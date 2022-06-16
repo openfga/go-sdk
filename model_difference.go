@@ -16,31 +16,31 @@ import (
 	"encoding/json"
 )
 
-// V1Difference struct for V1Difference
-type V1Difference struct {
+// Difference struct for Difference
+type Difference struct {
 	Base     *Userset `json:"base,omitempty"`
 	Subtract *Userset `json:"subtract,omitempty"`
 }
 
-// NewV1Difference instantiates a new V1Difference object
+// NewDifference instantiates a new Difference object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewV1Difference() *V1Difference {
-	this := V1Difference{}
+func NewDifference() *Difference {
+	this := Difference{}
 	return &this
 }
 
-// NewV1DifferenceWithDefaults instantiates a new V1Difference object
+// NewDifferenceWithDefaults instantiates a new Difference object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewV1DifferenceWithDefaults() *V1Difference {
-	this := V1Difference{}
+func NewDifferenceWithDefaults() *Difference {
+	this := Difference{}
 	return &this
 }
 
 // GetBase returns the Base field value if set, zero value otherwise.
-func (o *V1Difference) GetBase() Userset {
+func (o *Difference) GetBase() Userset {
 	if o == nil || o.Base == nil {
 		var ret Userset
 		return ret
@@ -50,7 +50,7 @@ func (o *V1Difference) GetBase() Userset {
 
 // GetBaseOk returns a tuple with the Base field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *V1Difference) GetBaseOk() (*Userset, bool) {
+func (o *Difference) GetBaseOk() (*Userset, bool) {
 	if o == nil || o.Base == nil {
 		return nil, false
 	}
@@ -58,7 +58,7 @@ func (o *V1Difference) GetBaseOk() (*Userset, bool) {
 }
 
 // HasBase returns a boolean if a field has been set.
-func (o *V1Difference) HasBase() bool {
+func (o *Difference) HasBase() bool {
 	if o != nil && o.Base != nil {
 		return true
 	}
@@ -67,12 +67,12 @@ func (o *V1Difference) HasBase() bool {
 }
 
 // SetBase gets a reference to the given Userset and assigns it to the Base field.
-func (o *V1Difference) SetBase(v Userset) {
+func (o *Difference) SetBase(v Userset) {
 	o.Base = &v
 }
 
 // GetSubtract returns the Subtract field value if set, zero value otherwise.
-func (o *V1Difference) GetSubtract() Userset {
+func (o *Difference) GetSubtract() Userset {
 	if o == nil || o.Subtract == nil {
 		var ret Userset
 		return ret
@@ -82,7 +82,7 @@ func (o *V1Difference) GetSubtract() Userset {
 
 // GetSubtractOk returns a tuple with the Subtract field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *V1Difference) GetSubtractOk() (*Userset, bool) {
+func (o *Difference) GetSubtractOk() (*Userset, bool) {
 	if o == nil || o.Subtract == nil {
 		return nil, false
 	}
@@ -90,7 +90,7 @@ func (o *V1Difference) GetSubtractOk() (*Userset, bool) {
 }
 
 // HasSubtract returns a boolean if a field has been set.
-func (o *V1Difference) HasSubtract() bool {
+func (o *Difference) HasSubtract() bool {
 	if o != nil && o.Subtract != nil {
 		return true
 	}
@@ -99,11 +99,11 @@ func (o *V1Difference) HasSubtract() bool {
 }
 
 // SetSubtract gets a reference to the given Userset and assigns it to the Subtract field.
-func (o *V1Difference) SetSubtract(v Userset) {
+func (o *Difference) SetSubtract(v Userset) {
 	o.Subtract = &v
 }
 
-func (o V1Difference) MarshalJSON() ([]byte, error) {
+func (o Difference) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.Base != nil {
 		toSerialize["base"] = o.Base
@@ -114,38 +114,38 @@ func (o V1Difference) MarshalJSON() ([]byte, error) {
 	return json.Marshal(toSerialize)
 }
 
-type NullableV1Difference struct {
-	value *V1Difference
+type NullableDifference struct {
+	value *Difference
 	isSet bool
 }
 
-func (v NullableV1Difference) Get() *V1Difference {
+func (v NullableDifference) Get() *Difference {
 	return v.value
 }
 
-func (v *NullableV1Difference) Set(val *V1Difference) {
+func (v *NullableDifference) Set(val *Difference) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableV1Difference) IsSet() bool {
+func (v NullableDifference) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableV1Difference) Unset() {
+func (v *NullableDifference) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableV1Difference(val *V1Difference) *NullableV1Difference {
-	return &NullableV1Difference{value: val, isSet: true}
+func NewNullableDifference(val *Difference) *NullableDifference {
+	return &NullableDifference{value: val, isSet: true}
 }
 
-func (v NullableV1Difference) MarshalJSON() ([]byte, error) {
+func (v NullableDifference) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableV1Difference) UnmarshalJSON(src []byte) error {
+func (v *NullableDifference) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }

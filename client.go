@@ -33,8 +33,6 @@ import (
 	"strings"
 	"time"
 	"unicode/utf8"
-
-	"github.com/openfga/go-sdk/oauth2/clientcredentials"
 )
 
 var (
@@ -42,7 +40,7 @@ var (
 	xmlCheck  = regexp.MustCompile(`(?i:(?:application|text)/xml)`)
 )
 
-// ErrorResponse defines the erorr that will be asserted by FGA API.
+// ErrorResponse defines the error that will be asserted by FGA API.
 // This will only be used for error that is not defined
 type ErrorResponse struct {
 	Code    string `json:"code"`
@@ -69,18 +67,18 @@ type service struct {
 // optionally a custom http.Client to allow for advanced features such as caching.
 func NewAPIClient(cfg *Configuration) *APIClient {
 	if cfg.HTTPClient == nil {
-		if cfg.ClientId == "" {
+		if cfg.Credentials == nil {
 			cfg.HTTPClient = http.DefaultClient
 		} else {
-			ccConfig := clientcredentials.Config{
-				ClientID:     cfg.ClientId,
-				ClientSecret: cfg.ClientSecret,
-				TokenURL:     fmt.Sprintf("https://%s/oauth/token", cfg.ApiTokenIssuer),
-				EndpointParams: map[string][]string{
-					"audience": []string{cfg.ApiAudience},
-				},
+			var httpClient, headers = cfg.Credentials.GetHttpClientAndHeaderOverrides()
+			if len(headers) > 0 {
+				for idx := range headers {
+					cfg.AddDefaultHeader(headers[idx].Key, headers[idx].Value)
+				}
 			}
-			cfg.HTTPClient = ccConfig.Client(context.Background())
+			if httpClient != nil {
+				cfg.HTTPClient = httpClient
+			}
 		}
 	}
 
@@ -93,6 +91,14 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 	c.OpenFgaApi = (*OpenFgaApiService)(&c.common)
 
 	return c
+}
+
+func (a APIClient) GetStoreId() string {
+	return a.cfg.StoreId
+}
+
+func (a APIClient) SetStoreId(storeId string) {
+	a.cfg.StoreId = storeId
 }
 
 func atoi(in string) (int, error) {

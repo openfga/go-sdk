@@ -14,6 +14,7 @@ package openfga
 
 import (
 	"encoding/json"
+	"net/url"
 	"time"
 )
 
@@ -327,4 +328,14 @@ func (v NullableTime) MarshalJSON() ([]byte, error) {
 func (v *NullableTime) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
+}
+
+func IsWellFormedUri(uriString string) bool {
+	uri, err := url.Parse(uriString)
+
+	if (err != nil) || (uri.Scheme != "http" && uri.Scheme != "https") || ((uri.Scheme + "://" + uri.Host) != uriString) {
+		return false
+	}
+
+	return true
 }

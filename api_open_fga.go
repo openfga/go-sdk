@@ -329,11 +329,11 @@ type OpenFgaApi interface {
 	The response will return the authorization model for the particular version.
 
 	## Example
-	To retrieve the authorization model with ID `1yunpF9DkzXMzm0dHrsCuWsooEV` for the store, call the GET authorization-models by ID API with `1yunpF9DkzXMzm0dHrsCuWsooEV` as the `id` path parameter.  The API will return:
+	To retrieve the authorization model with ID `01G5JAVJ41T49E9TT3SKVS7X1J` for the store, call the GET authorization-models by ID API with `01G5JAVJ41T49E9TT3SKVS7X1J` as the `id` path parameter.  The API will return:
 	```json
 	{
 	  "authorization_model":{
-	    "id":"1yunpF9DkzXMzm0dHrsCuWsooEV",
+	    "id":"01G5JAVJ41T49E9TT3SKVS7X1J",
 	    "type_definitions":[
 	      {
 	        "type":"document",
@@ -376,28 +376,40 @@ type OpenFgaApi interface {
 	ReadAuthorizationModelExecute(r ApiReadAuthorizationModelRequest) (ReadAuthorizationModelResponse, *_nethttp.Response, error)
 
 	/*
-		 * ReadAuthorizationModels Return all the authorization model IDs for a particular store
-		 * The GET authorization-models API will return all the IDs of the authorization models for a certain store.
+		 * ReadAuthorizationModels Return all the authorization models for a particular store
+		 * The GET authorization-models API will return all the authorization models for a certain store.
 	Path parameter `store_id` is required.
-	OpenFGA's response will contain an array of all authorization model IDs, sorted in descending order of creation.
+	OpenFGA's response will contain an array of all authorization models, sorted in descending order of creation.
 
 	## Example
-	Assume that the store's authorization model has been configured twice.  To get all the IDs of the authorization models that had been created in this store, call GET authorization-models.  The API will return a response that looks like:
+	Assume that a store's authorization model has been configured twice. To get all the authorization models that have been created in this store, call GET authorization-models. The API will return a response that looks like:
 	```json
 	{
-	  "authorization_model_ids": [
-	      "1yunpF9DkzXMzm0dHrsCuWsooEV",
-	      "1yundoHpJHlodgn4EOVar2DhmKp"
+	  "authorization_models": [
+	    {
+	      "id": "01G50QVV17PECNVAHX1GG4Y5NC",
+	      "type_definitions": [...]
+	    },
+	    {
+	      "id": "01G4ZW8F4A07AKQ8RHSVG9RW04",
+	      "type_definitions": [...]
+	    },
 	  ]
 	}
 	```
-	If there are more authorization model IDs available, the response will contain an extra field `continuation_token`:
+	If there are more authorization models available, the response will contain an extra field `continuation_token`:
 	```json
 	{
-	  "authorization_model_ids": [
-	      "1yunpF9DkzXMzm0dHrsCuWsooEV",
-	      "1yundoHpJHlodgn4EOVar2DhmKp"
-	  ],
+	  "authorization_models": [
+	    {
+	      "id": "01G50QVV17PECNVAHX1GG4Y5NC",
+	      "type_definitions": [...]
+	    },
+	    {
+	      "id": "01G4ZW8F4A07AKQ8RHSVG9RW04",
+	      "type_definitions": [...]
+	    },
+	  ]
 	  "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
 	}
 	```
@@ -508,9 +520,7 @@ type OpenFgaApi interface {
 	          "union":{
 	            "child":[
 	              {
-	                "this":{
-
-	                }
+	                "this":{}
 	              },
 	              {
 	                "computedUserset":{
@@ -522,9 +532,7 @@ type OpenFgaApi interface {
 	          }
 	        },
 	        "writer":{
-	          "this":{
-
-	          }
+	          "this":{}
 	        }
 	      }
 	    }
@@ -533,7 +541,7 @@ type OpenFgaApi interface {
 	```
 	OpenFGA's response will include the version id for this authorization model, which will look like
 	```
-	{"authorization_model_id": "1yunpF9DkzXMzm0dHrsCuWsooEV"}
+	{"authorization_model_id": "01G50QVV17PECNVAHX1GG4Y5NC"}
 	```
 
 		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -645,6 +653,9 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 			localVarReturnValue  CheckResponse
 		)
 
+		if a.client.cfg.StoreId == "" {
+			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
+		}
 		localVarPath := "/stores/{store_id}/check"
 		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(a.client.cfg.StoreId), -1)
 
@@ -1159,6 +1170,9 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 			localVarFileBytes    []byte
 		)
 
+		if a.client.cfg.StoreId == "" {
+			return nil, reportError("Configuration.StoreId is required and must be specified to call this method")
+		}
 		localVarPath := "/stores/{store_id}"
 		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(a.client.cfg.StoreId), -1)
 
@@ -1460,6 +1474,9 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 			localVarReturnValue  ExpandResponse
 		)
 
+		if a.client.cfg.StoreId == "" {
+			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
+		}
 		localVarPath := "/stores/{store_id}/expand"
 		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(a.client.cfg.StoreId), -1)
 
@@ -1715,6 +1732,9 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 			localVarReturnValue  GetStoreResponse
 		)
 
+		if a.client.cfg.StoreId == "" {
+			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
+		}
 		localVarPath := "/stores/{store_id}"
 		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(a.client.cfg.StoreId), -1)
 
@@ -2331,6 +2351,9 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 			localVarReturnValue  ReadResponse
 		)
 
+		if a.client.cfg.StoreId == "" {
+			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
+		}
 		localVarPath := "/stores/{store_id}/read"
 		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(a.client.cfg.StoreId), -1)
 
@@ -2590,6 +2613,9 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 			localVarReturnValue  ReadAssertionsResponse
 		)
 
+		if a.client.cfg.StoreId == "" {
+			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
+		}
 		localVarPath := "/stores/{store_id}/assertions/{authorization_model_id}"
 		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(a.client.cfg.StoreId), -1)
 		localVarPath = strings.Replace(localVarPath, "{"+"authorization_model_id"+"}", _neturl.PathEscape(parameterToString(r.authorizationModelId, "")), -1)
@@ -2811,11 +2837,11 @@ Path parameter `store_id` and `id` are required.
 The response will return the authorization model for the particular version.
 
 ## Example
-To retrieve the authorization model with ID `1yunpF9DkzXMzm0dHrsCuWsooEV` for the store, call the GET authorization-models by ID API with `1yunpF9DkzXMzm0dHrsCuWsooEV` as the `id` path parameter.  The API will return:
+To retrieve the authorization model with ID `01G5JAVJ41T49E9TT3SKVS7X1J` for the store, call the GET authorization-models by ID API with `01G5JAVJ41T49E9TT3SKVS7X1J` as the `id` path parameter.  The API will return:
 ```json
 {
   "authorization_model":{
-    "id":"1yunpF9DkzXMzm0dHrsCuWsooEV",
+    "id":"01G5JAVJ41T49E9TT3SKVS7X1J",
     "type_definitions":[
       {
         "type":"document",
@@ -2883,6 +2909,9 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 			localVarReturnValue  ReadAuthorizationModelResponse
 		)
 
+		if a.client.cfg.StoreId == "" {
+			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
+		}
 		localVarPath := "/stores/{store_id}/authorization-models/{id}"
 		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(a.client.cfg.StoreId), -1)
 		localVarPath = strings.Replace(localVarPath, "{"+"id"+"}", _neturl.PathEscape(parameterToString(r.id, "")), -1)
@@ -3108,28 +3137,40 @@ func (r ApiReadAuthorizationModelsRequest) Execute() (ReadAuthorizationModelsRes
 }
 
 /*
- * ReadAuthorizationModels Return all the authorization model IDs for a particular store
- * The GET authorization-models API will return all the IDs of the authorization models for a certain store.
+ * ReadAuthorizationModels Return all the authorization models for a particular store
+ * The GET authorization-models API will return all the authorization models for a certain store.
 Path parameter `store_id` is required.
-OpenFGA's response will contain an array of all authorization model IDs, sorted in descending order of creation.
+OpenFGA's response will contain an array of all authorization models, sorted in descending order of creation.
 
 ## Example
-Assume that the store's authorization model has been configured twice.  To get all the IDs of the authorization models that had been created in this store, call GET authorization-models.  The API will return a response that looks like:
+Assume that a store's authorization model has been configured twice. To get all the authorization models that have been created in this store, call GET authorization-models. The API will return a response that looks like:
 ```json
 {
-  "authorization_model_ids": [
-      "1yunpF9DkzXMzm0dHrsCuWsooEV",
-      "1yundoHpJHlodgn4EOVar2DhmKp"
+  "authorization_models": [
+    {
+      "id": "01G50QVV17PECNVAHX1GG4Y5NC",
+      "type_definitions": [...]
+    },
+    {
+      "id": "01G4ZW8F4A07AKQ8RHSVG9RW04",
+      "type_definitions": [...]
+    },
   ]
 }
 ```
-If there are more authorization model IDs available, the response will contain an extra field `continuation_token`:
+If there are more authorization models available, the response will contain an extra field `continuation_token`:
 ```json
 {
-  "authorization_model_ids": [
-      "1yunpF9DkzXMzm0dHrsCuWsooEV",
-      "1yundoHpJHlodgn4EOVar2DhmKp"
-  ],
+  "authorization_models": [
+    {
+      "id": "01G50QVV17PECNVAHX1GG4Y5NC",
+      "type_definitions": [...]
+    },
+    {
+      "id": "01G4ZW8F4A07AKQ8RHSVG9RW04",
+      "type_definitions": [...]
+    },
+  ]
   "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
 }
 ```
@@ -3170,6 +3211,9 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 			localVarReturnValue  ReadAuthorizationModelsResponse
 		)
 
+		if a.client.cfg.StoreId == "" {
+			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
+		}
 		localVarPath := "/stores/{store_id}/authorization-models"
 		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(a.client.cfg.StoreId), -1)
 
@@ -3445,6 +3489,9 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 			localVarReturnValue  ReadChangesResponse
 		)
 
+		if a.client.cfg.StoreId == "" {
+			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
+		}
 		localVarPath := "/stores/{store_id}/changes"
 		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(a.client.cfg.StoreId), -1)
 
@@ -3744,6 +3791,9 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 			localVarReturnValue  map[string]interface{}
 		)
 
+		if a.client.cfg.StoreId == "" {
+			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
+		}
 		localVarPath := "/stores/{store_id}/write"
 		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(a.client.cfg.StoreId), -1)
 
@@ -4007,6 +4057,9 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 			localVarFileBytes    []byte
 		)
 
+		if a.client.cfg.StoreId == "" {
+			return nil, reportError("Configuration.StoreId is required and must be specified to call this method")
+		}
 		localVarPath := "/stores/{store_id}/assertions/{authorization_model_id}"
 		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(a.client.cfg.StoreId), -1)
 		localVarPath = strings.Replace(localVarPath, "{"+"authorization_model_id"+"}", _neturl.PathEscape(parameterToString(r.authorizationModelId, "")), -1)
@@ -4239,9 +4292,7 @@ To update the authorization model with a single `document` authorization model, 
           "union":{
             "child":[
               {
-                "this":{
-
-                }
+                "this":{}
               },
               {
                 "computedUserset":{
@@ -4253,9 +4304,7 @@ To update the authorization model with a single `document` authorization model, 
           }
         },
         "writer":{
-          "this":{
-
-          }
+          "this":{}
         }
       }
     }
@@ -4264,7 +4313,7 @@ To update the authorization model with a single `document` authorization model, 
 ```
 OpenFGA's response will include the version id for this authorization model, which will look like
 ```
-{"authorization_model_id": "1yunpF9DkzXMzm0dHrsCuWsooEV"}
+{"authorization_model_id": "01G50QVV17PECNVAHX1GG4Y5NC"}
 ```
 
  * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -4303,6 +4352,9 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 			localVarReturnValue  WriteAuthorizationModelResponse
 		)
 
+		if a.client.cfg.StoreId == "" {
+			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
+		}
 		localVarPath := "/stores/{store_id}/authorization-models"
 		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(a.client.cfg.StoreId), -1)
 

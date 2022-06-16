@@ -16,9 +16,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/jarcoal/httpmock"
 	"net/http"
 	"testing"
+
+	"github.com/jarcoal/httpmock"
+	"github.com/openfga/go-sdk/credentials"
 )
 
 type TestDefinition struct {
@@ -30,81 +32,161 @@ type TestDefinition struct {
 }
 
 func TestOpenFgaApiConfiguration(t *testing.T) {
-	t.Run("Providing no store id should error", func(t *testing.T) {
+	t.Run("Providing no store id should not error", func(t *testing.T) {
 		_, err := NewConfiguration(Configuration{
 			ApiHost: "api.fga.example",
 		})
 
-		if err == nil {
-			t.Errorf("Expected an error")
-			return
+		if err != nil {
+			t.Fatalf("%v", err)
 		}
 	})
 
-	t.Run("Providing a client id with no secret, audience or issuer should error", func(t *testing.T) {
+	t.Run("Providing no store id when calling endpoints that require it should error", func(t *testing.T) {
+		configuration, err := NewConfiguration(Configuration{
+			ApiHost: "api.fga.example",
+		})
+
+		apiClient := NewAPIClient(configuration)
+
+		if _, _, err = apiClient.OpenFgaApi.ReadAuthorizationModels(context.Background()).Execute(); err == nil {
+			t.Fatalf("Expected an error when storeId is required but not provided")
+		}
+	})
+
+	t.Run("Providing no ApiHost should error", func(t *testing.T) {
+		_, err := NewConfiguration(Configuration{})
+
+		if err == nil {
+			t.Fatalf("Expected an error when storeId is required but not provided")
+		}
+	})
+
+	t.Run("ApiHost should be valid", func(t *testing.T) {
 		_, err := NewConfiguration(Configuration{
-			ApiHost:  "api.fga.example",
-			StoreId:  "6c181474-aaa1-4df7-8929-6e7b3a992754",
-			ClientId: "some-id",
+			ApiHost: "https://api.fga.example",
 		})
 
 		if err == nil {
-			t.Errorf("Expected an error: client secret is required")
-			return
+			t.Fatalf("Expected an error when ApiHost is invalid (scheme is part of the host)")
 		}
+	})
 
-		_, err = NewConfiguration(Configuration{
-			ApiHost:      "api.fga.example",
-			StoreId:      "6c181474-aaa1-4df7-8929-6e7b3a992754",
-			ClientId:     "some-id",
-			ClientSecret: "some-id",
+	t.Run("In ApiToken credential method, apiToken is required in the Credentials Config", func(t *testing.T) {
+		_, err := NewConfiguration(Configuration{
+			ApiHost: "https://api.fga.example",
+			Credentials: &credentials.Credentials{
+				Method: credentials.CredentialsMethodApiToken,
+			},
 		})
 
 		if err == nil {
-			t.Errorf("Expected an error: api audience is required")
-			return
+			t.Fatalf("Expected an error when apiToken is missing but the credential method is ApiToken")
 		}
+	})
 
-		_, err = NewConfiguration(Configuration{
-			ApiHost:      "api.fga.example",
-			StoreId:      "6c181474-aaa1-4df7-8929-6e7b3a992754",
-			ClientId:     "some-id",
-			ClientSecret: "some-secret",
-			ApiAudience:  "some-audience",
+	t.Run("In ClientCredentials method, providing no client id, secret, audience or issuer should error", func(t *testing.T) {
+		_, err := NewConfiguration(Configuration{
+			ApiHost: "https://api.fga.example",
+			StoreId: "6c181474-aaa1-4df7-8929-6e7b3a992754",
+			Credentials: &credentials.Credentials{
+				Method: credentials.CredentialsMethodApiToken,
+				Config: &credentials.Config{
+					ClientCredentialsClientSecret: "some-secret",
+				},
+			},
 		})
 
 		if err == nil {
-			t.Errorf("Expected an error: api token issuer is required")
-			return
+			t.Fatalf("Expected an error: client id is required")
 		}
 
 		_, err = NewConfiguration(Configuration{
-			ApiHost:        "api.fga.example",
-			StoreId:        "6c181474-aaa1-4df7-8929-6e7b3a992754",
-			ClientId:       "some-id",
-			ClientSecret:   "some-secret",
-			ApiAudience:    "some-audience",
-			ApiTokenIssuer: "some-issuer",
+			ApiHost: "https://api.fga.example",
+			StoreId: "6c181474-aaa1-4df7-8929-6e7b3a992754",
+			Credentials: &credentials.Credentials{
+				Method: credentials.CredentialsMethodApiToken,
+				Config: &credentials.Config{
+					ClientCredentialsClientId:       "some-id",
+					ClientCredentialsApiTokenIssuer: "some-issuer",
+					ClientCredentialsApiAudience:    "some-audience",
+				},
+			},
+		})
+
+		if err == nil {
+			t.Fatalf("Expected an error: client secret is required")
+		}
+
+		_, err = NewConfiguration(Configuration{
+			ApiHost: "https://api.fga.example",
+			StoreId: "6c181474-aaa1-4df7-8929-6e7b3a992754",
+			Credentials: &credentials.Credentials{
+				Method: credentials.CredentialsMethodApiToken,
+				Config: &credentials.Config{
+					ClientCredentialsClientId:       "some-id",
+					ClientCredentialsClientSecret:   "some-secret",
+					ClientCredentialsApiTokenIssuer: "some-issuer",
+				},
+			},
+		})
+
+		if err == nil {
+			t.Fatalf("Expected an error: api audience is required")
+		}
+
+		_, err = NewConfiguration(Configuration{
+			ApiHost: "https://api.fga.example",
+			StoreId: "6c181474-aaa1-4df7-8929-6e7b3a992754",
+			Credentials: &credentials.Credentials{
+				Method: credentials.CredentialsMethodApiToken,
+				Config: &credentials.Config{
+					ClientCredentialsClientId:     "some-id",
+					ClientCredentialsClientSecret: "some-secret",
+					ClientCredentialsApiAudience:  "some-audience",
+				},
+			},
+		})
+
+		if err == nil {
+			t.Fatalf("Expected an error: api token issuer is required")
+		}
+
+		_, err = NewConfiguration(Configuration{
+			ApiHost: "api.fga.example",
+			StoreId: "6c181474-aaa1-4df7-8929-6e7b3a992754",
+			Credentials: &credentials.Credentials{
+				Method: credentials.CredentialsMethodClientCredentials,
+				Config: &credentials.Config{
+					ClientCredentialsClientId:       "some-id",
+					ClientCredentialsClientSecret:   "some-secret",
+					ClientCredentialsApiAudience:    "some-audience",
+					ClientCredentialsApiTokenIssuer: "some-issuer.fga.example",
+				},
+			},
 		})
 
 		if err != nil {
-			t.Errorf("Unexpected error: %v", err)
-			return
+			t.Fatalf("Unexpected error: %v", err)
 		}
 	})
 
 	t.Run("should issue a network call to get the token at the first request if client id is provided", func(t *testing.T) {
 		configuration, err := NewConfiguration(Configuration{
-			ApiHost:        "api.fga.example",
-			StoreId:        "6c181474-aaa1-4df7-8929-6e7b3a992754",
-			ClientId:       "some-id",
-			ClientSecret:   "some-secret",
-			ApiAudience:    "some-audience",
-			ApiTokenIssuer: "some-issuer",
+			ApiHost: "api.fga.example",
+			StoreId: "6c181474-aaa1-4df7-8929-6e7b3a992754",
+			Credentials: &credentials.Credentials{
+				Method: credentials.CredentialsMethodClientCredentials,
+				Config: &credentials.Config{
+					ClientCredentialsClientId:       "some-id",
+					ClientCredentialsClientSecret:   "some-secret",
+					ClientCredentialsApiAudience:    "some-audience",
+					ClientCredentialsApiTokenIssuer: "tokenissuer.fga.example",
+				},
+			},
 		})
 		if err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		apiClient := NewAPIClient(configuration)
@@ -130,7 +212,7 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 			},
 		)
 
-		httpmock.RegisterResponder("POST", fmt.Sprintf("https://%s/oauth/token", configuration.ApiTokenIssuer),
+		httpmock.RegisterResponder("POST", fmt.Sprintf("https://%s/oauth/token", configuration.Credentials.Config.ClientCredentialsApiTokenIssuer),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(200, struct {
 					AccessToken string `json:"access_token"`
@@ -143,20 +225,17 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 		)
 
 		if _, _, err = apiClient.OpenFgaApi.ReadAuthorizationModels(context.Background()).Execute(); err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		info := httpmock.GetCallCountInfo()
-		numCalls := info[fmt.Sprintf("POST https://%s/oauth/token", configuration.ApiTokenIssuer)]
+		numCalls := info[fmt.Sprintf("POST https://%s/oauth/token", configuration.Credentials.Config.ClientCredentialsApiTokenIssuer)]
 		if numCalls != 1 {
-			t.Errorf("Expected call to get access token to be made exactly once, saw: %d", numCalls)
-			return
+			t.Fatalf("Expected call to get access token to be made exactly once, saw: %d", numCalls)
 		}
 		numCalls = info[fmt.Sprintf("GET %s://%s/stores/%s/authorization-models", configuration.ApiScheme, configuration.ApiHost, configuration.StoreId)]
 		if numCalls != 1 {
-			t.Errorf("Expected call to get authorization models to be made exactly once, saw: %d", numCalls)
-			return
+			t.Fatalf("Expected call to get authorization models to be made exactly once, saw: %d", numCalls)
 		}
 	})
 
@@ -164,10 +243,13 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 		configuration, err := NewConfiguration(Configuration{
 			ApiHost: "api.fga.example",
 			StoreId: "6c181474-aaa1-4df7-8929-6e7b3a992754",
+			Credentials: &credentials.Credentials{
+				Method: credentials.CredentialsMethodNone,
+				Config: &credentials.Config{ClientCredentialsApiTokenIssuer: "tokenissuer.api.example"},
+			},
 		})
 		if err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 		configuration.ApiHost = "api.fga.example"
 
@@ -194,20 +276,73 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 			},
 		)
 		if _, _, err = apiClient.OpenFgaApi.ReadAuthorizationModels(context.Background()).Execute(); err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		info := httpmock.GetCallCountInfo()
-		numCalls := info[fmt.Sprintf("POST https://%s/oauth/token", configuration.ApiTokenIssuer)]
+		numCalls := info[fmt.Sprintf("POST https://%s/oauth/token", configuration.Credentials.Config.ClientCredentialsApiTokenIssuer)]
 		if numCalls != 0 {
-			t.Errorf("Unexpected call to get access token made. Expected 0, saw: %d", numCalls)
-			return
+			t.Fatalf("Unexpected call to get access token made. Expected 0, saw: %d", numCalls)
 		}
 		numCalls = info[fmt.Sprintf("GET %s://%s/stores/%s/authorization-models", configuration.ApiScheme, configuration.ApiHost, configuration.StoreId)]
 		if numCalls != 1 {
-			t.Errorf("Expected call to get authorization models to be made exactly once, saw: %d", numCalls)
-			return
+			t.Fatalf("Expected call to get authorization models to be made exactly once, saw: %d", numCalls)
+		}
+	})
+
+	t.Run("Updating StoreId after initialization should work", func(t *testing.T) {
+		configuration, err := NewConfiguration(Configuration{
+			ApiHost: "api.fga.example",
+			Credentials: &credentials.Credentials{
+				Method: credentials.CredentialsMethodClientCredentials,
+				Config: &credentials.Config{
+					ClientCredentialsClientId:       "some-id",
+					ClientCredentialsClientSecret:   "some-secret",
+					ClientCredentialsApiAudience:    "some-audience",
+					ClientCredentialsApiTokenIssuer: "tokenissuer.fga.example",
+				},
+			},
+		})
+
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		apiClient := NewAPIClient(configuration)
+		if apiClient.GetStoreId() != "" {
+			t.Fatalf("apiClient.GetStoreId() = \"\", want %v", apiClient.GetStoreId())
+		}
+
+		storeId := "some-id"
+		apiClient.SetStoreId(storeId)
+		if apiClient.GetStoreId() != storeId {
+			t.Fatalf("apiClient.GetStoreId() = %v, want %v", apiClient.GetStoreId(), storeId)
+		}
+
+		storeId = "some-other-id"
+		apiClient.SetStoreId(storeId)
+		if apiClient.GetStoreId() != storeId {
+			t.Fatalf("apiClient.GetStoreId() = %v, want %v", apiClient.GetStoreId(), storeId)
+		}
+	})
+
+	t.Run("Issuing a call to a method that requires StoreId without providing it should error", func(t *testing.T) {
+		configuration, err := NewConfiguration(Configuration{
+			ApiHost: "api.fga.example",
+		})
+
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		apiClient := NewAPIClient(configuration)
+		if apiClient.GetStoreId() != "" {
+			t.Fatalf("apiClient.GetStoreId() = \"\", want %v", apiClient.GetStoreId())
+		}
+
+		_, _, err = apiClient.OpenFgaApi.ReadAuthorizationModels(context.Background()).Execute()
+		if err == nil {
+			t.Fatalf("Expected an error, got non")
 		}
 	})
 }
@@ -218,8 +353,7 @@ func TestOpenFgaApi(t *testing.T) {
 		StoreId: "6c181474-aaa1-4df7-8929-6e7b3a992754",
 	})
 	if err != nil {
-		t.Errorf("%v", err)
-		return
+		t.Fatalf("%v", err)
 	}
 
 	apiClient := NewAPIClient(configuration)
@@ -235,8 +369,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		var expectedResponse ReadAuthorizationModelsResponse
 		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		httpmock.Activate()
@@ -253,23 +386,19 @@ func TestOpenFgaApi(t *testing.T) {
 
 		got, response, err := apiClient.OpenFgaApi.ReadAuthorizationModels(context.Background()).Execute()
 		if err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		if response.StatusCode != test.ResponseStatus {
-			t.Errorf("OpenFga%v().Execute() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
-			return
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
 		}
 
 		if len(*got.AuthorizationModels) != 1 {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		if *((*got.AuthorizationModels)[0].Id) != *((*expectedResponse.AuthorizationModels)[0].Id) {
-			t.Errorf("OpenFga%v().Execute() = %v, want %v", test.Name, *((*got.AuthorizationModels)[0].Id), *((*expectedResponse.AuthorizationModels)[0].Id))
-			return
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, *((*got.AuthorizationModels)[0].Id), *((*expectedResponse.AuthorizationModels)[0].Id))
 		}
 	})
 
@@ -303,8 +432,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		var expectedResponse WriteAuthorizationModelResponse
 		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		httpmock.Activate()
@@ -320,19 +448,16 @@ func TestOpenFgaApi(t *testing.T) {
 		)
 		got, response, err := apiClient.OpenFgaApi.WriteAuthorizationModel(context.Background()).TypeDefinitions(requestBody).Execute()
 		if err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		if response.StatusCode != test.ResponseStatus {
-			t.Errorf("OpenFga%v().Execute() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
-			return
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
 		}
 
 		_, err = got.MarshalJSON()
 		if err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 	})
 
@@ -347,8 +472,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		var expectedResponse ReadAuthorizationModelResponse
 		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 		modelId := *(*expectedResponse.AuthorizationModel).Id
 
@@ -365,23 +489,20 @@ func TestOpenFgaApi(t *testing.T) {
 		)
 		got, response, err := apiClient.OpenFgaApi.ReadAuthorizationModel(context.Background(), modelId).Execute()
 		if err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		if response.StatusCode != test.ResponseStatus {
-			t.Errorf("OpenFga%v().Execute() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
-			return
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
 		}
 
 		responseJson, err := got.MarshalJSON()
 		if err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		if *(*got.AuthorizationModel).Id != modelId {
-			t.Errorf("OpenFga%v().Execute() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
 		}
 	})
 
@@ -403,8 +524,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		var expectedResponse CheckResponse
 		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		httpmock.Activate()
@@ -420,23 +540,20 @@ func TestOpenFgaApi(t *testing.T) {
 		)
 		got, response, err := apiClient.OpenFgaApi.Check(context.Background()).Body(requestBody).Execute()
 		if err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		if response.StatusCode != test.ResponseStatus {
-			t.Errorf("OpenFga%v().Execute() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
-			return
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
 		}
 
 		responseJson, err := got.MarshalJSON()
 		if err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		if *got.Allowed != *expectedResponse.Allowed {
-			t.Errorf("OpenFga%v().Execute() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
 		}
 	})
 
@@ -460,8 +577,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		var expectedResponse map[string]interface{}
 		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		httpmock.Activate()
@@ -477,13 +593,11 @@ func TestOpenFgaApi(t *testing.T) {
 		)
 		_, response, err := apiClient.OpenFgaApi.Write(context.Background()).Body(requestBody).Execute()
 		if err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		if response.StatusCode != test.ResponseStatus {
-			t.Errorf("OpenFga%v().Execute() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
-			return
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
 		}
 	})
 
@@ -508,8 +622,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		var expectedResponse map[string]interface{}
 		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		httpmock.Activate()
@@ -525,13 +638,11 @@ func TestOpenFgaApi(t *testing.T) {
 		)
 		_, response, err := apiClient.OpenFgaApi.Write(context.Background()).Body(requestBody).Execute()
 		if err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		if response.StatusCode != test.ResponseStatus {
-			t.Errorf("OpenFga%v().Execute() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
-			return
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
 		}
 	})
 
@@ -553,8 +664,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		var expectedResponse ExpandResponse
 		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		httpmock.Activate()
@@ -570,19 +680,16 @@ func TestOpenFgaApi(t *testing.T) {
 		)
 		got, response, err := apiClient.OpenFgaApi.Expand(context.Background()).Body(requestBody).Execute()
 		if err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		if response.StatusCode != test.ResponseStatus {
-			t.Errorf("OpenFga%v().Execute() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
-			return
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
 		}
 
 		_, err = got.MarshalJSON()
 		if err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 	})
 
@@ -605,8 +712,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		var expectedResponse ReadResponse
 		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		httpmock.Activate()
@@ -622,24 +728,20 @@ func TestOpenFgaApi(t *testing.T) {
 		)
 		got, response, err := apiClient.OpenFgaApi.Read(context.Background()).Body(requestBody).Execute()
 		if err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		if response.StatusCode != test.ResponseStatus {
-			t.Errorf("OpenFga%v().Execute() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
-			return
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
 		}
 
 		responseJson, err := got.MarshalJSON()
 		if err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		if len(*got.Tuples) != len(*expectedResponse.Tuples) {
-			t.Errorf("OpenFga%v().Execute() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
-			return
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
 		}
 	})
 
@@ -654,8 +756,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		var expectedResponse ReadChangesResponse
 		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		httpmock.Activate()
@@ -675,24 +776,20 @@ func TestOpenFgaApi(t *testing.T) {
 			ContinuationToken("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ==").
 			Execute()
 		if err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		if response.StatusCode != test.ResponseStatus {
-			t.Errorf("OpenFga%v().Execute() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
-			return
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
 		}
 
 		responseJson, err := got.MarshalJSON()
 		if err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		if len(*got.Changes) != len(*expectedResponse.Changes) {
-			t.Errorf("OpenFga%v().Execute() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
-			return
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
 		}
 	})
 
@@ -714,8 +811,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		var expectedResponse CheckResponse
 		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		httpmock.Activate()
@@ -731,39 +827,32 @@ func TestOpenFgaApi(t *testing.T) {
 		)
 		_, _, err := apiClient.OpenFgaApi.Check(context.Background()).Body(requestBody).Execute()
 		if err == nil {
-			t.Errorf("Expected error with 400 request but there is none")
-			return
+			t.Fatalf("Expected error with 400 request but there is none")
 		}
 		validationError, ok := err.(FgaApiValidationError)
 		if !ok {
-			t.Errorf("Expected validation Error but type is incorrect %v", err)
-			return
+			t.Fatalf("Expected validation Error but type is incorrect %v", err)
 		}
 		// Do some basic validation of the error itself
 
 		if validationError.StoreId() != configuration.StoreId {
-			t.Errorf("Expected store id to be %s but actual %s", configuration.StoreId, validationError.StoreId())
-			return
+			t.Fatalf("Expected store id to be %s but actual %s", configuration.StoreId, validationError.StoreId())
 		}
 
 		if validationError.EndpointCategory() != "Check" {
-			t.Errorf("Expected category to be Check but actual %s", validationError.EndpointCategory())
-			return
+			t.Fatalf("Expected category to be Check but actual %s", validationError.EndpointCategory())
 		}
 
 		if validationError.RequestMethod() != "POST" {
-			t.Errorf("Expected category to be POST but actual %s", validationError.RequestMethod())
-			return
+			t.Fatalf("Expected category to be POST but actual %s", validationError.RequestMethod())
 		}
 
 		if validationError.ResponseStatusCode() != 400 {
-			t.Errorf("Expected status code to be 400 but actual %d", validationError.ResponseStatusCode())
-			return
+			t.Fatalf("Expected status code to be 400 but actual %d", validationError.ResponseStatusCode())
 		}
 
 		if validationError.ResponseCode() != VALIDATION_ERROR {
-			t.Errorf("Expected response code to be VALIDATION_ERROR but actual %s", validationError.ResponseCode())
-			return
+			t.Fatalf("Expected response code to be VALIDATION_ERROR but actual %s", validationError.ResponseCode())
 		}
 	})
 
@@ -785,8 +874,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		var expectedResponse CheckResponse
 		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		httpmock.Activate()
@@ -802,29 +890,24 @@ func TestOpenFgaApi(t *testing.T) {
 		)
 		_, _, err := apiClient.OpenFgaApi.Check(context.Background()).Body(requestBody).Execute()
 		if err == nil {
-			t.Errorf("Expected error with 401 request but there is none")
-			return
+			t.Fatalf("Expected error with 401 request but there is none")
 		}
 		authenticationError, ok := err.(FgaApiAuthenticationError)
 		if !ok {
-			t.Errorf("Expected authentication Error but type is incorrect %v", err)
-			return
+			t.Fatalf("Expected authentication Error but type is incorrect %v", err)
 		}
 		// Do some basic validation of the error itself
 
 		if authenticationError.StoreId() != configuration.StoreId {
-			t.Errorf("Expected store id to be %s but actual %s", configuration.StoreId, authenticationError.StoreId())
-			return
+			t.Fatalf("Expected store id to be %s but actual %s", configuration.StoreId, authenticationError.StoreId())
 		}
 
 		if authenticationError.EndpointCategory() != "Check" {
-			t.Errorf("Expected category to be Check but actual %s", authenticationError.EndpointCategory())
-			return
+			t.Fatalf("Expected category to be Check but actual %s", authenticationError.EndpointCategory())
 		}
 
 		if authenticationError.ResponseStatusCode() != 401 {
-			t.Errorf("Expected status code to be 401 but actual %d", authenticationError.ResponseStatusCode())
-			return
+			t.Fatalf("Expected status code to be 401 but actual %d", authenticationError.ResponseStatusCode())
 		}
 
 	})
@@ -847,8 +930,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		var expectedResponse CheckResponse
 		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		httpmock.Activate()
@@ -864,39 +946,32 @@ func TestOpenFgaApi(t *testing.T) {
 		)
 		_, _, err := apiClient.OpenFgaApi.Check(context.Background()).Body(requestBody).Execute()
 		if err == nil {
-			t.Errorf("Expected error with 404 request but there is none")
-			return
+			t.Fatalf("Expected error with 404 request but there is none")
 		}
 		notFoundError, ok := err.(FgaApiNotFoundError)
 		if !ok {
-			t.Errorf("Expected not found Error but type is incorrect %v", err)
-			return
+			t.Fatalf("Expected not found Error but type is incorrect %v", err)
 		}
 		// Do some basic validation of the error itself
 
 		if notFoundError.StoreId() != configuration.StoreId {
-			t.Errorf("Expected store id to be %s but actual %s", configuration.StoreId, notFoundError.StoreId())
-			return
+			t.Fatalf("Expected store id to be %s but actual %s", configuration.StoreId, notFoundError.StoreId())
 		}
 
 		if notFoundError.EndpointCategory() != "Check" {
-			t.Errorf("Expected category to be Check but actual %s", notFoundError.EndpointCategory())
-			return
+			t.Fatalf("Expected category to be Check but actual %s", notFoundError.EndpointCategory())
 		}
 
 		if notFoundError.RequestMethod() != "POST" {
-			t.Errorf("Expected category to be POST but actual %s", notFoundError.RequestMethod())
-			return
+			t.Fatalf("Expected category to be POST but actual %s", notFoundError.RequestMethod())
 		}
 
 		if notFoundError.ResponseStatusCode() != 404 {
-			t.Errorf("Expected status code to be 404 but actual %d", notFoundError.ResponseStatusCode())
-			return
+			t.Fatalf("Expected status code to be 404 but actual %d", notFoundError.ResponseStatusCode())
 		}
 
 		if notFoundError.ResponseCode() != UNDEFINED_ENDPOINT {
-			t.Errorf("Expected response code to be UNDEFINED_ENDPOINT but actual %s", notFoundError.ResponseCode())
-			return
+			t.Fatalf("Expected response code to be UNDEFINED_ENDPOINT but actual %s", notFoundError.ResponseCode())
 		}
 	})
 
@@ -918,8 +993,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		var expectedResponse CheckResponse
 		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		httpmock.Activate()
@@ -943,37 +1017,31 @@ func TestOpenFgaApi(t *testing.T) {
 			},
 		})
 		if err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		updatedApiClient := NewAPIClient(updatedConfiguration)
 
 		_, _, err = updatedApiClient.OpenFgaApi.Check(context.Background()).Body(requestBody).Execute()
 		if err == nil {
-			t.Errorf("Expected error with 429 request but there is none")
-			return
+			t.Fatalf("Expected error with 429 request but there is none")
 		}
 		rateLimitError, ok := err.(FgaApiRateLimitExceededError)
 		if !ok {
-			t.Errorf("Expected rate limit exceeded Error but type is incorrect %v", err)
-			return
+			t.Fatalf("Expected rate limit exceeded Error but type is incorrect %v", err)
 		}
 		// Do some basic validation of the error itself
 
 		if rateLimitError.StoreId() != configuration.StoreId {
-			t.Errorf("Expected store id to be %s but actual %s", configuration.StoreId, rateLimitError.StoreId())
-			return
+			t.Fatalf("Expected store id to be %s but actual %s", configuration.StoreId, rateLimitError.StoreId())
 		}
 
 		if rateLimitError.EndpointCategory() != "Check" {
-			t.Errorf("Expected category to be Check but actual %s", rateLimitError.EndpointCategory())
-			return
+			t.Fatalf("Expected category to be Check but actual %s", rateLimitError.EndpointCategory())
 		}
 
 		if rateLimitError.ResponseStatusCode() != 429 {
-			t.Errorf("Expected status code to be 429 but actual %d", rateLimitError.ResponseStatusCode())
-			return
+			t.Fatalf("Expected status code to be 429 but actual %d", rateLimitError.ResponseStatusCode())
 		}
 
 	})
@@ -996,8 +1064,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		var expectedResponse CheckResponse
 		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		httpmock.Activate()
@@ -1016,8 +1083,7 @@ func TestOpenFgaApi(t *testing.T) {
 			},
 		})
 		if err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		updatedApiClient := NewAPIClient(updatedConfiguration)
@@ -1025,23 +1091,20 @@ func TestOpenFgaApi(t *testing.T) {
 		got, response, err := updatedApiClient.OpenFgaApi.Check(context.Background()).Body(requestBody).Execute()
 
 		if err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		if response.StatusCode != test.ResponseStatus {
-			t.Errorf("OpenFga%v().Execute() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
-			return
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
 		}
 
 		responseJson, err := got.MarshalJSON()
 		if err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		if *got.Allowed != *expectedResponse.Allowed {
-			t.Errorf("OpenFga%v().Execute() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
 		}
 	})
 
@@ -1063,8 +1126,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		var expectedResponse CheckResponse
 		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Errorf("%v", err)
-			return
+			t.Fatalf("%v", err)
 		}
 
 		httpmock.Activate()
@@ -1080,39 +1142,32 @@ func TestOpenFgaApi(t *testing.T) {
 		)
 		_, _, err := apiClient.OpenFgaApi.Check(context.Background()).Body(requestBody).Execute()
 		if err == nil {
-			t.Errorf("Expected error with 500 request but there is none")
-			return
+			t.Fatalf("Expected error with 500 request but there is none")
 		}
 		internalError, ok := err.(FgaApiInternalError)
 		if !ok {
-			t.Errorf("Expected internal Error but type is incorrect %v", err)
-			return
+			t.Fatalf("Expected internal Error but type is incorrect %v", err)
 		}
 		// Do some basic validation of the error itself
 
 		if internalError.StoreId() != configuration.StoreId {
-			t.Errorf("Expected store id to be %s but actual %s", configuration.StoreId, internalError.StoreId())
-			return
+			t.Fatalf("Expected store id to be %s but actual %s", configuration.StoreId, internalError.StoreId())
 		}
 
 		if internalError.EndpointCategory() != "Check" {
-			t.Errorf("Expected category to be Check but actual %s", internalError.EndpointCategory())
-			return
+			t.Fatalf("Expected category to be Check but actual %s", internalError.EndpointCategory())
 		}
 
 		if internalError.RequestMethod() != "POST" {
-			t.Errorf("Expected category to be POST but actual %s", internalError.RequestMethod())
-			return
+			t.Fatalf("Expected category to be POST but actual %s", internalError.RequestMethod())
 		}
 
 		if internalError.ResponseStatusCode() != 500 {
-			t.Errorf("Expected status code to be 500 but actual %d", internalError.ResponseStatusCode())
-			return
+			t.Fatalf("Expected status code to be 500 but actual %d", internalError.ResponseStatusCode())
 		}
 
 		if internalError.ResponseCode() != INTERNAL_ERROR {
-			t.Errorf("Expected response code to be INTERNAL_ERROR but actual %s", internalError.ResponseCode())
-			return
+			t.Fatalf("Expected response code to be INTERNAL_ERROR but actual %s", internalError.ResponseCode())
 		}
 	})
 }

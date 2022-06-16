@@ -16,6 +16,7 @@ VERSION.txt
 api_open_fga.go
 client.go
 configuration.go
+credentials/credentials.go
 docs/Any.md
 docs/Assertion.md
 docs/AuthorizationModel.md
@@ -25,6 +26,7 @@ docs/Computed.md
 docs/ContextualTupleKeys.md
 docs/CreateStoreRequest.md
 docs/CreateStoreResponse.md
+docs/Difference.md
 docs/ErrorCode.md
 docs/ExpandRequest.md
 docs/ExpandResponse.md
@@ -52,6 +54,7 @@ docs/TupleChange.md
 docs/TupleKey.md
 docs/TupleKeys.md
 docs/TupleOperation.md
+docs/TupleToUserset.md
 docs/TypeDefinition.md
 docs/TypeDefinitions.md
 docs/Users.md
@@ -60,8 +63,6 @@ docs/UsersetTree.md
 docs/UsersetTreeDifference.md
 docs/UsersetTreeTupleToUserset.md
 docs/Usersets.md
-docs/V1Difference.md
-docs/V1TupleToUserset.md
 docs/ValidationErrorMessageResponse.md
 docs/WriteAssertionsRequest.md
 docs/WriteAuthorizationModelResponse.md
@@ -79,6 +80,7 @@ model_computed.go
 model_contextual_tuple_keys.go
 model_create_store_request.go
 model_create_store_response.go
+model_difference.go
 model_error_code.go
 model_expand_request.go
 model_expand_response.go
@@ -105,6 +107,7 @@ model_tuple_change.go
 model_tuple_key.go
 model_tuple_keys.go
 model_tuple_operation.go
+model_tuple_to_userset.go
 model_type_definition.go
 model_type_definitions.go
 model_users.go
@@ -113,8 +116,6 @@ model_userset_tree.go
 model_userset_tree_difference.go
 model_userset_tree_tuple_to_userset.go
 model_usersets.go
-model_v1_difference.go
-model_v1_tuple_to_userset.go
 model_validation_error_message_response.go
 model_write_assertions_request.go
 model_write_authorization_model_response.go

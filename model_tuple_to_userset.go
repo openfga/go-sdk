@@ -16,31 +16,31 @@ import (
 	"encoding/json"
 )
 
-// V1TupleToUserset struct for V1TupleToUserset
-type V1TupleToUserset struct {
+// TupleToUserset struct for TupleToUserset
+type TupleToUserset struct {
 	Tupleset        *ObjectRelation `json:"tupleset,omitempty"`
 	ComputedUserset *ObjectRelation `json:"computedUserset,omitempty"`
 }
 
-// NewV1TupleToUserset instantiates a new V1TupleToUserset object
+// NewTupleToUserset instantiates a new TupleToUserset object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewV1TupleToUserset() *V1TupleToUserset {
-	this := V1TupleToUserset{}
+func NewTupleToUserset() *TupleToUserset {
+	this := TupleToUserset{}
 	return &this
 }
 
-// NewV1TupleToUsersetWithDefaults instantiates a new V1TupleToUserset object
+// NewTupleToUsersetWithDefaults instantiates a new TupleToUserset object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewV1TupleToUsersetWithDefaults() *V1TupleToUserset {
-	this := V1TupleToUserset{}
+func NewTupleToUsersetWithDefaults() *TupleToUserset {
+	this := TupleToUserset{}
 	return &this
 }
 
 // GetTupleset returns the Tupleset field value if set, zero value otherwise.
-func (o *V1TupleToUserset) GetTupleset() ObjectRelation {
+func (o *TupleToUserset) GetTupleset() ObjectRelation {
 	if o == nil || o.Tupleset == nil {
 		var ret ObjectRelation
 		return ret
@@ -50,7 +50,7 @@ func (o *V1TupleToUserset) GetTupleset() ObjectRelation {
 
 // GetTuplesetOk returns a tuple with the Tupleset field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *V1TupleToUserset) GetTuplesetOk() (*ObjectRelation, bool) {
+func (o *TupleToUserset) GetTuplesetOk() (*ObjectRelation, bool) {
 	if o == nil || o.Tupleset == nil {
 		return nil, false
 	}
@@ -58,7 +58,7 @@ func (o *V1TupleToUserset) GetTuplesetOk() (*ObjectRelation, bool) {
 }
 
 // HasTupleset returns a boolean if a field has been set.
-func (o *V1TupleToUserset) HasTupleset() bool {
+func (o *TupleToUserset) HasTupleset() bool {
 	if o != nil && o.Tupleset != nil {
 		return true
 	}
@@ -67,12 +67,12 @@ func (o *V1TupleToUserset) HasTupleset() bool {
 }
 
 // SetTupleset gets a reference to the given ObjectRelation and assigns it to the Tupleset field.
-func (o *V1TupleToUserset) SetTupleset(v ObjectRelation) {
+func (o *TupleToUserset) SetTupleset(v ObjectRelation) {
 	o.Tupleset = &v
 }
 
 // GetComputedUserset returns the ComputedUserset field value if set, zero value otherwise.
-func (o *V1TupleToUserset) GetComputedUserset() ObjectRelation {
+func (o *TupleToUserset) GetComputedUserset() ObjectRelation {
 	if o == nil || o.ComputedUserset == nil {
 		var ret ObjectRelation
 		return ret
@@ -82,7 +82,7 @@ func (o *V1TupleToUserset) GetComputedUserset() ObjectRelation {
 
 // GetComputedUsersetOk returns a tuple with the ComputedUserset field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *V1TupleToUserset) GetComputedUsersetOk() (*ObjectRelation, bool) {
+func (o *TupleToUserset) GetComputedUsersetOk() (*ObjectRelation, bool) {
 	if o == nil || o.ComputedUserset == nil {
 		return nil, false
 	}
@@ -90,7 +90,7 @@ func (o *V1TupleToUserset) GetComputedUsersetOk() (*ObjectRelation, bool) {
 }
 
 // HasComputedUserset returns a boolean if a field has been set.
-func (o *V1TupleToUserset) HasComputedUserset() bool {
+func (o *TupleToUserset) HasComputedUserset() bool {
 	if o != nil && o.ComputedUserset != nil {
 		return true
 	}
@@ -99,11 +99,11 @@ func (o *V1TupleToUserset) HasComputedUserset() bool {
 }
 
 // SetComputedUserset gets a reference to the given ObjectRelation and assigns it to the ComputedUserset field.
-func (o *V1TupleToUserset) SetComputedUserset(v ObjectRelation) {
+func (o *TupleToUserset) SetComputedUserset(v ObjectRelation) {
 	o.ComputedUserset = &v
 }
 
-func (o V1TupleToUserset) MarshalJSON() ([]byte, error) {
+func (o TupleToUserset) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.Tupleset != nil {
 		toSerialize["tupleset"] = o.Tupleset
@@ -114,38 +114,38 @@ func (o V1TupleToUserset) MarshalJSON() ([]byte, error) {
 	return json.Marshal(toSerialize)
 }
 
-type NullableV1TupleToUserset struct {
-	value *V1TupleToUserset
+type NullableTupleToUserset struct {
+	value *TupleToUserset
 	isSet bool
 }
 
-func (v NullableV1TupleToUserset) Get() *V1TupleToUserset {
+func (v NullableTupleToUserset) Get() *TupleToUserset {
 	return v.value
 }
 
-func (v *NullableV1TupleToUserset) Set(val *V1TupleToUserset) {
+func (v *NullableTupleToUserset) Set(val *TupleToUserset) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableV1TupleToUserset) IsSet() bool {
+func (v NullableTupleToUserset) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableV1TupleToUserset) Unset() {
+func (v *NullableTupleToUserset) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableV1TupleToUserset(val *V1TupleToUserset) *NullableV1TupleToUserset {
-	return &NullableV1TupleToUserset{value: val, isSet: true}
+func NewNullableTupleToUserset(val *TupleToUserset) *NullableTupleToUserset {
+	return &NullableTupleToUserset{value: val, isSet: true}
 }
 
-func (v NullableV1TupleToUserset) MarshalJSON() ([]byte, error) {
+func (v NullableTupleToUserset) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableV1TupleToUserset) UnmarshalJSON(src []byte) error {
+func (v *NullableTupleToUserset) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }

@@ -6,10 +6,10 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **This** | Pointer to **map[string]interface{}** | A DirectUserset is a sentinel message for referencing the direct members specified by an object/relation mapping. | [optional] 
 **ComputedUserset** | Pointer to [**ObjectRelation**](ObjectRelation.md) |  | [optional] 
-**TupleToUserset** | Pointer to [**V1TupleToUserset**](V1TupleToUserset.md) |  | [optional] 
+**TupleToUserset** | Pointer to [**TupleToUserset**](TupleToUserset.md) |  | [optional] 
 **Union** | Pointer to [**Usersets**](Usersets.md) |  | [optional] 
 **Intersection** | Pointer to [**Usersets**](Usersets.md) |  | [optional] 
-**Difference** | Pointer to [**V1Difference**](V1Difference.md) |  | [optional] 
+**Difference** | Pointer to [**Difference**](Difference.md) |  | [optional] 
 
 ## Methods
 
@@ -82,20 +82,20 @@ HasComputedUserset returns a boolean if a field has been set.
 
 ### GetTupleToUserset
 
-`func (o *Userset) GetTupleToUserset() V1TupleToUserset`
+`func (o *Userset) GetTupleToUserset() TupleToUserset`
 
 GetTupleToUserset returns the TupleToUserset field if non-nil, zero value otherwise.
 
 ### GetTupleToUsersetOk
 
-`func (o *Userset) GetTupleToUsersetOk() (*V1TupleToUserset, bool)`
+`func (o *Userset) GetTupleToUsersetOk() (*TupleToUserset, bool)`
 
 GetTupleToUsersetOk returns a tuple with the TupleToUserset field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetTupleToUserset
 
-`func (o *Userset) SetTupleToUserset(v V1TupleToUserset)`
+`func (o *Userset) SetTupleToUserset(v TupleToUserset)`
 
 SetTupleToUserset sets TupleToUserset field to given value.
 
@@ -157,20 +157,20 @@ HasIntersection returns a boolean if a field has been set.
 
 ### GetDifference
 
-`func (o *Userset) GetDifference() V1Difference`
+`func (o *Userset) GetDifference() Difference`
 
 GetDifference returns the Difference field if non-nil, zero value otherwise.
 
 ### GetDifferenceOk
 
-`func (o *Userset) GetDifferenceOk() (*V1Difference, bool)`
+`func (o *Userset) GetDifferenceOk() (*Difference, bool)`
 
 GetDifferenceOk returns a tuple with the Difference field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetDifference
 
-`func (o *Userset) SetDifference(v V1Difference)`
+`func (o *Userset) SetDifference(v Difference)`
 
 SetDifference sets Difference field to given value.
 

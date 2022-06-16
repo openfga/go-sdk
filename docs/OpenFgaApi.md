@@ -13,7 +13,7 @@ Method | HTTP request | Description
 [**Read**](OpenFgaApi.md#Read) | **Post** /stores/{store_id}/read | Get tuples from the store that matches a query, without following userset rewrite rules
 [**ReadAssertions**](OpenFgaApi.md#ReadAssertions) | **Get** /stores/{store_id}/assertions/{authorization_model_id} | Read assertions for an authorization model ID
 [**ReadAuthorizationModel**](OpenFgaApi.md#ReadAuthorizationModel) | **Get** /stores/{store_id}/authorization-models/{id} | Return a particular version of an authorization model
-[**ReadAuthorizationModels**](OpenFgaApi.md#ReadAuthorizationModels) | **Get** /stores/{store_id}/authorization-models | Return all the authorization model IDs for a particular store
+[**ReadAuthorizationModels**](OpenFgaApi.md#ReadAuthorizationModels) | **Get** /stores/{store_id}/authorization-models | Return all the authorization models for a particular store
 [**ReadChanges**](OpenFgaApi.md#ReadChanges) | **Get** /stores/{store_id}/changes | Return a list of all the tuple changes
 [**Write**](OpenFgaApi.md#Write) | **Post** /stores/{store_id}/write | Add or delete tuples from the store
 [**WriteAssertions**](OpenFgaApi.md#WriteAssertions) | **Put** /stores/{store_id}/assertions/{authorization_model_id} | Upsert assertions for an authorization model ID
@@ -832,7 +832,7 @@ No authorization required
 
 > ReadAuthorizationModelsResponse ReadAuthorizationModels(ctx).PageSize(pageSize).ContinuationToken(continuationToken).Execute()
 
-Return all the authorization model IDs for a particular store
+Return all the authorization models for a particular store
 
 
 

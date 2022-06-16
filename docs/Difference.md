@@ -1,4 +1,4 @@
-# V1Difference
+# Difference
 
 ## Properties
 
@@ -9,70 +9,70 @@ Name | Type | Description | Notes
 
 ## Methods
 
-### NewV1Difference
+### NewDifference
 
-`func NewV1Difference() *V1Difference`
+`func NewDifference() *Difference`
 
-NewV1Difference instantiates a new V1Difference object
+NewDifference instantiates a new Difference object
 This constructor will assign default values to properties that have it defined,
 and makes sure properties required by API are set, but the set of arguments
 will change when the set of required properties is changed
 
-### NewV1DifferenceWithDefaults
+### NewDifferenceWithDefaults
 
-`func NewV1DifferenceWithDefaults() *V1Difference`
+`func NewDifferenceWithDefaults() *Difference`
 
-NewV1DifferenceWithDefaults instantiates a new V1Difference object
+NewDifferenceWithDefaults instantiates a new Difference object
 This constructor will only assign default values to properties that have it defined,
 but it doesn't guarantee that properties required by API are set
 
 ### GetBase
 
-`func (o *V1Difference) GetBase() Userset`
+`func (o *Difference) GetBase() Userset`
 
 GetBase returns the Base field if non-nil, zero value otherwise.
 
 ### GetBaseOk
 
-`func (o *V1Difference) GetBaseOk() (*Userset, bool)`
+`func (o *Difference) GetBaseOk() (*Userset, bool)`
 
 GetBaseOk returns a tuple with the Base field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetBase
 
-`func (o *V1Difference) SetBase(v Userset)`
+`func (o *Difference) SetBase(v Userset)`
 
 SetBase sets Base field to given value.
 
 ### HasBase
 
-`func (o *V1Difference) HasBase() bool`
+`func (o *Difference) HasBase() bool`
 
 HasBase returns a boolean if a field has been set.
 
 ### GetSubtract
 
-`func (o *V1Difference) GetSubtract() Userset`
+`func (o *Difference) GetSubtract() Userset`
 
 GetSubtract returns the Subtract field if non-nil, zero value otherwise.
 
 ### GetSubtractOk
 
-`func (o *V1Difference) GetSubtractOk() (*Userset, bool)`
+`func (o *Difference) GetSubtractOk() (*Userset, bool)`
 
 GetSubtractOk returns a tuple with the Subtract field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetSubtract
 
-`func (o *V1Difference) SetSubtract(v Userset)`
+`func (o *Difference) SetSubtract(v Userset)`
 
 SetSubtract sets Subtract field to given value.
 
 ### HasSubtract
 
-`func (o *V1Difference) HasSubtract() bool`
+`func (o *Difference) HasSubtract() bool`
 
 HasSubtract returns a boolean if a field has been set.
 

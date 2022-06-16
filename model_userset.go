@@ -21,10 +21,10 @@ type Userset struct {
 	// A DirectUserset is a sentinel message for referencing the direct members specified by an object/relation mapping.
 	This            *map[string]interface{} `json:"this,omitempty"`
 	ComputedUserset *ObjectRelation         `json:"computedUserset,omitempty"`
-	TupleToUserset  *V1TupleToUserset       `json:"tupleToUserset,omitempty"`
+	TupleToUserset  *TupleToUserset         `json:"tupleToUserset,omitempty"`
 	Union           *Usersets               `json:"union,omitempty"`
 	Intersection    *Usersets               `json:"intersection,omitempty"`
-	Difference      *V1Difference           `json:"difference,omitempty"`
+	Difference      *Difference             `json:"difference,omitempty"`
 }
 
 // NewUserset instantiates a new Userset object
@@ -109,9 +109,9 @@ func (o *Userset) SetComputedUserset(v ObjectRelation) {
 }
 
 // GetTupleToUserset returns the TupleToUserset field value if set, zero value otherwise.
-func (o *Userset) GetTupleToUserset() V1TupleToUserset {
+func (o *Userset) GetTupleToUserset() TupleToUserset {
 	if o == nil || o.TupleToUserset == nil {
-		var ret V1TupleToUserset
+		var ret TupleToUserset
 		return ret
 	}
 	return *o.TupleToUserset
@@ -119,7 +119,7 @@ func (o *Userset) GetTupleToUserset() V1TupleToUserset {
 
 // GetTupleToUsersetOk returns a tuple with the TupleToUserset field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *Userset) GetTupleToUsersetOk() (*V1TupleToUserset, bool) {
+func (o *Userset) GetTupleToUsersetOk() (*TupleToUserset, bool) {
 	if o == nil || o.TupleToUserset == nil {
 		return nil, false
 	}
@@ -135,8 +135,8 @@ func (o *Userset) HasTupleToUserset() bool {
 	return false
 }
 
-// SetTupleToUserset gets a reference to the given V1TupleToUserset and assigns it to the TupleToUserset field.
-func (o *Userset) SetTupleToUserset(v V1TupleToUserset) {
+// SetTupleToUserset gets a reference to the given TupleToUserset and assigns it to the TupleToUserset field.
+func (o *Userset) SetTupleToUserset(v TupleToUserset) {
 	o.TupleToUserset = &v
 }
 
@@ -205,9 +205,9 @@ func (o *Userset) SetIntersection(v Usersets) {
 }
 
 // GetDifference returns the Difference field value if set, zero value otherwise.
-func (o *Userset) GetDifference() V1Difference {
+func (o *Userset) GetDifference() Difference {
 	if o == nil || o.Difference == nil {
-		var ret V1Difference
+		var ret Difference
 		return ret
 	}
 	return *o.Difference
@@ -215,7 +215,7 @@ func (o *Userset) GetDifference() V1Difference {
 
 // GetDifferenceOk returns a tuple with the Difference field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *Userset) GetDifferenceOk() (*V1Difference, bool) {
+func (o *Userset) GetDifferenceOk() (*Difference, bool) {
 	if o == nil || o.Difference == nil {
 		return nil, false
 	}
@@ -231,8 +231,8 @@ func (o *Userset) HasDifference() bool {
 	return false
 }
 
-// SetDifference gets a reference to the given V1Difference and assigns it to the Difference field.
-func (o *Userset) SetDifference(v V1Difference) {
+// SetDifference gets a reference to the given Difference and assigns it to the Difference field.
+func (o *Userset) SetDifference(v Difference) {
 	o.Difference = &v
 }
 

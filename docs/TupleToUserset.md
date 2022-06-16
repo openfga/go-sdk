@@ -1,4 +1,4 @@
-# V1TupleToUserset
+# TupleToUserset
 
 ## Properties
 
@@ -9,70 +9,70 @@ Name | Type | Description | Notes
 
 ## Methods
 
-### NewV1TupleToUserset
+### NewTupleToUserset
 
-`func NewV1TupleToUserset() *V1TupleToUserset`
+`func NewTupleToUserset() *TupleToUserset`
 
-NewV1TupleToUserset instantiates a new V1TupleToUserset object
+NewTupleToUserset instantiates a new TupleToUserset object
 This constructor will assign default values to properties that have it defined,
 and makes sure properties required by API are set, but the set of arguments
 will change when the set of required properties is changed
 
-### NewV1TupleToUsersetWithDefaults
+### NewTupleToUsersetWithDefaults
 
-`func NewV1TupleToUsersetWithDefaults() *V1TupleToUserset`
+`func NewTupleToUsersetWithDefaults() *TupleToUserset`
 
-NewV1TupleToUsersetWithDefaults instantiates a new V1TupleToUserset object
+NewTupleToUsersetWithDefaults instantiates a new TupleToUserset object
 This constructor will only assign default values to properties that have it defined,
 but it doesn't guarantee that properties required by API are set
 
 ### GetTupleset
 
-`func (o *V1TupleToUserset) GetTupleset() ObjectRelation`
+`func (o *TupleToUserset) GetTupleset() ObjectRelation`
 
 GetTupleset returns the Tupleset field if non-nil, zero value otherwise.
 
 ### GetTuplesetOk
 
-`func (o *V1TupleToUserset) GetTuplesetOk() (*ObjectRelation, bool)`
+`func (o *TupleToUserset) GetTuplesetOk() (*ObjectRelation, bool)`
 
 GetTuplesetOk returns a tuple with the Tupleset field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetTupleset
 
-`func (o *V1TupleToUserset) SetTupleset(v ObjectRelation)`
+`func (o *TupleToUserset) SetTupleset(v ObjectRelation)`
 
 SetTupleset sets Tupleset field to given value.
 
 ### HasTupleset
 
-`func (o *V1TupleToUserset) HasTupleset() bool`
+`func (o *TupleToUserset) HasTupleset() bool`
 
 HasTupleset returns a boolean if a field has been set.
 
 ### GetComputedUserset
 
-`func (o *V1TupleToUserset) GetComputedUserset() ObjectRelation`
+`func (o *TupleToUserset) GetComputedUserset() ObjectRelation`
 
 GetComputedUserset returns the ComputedUserset field if non-nil, zero value otherwise.
 
 ### GetComputedUsersetOk
 
-`func (o *V1TupleToUserset) GetComputedUsersetOk() (*ObjectRelation, bool)`
+`func (o *TupleToUserset) GetComputedUsersetOk() (*ObjectRelation, bool)`
 
 GetComputedUsersetOk returns a tuple with the ComputedUserset field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetComputedUserset
 
-`func (o *V1TupleToUserset) SetComputedUserset(v ObjectRelation)`
+`func (o *TupleToUserset) SetComputedUserset(v ObjectRelation)`
 
 SetComputedUserset sets ComputedUserset field to given value.
 
 ### HasComputedUserset
 
-`func (o *V1TupleToUserset) HasComputedUserset() bool`
+`func (o *TupleToUserset) HasComputedUserset() bool`
 
 HasComputedUserset returns a boolean if a field has been set.
 

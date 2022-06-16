@@ -15,7 +15,11 @@ package openfga
 import (
 	"net/http"
 	"strings"
+
+	"github.com/openfga/go-sdk/credentials"
 )
+
+var SdkVersion = "0.0.1"
 
 // RetryParams configures configuration for retry in case of HTTP too many request
 type RetryParams struct {
@@ -25,16 +29,13 @@ type RetryParams struct {
 
 // Configuration stores the configuration of the API client
 type Configuration struct {
-	ApiScheme      string            `json:"apiScheme,omitempty"`
-	ApiHost        string            `json:"apiHost,omitempty"`
-	StoreId        string            `json:"storeId,omitempty"`
-	ApiTokenIssuer string            `json:"apiTokenIssuer,omitempty"`
-	ApiAudience    string            `json:"apiAudience,omitempty"`
-	ClientId       string            `json:"clientId,omitempty"`
-	ClientSecret   string            `json:"clientSecret,omitempty"`
-	DefaultHeaders map[string]string `json:"defaultHeader,omitempty"`
-	UserAgent      string            `json:"userAgent,omitempty"`
-	Debug          bool              `json:"debug,omitempty"`
+	ApiScheme      string                   `json:"apiScheme,omitempty"`
+	ApiHost        string                   `json:"apiHost,omitempty"`
+	StoreId        string                   `json:"storeId,omitempty"`
+	Credentials    *credentials.Credentials `json:"credentials,omitempty"`
+	DefaultHeaders map[string]string        `json:"defaultHeader,omitempty"`
+	UserAgent      string                   `json:"userAgent,omitempty"`
+	Debug          bool                     `json:"debug,omitempty"`
 	HTTPClient     *http.Client
 	RetryParams    *RetryParams
 }
@@ -49,7 +50,7 @@ func DefaultRetryParams() *RetryParams {
 
 func GetSdkUserAgent() string {
 	userAgent := strings.Replace("openfga-sdk {sdkId}/{packageVersion}", "{sdkId}", "go", -1)
-	userAgent = strings.Replace(userAgent, "{packageVersion}", "0.0.1", -1)
+	userAgent = strings.Replace(userAgent, "{packageVersion}", SdkVersion, -1)
 
 	return userAgent
 }
@@ -60,10 +61,7 @@ func NewConfiguration(config Configuration) (*Configuration, error) {
 		ApiScheme:      config.ApiScheme,
 		ApiHost:        config.ApiHost,
 		StoreId:        config.StoreId,
-		ApiTokenIssuer: config.ApiTokenIssuer,
-		ApiAudience:    config.ApiAudience,
-		ClientId:       config.ClientId,
-		ClientSecret:   config.ClientSecret,
+		Credentials:    config.Credentials,
 		DefaultHeaders: make(map[string]string),
 		UserAgent:      GetSdkUserAgent(),
 		Debug:          false,
@@ -76,11 +74,11 @@ func NewConfiguration(config Configuration) (*Configuration, error) {
 
 	err := cfg.ValidateConfig()
 
-	if err == nil {
-		return cfg, nil
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, err
+	return cfg, nil
 }
 
 // AddDefaultHeader adds a new HTTP header to the default header in the request
@@ -98,12 +96,14 @@ func (c *Configuration) ValidateConfig() error {
 		return reportError("Configuration.ApiScheme is required")
 	}
 
-	if c.StoreId == "" {
-		return reportError("Configuration.StoreId is required")
+	if !IsWellFormedUri(c.ApiScheme + "://" + c.ApiHost) {
+		return reportError("Configuration.ApiScheme and Configuration.ApiHost (%s) do not generate a valid uri", c.ApiScheme+"://"+c.ApiHost)
 	}
 
-	if (c.ClientId != "" || c.ClientSecret != "") && (c.ClientId == "" || c.ClientSecret == "" || c.ApiAudience == "" || c.ApiTokenIssuer == "") {
-		return reportError("Configuration.ClientId or Configuration.ClientSecret is set, so all of Configuration.ClientId, Configuration.ClientSecret, Configuration.ApiAudience and Configuration.ApiTokenIssuer are required")
+	if c.Credentials != nil {
+		if err := c.Credentials.ValidateCredentialsConfig(); err != nil {
+			return reportError("Credentials are invalid: %v", err)
+		}
 	}
 
 	if c.RetryParams != nil && c.RetryParams.MaxRetry > 5 {
