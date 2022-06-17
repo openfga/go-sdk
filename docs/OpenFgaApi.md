@@ -45,12 +45,15 @@ func main() {
     
     body := *openapiclient.NewCheckRequest() // CheckRequest | 
 
-    configuration := openfga.NewConfiguration(UserConfiguration{
-        StoreId:      os.Getenv("OPENFGA_STORE_ID"),
-        ClientId:     os.Getenv("OPENFGA_CLIENT_ID"),
-        ClientSecret: os.Getenv("OPENFGA_CLIENT_SECRET"),
-        Environment:  os.Getenv("OPENFGA_ENVIRONMENT"),
+    configuration, err := openfga.NewConfiguration(openfga.Configuration{
+        ApiScheme:      os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"
+        ApiHost:        os.Getenv("OPENFGA_API_HOST"), // required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
+        StoreId:        os.Getenv("OPENFGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
     })
+
+    if err != nil {
+    // .. Handle error
+    }
 
     apiClient := openfga.NewAPIClient(configuration)
 
@@ -135,12 +138,15 @@ import (
 func main() {
     
 
-    configuration := openfga.NewConfiguration(UserConfiguration{
-        StoreId:      os.Getenv("OPENFGA_STORE_ID"),
-        ClientId:     os.Getenv("OPENFGA_CLIENT_ID"),
-        ClientSecret: os.Getenv("OPENFGA_CLIENT_SECRET"),
-        Environment:  os.Getenv("OPENFGA_ENVIRONMENT"),
+    configuration, err := openfga.NewConfiguration(openfga.Configuration{
+        ApiScheme:      os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"
+        ApiHost:        os.Getenv("OPENFGA_API_HOST"), // required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
+        StoreId:        os.Getenv("OPENFGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
     })
+
+    if err != nil {
+    // .. Handle error
+    }
 
     apiClient := openfga.NewAPIClient(configuration)
 
@@ -222,12 +228,15 @@ import (
 func main() {
     
 
-    configuration := openfga.NewConfiguration(UserConfiguration{
-        StoreId:      os.Getenv("OPENFGA_STORE_ID"),
-        ClientId:     os.Getenv("OPENFGA_CLIENT_ID"),
-        ClientSecret: os.Getenv("OPENFGA_CLIENT_SECRET"),
-        Environment:  os.Getenv("OPENFGA_ENVIRONMENT"),
+    configuration, err := openfga.NewConfiguration(openfga.Configuration{
+        ApiScheme:      os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"
+        ApiHost:        os.Getenv("OPENFGA_API_HOST"), // required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
+        StoreId:        os.Getenv("OPENFGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
     })
+
+    if err != nil {
+    // .. Handle error
+    }
 
     apiClient := openfga.NewAPIClient(configuration)
 
@@ -310,12 +319,15 @@ func main() {
     
     body := *openapiclient.NewExpandRequest() // ExpandRequest | 
 
-    configuration := openfga.NewConfiguration(UserConfiguration{
-        StoreId:      os.Getenv("OPENFGA_STORE_ID"),
-        ClientId:     os.Getenv("OPENFGA_CLIENT_ID"),
-        ClientSecret: os.Getenv("OPENFGA_CLIENT_SECRET"),
-        Environment:  os.Getenv("OPENFGA_ENVIRONMENT"),
+    configuration, err := openfga.NewConfiguration(openfga.Configuration{
+        ApiScheme:      os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"
+        ApiHost:        os.Getenv("OPENFGA_API_HOST"), // required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
+        StoreId:        os.Getenv("OPENFGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
     })
+
+    if err != nil {
+    // .. Handle error
+    }
 
     apiClient := openfga.NewAPIClient(configuration)
 
@@ -400,12 +412,15 @@ import (
 func main() {
     
 
-    configuration := openfga.NewConfiguration(UserConfiguration{
-        StoreId:      os.Getenv("OPENFGA_STORE_ID"),
-        ClientId:     os.Getenv("OPENFGA_CLIENT_ID"),
-        ClientSecret: os.Getenv("OPENFGA_CLIENT_SECRET"),
-        Environment:  os.Getenv("OPENFGA_ENVIRONMENT"),
+    configuration, err := openfga.NewConfiguration(openfga.Configuration{
+        ApiScheme:      os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"
+        ApiHost:        os.Getenv("OPENFGA_API_HOST"), // required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
+        StoreId:        os.Getenv("OPENFGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
     })
+
+    if err != nil {
+    // .. Handle error
+    }
 
     apiClient := openfga.NewAPIClient(configuration)
 
@@ -490,12 +505,15 @@ func main() {
     
     continuationToken := "continuationToken_example" // string |  (optional)
 
-    configuration := openfga.NewConfiguration(UserConfiguration{
-        StoreId:      os.Getenv("OPENFGA_STORE_ID"),
-        ClientId:     os.Getenv("OPENFGA_CLIENT_ID"),
-        ClientSecret: os.Getenv("OPENFGA_CLIENT_SECRET"),
-        Environment:  os.Getenv("OPENFGA_ENVIRONMENT"),
+    configuration, err := openfga.NewConfiguration(openfga.Configuration{
+        ApiScheme:      os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"
+        ApiHost:        os.Getenv("OPENFGA_API_HOST"), // required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
+        StoreId:        os.Getenv("OPENFGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
     })
+
+    if err != nil {
+    // .. Handle error
+    }
 
     apiClient := openfga.NewAPIClient(configuration)
 
@@ -579,12 +597,15 @@ func main() {
     
     body := *openapiclient.NewReadRequest() // ReadRequest | 
 
-    configuration := openfga.NewConfiguration(UserConfiguration{
-        StoreId:      os.Getenv("OPENFGA_STORE_ID"),
-        ClientId:     os.Getenv("OPENFGA_CLIENT_ID"),
-        ClientSecret: os.Getenv("OPENFGA_CLIENT_SECRET"),
-        Environment:  os.Getenv("OPENFGA_ENVIRONMENT"),
+    configuration, err := openfga.NewConfiguration(openfga.Configuration{
+        ApiScheme:      os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"
+        ApiHost:        os.Getenv("OPENFGA_API_HOST"), // required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
+        StoreId:        os.Getenv("OPENFGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
     })
+
+    if err != nil {
+    // .. Handle error
+    }
 
     apiClient := openfga.NewAPIClient(configuration)
 
@@ -670,12 +691,15 @@ func main() {
     
     authorizationModelId := "authorizationModelId_example" // string | 
 
-    configuration := openfga.NewConfiguration(UserConfiguration{
-        StoreId:      os.Getenv("OPENFGA_STORE_ID"),
-        ClientId:     os.Getenv("OPENFGA_CLIENT_ID"),
-        ClientSecret: os.Getenv("OPENFGA_CLIENT_SECRET"),
-        Environment:  os.Getenv("OPENFGA_ENVIRONMENT"),
+    configuration, err := openfga.NewConfiguration(openfga.Configuration{
+        ApiScheme:      os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"
+        ApiHost:        os.Getenv("OPENFGA_API_HOST"), // required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
+        StoreId:        os.Getenv("OPENFGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
     })
+
+    if err != nil {
+    // .. Handle error
+    }
 
     apiClient := openfga.NewAPIClient(configuration)
 
@@ -761,12 +785,15 @@ func main() {
     
     id := "id_example" // string | 
 
-    configuration := openfga.NewConfiguration(UserConfiguration{
-        StoreId:      os.Getenv("OPENFGA_STORE_ID"),
-        ClientId:     os.Getenv("OPENFGA_CLIENT_ID"),
-        ClientSecret: os.Getenv("OPENFGA_CLIENT_SECRET"),
-        Environment:  os.Getenv("OPENFGA_ENVIRONMENT"),
+    configuration, err := openfga.NewConfiguration(openfga.Configuration{
+        ApiScheme:      os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"
+        ApiHost:        os.Getenv("OPENFGA_API_HOST"), // required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
+        StoreId:        os.Getenv("OPENFGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
     })
+
+    if err != nil {
+    // .. Handle error
+    }
 
     apiClient := openfga.NewAPIClient(configuration)
 
@@ -853,12 +880,15 @@ func main() {
     pageSize := int32(56) // int32 |  (optional)
     continuationToken := "continuationToken_example" // string |  (optional)
 
-    configuration := openfga.NewConfiguration(UserConfiguration{
-        StoreId:      os.Getenv("OPENFGA_STORE_ID"),
-        ClientId:     os.Getenv("OPENFGA_CLIENT_ID"),
-        ClientSecret: os.Getenv("OPENFGA_CLIENT_SECRET"),
-        Environment:  os.Getenv("OPENFGA_ENVIRONMENT"),
+    configuration, err := openfga.NewConfiguration(openfga.Configuration{
+        ApiScheme:      os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"
+        ApiHost:        os.Getenv("OPENFGA_API_HOST"), // required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
+        StoreId:        os.Getenv("OPENFGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
     })
+
+    if err != nil {
+    // .. Handle error
+    }
 
     apiClient := openfga.NewAPIClient(configuration)
 
@@ -947,12 +977,15 @@ func main() {
     pageSize := int32(56) // int32 |  (optional)
     continuationToken := "continuationToken_example" // string |  (optional)
 
-    configuration := openfga.NewConfiguration(UserConfiguration{
-        StoreId:      os.Getenv("OPENFGA_STORE_ID"),
-        ClientId:     os.Getenv("OPENFGA_CLIENT_ID"),
-        ClientSecret: os.Getenv("OPENFGA_CLIENT_SECRET"),
-        Environment:  os.Getenv("OPENFGA_ENVIRONMENT"),
+    configuration, err := openfga.NewConfiguration(openfga.Configuration{
+        ApiScheme:      os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"
+        ApiHost:        os.Getenv("OPENFGA_API_HOST"), // required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
+        StoreId:        os.Getenv("OPENFGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
     })
+
+    if err != nil {
+    // .. Handle error
+    }
 
     apiClient := openfga.NewAPIClient(configuration)
 
@@ -1040,12 +1073,15 @@ func main() {
     
     body := *openapiclient.NewWriteRequest() // WriteRequest | 
 
-    configuration := openfga.NewConfiguration(UserConfiguration{
-        StoreId:      os.Getenv("OPENFGA_STORE_ID"),
-        ClientId:     os.Getenv("OPENFGA_CLIENT_ID"),
-        ClientSecret: os.Getenv("OPENFGA_CLIENT_SECRET"),
-        Environment:  os.Getenv("OPENFGA_ENVIRONMENT"),
+    configuration, err := openfga.NewConfiguration(openfga.Configuration{
+        ApiScheme:      os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"
+        ApiHost:        os.Getenv("OPENFGA_API_HOST"), // required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
+        StoreId:        os.Getenv("OPENFGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
     })
+
+    if err != nil {
+    // .. Handle error
+    }
 
     apiClient := openfga.NewAPIClient(configuration)
 
@@ -1132,12 +1168,15 @@ func main() {
     authorizationModelId := "authorizationModelId_example" // string | 
     body := *openapiclient.NewWriteAssertionsRequest([]openapiclient.Assertion{*openapiclient.NewAssertion(false)}) // WriteAssertionsRequest | 
 
-    configuration := openfga.NewConfiguration(UserConfiguration{
-        StoreId:      os.Getenv("OPENFGA_STORE_ID"),
-        ClientId:     os.Getenv("OPENFGA_CLIENT_ID"),
-        ClientSecret: os.Getenv("OPENFGA_CLIENT_SECRET"),
-        Environment:  os.Getenv("OPENFGA_ENVIRONMENT"),
+    configuration, err := openfga.NewConfiguration(openfga.Configuration{
+        ApiScheme:      os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"
+        ApiHost:        os.Getenv("OPENFGA_API_HOST"), // required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
+        StoreId:        os.Getenv("OPENFGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
     })
+
+    if err != nil {
+    // .. Handle error
+    }
 
     apiClient := openfga.NewAPIClient(configuration)
 
@@ -1222,12 +1261,15 @@ func main() {
     
     typeDefinitions := *openapiclient.NewTypeDefinitions() // TypeDefinitions | 
 
-    configuration := openfga.NewConfiguration(UserConfiguration{
-        StoreId:      os.Getenv("OPENFGA_STORE_ID"),
-        ClientId:     os.Getenv("OPENFGA_CLIENT_ID"),
-        ClientSecret: os.Getenv("OPENFGA_CLIENT_SECRET"),
-        Environment:  os.Getenv("OPENFGA_ENVIRONMENT"),
+    configuration, err := openfga.NewConfiguration(openfga.Configuration{
+        ApiScheme:      os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"
+        ApiHost:        os.Getenv("OPENFGA_API_HOST"), // required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
+        StoreId:        os.Getenv("OPENFGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
     })
+
+    if err != nil {
+    // .. Handle error
+    }
 
     apiClient := openfga.NewAPIClient(configuration)
 
