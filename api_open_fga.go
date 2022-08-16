@@ -188,6 +188,19 @@ type OpenFgaApi interface {
 	GetStoreExecute(r ApiGetStoreRequest) (GetStoreResponse, *_nethttp.Response, error)
 
 	/*
+	 * ListObjects ListObjects lists all of the object ids for objects of the provided type that the given user has a specific relation with.
+	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return ApiListObjectsRequest
+	 */
+	ListObjects(ctx _context.Context) ApiListObjectsRequest
+
+	/*
+	 * ListObjectsExecute executes the request
+	 * @return ListObjectsResponse
+	 */
+	ListObjectsExecute(r ApiListObjectsRequest) (ListObjectsResponse, *_nethttp.Response, error)
+
+	/*
 	 * ListStores Get all stores
 	 * Returns a paginated list of OpenFGA stores.
 	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -409,7 +422,7 @@ type OpenFgaApi interface {
 	      "id": "01G4ZW8F4A07AKQ8RHSVG9RW04",
 	      "type_definitions": [...]
 	    },
-	  ]
+	  ],
 	  "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
 	}
 	```
@@ -582,8 +595,9 @@ func (r ApiCheckRequest) Execute() (CheckResponse, *_nethttp.Response, error) {
 }
 
 /*
- * Check Check whether a user is authorized to access an object
- * The Check API queries to check if the user has a certain relationship with an object in a certain store.
+  - Check Check whether a user is authorized to access an object
+  - The Check API queries to check if the user has a certain relationship with an object in a certain store.
+
 Path parameter `store_id` as well as the body parameter `tuple_key` with specified `object`, `relation` and `user` subfields are all required.
 Optionally, a `contextual_tuples` object may also be included in the body of the request. This object contains one field `tuple_keys`, which is an array of tuple keys.
 The response will return whether the relationship exists in the field `allowed`.
@@ -591,34 +605,38 @@ The response will return whether the relationship exists in the field `allowed`.
 ## Example
 In order to check if user `anne` has a `can_read` relationship with object `document:2021-budget` given the following contextual tuple
 ```json
-{
-  "user": "anne",
-  "relation": "member",
-  "object": "time_slot:office_hours"
-}
+
+	{
+	  "user": "anne",
+	  "relation": "member",
+	  "object": "time_slot:office_hours"
+	}
+
 ```
 a check API call should be fired with the following body:
 ```json
-{
-  "tuple_key": {
-    "user": "anne",
-    "relation": "can_read",
-    "object": "document:2021-budget"
-  },
-  "contextual_tuples": {
-    "tuple_keys": [
-      {
-        "user": "anne",
-        "relation": "member",
-        "object": "time_slot:office_hours"
-      }
-    ]
-  }
-}
+
+	{
+	  "tuple_key": {
+	    "user": "anne",
+	    "relation": "can_read",
+	    "object": "document:2021-budget"
+	  },
+	  "contextual_tuples": {
+	    "tuple_keys": [
+	      {
+	        "user": "anne",
+	        "relation": "member",
+	        "object": "time_slot:office_hours"
+	      }
+	    ]
+	  }
+	}
+
 ```
 OpenFGA's response will include `{ "allowed": true }` if there is a relationship and `{ "allowed": false }` if there isn't.
- * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return ApiCheckRequest
+  - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @return ApiCheckRequest
 */
 func (a *OpenFgaApiService) Check(ctx _context.Context) ApiCheckRequest {
 	return ApiCheckRequest{
@@ -1382,8 +1400,9 @@ func (r ApiExpandRequest) Execute() (ExpandResponse, *_nethttp.Response, error) 
 }
 
 /*
- * Expand Expand all relationships in userset tree format, and following userset rewrite rules.  Useful to reason about and debug a certain relationship
- * The Expand API will return all users (including user and userset) that have certain relationship with an object in a certain store.
+  - Expand Expand all relationships in userset tree format, and following userset rewrite rules.  Useful to reason about and debug a certain relationship
+  - The Expand API will return all users (including user and userset) that have certain relationship with an object in a certain store.
+
 This is different from the `/stores/{store_id}/read` API in that both users and computed references are returned.
 Path parameter `store_id` as well as body parameter `object`, `relation` are all required.
 The response will return a userset tree whose leaves are the user id and usersets.  Union, intersection and difference operator are located in the intermediate nodes.
@@ -1391,55 +1410,61 @@ The response will return a userset tree whose leaves are the user id and userset
 ## Example
 Assume the following type definition for document:
 ```yaml
-  type document
-    relations
-      define reader as self or writer
-      define writer as self
+
+	type document
+	  relations
+	    define reader as self or writer
+	    define writer as self
+
 ```
 In order to expand all users that have `reader` relationship with object `document:2021-budget`, an expand API call should be fired with the following body
 ```json
-{
-  "tuple_key": {
-    "object": "document:2021-budget",
-    "relation": "reader"
-  }
-}
+
+	{
+	  "tuple_key": {
+	    "object": "document:2021-budget",
+	    "relation": "reader"
+	  }
+	}
+
 ```
 OpenFGA's response will be a userset tree of the users and computed usersets that have read access to the document.
 ```json
-{
-  "tree":{
-    "root":{
-      "type":"document:2021-budget#reader",
-      "union":{
-        "nodes":[
-          {
-            "type":"document:2021-budget#reader",
-            "leaf":{
-              "users":{
-                "users":[
-                  "bob"
-                ]
-              }
-            }
-          },
-          {
-            "type":"document:2021-budget#reader",
-            "leaf":{
-              "computed":{
-                "userset":"document:2021-budget#writer"
-              }
-            }
-          }
-        ]
-      }
-    }
-  }
-}
+
+	{
+	  "tree":{
+	    "root":{
+	      "type":"document:2021-budget#reader",
+	      "union":{
+	        "nodes":[
+	          {
+	            "type":"document:2021-budget#reader",
+	            "leaf":{
+	              "users":{
+	                "users":[
+	                  "bob"
+	                ]
+	              }
+	            }
+	          },
+	          {
+	            "type":"document:2021-budget#reader",
+	            "leaf":{
+	              "computed":{
+	                "userset":"document:2021-budget#writer"
+	              }
+	            }
+	          }
+	        ]
+	      }
+	    }
+	  }
+	}
+
 ```
 The caller can then call expand API for the `writer` relationship for the `document:2021-budget`.
- * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return ApiExpandRequest
+  - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @return ApiExpandRequest
 */
 func (a *OpenFgaApiService) Expand(ctx _context.Context) ApiExpandRequest {
 	return ApiExpandRequest{
@@ -1937,6 +1962,270 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 	return localVarReturnValue, nil, reportError("RateLimitError not handled properly")
 }
 
+type ApiListObjectsRequest struct {
+	ctx        _context.Context
+	ApiService OpenFgaApi
+
+	body *ListObjectsRequest
+}
+
+func (r ApiListObjectsRequest) Body(body ListObjectsRequest) ApiListObjectsRequest {
+	r.body = &body
+	return r
+}
+
+func (r ApiListObjectsRequest) Execute() (ListObjectsResponse, *_nethttp.Response, error) {
+	return r.ApiService.ListObjectsExecute(r)
+}
+
+/*
+ * ListObjects ListObjects lists all of the object ids for objects of the provided type that the given user has a specific relation with.
+ * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @return ApiListObjectsRequest
+ */
+func (a *OpenFgaApiService) ListObjects(ctx _context.Context) ApiListObjectsRequest {
+	return ApiListObjectsRequest{
+		ApiService: a,
+		ctx:        ctx,
+	}
+}
+
+/*
+ * Execute executes the request
+ * @return ListObjectsResponse
+ */
+func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObjectsResponse, *_nethttp.Response, error) {
+	var maxRetry int
+	var minWaitInMs int
+
+	if a.RetryParams != nil {
+		maxRetry = a.RetryParams.MinWaitInMs
+		minWaitInMs = a.RetryParams.MinWaitInMs
+	} else {
+		maxRetry = 0
+		minWaitInMs = 0
+	}
+
+	for i := 0; i < maxRetry+1; i++ {
+		var (
+			localVarHTTPMethod   = _nethttp.MethodPost
+			localVarPostBody     interface{}
+			localVarFormFileName string
+			localVarFileName     string
+			localVarFileBytes    []byte
+			localVarReturnValue  ListObjectsResponse
+		)
+
+		if a.client.cfg.StoreId == "" {
+			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
+		}
+		localVarPath := "/stores/{store_id}/list-objects"
+		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(a.client.cfg.StoreId), -1)
+
+		localVarHeaderParams := make(map[string]string)
+		localVarQueryParams := _neturl.Values{}
+		localVarFormParams := _neturl.Values{}
+		if r.body == nil {
+			return localVarReturnValue, nil, reportError("body is required and must be specified")
+		}
+
+		// to determine the Content-Type header
+		localVarHTTPContentTypes := []string{"application/json"}
+
+		// set Content-Type header
+		localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+		if localVarHTTPContentType != "" {
+			localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+		}
+
+		// to determine the Accept header
+		localVarHTTPHeaderAccepts := []string{"application/json"}
+
+		// set Accept header
+		localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+		if localVarHTTPHeaderAccept != "" {
+			localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+		}
+		// body params
+		localVarPostBody = r.body
+		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+		if err != nil {
+			return localVarReturnValue, nil, err
+		}
+
+		localVarHTTPResponse, err := a.client.callAPI(req)
+		if err != nil || localVarHTTPResponse == nil {
+			return localVarReturnValue, localVarHTTPResponse, err
+		}
+
+		localVarBody, err := _ioutil.ReadAll(localVarHTTPResponse.Body)
+		localVarHTTPResponse.Body.Close()
+		localVarHTTPResponse.Body = _ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+		if err != nil {
+			return localVarReturnValue, localVarHTTPResponse, err
+		}
+
+		if localVarHTTPResponse.StatusCode >= 300 {
+
+			if localVarHTTPResponse.StatusCode == 400 || localVarHTTPResponse.StatusCode == 422 {
+				newErr := FgaApiValidationError{
+					body:               localVarBody,
+					storeId:            a.client.cfg.StoreId,
+					endpointCategory:   "ListObjects",
+					requestBody:        localVarPostBody,
+					requestMethod:      localVarHTTPMethod,
+					responseStatusCode: localVarHTTPResponse.StatusCode,
+					responseHeader:     localVarHTTPResponse.Header,
+				}
+				// Due to CanonicalHeaderKey, header name is case-insensitive.
+				newErr.requestId = localVarHTTPResponse.Header.Get("Fga-Request-Id")
+				newErr.error = "ListObjects validation error for " + localVarHTTPMethod + " ListObjects with body " + string(localVarBody)
+				var v ValidationErrorMessageResponse
+				err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+				if err != nil {
+					newErr.modelDecodeError = err
+					return localVarReturnValue, localVarHTTPResponse, newErr
+				}
+				newErr.model = v
+				newErr.responseCode = v.GetCode()
+				newErr.error += " with error code " + string(v.GetCode()) + " error message: " + v.GetMessage()
+
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+
+			if localVarHTTPResponse.StatusCode == 401 || localVarHTTPResponse.StatusCode == 403 {
+				newErr := FgaApiAuthenticationError{
+					body: localVarBody,
+
+					storeId:            a.client.cfg.StoreId,
+					endpointCategory:   "ListObjects",
+					responseStatusCode: localVarHTTPResponse.StatusCode,
+					responseHeader:     localVarHTTPResponse.Header,
+				}
+				// Due to CanonicalHeaderKey, header name is case-insensitive.
+				newErr.requestId = localVarHTTPResponse.Header.Get("Fga-Request-Id")
+				newErr.error = "ListObjects auth error for " + localVarHTTPMethod + " ListObjects with body " + string(localVarBody)
+
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+
+			if localVarHTTPResponse.StatusCode == 404 {
+				newErr := FgaApiNotFoundError{
+					body:               localVarBody,
+					storeId:            a.client.cfg.StoreId,
+					endpointCategory:   "ListObjects",
+					requestBody:        localVarPostBody,
+					requestMethod:      localVarHTTPMethod,
+					responseStatusCode: localVarHTTPResponse.StatusCode,
+					responseHeader:     localVarHTTPResponse.Header,
+				}
+				// Due to CanonicalHeaderKey, header name is case-insensitive.
+				newErr.requestId = localVarHTTPResponse.Header.Get("Fga-Request-Id")
+				newErr.error = "ListObjects validation error for " + localVarHTTPMethod + " ListObjects with body " + string(localVarBody)
+				var v PathUnknownErrorMessageResponse
+				err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+				if err != nil {
+					newErr.modelDecodeError = err
+					return localVarReturnValue, localVarHTTPResponse, newErr
+				}
+				newErr.model = v
+				newErr.responseCode = v.GetCode()
+				newErr.error += " with error code " + string(v.GetCode()) + " error message: " + v.GetMessage()
+
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+
+			if localVarHTTPResponse.StatusCode == 429 {
+				if i < maxRetry {
+					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
+				// maximum number of retry reached
+				newErr := FgaApiRateLimitExceededError{
+					body: localVarBody,
+
+					storeId:            a.client.cfg.StoreId,
+					endpointCategory:   "ListObjects",
+					requestBody:        localVarPostBody,
+					requestMethod:      localVarHTTPMethod,
+					responseStatusCode: localVarHTTPResponse.StatusCode,
+					responseHeader:     localVarHTTPResponse.Header,
+				}
+				newErr.error = "ListObjects rate limit error for " + localVarHTTPMethod + " ListObjects with body " + string(localVarBody)
+
+				// Due to CanonicalHeaderKey, header name is case-insensitive.
+				newErr.requestId = localVarHTTPResponse.Header.Get("Fga-Request-Id")
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+
+			if localVarHTTPResponse.StatusCode >= 500 {
+				newErr := FgaApiInternalError{
+					body: localVarBody,
+
+					storeId:            a.client.cfg.StoreId,
+					endpointCategory:   "ListObjects",
+					requestBody:        localVarPostBody,
+					requestMethod:      localVarHTTPMethod,
+					responseStatusCode: localVarHTTPResponse.StatusCode,
+					responseHeader:     localVarHTTPResponse.Header,
+				}
+				newErr.error = "ListObjects internal error for " + localVarHTTPMethod + " ListObjects with body " + string(localVarBody)
+				newErr.requestId = localVarHTTPResponse.Header.Get("Fga-Request-Id")
+
+				var v InternalErrorMessageResponse
+				err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+				if err != nil {
+					newErr.modelDecodeError = err
+					return localVarReturnValue, localVarHTTPResponse, newErr
+				}
+				newErr.model = v
+				newErr.responseCode = v.GetCode()
+				newErr.error += " with error code " + string(v.GetCode()) + " error message: " + v.GetMessage()
+
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr := FgaApiError{
+				body: localVarBody,
+
+				storeId:            a.client.cfg.StoreId,
+				endpointCategory:   "ListObjects",
+				requestBody:        localVarPostBody,
+				requestMethod:      localVarHTTPMethod,
+				responseStatusCode: localVarHTTPResponse.StatusCode,
+				responseHeader:     localVarHTTPResponse.Header,
+			}
+			newErr.error = "ListObjects error for " + localVarHTTPMethod + " ListObjects with body " + string(localVarBody)
+			newErr.requestId = localVarHTTPResponse.Header.Get("Fga-Request-Id")
+
+			var v ErrorResponse
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.modelDecodeError = err
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			newErr.responseCode = v.Code
+			newErr.error += " with error code " + v.Code + " error message: " + v.Message
+
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+
+		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+		if err != nil {
+			newErr := GenericOpenAPIError{
+				body:  localVarBody,
+				error: err.Error(),
+			}
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+
+		return localVarReturnValue, localVarHTTPResponse, nil
+	}
+	// should never have reached this
+	var localVarReturnValue ListObjectsResponse
+	return localVarReturnValue, nil, reportError("RateLimitError not handled properly")
+}
+
 type ApiListStoresRequest struct {
 	ctx        _context.Context
 	ApiService OpenFgaApi
@@ -2221,8 +2510,9 @@ func (r ApiReadRequest) Execute() (ReadResponse, *_nethttp.Response, error) {
 }
 
 /*
- * Read Get tuples from the store that matches a query, without following userset rewrite rules
- * The POST read API will return the tuples for a certain store that matches a query filter specified in the body. Tuples and type definitions allow OpenFGA to determine whether a relationship exists between an object and an user.
+  - Read Get tuples from the store that matches a query, without following userset rewrite rules
+  - The POST read API will return the tuples for a certain store that matches a query filter specified in the body. Tuples and type definitions allow OpenFGA to determine whether a relationship exists between an object and an user.
+
 It is different from the `/stores/{store_id}/expand` API in that only read returns relationship tuples that are stored in the system and satisfy the query.
 It does not expand or traverse the graph by taking the authorization model into account.Path parameter `store_id` is required.  In the body:
 1. Object is mandatory. An object can be a full object (e.g., `type:object_id`) or type only (e.g., `type:`).
@@ -2231,92 +2521,104 @@ It does not expand or traverse the graph by taking the authorization model into 
 ### Query for all objects in a type definition
 To query for all objects that `bob` has `reader` relationship in the document type definition, call read API with body of
 ```json
-{
- "tuple_key": {
-     "user": "bob",
-     "relation": "reader",
-     "object": "document:"
-  }
-}
+
+	{
+	 "tuple_key": {
+	     "user": "bob",
+	     "relation": "reader",
+	     "object": "document:"
+	  }
+	}
+
 ```
 The API will return tuples and an optional continuation token, something like
 ```json
-{
-  "tuples": [
-    {
-      "key": {
-        "user": "bob",
-        "relation": "reader",
-        "object": "document:2021-budget"
-      },
-      "timestamp": "2021-10-06T15:32:11.128Z"
-    }
-  ]
-}
+
+	{
+	  "tuples": [
+	    {
+	      "key": {
+	        "user": "bob",
+	        "relation": "reader",
+	        "object": "document:2021-budget"
+	      },
+	      "timestamp": "2021-10-06T15:32:11.128Z"
+	    }
+	  ]
+	}
+
 ```
 This means that `bob` has a `reader` relationship with 1 document `document:2021-budget`.
 ### Query for all users with particular relationships for a particular document
 To query for all users that have `reader` relationship with `document:2021-budget`, call read API with body of
 ```json
-{
-  "tuple_key": {
-     "object": "document:2021-budget",
-     "relation": "reader"
-   }
-}
+
+	{
+	  "tuple_key": {
+	     "object": "document:2021-budget",
+	     "relation": "reader"
+	   }
+	}
+
 ```
 The API will return something like
 ```json
-{
-  "tuples": [
-    {
-      "key": {
-        "user": "bob",
-        "relation": "reader",
-        "object": "document:2021-budget"
-      },
-      "timestamp": "2021-10-06T15:32:11.128Z"
-    }
-  ]
-}
+
+	{
+	  "tuples": [
+	    {
+	      "key": {
+	        "user": "bob",
+	        "relation": "reader",
+	        "object": "document:2021-budget"
+	      },
+	      "timestamp": "2021-10-06T15:32:11.128Z"
+	    }
+	  ]
+	}
+
 ```
 This means that `document:2021-budget` has 1 `reader` (`bob`).  Note that the API will not return writers such as `anne` even when all writers are readers.  This is because only direct relationship are returned for the READ API.
 ### Query for all users with all relationships for a particular document
 To query for all users that have any relationship with `document:2021-budget`, call read API with body of
 ```json
-{
-  "tuple_key": {
-      "object": "document:2021-budget"
-   }
-}
+
+	{
+	  "tuple_key": {
+	      "object": "document:2021-budget"
+	   }
+	}
+
 ```
 The API will return something like
 ```json
-{
-  "tuples": [
-    {
-      "key": {
-        "user": "anne",
-        "relation": "writer",
-        "object": "document:2021-budget"
-      },
-      "timestamp": "2021-10-05T13:42:12.356Z"
-    },
-    {
-      "key": {
-        "user": "bob",
-        "relation": "reader",
-        "object": "document:2021-budget"
-      },
-      "timestamp": "2021-10-06T15:32:11.128Z"
-    }
-  ]
-}
+
+	{
+	  "tuples": [
+	    {
+	      "key": {
+	        "user": "anne",
+	        "relation": "writer",
+	        "object": "document:2021-budget"
+	      },
+	      "timestamp": "2021-10-05T13:42:12.356Z"
+	    },
+	    {
+	      "key": {
+	        "user": "bob",
+	        "relation": "reader",
+	        "object": "document:2021-budget"
+	      },
+	      "timestamp": "2021-10-06T15:32:11.128Z"
+	    }
+	  ]
+	}
+
 ```
 This means that `document:2021-budget` has 1 `reader` (`bob`) and 1 `writer` (`anne`).
 
- * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return ApiReadRequest
+  - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @return ApiReadRequest
 */
 func (a *OpenFgaApiService) Read(ctx _context.Context) ApiReadRequest {
 	return ApiReadRequest{
@@ -2831,49 +3133,52 @@ func (r ApiReadAuthorizationModelRequest) Execute() (ReadAuthorizationModelRespo
 }
 
 /*
- * ReadAuthorizationModel Return a particular version of an authorization model
- * The GET authorization-models by ID API will return a particular version of authorization model that had been configured for a certain store.
+  - ReadAuthorizationModel Return a particular version of an authorization model
+  - The GET authorization-models by ID API will return a particular version of authorization model that had been configured for a certain store.
+
 Path parameter `store_id` and `id` are required.
 The response will return the authorization model for the particular version.
 
 ## Example
 To retrieve the authorization model with ID `01G5JAVJ41T49E9TT3SKVS7X1J` for the store, call the GET authorization-models by ID API with `01G5JAVJ41T49E9TT3SKVS7X1J` as the `id` path parameter.  The API will return:
 ```json
-{
-  "authorization_model":{
-    "id":"01G5JAVJ41T49E9TT3SKVS7X1J",
-    "type_definitions":[
-      {
-        "type":"document",
-        "relations":{
-          "reader":{
-            "union":{
-              "child":[
-                {
-                  "this":{}
-                },
-                {
-                  "computedUserset":{
-                    "object":"",
-                    "relation":"writer"
-                  }
-                }
-              ]
-            }
-          },
-          "writer":{
-            "this":{}
-          }
-        }
-      }
-    ]
-  }
-}
+
+	{
+	  "authorization_model":{
+	    "id":"01G5JAVJ41T49E9TT3SKVS7X1J",
+	    "type_definitions":[
+	      {
+	        "type":"document",
+	        "relations":{
+	          "reader":{
+	            "union":{
+	              "child":[
+	                {
+	                  "this":{}
+	                },
+	                {
+	                  "computedUserset":{
+	                    "object":"",
+	                    "relation":"writer"
+	                  }
+	                }
+	              ]
+	            }
+	          },
+	          "writer":{
+	            "this":{}
+	          }
+	        }
+	      }
+	    ]
+	  }
+	}
+
 ```
 In the above example, there is only 1 type (`document`) with 2 relations (`writer` and `reader`).
- * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param id
- * @return ApiReadAuthorizationModelRequest
+  - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param id
+  - @return ApiReadAuthorizationModelRequest
 */
 func (a *OpenFgaApiService) ReadAuthorizationModel(ctx _context.Context, id string) ApiReadAuthorizationModelRequest {
 	return ApiReadAuthorizationModelRequest{
@@ -3137,46 +3442,51 @@ func (r ApiReadAuthorizationModelsRequest) Execute() (ReadAuthorizationModelsRes
 }
 
 /*
- * ReadAuthorizationModels Return all the authorization models for a particular store
- * The GET authorization-models API will return all the authorization models for a certain store.
+  - ReadAuthorizationModels Return all the authorization models for a particular store
+  - The GET authorization-models API will return all the authorization models for a certain store.
+
 Path parameter `store_id` is required.
 OpenFGA's response will contain an array of all authorization models, sorted in descending order of creation.
 
 ## Example
 Assume that a store's authorization model has been configured twice. To get all the authorization models that have been created in this store, call GET authorization-models. The API will return a response that looks like:
 ```json
-{
-  "authorization_models": [
-    {
-      "id": "01G50QVV17PECNVAHX1GG4Y5NC",
-      "type_definitions": [...]
-    },
-    {
-      "id": "01G4ZW8F4A07AKQ8RHSVG9RW04",
-      "type_definitions": [...]
-    },
-  ]
-}
+
+	{
+	  "authorization_models": [
+	    {
+	      "id": "01G50QVV17PECNVAHX1GG4Y5NC",
+	      "type_definitions": [...]
+	    },
+	    {
+	      "id": "01G4ZW8F4A07AKQ8RHSVG9RW04",
+	      "type_definitions": [...]
+	    },
+	  ]
+	}
+
 ```
 If there are more authorization models available, the response will contain an extra field `continuation_token`:
 ```json
-{
-  "authorization_models": [
-    {
-      "id": "01G50QVV17PECNVAHX1GG4Y5NC",
-      "type_definitions": [...]
-    },
-    {
-      "id": "01G4ZW8F4A07AKQ8RHSVG9RW04",
-      "type_definitions": [...]
-    },
-  ]
-  "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
-}
+
+	{
+	  "authorization_models": [
+	    {
+	      "id": "01G50QVV17PECNVAHX1GG4Y5NC",
+	      "type_definitions": [...]
+	    },
+	    {
+	      "id": "01G4ZW8F4A07AKQ8RHSVG9RW04",
+	      "type_definitions": [...]
+	    },
+	  ],
+	  "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
+	}
+
 ```
 
- * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return ApiReadAuthorizationModelsRequest
+  - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @return ApiReadAuthorizationModelsRequest
 */
 func (a *OpenFgaApiService) ReadAuthorizationModels(ctx _context.Context) ApiReadAuthorizationModelsRequest {
 	return ApiReadAuthorizationModelsRequest{
@@ -3449,12 +3759,13 @@ func (r ApiReadChangesRequest) Execute() (ReadChangesResponse, *_nethttp.Respons
 }
 
 /*
- * ReadChanges Return a list of all the tuple changes
- * The GET changes API will return a paginated list of tuple changes (additions and deletions) that occurred in a given store, sorted by ascending time. The response will include a continuation token that is used to get the next set of changes. If there are no changes after the provided continuation token, the same token will be returned in order for it to be used when new changes are recorded. If the store never had any tuples added or removed, this token will be empty.
+  - ReadChanges Return a list of all the tuple changes
+  - The GET changes API will return a paginated list of tuple changes (additions and deletions) that occurred in a given store, sorted by ascending time. The response will include a continuation token that is used to get the next set of changes. If there are no changes after the provided continuation token, the same token will be returned in order for it to be used when new changes are recorded. If the store never had any tuples added or removed, this token will be empty.
+
 You can use the `type` parameter to only get the list of tuple changes that affect objects of that type.
 
- * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return ApiReadChangesRequest
+  - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @return ApiReadChangesRequest
 */
 func (a *OpenFgaApiService) ReadChanges(ctx _context.Context) ApiReadChangesRequest {
 	return ApiReadChangesRequest{
@@ -3720,43 +4031,48 @@ func (r ApiWriteRequest) Execute() (map[string]interface{}, *_nethttp.Response, 
 }
 
 /*
- * Write Add or delete tuples from the store
- * The POST write API will update the tuples for a certain store.  Tuples and type definitions allow OpenFGA to determine whether a relationship exists between an object and an user.
+  - Write Add or delete tuples from the store
+  - The POST write API will update the tuples for a certain store.  Tuples and type definitions allow OpenFGA to determine whether a relationship exists between an object and an user.
+
 Path parameter `store_id` is required.  In the body, `writes` adds new tuples while `deletes` removes existing tuples.
 ## Example
 ### Adding relationships
 To add `anne` as a `writer` for `document:2021-budget`, call write API with the following
 ```json
-{
-  "writes": {
-    "tuple_keys": [
-      {
-        "user": "anne",
-        "relation": "writer",
-        "object": "document:2021-budget"
-      }
-    ]
-  }
-}
+
+	{
+	  "writes": {
+	    "tuple_keys": [
+	      {
+	        "user": "anne",
+	        "relation": "writer",
+	        "object": "document:2021-budget"
+	      }
+	    ]
+	  }
+	}
+
 ```
 ### Removing relationships
 To remove `bob` as a `reader` for `document:2021-budget`, call write API with the following
 ```json
-{
-  "deletes": {
-    "tuple_keys": [
-      {
-        "user": "bob",
-        "relation": "reader",
-        "object": "document:2021-budget"
-      }
-    ]
-  }
-}
+
+	{
+	  "deletes": {
+	    "tuple_keys": [
+	      {
+	        "user": "bob",
+	        "relation": "reader",
+	        "object": "document:2021-budget"
+	      }
+	    ]
+	  }
+	}
+
 ```
 
- * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return ApiWriteRequest
+  - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @return ApiWriteRequest
 */
 func (a *OpenFgaApiService) Write(ctx _context.Context) ApiWriteRequest {
 	return ApiWriteRequest{
@@ -4275,49 +4591,52 @@ func (r ApiWriteAuthorizationModelRequest) Execute() (WriteAuthorizationModelRes
 }
 
 /*
- * WriteAuthorizationModel Create a new authorization model
- * The POST authorization-model API will update the authorization model for a certain store.
+  - WriteAuthorizationModel Create a new authorization model
+  - The POST authorization-model API will update the authorization model for a certain store.
+
 Path parameter `store_id` and `type_definitions` array in the body are required.  Each item in the `type_definitions` array is a type definition as specified in the field `type_definition`.
 The response will return the authorization model's ID in the `id` field.
 
 ## Example
 To update the authorization model with a single `document` authorization model, call POST authorization-models API with the body:
 ```json
-{
-  "type_definitions":[
-    {
-      "type":"document",
-      "relations":{
-        "reader":{
-          "union":{
-            "child":[
-              {
-                "this":{}
-              },
-              {
-                "computedUserset":{
-                  "object":"",
-                  "relation":"writer"
-                }
-              }
-            ]
-          }
-        },
-        "writer":{
-          "this":{}
-        }
-      }
-    }
-  ]
-}
+
+	{
+	  "type_definitions":[
+	    {
+	      "type":"document",
+	      "relations":{
+	        "reader":{
+	          "union":{
+	            "child":[
+	              {
+	                "this":{}
+	              },
+	              {
+	                "computedUserset":{
+	                  "object":"",
+	                  "relation":"writer"
+	                }
+	              }
+	            ]
+	          }
+	        },
+	        "writer":{
+	          "this":{}
+	        }
+	      }
+	    }
+	  ]
+	}
+
 ```
 OpenFGA's response will include the version id for this authorization model, which will look like
 ```
 {"authorization_model_id": "01G50QVV17PECNVAHX1GG4Y5NC"}
 ```
 
- * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return ApiWriteAuthorizationModelRequest
+  - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @return ApiWriteAuthorizationModelRequest
 */
 func (a *OpenFgaApiService) WriteAuthorizationModel(ctx _context.Context) ApiWriteAuthorizationModelRequest {
 	return ApiWriteAuthorizationModelRequest{

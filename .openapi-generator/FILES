@@ -34,6 +34,8 @@ docs/GetStoreResponse.md
 docs/InternalErrorCode.md
 docs/InternalErrorMessageResponse.md
 docs/Leaf.md
+docs/ListObjectsRequest.md
+docs/ListObjectsResponse.md
 docs/ListStoresResponse.md
 docs/Node.md
 docs/Nodes.md
@@ -88,6 +90,8 @@ model_get_store_response.go
 model_internal_error_code.go
 model_internal_error_message_response.go
 model_leaf.go
+model_list_objects_request.go
+model_list_objects_response.go
 model_list_stores_response.go
 model_node.go
 model_nodes.go

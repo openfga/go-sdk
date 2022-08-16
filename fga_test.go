@@ -793,6 +793,70 @@ func TestOpenFgaApi(t *testing.T) {
 		}
 	})
 
+	t.Run("ListObjects", func(t *testing.T) {
+		test := TestDefinition{
+			Name:           "ListObjects",
+			JsonResponse:   `{"object_ids":["roadmap"]}`,
+			ResponseStatus: 200,
+			Method:         "POST",
+			RequestPath:    "list-objects",
+		}
+
+		requestBody := ListObjectsRequest{
+			AuthorizationModelId: PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			User:                 PtrString("anne"),
+			Relation:             PtrString("can_read"),
+			Type:                 PtrString("document"),
+			ContextualTuples: &ContextualTupleKeys{
+				TupleKeys: []TupleKey{{
+					User:     PtrString("anne"),
+					Relation: PtrString("editor"),
+					Object:   PtrString("folder:product"),
+				}, {
+					User:     PtrString("folder:product"),
+					Relation: PtrString("parent"),
+					Object:   PtrString("document:roadmap"),
+				}},
+			},
+		}
+
+		var expectedResponse ListObjectsResponse
+		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", configuration.ApiScheme, configuration.ApiHost, configuration.StoreId, test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(500, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		got, response, err := apiClient.OpenFgaApi.ListObjects(context.Background()).
+			Body(requestBody).
+			Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		if response.StatusCode != test.ResponseStatus {
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
+		}
+
+		responseJson, err := got.MarshalJSON()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		if len(*got.ObjectIds) != len(*expectedResponse.ObjectIds) {
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
+		}
+	})
+
 	t.Run("Check with 400 error", func(t *testing.T) {
 		test := TestDefinition{
 			Name:           "Check",
