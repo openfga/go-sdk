@@ -85,6 +85,49 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 		}
 	})
 
+	t.Run("should issue a successful network call when using ApiToken credential method", func(t *testing.T) {
+		configuration, err := NewConfiguration(Configuration{
+			ApiHost: "api.fga.example",
+			StoreId: "6c181474-aaa1-4df7-8929-6e7b3a992754",
+			Credentials: &credentials.Credentials{
+				Method: credentials.CredentialsMethodApiToken,
+				Config: &credentials.Config{
+					ApiToken: "some-token",
+				},
+			},
+		})
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		apiClient := NewAPIClient(configuration)
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterResponder("GET", fmt.Sprintf("%s://%s/stores/%s/authorization-models", configuration.ApiScheme, configuration.ApiHost, configuration.StoreId),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(200, ReadAuthorizationModelsResponse{AuthorizationModels: &[]AuthorizationModel{
+					{
+						Id:              PtrString("1uHxCSuTP0VKPYSnkq1pbb1jeZw"),
+						TypeDefinitions: &[]TypeDefinition{},
+					},
+					{
+						Id:              PtrString("GtQpMohWezFmIbyXxVEocOCxxgq"),
+						TypeDefinitions: &[]TypeDefinition{},
+					},
+				}})
+				if err != nil {
+					return httpmock.NewStringResponse(500, ""), nil
+				}
+				return resp, nil
+			},
+		)
+
+		if _, _, err = apiClient.OpenFgaApi.ReadAuthorizationModels(context.Background()).Execute(); err != nil {
+			t.Fatalf("%v", err)
+		}
+	})
+
 	t.Run("In ClientCredentials method, providing no client id, secret, audience or issuer should error", func(t *testing.T) {
 		_, err := NewConfiguration(Configuration{
 			ApiHost: "https://api.fga.example",

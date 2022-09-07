@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.0.3
+
+### [0.0.3](https://github.com/openfga/go-sdk/compare/v0.0.2...v0.0.3) (2022-09-07)
+
+- Fix incorrectly applying client_credentials validation to api_token cred method [openfga/sdk-generator#21](https://github.com/openfga/sdk-generator/pull/21)
+- Target go 1.19
+- Bump golang.org/x/net
+- Use [govulncheck](https://go.dev/blog/vuln) in CI to check for issues
+
 ## v0.0.2
 
 ### [0.0.2](https://github.com/openfga/go-sdk/compare/v0.0.1...v0.0.2) (2022-08-15)

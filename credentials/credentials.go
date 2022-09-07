@@ -70,7 +70,7 @@ func (c *Credentials) ValidateCredentialsConfig() error {
     conf := c.Config
     if c.Method == CredentialsMethodApiToken && (conf == nil || conf.ApiToken == "") {
         return fmt.Errorf("CredentialsConfig.ApiToken is required when CredentialsMethod is CredentialsMethodApiToken (%s)", c.Method)
-    } else if c.Method == CredentialsMethodApiToken {
+    } else if c.Method == CredentialsMethodClientCredentials {
         if conf == nil ||
             conf.ClientCredentialsClientId == "" ||
             conf.ClientCredentialsClientSecret == "" ||
