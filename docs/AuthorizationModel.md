@@ -5,6 +5,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Id** | Pointer to **string** |  | [optional] 
+**SchemaVersion** | Pointer to **string** |  | [optional] 
 **TypeDefinitions** | Pointer to [**[]TypeDefinition**](TypeDefinition.md) |  | [optional] 
 
 ## Methods
@@ -50,6 +51,31 @@ SetId sets Id field to given value.
 `func (o *AuthorizationModel) HasId() bool`
 
 HasId returns a boolean if a field has been set.
+
+### GetSchemaVersion
+
+`func (o *AuthorizationModel) GetSchemaVersion() string`
+
+GetSchemaVersion returns the SchemaVersion field if non-nil, zero value otherwise.
+
+### GetSchemaVersionOk
+
+`func (o *AuthorizationModel) GetSchemaVersionOk() (*string, bool)`
+
+GetSchemaVersionOk returns a tuple with the SchemaVersion field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetSchemaVersion
+
+`func (o *AuthorizationModel) SetSchemaVersion(v string)`
+
+SetSchemaVersion sets SchemaVersion field to given value.
+
+### HasSchemaVersion
+
+`func (o *AuthorizationModel) HasSchemaVersion() bool`
+
+HasSchemaVersion returns a boolean if a field has been set.
 
 ### GetTypeDefinitions
 

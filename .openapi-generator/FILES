@@ -37,6 +37,7 @@ docs/Leaf.md
 docs/ListObjectsRequest.md
 docs/ListObjectsResponse.md
 docs/ListStoresResponse.md
+docs/Metadata.md
 docs/Node.md
 docs/Nodes.md
 docs/NotFoundErrorCode.md
@@ -49,6 +50,8 @@ docs/ReadAuthorizationModelsResponse.md
 docs/ReadChangesResponse.md
 docs/ReadRequest.md
 docs/ReadResponse.md
+docs/RelationMetadata.md
+docs/RelationReference.md
 docs/Status.md
 docs/Store.md
 docs/Tuple.md
@@ -58,7 +61,6 @@ docs/TupleKeys.md
 docs/TupleOperation.md
 docs/TupleToUserset.md
 docs/TypeDefinition.md
-docs/TypeDefinitions.md
 docs/Users.md
 docs/Userset.md
 docs/UsersetTree.md
@@ -67,6 +69,7 @@ docs/UsersetTreeTupleToUserset.md
 docs/Usersets.md
 docs/ValidationErrorMessageResponse.md
 docs/WriteAssertionsRequest.md
+docs/WriteAuthorizationModelRequest.md
 docs/WriteAuthorizationModelResponse.md
 docs/WriteRequest.md
 fga_test.go
@@ -93,6 +96,7 @@ model_leaf.go
 model_list_objects_request.go
 model_list_objects_response.go
 model_list_stores_response.go
+model_metadata.go
 model_node.go
 model_nodes.go
 model_not_found_error_code.go
@@ -104,6 +108,8 @@ model_read_authorization_models_response.go
 model_read_changes_response.go
 model_read_request.go
 model_read_response.go
+model_relation_metadata.go
+model_relation_reference.go
 model_status.go
 model_store.go
 model_tuple.go
@@ -113,7 +119,6 @@ model_tuple_keys.go
 model_tuple_operation.go
 model_tuple_to_userset.go
 model_type_definition.go
-model_type_definitions.go
 model_users.go
 model_userset.go
 model_userset_tree.go
@@ -122,6 +127,7 @@ model_userset_tree_tuple_to_userset.go
 model_usersets.go
 model_validation_error_message_response.go
 model_write_assertions_request.go
+model_write_authorization_model_request.go
 model_write_authorization_model_response.go
 model_write_request.go
 oauth2/LICENSE

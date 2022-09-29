@@ -18,18 +18,18 @@ import (
 
 // TypeDefinition struct for TypeDefinition
 type TypeDefinition struct {
-	Type      string             `json:"type"`
-	Relations map[string]Userset `json:"relations"`
+	Type      string              `json:"type"`
+	Relations *map[string]Userset `json:"relations,omitempty"`
+	Metadata  *Metadata           `json:"metadata,omitempty"`
 }
 
 // NewTypeDefinition instantiates a new TypeDefinition object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewTypeDefinition(type_ string, relations map[string]Userset) *TypeDefinition {
+func NewTypeDefinition(type_ string) *TypeDefinition {
 	this := TypeDefinition{}
 	this.Type = type_
-	this.Relations = relations
 	return &this
 }
 
@@ -65,28 +65,68 @@ func (o *TypeDefinition) SetType(v string) {
 	o.Type = v
 }
 
-// GetRelations returns the Relations field value
+// GetRelations returns the Relations field value if set, zero value otherwise.
 func (o *TypeDefinition) GetRelations() map[string]Userset {
-	if o == nil {
+	if o == nil || o.Relations == nil {
 		var ret map[string]Userset
 		return ret
 	}
-
-	return o.Relations
+	return *o.Relations
 }
 
-// GetRelationsOk returns a tuple with the Relations field value
+// GetRelationsOk returns a tuple with the Relations field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 func (o *TypeDefinition) GetRelationsOk() (*map[string]Userset, bool) {
-	if o == nil {
+	if o == nil || o.Relations == nil {
 		return nil, false
 	}
-	return &o.Relations, true
+	return o.Relations, true
 }
 
-// SetRelations sets field value
+// HasRelations returns a boolean if a field has been set.
+func (o *TypeDefinition) HasRelations() bool {
+	if o != nil && o.Relations != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetRelations gets a reference to the given map[string]Userset and assigns it to the Relations field.
 func (o *TypeDefinition) SetRelations(v map[string]Userset) {
-	o.Relations = v
+	o.Relations = &v
+}
+
+// GetMetadata returns the Metadata field value if set, zero value otherwise.
+func (o *TypeDefinition) GetMetadata() Metadata {
+	if o == nil || o.Metadata == nil {
+		var ret Metadata
+		return ret
+	}
+	return *o.Metadata
+}
+
+// GetMetadataOk returns a tuple with the Metadata field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *TypeDefinition) GetMetadataOk() (*Metadata, bool) {
+	if o == nil || o.Metadata == nil {
+		return nil, false
+	}
+	return o.Metadata, true
+}
+
+// HasMetadata returns a boolean if a field has been set.
+func (o *TypeDefinition) HasMetadata() bool {
+	if o != nil && o.Metadata != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetMetadata gets a reference to the given Metadata and assigns it to the Metadata field.
+func (o *TypeDefinition) SetMetadata(v Metadata) {
+	o.Metadata = &v
 }
 
 func (o TypeDefinition) MarshalJSON() ([]byte, error) {
@@ -94,8 +134,11 @@ func (o TypeDefinition) MarshalJSON() ([]byte, error) {
 	if true {
 		toSerialize["type"] = o.Type
 	}
-	if true {
+	if o.Relations != nil {
 		toSerialize["relations"] = o.Relations
+	}
+	if o.Metadata != nil {
+		toSerialize["metadata"] = o.Metadata
 	}
 	return json.Marshal(toSerialize)
 }

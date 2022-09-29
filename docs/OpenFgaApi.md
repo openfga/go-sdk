@@ -1332,7 +1332,7 @@ No authorization required
 
 ## WriteAuthorizationModel
 
-> WriteAuthorizationModelResponse WriteAuthorizationModel(ctx).TypeDefinitions(typeDefinitions).Execute()
+> WriteAuthorizationModelResponse WriteAuthorizationModel(ctx).Body(body).Execute()
 
 Create a new authorization model
 
@@ -1352,7 +1352,7 @@ import (
 
 func main() {
     
-    typeDefinitions := *openapiclient.NewTypeDefinitions() // TypeDefinitions | 
+    body := *openapiclient.NewWriteAuthorizationModelRequest() // WriteAuthorizationModelRequest | 
 
     configuration, err := openfga.NewConfiguration(openfga.Configuration{
         ApiScheme:      os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"
@@ -1366,7 +1366,7 @@ func main() {
 
     apiClient := openfga.NewAPIClient(configuration)
 
-    resp, r, err := apiClient.OpenFgaApi.WriteAuthorizationModel(context.Background()).TypeDefinitions(typeDefinitions).Execute()
+    resp, r, err := apiClient.OpenFgaApi.WriteAuthorizationModel(context.Background()).Body(body).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `OpenFgaApi.WriteAuthorizationModel``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -1404,7 +1404,7 @@ Other parameters are passed through a pointer to a apiWriteAuthorizationModelReq
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
-**typeDefinitions** | [**TypeDefinitions**](TypeDefinitions.md) |  | 
+**body** | [**WriteAuthorizationModelRequest**](WriteAuthorizationModelRequest.md) |  | 
 
 ### Return type
 

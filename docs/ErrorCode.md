@@ -95,6 +95,10 @@
 
 * `DUPLICATE_CONTEXTUAL_TUPLE` (value: `"duplicate_contextual_tuple"`)
 
+* `INVALID_AUTHORIZATION_MODEL` (value: `"invalid_authorization_model"`)
+
+* `UNSUPPORTED_SCHEMA_VERSION` (value: `"unsupported_schema_version"`)
+
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

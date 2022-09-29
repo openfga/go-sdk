@@ -68,6 +68,8 @@ const (
 	EXCEEDED_ENTITY_LIMIT                            ErrorCode = "exceeded_entity_limit"
 	INVALID_CONTEXTUAL_TUPLE                         ErrorCode = "invalid_contextual_tuple"
 	DUPLICATE_CONTEXTUAL_TUPLE                       ErrorCode = "duplicate_contextual_tuple"
+	INVALID_AUTHORIZATION_MODEL                      ErrorCode = "invalid_authorization_model"
+	UNSUPPORTED_SCHEMA_VERSION                       ErrorCode = "unsupported_schema_version"
 )
 
 var allowedErrorCodeEnumValues = []ErrorCode{
@@ -117,6 +119,8 @@ var allowedErrorCodeEnumValues = []ErrorCode{
 	"exceeded_entity_limit",
 	"invalid_contextual_tuple",
 	"duplicate_contextual_tuple",
+	"invalid_authorization_model",
+	"unsupported_schema_version",
 }
 
 func (v *ErrorCode) UnmarshalJSON(src []byte) error {

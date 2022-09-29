@@ -4578,11 +4578,11 @@ type ApiWriteAuthorizationModelRequest struct {
 	ctx        _context.Context
 	ApiService OpenFgaApi
 
-	typeDefinitions *TypeDefinitions
+	body *WriteAuthorizationModelRequest
 }
 
-func (r ApiWriteAuthorizationModelRequest) TypeDefinitions(typeDefinitions TypeDefinitions) ApiWriteAuthorizationModelRequest {
-	r.typeDefinitions = &typeDefinitions
+func (r ApiWriteAuthorizationModelRequest) Body(body WriteAuthorizationModelRequest) ApiWriteAuthorizationModelRequest {
+	r.body = &body
 	return r
 }
 
@@ -4680,8 +4680,8 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 		localVarHeaderParams := make(map[string]string)
 		localVarQueryParams := _neturl.Values{}
 		localVarFormParams := _neturl.Values{}
-		if r.typeDefinitions == nil {
-			return localVarReturnValue, nil, reportError("typeDefinitions is required and must be specified")
+		if r.body == nil {
+			return localVarReturnValue, nil, reportError("body is required and must be specified")
 		}
 
 		// to determine the Content-Type header
@@ -4702,7 +4702,7 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 			localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 		}
 		// body params
-		localVarPostBody = r.typeDefinitions
+		localVarPostBody = r.body
 		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 		if err != nil {
 			return localVarReturnValue, nil, err
