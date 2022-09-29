@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.1.0
+
+### [0.1.0](https://github.com/openfga/go-sdk/compare/v0.0.2...v0.1.0) (2022-09-29)
+
+- BREAKING: exported interface `TypeDefinitions` is now `WriteAuthorizationModelRequest`
+    This is only a breaking change on the SDK, not the API. It was changed to conform to the proto changes in [openfga/api](https://github.com/openfga/api/pull/27).
+- chore(deps): upgrade dependencies
+
 ## v0.0.3
 
 ### [0.0.3](https://github.com/openfga/go-sdk/compare/v0.0.2...v0.0.3) (2022-09-07)
