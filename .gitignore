@@ -23,15 +23,24 @@ _testmain.go
 *.test
 *.prof
 
-git_push.sh
-.DS_Store
-VERSION.txt
 
 # IDEs
 .idea
 .vscode
 .sublime-workspace
 .sublime-project
+.idea/
+.vscode/
 
+# Possible credential files
 .env
 credentials.json
+
+# git conflict leftover files
+*.orig
+
+# Mac
+.DS_Store
+
+VERSION.txt
+git_push.sh

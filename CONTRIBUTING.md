@@ -17,13 +17,13 @@ Reading and following these guidelines will help us make the contribution proces
 
 ## Code of Conduct
 
-By participating and contributing to this project, you are expected to uphold our [Code of Conduct](https://github.com/openfga/rfcs/blob/main/CODE-OF-CONDUCT.md).
+By participating and contributing to this project, you are expected to uphold our [Code of Conduct](https://github.com/openfga/.github/blob/main/CODE_OF_CONDUCT.md).
 
 ## Getting Started
 
 ### Making Changes
 
-When contributing to a repository, the first step is to open an issue on [sdk-generator](https://github.com/openfga/sd-generator) to discuss the change you wish to make before making them.
+When contributing to a repository, the first step is to open an issue on [sdk-generator](https://github.com/openfga/sdk-generator) to discuss the change you wish to make before making them.
 
 ### Opening Issues
 
