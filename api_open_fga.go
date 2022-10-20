@@ -39,10 +39,10 @@ type OpenFgaApi interface {
 	The response will return whether the relationship exists in the field `allowed`.
 
 	## Example
-	In order to check if user `anne` has a `can_read` relationship with object `document:2021-budget` given the following contextual tuple
+	In order to check if user `anne` of type `user` has a `can_read` relationship with object `document:2021-budget` given the following contextual tuple
 	```json
 	{
-	  "user": "anne",
+	  "user": "user:anne",
 	  "relation": "member",
 	  "object": "time_slot:office_hours"
 	}
@@ -51,14 +51,14 @@ type OpenFgaApi interface {
 	```json
 	{
 	  "tuple_key": {
-	    "user": "anne",
+	    "user": "user:anne",
 	    "relation": "can_read",
 	    "object": "document:2021-budget"
 	  },
 	  "contextual_tuples": {
 	    "tuple_keys": [
 	      {
-	        "user": "anne",
+	        "user": "user:anne",
 	        "relation": "member",
 	        "object": "time_slot:office_hours"
 	      }
@@ -142,7 +142,7 @@ type OpenFgaApi interface {
 	            "leaf":{
 	              "users":{
 	                "users":[
-	                  "bob"
+	                  "user:bob"
 	                ]
 	              }
 	            }
@@ -227,7 +227,7 @@ type OpenFgaApi interface {
 	```json
 	{
 	 "tuple_key": {
-	     "user": "bob",
+	     "user": "user:bob",
 	     "relation": "reader",
 	     "object": "document:"
 	  }
@@ -239,7 +239,7 @@ type OpenFgaApi interface {
 	  "tuples": [
 	    {
 	      "key": {
-	        "user": "bob",
+	        "user": "user:bob",
 	        "relation": "reader",
 	        "object": "document:2021-budget"
 	      },
@@ -265,7 +265,7 @@ type OpenFgaApi interface {
 	  "tuples": [
 	    {
 	      "key": {
-	        "user": "bob",
+	        "user": "user:bob",
 	        "relation": "reader",
 	        "object": "document:2021-budget"
 	      },
@@ -290,7 +290,7 @@ type OpenFgaApi interface {
 	  "tuples": [
 	    {
 	      "key": {
-	        "user": "anne",
+	        "user": "user:anne",
 	        "relation": "writer",
 	        "object": "document:2021-budget"
 	      },
@@ -298,7 +298,7 @@ type OpenFgaApi interface {
 	    },
 	    {
 	      "key": {
-	        "user": "bob",
+	        "user": "user:bob",
 	        "relation": "reader",
 	        "object": "document:2021-budget"
 	      },
@@ -307,7 +307,7 @@ type OpenFgaApi interface {
 	  ]
 	}
 	```
-	This means that `document:2021-budget` has 1 `reader` (`bob`) and 1 `writer` (`anne`).
+	This means that `document:2021-budget` has 1 `reader` (`user:bob`) and 1 `writer` (`user:anne`).
 
 		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 		 * @return ApiReadRequest
@@ -460,13 +460,13 @@ type OpenFgaApi interface {
 	Path parameter `store_id` is required.  In the body, `writes` adds new tuples while `deletes` removes existing tuples.
 	## Example
 	### Adding relationships
-	To add `anne` as a `writer` for `document:2021-budget`, call write API with the following
+	To add `user:anne` as a `writer` for `document:2021-budget`, call write API with the following
 	```json
 	{
 	  "writes": {
 	    "tuple_keys": [
 	      {
-	        "user": "anne",
+	        "user": "user:anne",
 	        "relation": "writer",
 	        "object": "document:2021-budget"
 	      }
@@ -475,13 +475,13 @@ type OpenFgaApi interface {
 	}
 	```
 	### Removing relationships
-	To remove `bob` as a `reader` for `document:2021-budget`, call write API with the following
+	To remove `user:bob` as a `reader` for `document:2021-budget`, call write API with the following
 	```json
 	{
 	  "deletes": {
 	    "tuple_keys": [
 	      {
-	        "user": "bob",
+	        "user": "user:bob",
 	        "relation": "reader",
 	        "object": "document:2021-budget"
 	      }
@@ -603,11 +603,11 @@ Optionally, a `contextual_tuples` object may also be included in the body of the
 The response will return whether the relationship exists in the field `allowed`.
 
 ## Example
-In order to check if user `anne` has a `can_read` relationship with object `document:2021-budget` given the following contextual tuple
+In order to check if user `anne` of type `user` has a `can_read` relationship with object `document:2021-budget` given the following contextual tuple
 ```json
 
 	{
-	  "user": "anne",
+	  "user": "user:anne",
 	  "relation": "member",
 	  "object": "time_slot:office_hours"
 	}
@@ -618,14 +618,14 @@ a check API call should be fired with the following body:
 
 	{
 	  "tuple_key": {
-	    "user": "anne",
+	    "user": "user:anne",
 	    "relation": "can_read",
 	    "object": "document:2021-budget"
 	  },
 	  "contextual_tuples": {
 	    "tuple_keys": [
 	      {
-	        "user": "anne",
+	        "user": "user:anne",
 	        "relation": "member",
 	        "object": "time_slot:office_hours"
 	      }
@@ -1442,7 +1442,7 @@ OpenFGA's response will be a userset tree of the users and computed usersets tha
 	            "leaf":{
 	              "users":{
 	                "users":[
-	                  "bob"
+	                  "user:bob"
 	                ]
 	              }
 	            }
@@ -2524,7 +2524,7 @@ To query for all objects that `bob` has `reader` relationship in the document ty
 
 	{
 	 "tuple_key": {
-	     "user": "bob",
+	     "user": "user:bob",
 	     "relation": "reader",
 	     "object": "document:"
 	  }
@@ -2538,7 +2538,7 @@ The API will return tuples and an optional continuation token, something like
 	  "tuples": [
 	    {
 	      "key": {
-	        "user": "bob",
+	        "user": "user:bob",
 	        "relation": "reader",
 	        "object": "document:2021-budget"
 	      },
@@ -2568,7 +2568,7 @@ The API will return something like
 	  "tuples": [
 	    {
 	      "key": {
-	        "user": "bob",
+	        "user": "user:bob",
 	        "relation": "reader",
 	        "object": "document:2021-budget"
 	      },
@@ -2597,7 +2597,7 @@ The API will return something like
 	  "tuples": [
 	    {
 	      "key": {
-	        "user": "anne",
+	        "user": "user:anne",
 	        "relation": "writer",
 	        "object": "document:2021-budget"
 	      },
@@ -2605,7 +2605,7 @@ The API will return something like
 	    },
 	    {
 	      "key": {
-	        "user": "bob",
+	        "user": "user:bob",
 	        "relation": "reader",
 	        "object": "document:2021-budget"
 	      },
@@ -2615,7 +2615,7 @@ The API will return something like
 	}
 
 ```
-This means that `document:2021-budget` has 1 `reader` (`bob`) and 1 `writer` (`anne`).
+This means that `document:2021-budget` has 1 `reader` (`user:bob`) and 1 `writer` (`user:anne`).
 
   - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @return ApiReadRequest
@@ -4037,14 +4037,14 @@ func (r ApiWriteRequest) Execute() (map[string]interface{}, *_nethttp.Response, 
 Path parameter `store_id` is required.  In the body, `writes` adds new tuples while `deletes` removes existing tuples.
 ## Example
 ### Adding relationships
-To add `anne` as a `writer` for `document:2021-budget`, call write API with the following
+To add `user:anne` as a `writer` for `document:2021-budget`, call write API with the following
 ```json
 
 	{
 	  "writes": {
 	    "tuple_keys": [
 	      {
-	        "user": "anne",
+	        "user": "user:anne",
 	        "relation": "writer",
 	        "object": "document:2021-budget"
 	      }
@@ -4054,14 +4054,14 @@ To add `anne` as a `writer` for `document:2021-budget`, call write API with the 
 
 ```
 ### Removing relationships
-To remove `bob` as a `reader` for `document:2021-budget`, call write API with the following
+To remove `user:bob` as a `reader` for `document:2021-budget`, call write API with the following
 ```json
 
 	{
 	  "deletes": {
 	    "tuple_keys": [
 	      {
-	        "user": "bob",
+	        "user": "user:bob",
 	        "relation": "reader",
 	        "object": "document:2021-budget"
 	      }
