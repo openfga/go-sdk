@@ -69,7 +69,7 @@ In your code, import the module and use it:
 import "github.com/openfga/go-sdk"
 
 func Main() {
-	configuration, err := openfga.NewConfiguration(openfga.UserConfiguration{})
+	configuration, err := openfga.NewConfiguration(openfga.Configuration{})
 }
 ```
 
