@@ -19,9 +19,9 @@ import (
 // ListObjectsRequest struct for ListObjectsRequest
 type ListObjectsRequest struct {
 	AuthorizationModelId *string              `json:"authorization_model_id,omitempty"`
-	Type                 *string              `json:"type,omitempty"`
-	Relation             *string              `json:"relation,omitempty"`
-	User                 *string              `json:"user,omitempty"`
+	Type                 string               `json:"type"`
+	Relation             string               `json:"relation"`
+	User                 string               `json:"user"`
 	ContextualTuples     *ContextualTupleKeys `json:"contextual_tuples,omitempty"`
 }
 
@@ -29,8 +29,11 @@ type ListObjectsRequest struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewListObjectsRequest() *ListObjectsRequest {
+func NewListObjectsRequest(type_ string, relation string, user string) *ListObjectsRequest {
 	this := ListObjectsRequest{}
+	this.Type = type_
+	this.Relation = relation
+	this.User = user
 	return &this
 }
 
@@ -74,100 +77,76 @@ func (o *ListObjectsRequest) SetAuthorizationModelId(v string) {
 	o.AuthorizationModelId = &v
 }
 
-// GetType returns the Type field value if set, zero value otherwise.
+// GetType returns the Type field value
 func (o *ListObjectsRequest) GetType() string {
-	if o == nil || o.Type == nil {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.Type
+
+	return o.Type
 }
 
-// GetTypeOk returns a tuple with the Type field value if set, nil otherwise
+// GetTypeOk returns a tuple with the Type field value
 // and a boolean to check if the value has been set.
 func (o *ListObjectsRequest) GetTypeOk() (*string, bool) {
-	if o == nil || o.Type == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Type, true
+	return &o.Type, true
 }
 
-// HasType returns a boolean if a field has been set.
-func (o *ListObjectsRequest) HasType() bool {
-	if o != nil && o.Type != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetType gets a reference to the given string and assigns it to the Type field.
+// SetType sets field value
 func (o *ListObjectsRequest) SetType(v string) {
-	o.Type = &v
+	o.Type = v
 }
 
-// GetRelation returns the Relation field value if set, zero value otherwise.
+// GetRelation returns the Relation field value
 func (o *ListObjectsRequest) GetRelation() string {
-	if o == nil || o.Relation == nil {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.Relation
+
+	return o.Relation
 }
 
-// GetRelationOk returns a tuple with the Relation field value if set, nil otherwise
+// GetRelationOk returns a tuple with the Relation field value
 // and a boolean to check if the value has been set.
 func (o *ListObjectsRequest) GetRelationOk() (*string, bool) {
-	if o == nil || o.Relation == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Relation, true
+	return &o.Relation, true
 }
 
-// HasRelation returns a boolean if a field has been set.
-func (o *ListObjectsRequest) HasRelation() bool {
-	if o != nil && o.Relation != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetRelation gets a reference to the given string and assigns it to the Relation field.
+// SetRelation sets field value
 func (o *ListObjectsRequest) SetRelation(v string) {
-	o.Relation = &v
+	o.Relation = v
 }
 
-// GetUser returns the User field value if set, zero value otherwise.
+// GetUser returns the User field value
 func (o *ListObjectsRequest) GetUser() string {
-	if o == nil || o.User == nil {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.User
+
+	return o.User
 }
 
-// GetUserOk returns a tuple with the User field value if set, nil otherwise
+// GetUserOk returns a tuple with the User field value
 // and a boolean to check if the value has been set.
 func (o *ListObjectsRequest) GetUserOk() (*string, bool) {
-	if o == nil || o.User == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.User, true
+	return &o.User, true
 }
 
-// HasUser returns a boolean if a field has been set.
-func (o *ListObjectsRequest) HasUser() bool {
-	if o != nil && o.User != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetUser gets a reference to the given string and assigns it to the User field.
+// SetUser sets field value
 func (o *ListObjectsRequest) SetUser(v string) {
-	o.User = &v
+	o.User = v
 }
 
 // GetContextualTuples returns the ContextualTuples field value if set, zero value otherwise.
@@ -207,13 +186,13 @@ func (o ListObjectsRequest) MarshalJSON() ([]byte, error) {
 	if o.AuthorizationModelId != nil {
 		toSerialize["authorization_model_id"] = o.AuthorizationModelId
 	}
-	if o.Type != nil {
+	if true {
 		toSerialize["type"] = o.Type
 	}
-	if o.Relation != nil {
+	if true {
 		toSerialize["relation"] = o.Relation
 	}
-	if o.User != nil {
+	if true {
 		toSerialize["user"] = o.User
 	}
 	if o.ContextualTuples != nil {

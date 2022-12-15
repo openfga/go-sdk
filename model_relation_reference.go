@@ -18,8 +18,9 @@ import (
 
 // RelationReference RelationReference represents a relation of a particular object type (e.g. 'document#viewer').
 type RelationReference struct {
-	Type     string  `json:"type"`
-	Relation *string `json:"relation,omitempty"`
+	Type     string                  `json:"type"`
+	Relation *string                 `json:"relation,omitempty"`
+	Wildcard *map[string]interface{} `json:"wildcard,omitempty"`
 }
 
 // NewRelationReference instantiates a new RelationReference object
@@ -96,6 +97,38 @@ func (o *RelationReference) SetRelation(v string) {
 	o.Relation = &v
 }
 
+// GetWildcard returns the Wildcard field value if set, zero value otherwise.
+func (o *RelationReference) GetWildcard() map[string]interface{} {
+	if o == nil || o.Wildcard == nil {
+		var ret map[string]interface{}
+		return ret
+	}
+	return *o.Wildcard
+}
+
+// GetWildcardOk returns a tuple with the Wildcard field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *RelationReference) GetWildcardOk() (*map[string]interface{}, bool) {
+	if o == nil || o.Wildcard == nil {
+		return nil, false
+	}
+	return o.Wildcard, true
+}
+
+// HasWildcard returns a boolean if a field has been set.
+func (o *RelationReference) HasWildcard() bool {
+	if o != nil && o.Wildcard != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetWildcard gets a reference to the given map[string]interface{} and assigns it to the Wildcard field.
+func (o *RelationReference) SetWildcard(v map[string]interface{}) {
+	o.Wildcard = &v
+}
+
 func (o RelationReference) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if true {
@@ -103,6 +136,9 @@ func (o RelationReference) MarshalJSON() ([]byte, error) {
 	}
 	if o.Relation != nil {
 		toSerialize["relation"] = o.Relation
+	}
+	if o.Wildcard != nil {
+		toSerialize["wildcard"] = o.Wildcard
 	}
 	return json.Marshal(toSerialize)
 }

@@ -4,14 +4,14 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**TupleKey** | Pointer to [**TupleKey**](TupleKey.md) |  | [optional] 
+**TupleKey** | [**TupleKey**](TupleKey.md) |  | 
 **AuthorizationModelId** | Pointer to **string** |  | [optional] 
 
 ## Methods
 
 ### NewExpandRequest
 
-`func NewExpandRequest() *ExpandRequest`
+`func NewExpandRequest(tupleKey TupleKey, ) *ExpandRequest`
 
 NewExpandRequest instantiates a new ExpandRequest object
 This constructor will assign default values to properties that have it defined,
@@ -45,11 +45,6 @@ and a boolean to check if the value has been set.
 
 SetTupleKey sets TupleKey field to given value.
 
-### HasTupleKey
-
-`func (o *ExpandRequest) HasTupleKey() bool`
-
-HasTupleKey returns a boolean if a field has been set.
 
 ### GetAuthorizationModelId
 

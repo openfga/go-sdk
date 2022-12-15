@@ -18,10 +18,9 @@ import (
 
 // ReadRequest struct for ReadRequest
 type ReadRequest struct {
-	TupleKey             *TupleKey `json:"tuple_key,omitempty"`
-	AuthorizationModelId *string   `json:"authorization_model_id,omitempty"`
-	PageSize             *int32    `json:"page_size,omitempty"`
-	ContinuationToken    *string   `json:"continuation_token,omitempty"`
+	TupleKey          *TupleKey `json:"tuple_key,omitempty"`
+	PageSize          *int32    `json:"page_size,omitempty"`
+	ContinuationToken *string   `json:"continuation_token,omitempty"`
 }
 
 // NewReadRequest instantiates a new ReadRequest object
@@ -71,38 +70,6 @@ func (o *ReadRequest) HasTupleKey() bool {
 // SetTupleKey gets a reference to the given TupleKey and assigns it to the TupleKey field.
 func (o *ReadRequest) SetTupleKey(v TupleKey) {
 	o.TupleKey = &v
-}
-
-// GetAuthorizationModelId returns the AuthorizationModelId field value if set, zero value otherwise.
-func (o *ReadRequest) GetAuthorizationModelId() string {
-	if o == nil || o.AuthorizationModelId == nil {
-		var ret string
-		return ret
-	}
-	return *o.AuthorizationModelId
-}
-
-// GetAuthorizationModelIdOk returns a tuple with the AuthorizationModelId field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *ReadRequest) GetAuthorizationModelIdOk() (*string, bool) {
-	if o == nil || o.AuthorizationModelId == nil {
-		return nil, false
-	}
-	return o.AuthorizationModelId, true
-}
-
-// HasAuthorizationModelId returns a boolean if a field has been set.
-func (o *ReadRequest) HasAuthorizationModelId() bool {
-	if o != nil && o.AuthorizationModelId != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetAuthorizationModelId gets a reference to the given string and assigns it to the AuthorizationModelId field.
-func (o *ReadRequest) SetAuthorizationModelId(v string) {
-	o.AuthorizationModelId = &v
 }
 
 // GetPageSize returns the PageSize field value if set, zero value otherwise.
@@ -173,9 +140,6 @@ func (o ReadRequest) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.TupleKey != nil {
 		toSerialize["tuple_key"] = o.TupleKey
-	}
-	if o.AuthorizationModelId != nil {
-		toSerialize["authorization_model_id"] = o.AuthorizationModelId
 	}
 	if o.PageSize != nil {
 		toSerialize["page_size"] = o.PageSize

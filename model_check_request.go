@@ -18,7 +18,7 @@ import (
 
 // CheckRequest struct for CheckRequest
 type CheckRequest struct {
-	TupleKey             *TupleKey            `json:"tuple_key,omitempty"`
+	TupleKey             TupleKey             `json:"tuple_key"`
 	ContextualTuples     *ContextualTupleKeys `json:"contextual_tuples,omitempty"`
 	AuthorizationModelId *string              `json:"authorization_model_id,omitempty"`
 	// Defaults to false. Making it true has performance implications.
@@ -29,8 +29,9 @@ type CheckRequest struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewCheckRequest() *CheckRequest {
+func NewCheckRequest(tupleKey TupleKey) *CheckRequest {
 	this := CheckRequest{}
+	this.TupleKey = tupleKey
 	return &this
 }
 
@@ -42,36 +43,28 @@ func NewCheckRequestWithDefaults() *CheckRequest {
 	return &this
 }
 
-// GetTupleKey returns the TupleKey field value if set, zero value otherwise.
+// GetTupleKey returns the TupleKey field value
 func (o *CheckRequest) GetTupleKey() TupleKey {
-	if o == nil || o.TupleKey == nil {
+	if o == nil {
 		var ret TupleKey
 		return ret
 	}
-	return *o.TupleKey
+
+	return o.TupleKey
 }
 
-// GetTupleKeyOk returns a tuple with the TupleKey field value if set, nil otherwise
+// GetTupleKeyOk returns a tuple with the TupleKey field value
 // and a boolean to check if the value has been set.
 func (o *CheckRequest) GetTupleKeyOk() (*TupleKey, bool) {
-	if o == nil || o.TupleKey == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.TupleKey, true
+	return &o.TupleKey, true
 }
 
-// HasTupleKey returns a boolean if a field has been set.
-func (o *CheckRequest) HasTupleKey() bool {
-	if o != nil && o.TupleKey != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetTupleKey gets a reference to the given TupleKey and assigns it to the TupleKey field.
+// SetTupleKey sets field value
 func (o *CheckRequest) SetTupleKey(v TupleKey) {
-	o.TupleKey = &v
+	o.TupleKey = v
 }
 
 // GetContextualTuples returns the ContextualTuples field value if set, zero value otherwise.
@@ -172,7 +165,7 @@ func (o *CheckRequest) SetTrace(v bool) {
 
 func (o CheckRequest) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.TupleKey != nil {
+	if true {
 		toSerialize["tuple_key"] = o.TupleKey
 	}
 	if o.ContextualTuples != nil {

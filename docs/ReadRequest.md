@@ -5,7 +5,6 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **TupleKey** | Pointer to [**TupleKey**](TupleKey.md) |  | [optional] 
-**AuthorizationModelId** | Pointer to **string** |  | [optional] 
 **PageSize** | Pointer to **int32** |  | [optional] 
 **ContinuationToken** | Pointer to **string** |  | [optional] 
 
@@ -52,31 +51,6 @@ SetTupleKey sets TupleKey field to given value.
 `func (o *ReadRequest) HasTupleKey() bool`
 
 HasTupleKey returns a boolean if a field has been set.
-
-### GetAuthorizationModelId
-
-`func (o *ReadRequest) GetAuthorizationModelId() string`
-
-GetAuthorizationModelId returns the AuthorizationModelId field if non-nil, zero value otherwise.
-
-### GetAuthorizationModelIdOk
-
-`func (o *ReadRequest) GetAuthorizationModelIdOk() (*string, bool)`
-
-GetAuthorizationModelIdOk returns a tuple with the AuthorizationModelId field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetAuthorizationModelId
-
-`func (o *ReadRequest) SetAuthorizationModelId(v string)`
-
-SetAuthorizationModelId sets AuthorizationModelId field to given value.
-
-### HasAuthorizationModelId
-
-`func (o *ReadRequest) HasAuthorizationModelId() bool`
-
-HasAuthorizationModelId returns a boolean if a field has been set.
 
 ### GetPageSize
 

@@ -18,15 +18,16 @@ import (
 
 // CreateStoreRequest struct for CreateStoreRequest
 type CreateStoreRequest struct {
-	Name *string `json:"name,omitempty"`
+	Name string `json:"name"`
 }
 
 // NewCreateStoreRequest instantiates a new CreateStoreRequest object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewCreateStoreRequest() *CreateStoreRequest {
+func NewCreateStoreRequest(name string) *CreateStoreRequest {
 	this := CreateStoreRequest{}
+	this.Name = name
 	return &this
 }
 
@@ -38,41 +39,33 @@ func NewCreateStoreRequestWithDefaults() *CreateStoreRequest {
 	return &this
 }
 
-// GetName returns the Name field value if set, zero value otherwise.
+// GetName returns the Name field value
 func (o *CreateStoreRequest) GetName() string {
-	if o == nil || o.Name == nil {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.Name
+
+	return o.Name
 }
 
-// GetNameOk returns a tuple with the Name field value if set, nil otherwise
+// GetNameOk returns a tuple with the Name field value
 // and a boolean to check if the value has been set.
 func (o *CreateStoreRequest) GetNameOk() (*string, bool) {
-	if o == nil || o.Name == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Name, true
+	return &o.Name, true
 }
 
-// HasName returns a boolean if a field has been set.
-func (o *CreateStoreRequest) HasName() bool {
-	if o != nil && o.Name != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetName gets a reference to the given string and assigns it to the Name field.
+// SetName sets field value
 func (o *CreateStoreRequest) SetName(v string) {
-	o.Name = &v
+	o.Name = v
 }
 
 func (o CreateStoreRequest) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.Name != nil {
+	if true {
 		toSerialize["name"] = o.Name
 	}
 	return json.Marshal(toSerialize)

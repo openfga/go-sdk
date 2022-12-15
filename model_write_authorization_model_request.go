@@ -18,16 +18,17 @@ import (
 
 // WriteAuthorizationModelRequest struct for WriteAuthorizationModelRequest
 type WriteAuthorizationModelRequest struct {
-	TypeDefinitions *[]TypeDefinition `json:"type_definitions,omitempty"`
-	SchemaVersion   *string           `json:"schema_version,omitempty"`
+	TypeDefinitions []TypeDefinition `json:"type_definitions"`
+	SchemaVersion   *string          `json:"schema_version,omitempty"`
 }
 
 // NewWriteAuthorizationModelRequest instantiates a new WriteAuthorizationModelRequest object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewWriteAuthorizationModelRequest() *WriteAuthorizationModelRequest {
+func NewWriteAuthorizationModelRequest(typeDefinitions []TypeDefinition) *WriteAuthorizationModelRequest {
 	this := WriteAuthorizationModelRequest{}
+	this.TypeDefinitions = typeDefinitions
 	return &this
 }
 
@@ -39,36 +40,28 @@ func NewWriteAuthorizationModelRequestWithDefaults() *WriteAuthorizationModelReq
 	return &this
 }
 
-// GetTypeDefinitions returns the TypeDefinitions field value if set, zero value otherwise.
+// GetTypeDefinitions returns the TypeDefinitions field value
 func (o *WriteAuthorizationModelRequest) GetTypeDefinitions() []TypeDefinition {
-	if o == nil || o.TypeDefinitions == nil {
+	if o == nil {
 		var ret []TypeDefinition
 		return ret
 	}
-	return *o.TypeDefinitions
+
+	return o.TypeDefinitions
 }
 
-// GetTypeDefinitionsOk returns a tuple with the TypeDefinitions field value if set, nil otherwise
+// GetTypeDefinitionsOk returns a tuple with the TypeDefinitions field value
 // and a boolean to check if the value has been set.
 func (o *WriteAuthorizationModelRequest) GetTypeDefinitionsOk() (*[]TypeDefinition, bool) {
-	if o == nil || o.TypeDefinitions == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.TypeDefinitions, true
+	return &o.TypeDefinitions, true
 }
 
-// HasTypeDefinitions returns a boolean if a field has been set.
-func (o *WriteAuthorizationModelRequest) HasTypeDefinitions() bool {
-	if o != nil && o.TypeDefinitions != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetTypeDefinitions gets a reference to the given []TypeDefinition and assigns it to the TypeDefinitions field.
+// SetTypeDefinitions sets field value
 func (o *WriteAuthorizationModelRequest) SetTypeDefinitions(v []TypeDefinition) {
-	o.TypeDefinitions = &v
+	o.TypeDefinitions = v
 }
 
 // GetSchemaVersion returns the SchemaVersion field value if set, zero value otherwise.
@@ -105,7 +98,7 @@ func (o *WriteAuthorizationModelRequest) SetSchemaVersion(v string) {
 
 func (o WriteAuthorizationModelRequest) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.TypeDefinitions != nil {
+	if true {
 		toSerialize["type_definitions"] = o.TypeDefinitions
 	}
 	if o.SchemaVersion != nil {

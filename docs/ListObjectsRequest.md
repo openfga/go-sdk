@@ -5,16 +5,16 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **AuthorizationModelId** | Pointer to **string** |  | [optional] 
-**Type** | Pointer to **string** |  | [optional] 
-**Relation** | Pointer to **string** |  | [optional] 
-**User** | Pointer to **string** |  | [optional] 
+**Type** | **string** |  | 
+**Relation** | **string** |  | 
+**User** | **string** |  | 
 **ContextualTuples** | Pointer to [**ContextualTupleKeys**](ContextualTupleKeys.md) |  | [optional] 
 
 ## Methods
 
 ### NewListObjectsRequest
 
-`func NewListObjectsRequest() *ListObjectsRequest`
+`func NewListObjectsRequest(type_ string, relation string, user string, ) *ListObjectsRequest`
 
 NewListObjectsRequest instantiates a new ListObjectsRequest object
 This constructor will assign default values to properties that have it defined,
@@ -73,11 +73,6 @@ and a boolean to check if the value has been set.
 
 SetType sets Type field to given value.
 
-### HasType
-
-`func (o *ListObjectsRequest) HasType() bool`
-
-HasType returns a boolean if a field has been set.
 
 ### GetRelation
 
@@ -98,11 +93,6 @@ and a boolean to check if the value has been set.
 
 SetRelation sets Relation field to given value.
 
-### HasRelation
-
-`func (o *ListObjectsRequest) HasRelation() bool`
-
-HasRelation returns a boolean if a field has been set.
 
 ### GetUser
 
@@ -123,11 +113,6 @@ and a boolean to check if the value has been set.
 
 SetUser sets User field to given value.
 
-### HasUser
-
-`func (o *ListObjectsRequest) HasUser() bool`
-
-HasUser returns a boolean if a field has been set.
 
 ### GetContextualTuples
 

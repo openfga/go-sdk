@@ -69,7 +69,7 @@ In your code, import the module and use it:
 import "github.com/openfga/go-sdk"
 
 func Main() {
-	configuration, err := openfga.NewConfiguration(openfga.UserConfiguration{})
+	configuration, err := openfga.NewConfiguration(openfga.Configuration{})
 }
 ```
 
@@ -80,6 +80,7 @@ go mod tidy
 ```
 
 to update `go.mod` and `go.sum` if you are using them.
+
 
 ## Getting Started
 
@@ -182,7 +183,7 @@ if err != nil {
 
 apiClient := openfga.NewAPIClient(configuration)
 
-store, _, err := apiClient.OpenFgaApi.CreateStore(context.Background()).Body(CreateStoreRequest{Name: PtrString("FGA Demo")}).Execute()
+store, _, err := apiClient.OpenFgaApi.CreateStore(context.Background()).Body(openfga.CreateStoreRequest{Name: "FGA Demo"}).Execute()
 if err != nil {
     // handle error
 }
@@ -217,7 +218,7 @@ if err != nil {
 > Requires a client initialized with a storeId
 
 ```golang
-_, _, err := apiClient.OpenFgaApi.DeleteStore(context.Background()).Execute()
+_, err := apiClient.OpenFgaApi.DeleteStore(context.Background()).Execute()
 if err != nil {
     // handle error
 }
@@ -232,12 +233,15 @@ if err != nil {
 > Learn more about [the OpenFGA configuration language](https://openfga.dev/docs/configuration-language).
 
 ```golang
-body  := openfga.WriteAuthorizationModelRequest{TypeDefinitions: &[]openfga.TypeDefinition{
+body  := openfga.WriteAuthorizationModelRequest{TypeDefinitions: []openfga.TypeDefinition{
 	{
-		Type: "repo",
+		Type: "user",
+	},
+	{
+		Type: "document",
 		Relations: &map[string]openfga.Userset{
 			"writer": {This: &map[string]interface{}{}},
-			"reader": {Union: &openfga.Usersets{
+			"viewer": {Union: &openfga.Usersets{
 				Child: &[]openfga.Userset{
 					{This: &map[string]interface{}{}},
 					{ComputedUserset: &openfga.ObjectRelation{
@@ -262,7 +266,7 @@ fmt.Printf("%s", data.AuthorizationModelId) // 1uHxCSuTP0VKPYSnkq1pbb1jeZw
 // Assuming `1uHxCSuTP0VKPYSnkq1pbb1jeZw` is an id of a single model
 data, response, err := apiClient.OpenFgaApi.ReadAuthorizationModel(context.Background(), "1uHxCSuTP0VKPYSnkq1pbb1jeZw").Execute()
 
-// data = {"authorization_model":{"id":"1uHxCSuTP0VKPYSnkq1pbb1jeZw","type_definitions":[{"type":"repo","relations":{"writer":{"this":{}},"reader":{ ... }}}]}} // JSON
+// data = {"authorization_model":{"id":"1uHxCSuTP0VKPYSnkq1pbb1jeZw","type_definitions":[{"type":"document","relations":{"writer":{"this":{}},"viewer":{ ... }}},{"type":"user"}]}} // JSON
 
 fmt.Printf("%s", data.AuthorizationModel.Id) // 1uHxCSuTP0VKPYSnkq1pbb1jeZw
 ```
@@ -287,11 +291,12 @@ fmt.Printf("%s", (*data.AuthorizationModelIds)[0]) // 1uHxCSuTP0VKPYSnkq1pbb1jeZ
 
 ```golang
 body := openfga.CheckRequest{
-	TupleKey: &openfga.TupleKey{
+	TupleKey: openfga.TupleKey{
 		User: openfga.PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-		Relation: openfga.PtrString("admin"),
-		Object: openfga.PtrString("workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6"),
+		Relation: openfga.PtrString("viewer"),
+		Object: openfga.PtrString("document:roadmap"),
 	},
+	AuthorizationModelId: openfga.PtrString("1uHxCSuTP0VKPYSnkq1pbb1jeZw"),
 }
 data, response, err := apiClient.OpenFgaApi.Check(context.Background()).Body(body).Execute()
 
@@ -311,11 +316,12 @@ body := openfga.WriteRequest{
 		TupleKeys: []openfga.TupleKey{
 			{
 				User: openfga.PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-				Relation: openfga.PtrString("admin"),
-				Object: openfga.PtrString("workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6"),
+				Relation: openfga.PtrString("viewer"),
+				Object: openfga.PtrString("document:roadmap"),
 			},
 		},
 	},
+	AuthorizationModelId: openfga.PtrString("1uHxCSuTP0VKPYSnkq1pbb1jeZw"),
 }
 _, response, err := apiClient.OpenFgaApi.Write(context.Background()).Body(body).Execute()
 
@@ -331,11 +337,12 @@ body := openfga.WriteRequest{
 		TupleKeys: []openfga.TupleKey{
 			{
 				User: openfga.PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-				Relation: openfga.PtrString("admin"),
-				Object: openfga.PtrString("workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6"),
+				Relation: openfga.PtrString("viewer"),
+				Object: openfga.PtrString("document:roadmap"),
 			},
 		},
 	},
+	AuthorizationModelId: openfga.PtrString("1uHxCSuTP0VKPYSnkq1pbb1jeZw"),
 }
 _, response, err := apiClient.OpenFgaApi.Write(context.Background()).Body(body).Execute()
 
@@ -347,14 +354,15 @@ _, response, err := apiClient.OpenFgaApi.Write(context.Background()).Body(body).
 
 ```golang
 body := openfga.ExpandRequest{
-	TupleKey: &openfga.TupleKey{
-		Relation: openfga.PtrString("admin"),
-		Object: openfga.PtrString("workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6"),
+	TupleKey: openfga.TupleKey{
+		Relation: openfga.PtrString("viewer"),
+		Object: openfga.PtrString("document:roadmap"),
 	},
+	AuthorizationModelId: openfga.PtrString("1uHxCSuTP0VKPYSnkq1pbb1jeZw"),
 }
 data, response, err := apiClient.OpenFgaApi.Expand(context.Background()).Body(body).Execute()
 
-// data = {"tree":{"root":{"name":"workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6#admin","leaf":{"users":{"users":["user:81684243-9356-4421-8fbf-a4f8d36aa31b","user:f52a4f7a-054d-47ff-bb6e-3ac81269988f"]}}}}} // JSON
+// data = {"tree":{"root":{"name":"document:roadmap#viewer","leaf":{"users":{"users":["user:81684243-9356-4421-8fbf-a4f8d36aa31b","user:f52a4f7a-054d-47ff-bb6e-3ac81269988f"]}}}}} // JSON
 ```
 
 #### Read Changes
@@ -362,38 +370,41 @@ data, response, err := apiClient.OpenFgaApi.Expand(context.Background()).Body(bo
 [API Documentation](https://openfga.dev/api/service#/Relationship%20Tuples/Read)
 
 ```golang
-// Find if a relationship tuple stating that a certain user is an admin on a certain workspace
+// Find if a relationship tuple stating that a certain user is a viewer of a certain document
 body := openfga.ReadRequest{
     TupleKey: &openfga.TupleKey{
         User:     openfga.PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-        Relation: openfga.PtrString("admin"),
-        Object:   openfga.PtrString("workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6"),
+        Relation: openfga.PtrString("viewer"),
+        Object:   openfga.PtrString("document:roadmap"),
     },
 }
 
-// Find all relationship tuples where a certain user has a relationship as any relation to a certain workspace
+// Find all relationship tuples where a certain user has a relationship as any relation to a certain document
 body := openfga.ReadRequest{
     TupleKey: &openfga.TupleKey{
         User:     openfga.PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-        Object:   openfga.PtrString("workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6"),
+        Object:   openfga.PtrString("document:roadmap"),
     },
 }
 
-// Find all relationship tuples where a certain user is an admin on any workspace
+// Find all relationship tuples where a certain user is a viewer of any document
 body := openfga.ReadRequest{
     TupleKey: &openfga.TupleKey{
         User:     openfga.PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-        Relation: openfga.PtrString("admin"),
-        Object:   openfga.PtrString("workspace:"),
+        Relation: openfga.PtrString("viewer"),
+        Object:   openfga.PtrString("document:"),
     },
 }
 
-// Find all relationship tuples where any user has a relationship as any relation with a particular workspace
+// Find all relationship tuples where any user has a relationship as any relation with a particular document
 body := openfga.ReadRequest{
     TupleKey: &openfga.TupleKey{
-        Object:   openfga.PtrString("workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6"),
+        Object:   openfga.PtrString("document:roadmap"),
     },
 }
+
+// Read all stored relationship tuples
+body := openfga.ReadRequest{}
 
 data, response, err := apiClient.OpenFgaApi.Read(context.Background()).Body(body).Execute()
 
@@ -407,15 +418,15 @@ data, response, err := apiClient.OpenFgaApi.Read(context.Background()).Body(body
 
 ```golang
 data, response, err := apiClient.OpenFgaApi.ReadChanges(context.Background()).
-    Type_("workspace").
+    Type_("document").
     PageSize(25).
     ContinuationToken("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ==").
     Execute()
 
 // response.continuation_token = ...
 // response.changes = [
-//   { tuple_key: { user, relation, object }, operation: "write", timestamp: ... },
-//   { tuple_key: { user, relation, object }, operation: "delete", timestamp: ... }
+//   { tuple_key: { user, relation, object }, operation: "writer", timestamp: ... },
+//   { tuple_key: { user, relation, object }, operation: "viewer", timestamp: ... }
 // ]
 ```
 
@@ -427,26 +438,22 @@ data, response, err := apiClient.OpenFgaApi.ReadChanges(context.Background()).
 
 ```golang
 body := openfga.ListObjectsRequest{
-    AuthorizationModelId: PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
-    User:                 PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-    Relation:             PtrString("can_read"),
-    Type:                 PtrString("document"),
-    ContextualTuples: &ContextualTupleKeys{
+	AuthorizationModelId: openfga.PtrString("1uHxCSuTP0VKPYSnkq1pbb1jeZw"),
+    User:                 "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+    Relation:             "viewer",
+    Type:                 "document",
+	ContextualTuples: &ContextualTupleKeys{
         TupleKeys: []TupleKey{{
             User:     PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-            Relation: PtrString("editor"),
-            Object:   PtrString("folder:product"),
-        }, {
-            User:     PtrString("folder:product"),
-            Relation: PtrString("parent"),
-            Object:   PtrString("document:roadmap"),
+            Relation: PtrString("writer"),
+            Object:   PtrString("document:budget"),
         }},
     },
 }
 
 data, response, err := apiClient.OpenFgaApi.ListObjects(context.Background()).Body(body).Execute()
 
-// response.object_ids = ["roadmap"]
+// response.objects = ["document:roadmap"]
 ```
 
 
@@ -459,8 +466,8 @@ Class | Method | HTTP request | Description
 *OpenFgaApi* | [**DeleteStore**](docs/OpenFgaApi.md#deletestore) | **Delete** /stores/{store_id} | Delete a store
 *OpenFgaApi* | [**Expand**](docs/OpenFgaApi.md#expand) | **Post** /stores/{store_id}/expand | Expand all relationships in userset tree format, and following userset rewrite rules.  Useful to reason about and debug a certain relationship
 *OpenFgaApi* | [**GetStore**](docs/OpenFgaApi.md#getstore) | **Get** /stores/{store_id} | Get a store
-*OpenFgaApi* | [**ListObjects**](docs/OpenFgaApi.md#listobjects) | **Post** /stores/{store_id}/list-objects | ListObjects lists all of the object ids for objects of the provided type that the given user has a specific relation with.
-*OpenFgaApi* | [**ListStores**](docs/OpenFgaApi.md#liststores) | **Get** /stores | Get all stores
+*OpenFgaApi* | [**ListObjects**](docs/OpenFgaApi.md#listobjects) | **Post** /stores/{store_id}/list-objects | [EXPERIMENTAL] Get all object ids of the given type that the user has a relation with
+*OpenFgaApi* | [**ListStores**](docs/OpenFgaApi.md#liststores) | **Get** /stores | List all stores
 *OpenFgaApi* | [**Read**](docs/OpenFgaApi.md#read) | **Post** /stores/{store_id}/read | Get tuples from the store that matches a query, without following userset rewrite rules
 *OpenFgaApi* | [**ReadAssertions**](docs/OpenFgaApi.md#readassertions) | **Get** /stores/{store_id}/assertions/{authorization_model_id} | Read assertions for an authorization model ID
 *OpenFgaApi* | [**ReadAuthorizationModel**](docs/OpenFgaApi.md#readauthorizationmodel) | **Get** /stores/{store_id}/authorization-models/{id} | Return a particular version of an authorization model

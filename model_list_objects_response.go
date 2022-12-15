@@ -18,7 +18,7 @@ import (
 
 // ListObjectsResponse struct for ListObjectsResponse
 type ListObjectsResponse struct {
-	ObjectIds *[]string `json:"object_ids,omitempty"`
+	Objects *[]string `json:"objects,omitempty"`
 }
 
 // NewListObjectsResponse instantiates a new ListObjectsResponse object
@@ -38,42 +38,42 @@ func NewListObjectsResponseWithDefaults() *ListObjectsResponse {
 	return &this
 }
 
-// GetObjectIds returns the ObjectIds field value if set, zero value otherwise.
-func (o *ListObjectsResponse) GetObjectIds() []string {
-	if o == nil || o.ObjectIds == nil {
+// GetObjects returns the Objects field value if set, zero value otherwise.
+func (o *ListObjectsResponse) GetObjects() []string {
+	if o == nil || o.Objects == nil {
 		var ret []string
 		return ret
 	}
-	return *o.ObjectIds
+	return *o.Objects
 }
 
-// GetObjectIdsOk returns a tuple with the ObjectIds field value if set, nil otherwise
+// GetObjectsOk returns a tuple with the Objects field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *ListObjectsResponse) GetObjectIdsOk() (*[]string, bool) {
-	if o == nil || o.ObjectIds == nil {
+func (o *ListObjectsResponse) GetObjectsOk() (*[]string, bool) {
+	if o == nil || o.Objects == nil {
 		return nil, false
 	}
-	return o.ObjectIds, true
+	return o.Objects, true
 }
 
-// HasObjectIds returns a boolean if a field has been set.
-func (o *ListObjectsResponse) HasObjectIds() bool {
-	if o != nil && o.ObjectIds != nil {
+// HasObjects returns a boolean if a field has been set.
+func (o *ListObjectsResponse) HasObjects() bool {
+	if o != nil && o.Objects != nil {
 		return true
 	}
 
 	return false
 }
 
-// SetObjectIds gets a reference to the given []string and assigns it to the ObjectIds field.
-func (o *ListObjectsResponse) SetObjectIds(v []string) {
-	o.ObjectIds = &v
+// SetObjects gets a reference to the given []string and assigns it to the Objects field.
+func (o *ListObjectsResponse) SetObjects(v []string) {
+	o.Objects = &v
 }
 
 func (o ListObjectsResponse) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.ObjectIds != nil {
-		toSerialize["object_ids"] = o.ObjectIds
+	if o.Objects != nil {
+		toSerialize["objects"] = o.Objects
 	}
 	return json.Marshal(toSerialize)
 }

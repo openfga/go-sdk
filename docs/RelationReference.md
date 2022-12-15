@@ -6,6 +6,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Type** | **string** |  | 
 **Relation** | Pointer to **string** |  | [optional] 
+**Wildcard** | Pointer to **map[string]interface{}** |  | [optional] 
 
 ## Methods
 
@@ -70,6 +71,31 @@ SetRelation sets Relation field to given value.
 `func (o *RelationReference) HasRelation() bool`
 
 HasRelation returns a boolean if a field has been set.
+
+### GetWildcard
+
+`func (o *RelationReference) GetWildcard() map[string]interface{}`
+
+GetWildcard returns the Wildcard field if non-nil, zero value otherwise.
+
+### GetWildcardOk
+
+`func (o *RelationReference) GetWildcardOk() (*map[string]interface{}, bool)`
+
+GetWildcardOk returns a tuple with the Wildcard field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetWildcard
+
+`func (o *RelationReference) SetWildcard(v map[string]interface{})`
+
+SetWildcard sets Wildcard field to given value.
+
+### HasWildcard
+
+`func (o *RelationReference) HasWildcard() bool`
+
+HasWildcard returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

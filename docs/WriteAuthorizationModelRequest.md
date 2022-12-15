@@ -4,14 +4,14 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**TypeDefinitions** | Pointer to [**[]TypeDefinition**](TypeDefinition.md) |  | [optional] 
+**TypeDefinitions** | [**[]TypeDefinition**](TypeDefinition.md) |  | 
 **SchemaVersion** | Pointer to **string** |  | [optional] 
 
 ## Methods
 
 ### NewWriteAuthorizationModelRequest
 
-`func NewWriteAuthorizationModelRequest() *WriteAuthorizationModelRequest`
+`func NewWriteAuthorizationModelRequest(typeDefinitions []TypeDefinition, ) *WriteAuthorizationModelRequest`
 
 NewWriteAuthorizationModelRequest instantiates a new WriteAuthorizationModelRequest object
 This constructor will assign default values to properties that have it defined,
@@ -45,11 +45,6 @@ and a boolean to check if the value has been set.
 
 SetTypeDefinitions sets TypeDefinitions field to given value.
 
-### HasTypeDefinitions
-
-`func (o *WriteAuthorizationModelRequest) HasTypeDefinitions() bool`
-
-HasTypeDefinitions returns a boolean if a field has been set.
 
 ### GetSchemaVersion
 

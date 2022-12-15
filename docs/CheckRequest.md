@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**TupleKey** | Pointer to [**TupleKey**](TupleKey.md) |  | [optional] 
+**TupleKey** | [**TupleKey**](TupleKey.md) |  | 
 **ContextualTuples** | Pointer to [**ContextualTupleKeys**](ContextualTupleKeys.md) |  | [optional] 
 **AuthorizationModelId** | Pointer to **string** |  | [optional] 
 **Trace** | Pointer to **bool** | Defaults to false. Making it true has performance implications. | [optional] [readonly] 
@@ -13,7 +13,7 @@ Name | Type | Description | Notes
 
 ### NewCheckRequest
 
-`func NewCheckRequest() *CheckRequest`
+`func NewCheckRequest(tupleKey TupleKey, ) *CheckRequest`
 
 NewCheckRequest instantiates a new CheckRequest object
 This constructor will assign default values to properties that have it defined,
@@ -47,11 +47,6 @@ and a boolean to check if the value has been set.
 
 SetTupleKey sets TupleKey field to given value.
 
-### HasTupleKey
-
-`func (o *CheckRequest) HasTupleKey() bool`
-
-HasTupleKey returns a boolean if a field has been set.
 
 ### GetContextualTuples
 

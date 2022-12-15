@@ -18,16 +18,18 @@ import (
 
 // Difference struct for Difference
 type Difference struct {
-	Base     *Userset `json:"base,omitempty"`
-	Subtract *Userset `json:"subtract,omitempty"`
+	Base     Userset `json:"base"`
+	Subtract Userset `json:"subtract"`
 }
 
 // NewDifference instantiates a new Difference object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewDifference() *Difference {
+func NewDifference(base Userset, subtract Userset) *Difference {
 	this := Difference{}
+	this.Base = base
+	this.Subtract = subtract
 	return &this
 }
 
@@ -39,76 +41,60 @@ func NewDifferenceWithDefaults() *Difference {
 	return &this
 }
 
-// GetBase returns the Base field value if set, zero value otherwise.
+// GetBase returns the Base field value
 func (o *Difference) GetBase() Userset {
-	if o == nil || o.Base == nil {
+	if o == nil {
 		var ret Userset
 		return ret
 	}
-	return *o.Base
+
+	return o.Base
 }
 
-// GetBaseOk returns a tuple with the Base field value if set, nil otherwise
+// GetBaseOk returns a tuple with the Base field value
 // and a boolean to check if the value has been set.
 func (o *Difference) GetBaseOk() (*Userset, bool) {
-	if o == nil || o.Base == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Base, true
+	return &o.Base, true
 }
 
-// HasBase returns a boolean if a field has been set.
-func (o *Difference) HasBase() bool {
-	if o != nil && o.Base != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetBase gets a reference to the given Userset and assigns it to the Base field.
+// SetBase sets field value
 func (o *Difference) SetBase(v Userset) {
-	o.Base = &v
+	o.Base = v
 }
 
-// GetSubtract returns the Subtract field value if set, zero value otherwise.
+// GetSubtract returns the Subtract field value
 func (o *Difference) GetSubtract() Userset {
-	if o == nil || o.Subtract == nil {
+	if o == nil {
 		var ret Userset
 		return ret
 	}
-	return *o.Subtract
+
+	return o.Subtract
 }
 
-// GetSubtractOk returns a tuple with the Subtract field value if set, nil otherwise
+// GetSubtractOk returns a tuple with the Subtract field value
 // and a boolean to check if the value has been set.
 func (o *Difference) GetSubtractOk() (*Userset, bool) {
-	if o == nil || o.Subtract == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Subtract, true
+	return &o.Subtract, true
 }
 
-// HasSubtract returns a boolean if a field has been set.
-func (o *Difference) HasSubtract() bool {
-	if o != nil && o.Subtract != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetSubtract gets a reference to the given Userset and assigns it to the Subtract field.
+// SetSubtract sets field value
 func (o *Difference) SetSubtract(v Userset) {
-	o.Subtract = &v
+	o.Subtract = v
 }
 
 func (o Difference) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.Base != nil {
+	if true {
 		toSerialize["base"] = o.Base
 	}
-	if o.Subtract != nil {
+	if true {
 		toSerialize["subtract"] = o.Subtract
 	}
 	return json.Marshal(toSerialize)

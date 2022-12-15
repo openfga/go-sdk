@@ -18,16 +18,17 @@ import (
 
 // Assertion struct for Assertion
 type Assertion struct {
-	TupleKey    *TupleKey `json:"tuple_key,omitempty"`
-	Expectation bool      `json:"expectation"`
+	TupleKey    TupleKey `json:"tuple_key"`
+	Expectation bool     `json:"expectation"`
 }
 
 // NewAssertion instantiates a new Assertion object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewAssertion(expectation bool) *Assertion {
+func NewAssertion(tupleKey TupleKey, expectation bool) *Assertion {
 	this := Assertion{}
+	this.TupleKey = tupleKey
 	this.Expectation = expectation
 	return &this
 }
@@ -40,36 +41,28 @@ func NewAssertionWithDefaults() *Assertion {
 	return &this
 }
 
-// GetTupleKey returns the TupleKey field value if set, zero value otherwise.
+// GetTupleKey returns the TupleKey field value
 func (o *Assertion) GetTupleKey() TupleKey {
-	if o == nil || o.TupleKey == nil {
+	if o == nil {
 		var ret TupleKey
 		return ret
 	}
-	return *o.TupleKey
+
+	return o.TupleKey
 }
 
-// GetTupleKeyOk returns a tuple with the TupleKey field value if set, nil otherwise
+// GetTupleKeyOk returns a tuple with the TupleKey field value
 // and a boolean to check if the value has been set.
 func (o *Assertion) GetTupleKeyOk() (*TupleKey, bool) {
-	if o == nil || o.TupleKey == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.TupleKey, true
+	return &o.TupleKey, true
 }
 
-// HasTupleKey returns a boolean if a field has been set.
-func (o *Assertion) HasTupleKey() bool {
-	if o != nil && o.TupleKey != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetTupleKey gets a reference to the given TupleKey and assigns it to the TupleKey field.
+// SetTupleKey sets field value
 func (o *Assertion) SetTupleKey(v TupleKey) {
-	o.TupleKey = &v
+	o.TupleKey = v
 }
 
 // GetExpectation returns the Expectation field value
@@ -98,7 +91,7 @@ func (o *Assertion) SetExpectation(v bool) {
 
 func (o Assertion) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.TupleKey != nil {
+	if true {
 		toSerialize["tuple_key"] = o.TupleKey
 	}
 	if true {

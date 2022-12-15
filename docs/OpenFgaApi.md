@@ -9,8 +9,8 @@ Method | HTTP request | Description
 [**DeleteStore**](OpenFgaApi.md#DeleteStore) | **Delete** /stores/{store_id} | Delete a store
 [**Expand**](OpenFgaApi.md#Expand) | **Post** /stores/{store_id}/expand | Expand all relationships in userset tree format, and following userset rewrite rules.  Useful to reason about and debug a certain relationship
 [**GetStore**](OpenFgaApi.md#GetStore) | **Get** /stores/{store_id} | Get a store
-[**ListObjects**](OpenFgaApi.md#ListObjects) | **Post** /stores/{store_id}/list-objects | ListObjects lists all of the object ids for objects of the provided type that the given user has a specific relation with.
-[**ListStores**](OpenFgaApi.md#ListStores) | **Get** /stores | Get all stores
+[**ListObjects**](OpenFgaApi.md#ListObjects) | **Post** /stores/{store_id}/list-objects | [EXPERIMENTAL] Get all object ids of the given type that the user has a relation with
+[**ListStores**](OpenFgaApi.md#ListStores) | **Get** /stores | List all stores
 [**Read**](OpenFgaApi.md#Read) | **Post** /stores/{store_id}/read | Get tuples from the store that matches a query, without following userset rewrite rules
 [**ReadAssertions**](OpenFgaApi.md#ReadAssertions) | **Get** /stores/{store_id}/assertions/{authorization_model_id} | Read assertions for an authorization model ID
 [**ReadAuthorizationModel**](OpenFgaApi.md#ReadAuthorizationModel) | **Get** /stores/{store_id}/authorization-models/{id} | Return a particular version of an authorization model
@@ -44,7 +44,7 @@ import (
 
 func main() {
     
-    body := *openapiclient.NewCheckRequest() // CheckRequest | 
+    body := *openapiclient.NewCheckRequest(*openapiclient.NewTupleKey()) // CheckRequest | 
 
     configuration, err := openfga.NewConfiguration(openfga.Configuration{
         ApiScheme:      os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"
@@ -318,7 +318,7 @@ import (
 
 func main() {
     
-    body := *openapiclient.NewExpandRequest() // ExpandRequest | 
+    body := *openapiclient.NewExpandRequest(*openapiclient.NewTupleKey()) // ExpandRequest | 
 
     configuration, err := openfga.NewConfiguration(openfga.Configuration{
         ApiScheme:      os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"
@@ -486,7 +486,9 @@ No authorization required
 
 > ListObjectsResponse ListObjects(ctx).Body(body).Execute()
 
-ListObjects lists all of the object ids for objects of the provided type that the given user has a specific relation with.
+[EXPERIMENTAL] Get all object ids of the given type that the user has a relation with
+
+
 
 ### Example
 
@@ -502,7 +504,7 @@ import (
 
 func main() {
     
-    body := *openapiclient.NewListObjectsRequest() // ListObjectsRequest | 
+    body := *openapiclient.NewListObjectsRequest("document", "reader", "user:anne") // ListObjectsRequest | 
 
     configuration, err := openfga.NewConfiguration(openfga.Configuration{
         ApiScheme:      os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"
@@ -578,7 +580,7 @@ No authorization required
 
 > ListStoresResponse ListStores(ctx).PageSize(pageSize).ContinuationToken(continuationToken).Execute()
 
-Get all stores
+List all stores
 
 
 
@@ -1259,7 +1261,7 @@ import (
 func main() {
     
     authorizationModelId := "authorizationModelId_example" // string | 
-    body := *openapiclient.NewWriteAssertionsRequest([]openapiclient.Assertion{*openapiclient.NewAssertion(false)}) // WriteAssertionsRequest | 
+    body := *openapiclient.NewWriteAssertionsRequest([]openapiclient.Assertion{*openapiclient.NewAssertion(*openapiclient.NewTupleKey(), false)}) // WriteAssertionsRequest | 
 
     configuration, err := openfga.NewConfiguration(openfga.Configuration{
         ApiScheme:      os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"
@@ -1352,7 +1354,7 @@ import (
 
 func main() {
     
-    body := *openapiclient.NewWriteAuthorizationModelRequest() // WriteAuthorizationModelRequest | 
+    body := *openapiclient.NewWriteAuthorizationModelRequest([]openapiclient.TypeDefinition{*openapiclient.NewTypeDefinition("document")}) // WriteAuthorizationModelRequest | 
 
     configuration, err := openfga.NewConfiguration(openfga.Configuration{
         ApiScheme:      os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"

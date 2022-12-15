@@ -4,14 +4,14 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Base** | Pointer to [**Userset**](Userset.md) |  | [optional] 
-**Subtract** | Pointer to [**Userset**](Userset.md) |  | [optional] 
+**Base** | [**Userset**](Userset.md) |  | 
+**Subtract** | [**Userset**](Userset.md) |  | 
 
 ## Methods
 
 ### NewDifference
 
-`func NewDifference() *Difference`
+`func NewDifference(base Userset, subtract Userset, ) *Difference`
 
 NewDifference instantiates a new Difference object
 This constructor will assign default values to properties that have it defined,
@@ -45,11 +45,6 @@ and a boolean to check if the value has been set.
 
 SetBase sets Base field to given value.
 
-### HasBase
-
-`func (o *Difference) HasBase() bool`
-
-HasBase returns a boolean if a field has been set.
 
 ### GetSubtract
 
@@ -70,11 +65,6 @@ and a boolean to check if the value has been set.
 
 SetSubtract sets Subtract field to given value.
 
-### HasSubtract
-
-`func (o *Difference) HasSubtract() bool`
-
-HasSubtract returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

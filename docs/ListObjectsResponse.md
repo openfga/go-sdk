@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**ObjectIds** | Pointer to **[]string** |  | [optional] 
+**Objects** | Pointer to **[]string** |  | [optional] 
 
 ## Methods
 
@@ -25,30 +25,30 @@ NewListObjectsResponseWithDefaults instantiates a new ListObjectsResponse object
 This constructor will only assign default values to properties that have it defined,
 but it doesn't guarantee that properties required by API are set
 
-### GetObjectIds
+### GetObjects
 
-`func (o *ListObjectsResponse) GetObjectIds() []string`
+`func (o *ListObjectsResponse) GetObjects() []string`
 
-GetObjectIds returns the ObjectIds field if non-nil, zero value otherwise.
+GetObjects returns the Objects field if non-nil, zero value otherwise.
 
-### GetObjectIdsOk
+### GetObjectsOk
 
-`func (o *ListObjectsResponse) GetObjectIdsOk() (*[]string, bool)`
+`func (o *ListObjectsResponse) GetObjectsOk() (*[]string, bool)`
 
-GetObjectIdsOk returns a tuple with the ObjectIds field if it's non-nil, zero value otherwise
+GetObjectsOk returns a tuple with the Objects field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
-### SetObjectIds
+### SetObjects
 
-`func (o *ListObjectsResponse) SetObjectIds(v []string)`
+`func (o *ListObjectsResponse) SetObjects(v []string)`
 
-SetObjectIds sets ObjectIds field to given value.
+SetObjects sets Objects field to given value.
 
-### HasObjectIds
+### HasObjects
 
-`func (o *ListObjectsResponse) HasObjectIds() bool`
+`func (o *ListObjectsResponse) HasObjects() bool`
 
-HasObjectIds returns a boolean if a field has been set.
+HasObjects returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
