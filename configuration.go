@@ -19,7 +19,7 @@ import (
 	"github.com/openfga/go-sdk/credentials"
 )
 
-var SdkVersion = "0.2.0"
+var SdkVersion = "0.2.1"
 
 // RetryParams configures configuration for retry in case of HTTP too many request
 type RetryParams struct {
