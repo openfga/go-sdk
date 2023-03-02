@@ -3,7 +3,7 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/openfga/go-sdk.svg)](https://pkg.go.dev/github.com/openfga/go-sdk)
 [![Release](https://img.shields.io/github/v/release/openfga/go-sdk?sort=semver&color=green)](https://github.com/openfga/go-sdk/releases)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](./LICENSE)
-[![FOSSA Status](https://app.fossa.com/api/projects/custom%2B4989%2Fgithub.com%2Fopenfga%2Fgo-sdk.svg?type=shield)](https://app.fossa.com/reports/1c1c164d-b721-47e0-9165-400029aad1e4)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fopenfga%2Fgo-sdk.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fopenfga%2Fgo-sdk?ref=badge_shield)
 [![Discord Server](https://img.shields.io/discord/759188666072825867?color=7289da&logo=discord "Discord Server")](https://discord.com/channels/759188666072825867/930524706854031421)
 [![Twitter](https://img.shields.io/twitter/follow/openfga?color=%23179CF0&logo=twitter&style=flat-square "@openfga on Twitter")](https://twitter.com/openfga)
 

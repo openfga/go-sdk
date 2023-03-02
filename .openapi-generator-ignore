@@ -1,2 +1,3 @@
 .travis.yml
 api/openapi.yaml
+test/api_open_fga_test.go

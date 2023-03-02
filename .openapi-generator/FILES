@@ -14,6 +14,7 @@ NOTICE.txt
 README.md
 VERSION.txt
 api_open_fga.go
+api_open_fga_test.go
 client.go
 configuration.go
 credentials/credentials.go
@@ -72,7 +73,6 @@ docs/WriteAssertionsRequest.md
 docs/WriteAuthorizationModelRequest.md
 docs/WriteAuthorizationModelResponse.md
 docs/WriteRequest.md
-fga_test.go
 git_push.sh
 go.mod
 go.sum

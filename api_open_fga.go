@@ -35,7 +35,7 @@ type OpenFgaApi interface {
 		 * Check Check whether a user is authorized to access an object
 		 * The Check API queries to check if the user has a certain relationship with an object in a certain store.
 	A `contextual_tuples` object may also be included in the body of the request. This object contains one field `tuple_keys`, which is an array of tuple keys.
-	You may also provide an `authorization_model_id` in the body. This will be used to assert that the input `tuple_key` is valid for the model specified. If not specified, the assertion will be made against the latest authorization model ID.
+	You may also provide an `authorization_model_id` in the body. This will be used to assert that the input `tuple_key` is valid for the model specified. If not specified, the assertion will be made against the latest authorization model ID. It is strongly recommended to specify authorization model id for better performance.
 	The response will return whether the relationship exists in the field `allowed`.
 
 	## Example
@@ -63,7 +63,8 @@ type OpenFgaApi interface {
 	        "object": "time_slot:office_hours"
 	      }
 	    ]
-	  }
+	  },
+	  "authorization_model_id": "01G50QVV17PECNVAHX1GG4Y5NC"
 	}
 	```
 	OpenFGA's response will include `{ "allowed": true }` if there is a relationship and `{ "allowed": false }` if there isn't.
@@ -119,7 +120,8 @@ type OpenFgaApi interface {
 	  "tuple_key": {
 	    "object": "document:2021-budget",
 	    "relation": "reader"
-	  }
+	  },
+	  "authorization_model_id": "01G50QVV17PECNVAHX1GG4Y5NC"
 	}
 	```
 	OpenFGA's response will be a userset tree of the users and usersets that have read access to the document.
@@ -183,7 +185,7 @@ type OpenFgaApi interface {
 	/*
 		 * ListObjects [EXPERIMENTAL] Get all objects of the given type that the user has a relation with
 		 * The ListObjects API returns a list of all the objects of the given type that the user has a relation with. To achieve this, both the store tuples and the authorization model are used.
-	An `authorization_model_id` may be specified in the body. If it is, it will be used to decide the underlying implementation used. If it is not specified, the latest authorization model ID will be used.
+	An `authorization_model_id` may be specified in the body. If it is, it will be used to decide the underlying implementation used. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance.
 	You may also specify `contextual_tuples` that will be treated as regular tuples.
 	The response will contain the related objects in an array in the "objects" field of the response and they will be strings in the object format `<type>:<id>` (e.g. "document:roadmap")
 
@@ -470,7 +472,8 @@ type OpenFgaApi interface {
 	        "object": "document:2021-budget"
 	      }
 	    ]
-	  }
+	  },
+	  "authorization_model_id": "01G50QVV17PECNVAHX1GG4Y5NC"
 	}
 	```
 	### Removing relationships
@@ -601,7 +604,7 @@ func (r ApiCheckRequest) Execute() (CheckResponse, *_nethttp.Response, error) {
   - The Check API queries to check if the user has a certain relationship with an object in a certain store.
 
 A `contextual_tuples` object may also be included in the body of the request. This object contains one field `tuple_keys`, which is an array of tuple keys.
-You may also provide an `authorization_model_id` in the body. This will be used to assert that the input `tuple_key` is valid for the model specified. If not specified, the assertion will be made against the latest authorization model ID.
+You may also provide an `authorization_model_id` in the body. This will be used to assert that the input `tuple_key` is valid for the model specified. If not specified, the assertion will be made against the latest authorization model ID. It is strongly recommended to specify authorization model id for better performance.
 The response will return whether the relationship exists in the field `allowed`.
 
 ## Example
@@ -632,7 +635,8 @@ the Check API can be used with the following request body:
 	        "object": "time_slot:office_hours"
 	      }
 	    ]
-	  }
+	  },
+	  "authorization_model_id": "01G50QVV17PECNVAHX1GG4Y5NC"
 	}
 
 ```
@@ -1417,7 +1421,8 @@ To expand all users that have the `reader` relationship with object `document:20
 	  "tuple_key": {
 	    "object": "document:2021-budget",
 	    "relation": "reader"
-	  }
+	  },
+	  "authorization_model_id": "01G50QVV17PECNVAHX1GG4Y5NC"
 	}
 
 ```
@@ -1975,7 +1980,7 @@ func (r ApiListObjectsRequest) Execute() (ListObjectsResponse, *_nethttp.Respons
   - ListObjects [EXPERIMENTAL] Get all objects of the given type that the user has a relation with
   - The ListObjects API returns a list of all the objects of the given type that the user has a relation with. To achieve this, both the store tuples and the authorization model are used.
 
-An `authorization_model_id` may be specified in the body. If it is, it will be used to decide the underlying implementation used. If it is not specified, the latest authorization model ID will be used.
+An `authorization_model_id` may be specified in the body. If it is, it will be used to decide the underlying implementation used. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance.
 You may also specify `contextual_tuples` that will be treated as regular tuples.
 The response will contain the related objects in an array in the "objects" field of the response and they will be strings in the object format `<type>:<id>` (e.g. "document:roadmap")
 
@@ -4049,7 +4054,8 @@ To add `user:anne` as a `writer` for `document:2021-budget`, call write API with
 	        "object": "document:2021-budget"
 	      }
 	    ]
-	  }
+	  },
+	  "authorization_model_id": "01G50QVV17PECNVAHX1GG4Y5NC"
 	}
 
 ```
