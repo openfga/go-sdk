@@ -126,7 +126,7 @@ func main() {
         StoreId:        os.Getenv("OPENFGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
         Credentials: &credentials.Credentials{
             Method: credentials.CredentialsMethodApiToken,
-            Config: {
+            Config: &credentials.Config {
                 ApiToken: os.Getenv("OPENFGA_API_TOKEN"), // will be passed as the "Authorization: Bearer ${ApiToken}" request header
             },
         },
