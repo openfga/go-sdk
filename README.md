@@ -88,7 +88,7 @@ to update `go.mod` and `go.sum` if you are using them.
 
 [Learn how to initialize your SDK](https://openfga.dev/docs/getting-started/setup-sdk-client)
 
-Without an API Token
+#### No Credentials
 
 ```golang
 import (
@@ -111,7 +111,7 @@ func main() {
 }
 ```
 
-With an API Token
+#### API Token
 
 ```golang
 import (
@@ -126,8 +126,40 @@ func main() {
         StoreId:        os.Getenv("OPENFGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
         Credentials: &credentials.Credentials{
             Method: credentials.CredentialsMethodApiToken,
-            Config: &credentials.Config {
+            Config: &credentials.Config{
                 ApiToken: os.Getenv("OPENFGA_API_TOKEN"), // will be passed as the "Authorization: Bearer ${ApiToken}" request header
+            },
+        },
+    })
+
+    if err != nil {
+    // .. Handle error
+    }
+
+    apiClient := openfga.NewAPIClient(configuration)
+}
+```
+
+#### Client Credentials
+
+```golang
+import (
+    openfga "github.com/openfga/go-sdk"
+    "os"
+)
+
+func main() {
+    configuration, err := openfga.NewConfiguration(openfga.Configuration{
+        ApiScheme:      os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"
+        ApiHost:        os.Getenv("OPENFGA_API_HOST"), // required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
+        StoreId:        os.Getenv("OPENFGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
+        Credentials: &credentials.Credentials{
+            Method: credentials.CredentialsMethodClientCredentials,
+            Config: &credentials.Config{
+                ClientCredentialsClientId:       os.Getenv("OPENFGA_CLIENT_ID"),
+                ClientCredentialsClientSecret:   os.Getenv("OPENFGA_CLIENT_SECRET"),
+                ClientCredentialsApiAudience:    os.Getenv("OPENFGA_API_AUDIENCE"),
+                ClientCredentialsApiTokenIssuer: os.Getenv("OPENFGA_API_TOKEN_ISSUER"),
             },
         },
     })
@@ -266,7 +298,7 @@ fmt.Printf("%s", data.AuthorizationModelId) // 1uHxCSuTP0VKPYSnkq1pbb1jeZw
 // Assuming `1uHxCSuTP0VKPYSnkq1pbb1jeZw` is an id of a single model
 data, response, err := apiClient.OpenFgaApi.ReadAuthorizationModel(context.Background(), "1uHxCSuTP0VKPYSnkq1pbb1jeZw").Execute()
 
-// data = {"authorization_model":{"id":"1uHxCSuTP0VKPYSnkq1pbb1jeZw","type_definitions":[{"type":"document","relations":{"writer":{"this":{}},"viewer":{ ... }}},{"type":"user"}]}} // JSON
+// data = {"authorization_model":{"id":"1uHxCSuTP0VKPYSnkq1pbb1jeZw","schema_version":"1.1","type_definitions":[{"type":"document","relations":{"writer":{"this":{}},"viewer":{ ... }}},{"type":"user"}]}} // JSON
 
 fmt.Printf("%s", data.AuthorizationModel.Id) // 1uHxCSuTP0VKPYSnkq1pbb1jeZw
 ```
@@ -466,7 +498,7 @@ Class | Method | HTTP request | Description
 *OpenFgaApi* | [**DeleteStore**](docs/OpenFgaApi.md#deletestore) | **Delete** /stores/{store_id} | Delete a store
 *OpenFgaApi* | [**Expand**](docs/OpenFgaApi.md#expand) | **Post** /stores/{store_id}/expand | Expand all relationships in userset tree format, and following userset rewrite rules.  Useful to reason about and debug a certain relationship
 *OpenFgaApi* | [**GetStore**](docs/OpenFgaApi.md#getstore) | **Get** /stores/{store_id} | Get a store
-*OpenFgaApi* | [**ListObjects**](docs/OpenFgaApi.md#listobjects) | **Post** /stores/{store_id}/list-objects | [EXPERIMENTAL] Get all objects of the given type that the user has a relation with
+*OpenFgaApi* | [**ListObjects**](docs/OpenFgaApi.md#listobjects) | **Post** /stores/{store_id}/list-objects | Get all objects of the given type that the user has a relation with
 *OpenFgaApi* | [**ListStores**](docs/OpenFgaApi.md#liststores) | **Get** /stores | List all stores
 *OpenFgaApi* | [**Read**](docs/OpenFgaApi.md#read) | **Post** /stores/{store_id}/read | Get tuples from the store that matches a query, without following userset rewrite rules
 *OpenFgaApi* | [**ReadAssertions**](docs/OpenFgaApi.md#readassertions) | **Get** /stores/{store_id}/assertions/{authorization_model_id} | Read assertions for an authorization model ID

@@ -5,5 +5,5 @@ server: https://app.fossa.com
 project:
   id: github.com/openfga/go-sdk
   name: github.com/openfga/go-sdk
-  link: fga.dev
+  link: openfga.dev
   url: github.com/openfga/go-sdk

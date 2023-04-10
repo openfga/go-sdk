@@ -5,14 +5,14 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Id** | Pointer to **string** |  | [optional] 
-**SchemaVersion** | Pointer to **string** |  | [optional] 
+**SchemaVersion** | **string** |  | 
 **TypeDefinitions** | Pointer to [**[]TypeDefinition**](TypeDefinition.md) |  | [optional] 
 
 ## Methods
 
 ### NewAuthorizationModel
 
-`func NewAuthorizationModel() *AuthorizationModel`
+`func NewAuthorizationModel(schemaVersion string, ) *AuthorizationModel`
 
 NewAuthorizationModel instantiates a new AuthorizationModel object
 This constructor will assign default values to properties that have it defined,
@@ -71,11 +71,6 @@ and a boolean to check if the value has been set.
 
 SetSchemaVersion sets SchemaVersion field to given value.
 
-### HasSchemaVersion
-
-`func (o *AuthorizationModel) HasSchemaVersion() bool`
-
-HasSchemaVersion returns a boolean if a field has been set.
 
 ### GetTypeDefinitions
 

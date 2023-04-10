@@ -43,7 +43,7 @@ type Configuration struct {
 // DefaultRetryParams returns the default retry parameters
 func DefaultRetryParams() *RetryParams {
 	return &RetryParams{
-		MaxRetry:    3,
+		MaxRetry:    5,
 		MinWaitInMs: 100,
 	}
 }
@@ -106,8 +106,8 @@ func (c *Configuration) ValidateConfig() error {
 		}
 	}
 
-	if c.RetryParams != nil && c.RetryParams.MaxRetry > 5 {
-		return reportError("Configuration.RetryParams.MaxRetry exceeds maximum allowed limit of 5")
+	if c.RetryParams != nil && c.RetryParams.MaxRetry > 15 {
+		return reportError("Configuration.RetryParams.MaxRetry exceeds maximum allowed limit of 15")
 	}
 
 	return nil

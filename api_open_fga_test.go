@@ -404,7 +404,7 @@ func TestOpenFgaApi(t *testing.T) {
 	t.Run("ReadAuthorizationModels", func(t *testing.T) {
 		test := TestDefinition{
 			Name:           "ReadAuthorizationModels",
-			JsonResponse:   `{"authorization_models":[{"id":"1uHxCSuTP0VKPYSnkq1pbb1jeZw","type_definitions":[]}]}`,
+			JsonResponse:   `{"authorization_models":[{"id":"1uHxCSuTP0VKPYSnkq1pbb1jeZw","schema_version":"1.1","type_definitions":[]}]}`,
 			ResponseStatus: 200,
 			Method:         "GET",
 			RequestPath:    "authorization-models",
@@ -507,7 +507,7 @@ func TestOpenFgaApi(t *testing.T) {
 	t.Run("ReadAuthorizationModel", func(t *testing.T) {
 		test := TestDefinition{
 			Name:           "ReadAuthorizationModel",
-			JsonResponse:   `{"authorization_model":{"id":"1uHxCSuTP0VKPYSnkq1pbb1jeZw", "type_definitions":[{"type":"github-repo", "relations":{"viewer":{"this":{}}}}]}}`,
+			JsonResponse:   `{"authorization_model":{"id":"1uHxCSuTP0VKPYSnkq1pbb1jeZw", "schema_version":"1.1", "type_definitions":[{"type":"github-repo", "relations":{"viewer":{"this":{}}}}]}}`,
 			ResponseStatus: 200,
 			Method:         "GET",
 			RequestPath:    "authorization-models",

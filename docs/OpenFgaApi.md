@@ -9,7 +9,7 @@ Method | HTTP request | Description
 [**DeleteStore**](OpenFgaApi.md#DeleteStore) | **Delete** /stores/{store_id} | Delete a store
 [**Expand**](OpenFgaApi.md#Expand) | **Post** /stores/{store_id}/expand | Expand all relationships in userset tree format, and following userset rewrite rules.  Useful to reason about and debug a certain relationship
 [**GetStore**](OpenFgaApi.md#GetStore) | **Get** /stores/{store_id} | Get a store
-[**ListObjects**](OpenFgaApi.md#ListObjects) | **Post** /stores/{store_id}/list-objects | [EXPERIMENTAL] Get all objects of the given type that the user has a relation with
+[**ListObjects**](OpenFgaApi.md#ListObjects) | **Post** /stores/{store_id}/list-objects | Get all objects of the given type that the user has a relation with
 [**ListStores**](OpenFgaApi.md#ListStores) | **Get** /stores | List all stores
 [**Read**](OpenFgaApi.md#Read) | **Post** /stores/{store_id}/read | Get tuples from the store that matches a query, without following userset rewrite rules
 [**ReadAssertions**](OpenFgaApi.md#ReadAssertions) | **Get** /stores/{store_id}/assertions/{authorization_model_id} | Read assertions for an authorization model ID
@@ -486,7 +486,7 @@ No authorization required
 
 > ListObjectsResponse ListObjects(ctx).Body(body).Execute()
 
-[EXPERIMENTAL] Get all objects of the given type that the user has a relation with
+Get all objects of the given type that the user has a relation with
 
 
 

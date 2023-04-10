@@ -19,7 +19,7 @@ import (
 // AuthorizationModel struct for AuthorizationModel
 type AuthorizationModel struct {
 	Id              *string           `json:"id,omitempty"`
-	SchemaVersion   *string           `json:"schema_version,omitempty"`
+	SchemaVersion   string            `json:"schema_version"`
 	TypeDefinitions *[]TypeDefinition `json:"type_definitions,omitempty"`
 }
 
@@ -27,8 +27,9 @@ type AuthorizationModel struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewAuthorizationModel() *AuthorizationModel {
+func NewAuthorizationModel(schemaVersion string) *AuthorizationModel {
 	this := AuthorizationModel{}
+	this.SchemaVersion = schemaVersion
 	return &this
 }
 
@@ -72,36 +73,28 @@ func (o *AuthorizationModel) SetId(v string) {
 	o.Id = &v
 }
 
-// GetSchemaVersion returns the SchemaVersion field value if set, zero value otherwise.
+// GetSchemaVersion returns the SchemaVersion field value
 func (o *AuthorizationModel) GetSchemaVersion() string {
-	if o == nil || o.SchemaVersion == nil {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.SchemaVersion
+
+	return o.SchemaVersion
 }
 
-// GetSchemaVersionOk returns a tuple with the SchemaVersion field value if set, nil otherwise
+// GetSchemaVersionOk returns a tuple with the SchemaVersion field value
 // and a boolean to check if the value has been set.
 func (o *AuthorizationModel) GetSchemaVersionOk() (*string, bool) {
-	if o == nil || o.SchemaVersion == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.SchemaVersion, true
+	return &o.SchemaVersion, true
 }
 
-// HasSchemaVersion returns a boolean if a field has been set.
-func (o *AuthorizationModel) HasSchemaVersion() bool {
-	if o != nil && o.SchemaVersion != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetSchemaVersion gets a reference to the given string and assigns it to the SchemaVersion field.
+// SetSchemaVersion sets field value
 func (o *AuthorizationModel) SetSchemaVersion(v string) {
-	o.SchemaVersion = &v
+	o.SchemaVersion = v
 }
 
 // GetTypeDefinitions returns the TypeDefinitions field value if set, zero value otherwise.
@@ -141,7 +134,7 @@ func (o AuthorizationModel) MarshalJSON() ([]byte, error) {
 	if o.Id != nil {
 		toSerialize["id"] = o.Id
 	}
-	if o.SchemaVersion != nil {
+	if true {
 		toSerialize["schema_version"] = o.SchemaVersion
 	}
 	if o.TypeDefinitions != nil {
