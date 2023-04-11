@@ -385,7 +385,7 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 
 		_, _, err = apiClient.OpenFgaApi.ReadAuthorizationModels(context.Background()).Execute()
 		if err == nil {
-			t.Fatalf("Expected an error, got non")
+			t.Fatalf("Expected an error, got none")
 		}
 	})
 }
