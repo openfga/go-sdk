@@ -32,9 +32,9 @@ func TestOpenFgaClient(t *testing.T) {
 	t.Run("ListStores", func(t *testing.T) {
 		test := TestDefinition{
 			Name:           "ListStores",
-			JsonResponse:   `{"stores":[{"id":"1uHxCSuTP0VKPYSnkq1pbb1jeZw","name":"Test Store","created_at":"2023-01-01T23:23:23.000000000Z","updated_at":"2023-01-01T23:23:23.000000000Z"}]}`,
+			JsonResponse:   `{"stores":[{"id":"01GXSA8YR785C4FYS3C0RTG7B1","name":"Test Store","created_at":"2023-01-01T23:23:23.000000000Z","updated_at":"2023-01-01T23:23:23.000000000Z"}]}`,
 			ResponseStatus: http.StatusOK,
-			Method:         "GET",
+			Method:         http.MethodGet,
 		}
 
 		var expectedResponse openfga.ListStoresResponse
@@ -44,17 +44,21 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores", fgaClient.Config.ApiScheme, fgaClient.Config.ApiHost),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
 				}
 				return resp, nil
 			},
 		)
 
-		got, response, err := fgaClient.ListStores(context.Background()).Execute()
+		options := ClientListStoresOptions{
+			PageSize:          openfga.PtrInt32(10),
+			ContinuationToken: openfga.PtrString("..."),
+		}
+		got, response, err := fgaClient.ListStores(context.Background()).Options(options).Execute()
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
@@ -75,9 +79,9 @@ func TestOpenFgaClient(t *testing.T) {
 	t.Run("CreateStore", func(t *testing.T) {
 		test := TestDefinition{
 			Name:           "CreateStore",
-			JsonResponse:   `{"id":"1uHxCSuTP0VKPYSnkq1pbb1jeZw","name":"Test Store","created_at":"2023-01-01T23:23:23.000000000Z","updated_at":"2023-01-01T23:23:23.000000000Z"}`,
+			JsonResponse:   `{"id":"01GXSA8YR785C4FYS3C0RTG7B1","name":"Test Store","created_at":"2023-01-01T23:23:23.000000000Z","updated_at":"2023-01-01T23:23:23.000000000Z"}`,
 			ResponseStatus: http.StatusOK,
-			Method:         "POST",
+			Method:         http.MethodPost,
 		}
 		requestBody := ClientCreateStoreRequest{
 			Name: "Test Store",
@@ -90,11 +94,11 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores", fgaClient.Config.ApiScheme, fgaClient.Config.ApiHost),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
 				}
 				return resp, nil
 			},
@@ -120,9 +124,9 @@ func TestOpenFgaClient(t *testing.T) {
 	t.Run("GetStore", func(t *testing.T) {
 		test := TestDefinition{
 			Name:           "GetStore",
-			JsonResponse:   `{"id":"1uHxCSuTP0VKPYSnkq1pbb1jeZw","name":"Test Store","created_at":"2023-01-01T23:23:23.000000000Z","updated_at":"2023-01-01T23:23:23.000000000Z"}`,
+			JsonResponse:   `{"id":"01GXSA8YR785C4FYS3C0RTG7B1","name":"Test Store","created_at":"2023-01-01T23:23:23.000000000Z","updated_at":"2023-01-01T23:23:23.000000000Z"}`,
 			ResponseStatus: http.StatusOK,
-			Method:         "GET",
+			Method:         http.MethodGet,
 		}
 
 		var expectedResponse openfga.GetStoreResponse
@@ -132,11 +136,11 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s", fgaClient.Config.ApiScheme, fgaClient.Config.ApiHost, fgaClient.Config.StoreId),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost, fgaClient.Config.StoreId),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
 				}
 				return resp, nil
 			},
@@ -156,21 +160,96 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 	})
 
+	t.Run("GetStoreAfterSettingStoreId", func(t *testing.T) {
+		test := TestDefinition{
+			Name:           "GetStoreAfterSettingStoreId",
+			JsonResponse:   `{"id":"01GXSA8YR785C4FYS3C0RTG7B1","name":"Test Store","created_at":"2023-01-01T23:23:23.000000000Z","updated_at":"2023-01-01T23:23:23.000000000Z"}`,
+			ResponseStatus: http.StatusOK,
+			Method:         http.MethodPost,
+		}
+
+		requestBody := ClientCreateStoreRequest{
+			Name: "Test Store",
+		}
+
+		var expectedResponse openfga.CreateStoreResponse
+		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+
+		got1, response1, err1 := fgaClient.CreateStore(context.Background()).Body(requestBody).Execute()
+		if err1 != nil {
+			t.Fatalf("%v", err1)
+		}
+
+		if response1.StatusCode != test.ResponseStatus {
+			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response1.StatusCode, test.ResponseStatus)
+		}
+
+		_, err = got1.MarshalJSON()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+		if *got1.Name != *expectedResponse.Name {
+			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, *got1.Name, *expectedResponse.Name)
+		}
+
+		storeId := *got1.Id
+		fgaClient.SetStoreId(storeId)
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterResponder(http.MethodGet, fmt.Sprintf("%s://%s/stores/%s", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost, storeId),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+
+		got2, response2, err2 := fgaClient.GetStore(context.Background()).Execute()
+		if err2 != nil {
+			t.Fatalf("%v", err2)
+		}
+
+		if response2.StatusCode != test.ResponseStatus {
+			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response2.StatusCode, test.ResponseStatus)
+		}
+
+		if *got2.Id != storeId {
+			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, *got2.Id, storeId)
+		}
+	})
+
 	t.Run("DeleteStore", func(t *testing.T) {
 		test := TestDefinition{
 			Name:           "DeleteStore",
 			JsonResponse:   ``,
 			ResponseStatus: http.StatusNoContent,
-			Method:         "DELETE",
+			Method:         http.MethodDelete,
 		}
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s", fgaClient.Config.ApiScheme, fgaClient.Config.ApiHost, fgaClient.Config.StoreId),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost, fgaClient.Config.StoreId),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, "{}")
 				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
 				}
 				return resp, nil
 			},
@@ -189,9 +268,9 @@ func TestOpenFgaClient(t *testing.T) {
 	t.Run("ReadAuthorizationModels", func(t *testing.T) {
 		test := TestDefinition{
 			Name:           "ReadAuthorizationModels",
-			JsonResponse:   `{"authorization_models":[{"id":"1uHxCSuTP0VKPYSnkq1pbb1jeZw","schema_version":"1.1","type_definitions":[]}]}`,
+			JsonResponse:   `{"authorization_models":[{"id":"01GXSA8YR785C4FYS3C0RTG7B1","schema_version":"1.1","type_definitions":[]}]}`,
 			ResponseStatus: http.StatusOK,
-			Method:         "GET",
+			Method:         http.MethodGet,
 			RequestPath:    "authorization-models",
 		}
 
@@ -202,17 +281,21 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", fgaClient.Config.ApiScheme, fgaClient.Config.ApiHost, fgaClient.Config.StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost, fgaClient.Config.StoreId, test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
 				}
 				return resp, nil
 			},
 		)
 
-		got, response, err := fgaClient.ReadAuthorizationModels(context.Background()).Execute()
+		options := ClientReadAuthorizationModelsOptions{
+			PageSize:          openfga.PtrInt32(10),
+			ContinuationToken: openfga.PtrString("..."),
+		}
+		got, response, err := fgaClient.ReadAuthorizationModels(context.Background()).Options(options).Execute()
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
@@ -233,29 +316,46 @@ func TestOpenFgaClient(t *testing.T) {
 	t.Run("WriteAuthorizationModel", func(t *testing.T) {
 		test := TestDefinition{
 			Name:           "WriteAuthorizationModel",
-			JsonResponse:   `{"authorization_model_id":"1uHxCSuTP0VKPYSnkq1pbb1jeZw"}`,
+			JsonResponse:   `{"authorization_model_id":"01GXSA8YR785C4FYS3C0RTG7B1"}`,
 			ResponseStatus: http.StatusOK,
-			Method:         "POST",
+			Method:         http.MethodPost,
 			RequestPath:    "authorization-models",
 		}
 		requestBody := ClientWriteAuthorizationModelRequest{
-			TypeDefinitions: []openfga.TypeDefinition{{
-				Type: "github-repo",
-				Relations: &map[string]openfga.Userset{
-					"repo_writer": {
-						This: &map[string]interface{}{},
-					},
-					"viewer": {Union: &openfga.Usersets{
-						Child: &[]openfga.Userset{
-							{This: &map[string]interface{}{}},
-							{ComputedUserset: &openfga.ObjectRelation{
-								Object:   openfga.PtrString(""),
-								Relation: openfga.PtrString("repo_writer"),
-							}},
+			SchemaVersion: "1.1",
+			TypeDefinitions: []openfga.TypeDefinition{
+				{Type: "user", Relations: &map[string]openfga.Userset{}},
+				{
+					Type: "document",
+					Relations: &map[string]openfga.Userset{
+						"writer": {
+							This: &map[string]interface{}{},
 						},
-					}},
-				},
-			}},
+						"viewer": {Union: &openfga.Usersets{
+							Child: &[]openfga.Userset{
+								{This: &map[string]interface{}{}},
+								{ComputedUserset: &openfga.ObjectRelation{
+									Object:   openfga.PtrString(""),
+									Relation: openfga.PtrString("writer"),
+								}},
+							},
+						}},
+					},
+					Metadata: &openfga.Metadata{
+						Relations: &map[string]openfga.RelationMetadata{
+							"writer": {
+								DirectlyRelatedUserTypes: &[]openfga.RelationReference{
+									{Type: "user"},
+								},
+							},
+							"viewer": {
+								DirectlyRelatedUserTypes: &[]openfga.RelationReference{
+									{Type: "user"},
+								},
+							},
+						},
+					},
+				}},
 		}
 
 		var expectedResponse openfga.WriteAuthorizationModelResponse
@@ -265,11 +365,11 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", fgaClient.Config.ApiScheme, fgaClient.Config.ApiHost, fgaClient.Config.StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost, fgaClient.Config.StoreId, test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
 				}
 				return resp, nil
 			},
@@ -287,14 +387,19 @@ func TestOpenFgaClient(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
+
+		if got.GetAuthorizationModelId() != expectedResponse.GetAuthorizationModelId() {
+			t.Fatalf("OpenFgaClient.%v() / AuthorizationModelId = %v, want %v", test.Name, got.GetAuthorizationModelId(), expectedResponse.GetAuthorizationModelId())
+		}
+
 	})
 
 	t.Run("ReadAuthorizationModel", func(t *testing.T) {
 		test := TestDefinition{
 			Name:           "ReadAuthorizationModel",
-			JsonResponse:   `{"authorization_model":{"id":"1uHxCSuTP0VKPYSnkq1pbb1jeZw","schema_version":"1.1","type_definitions":[{"type":"github-repo", "relations":{"viewer":{"this":{}}}}]}}`,
+			JsonResponse:   `{"authorization_model":{"id":"01GXSA8YR785C4FYS3C0RTG7B1","schema_version":"1.1","type_definitions":[{"type":"github-repo", "relations":{"viewer":{"this":{}}}}]}}`,
 			ResponseStatus: http.StatusOK,
-			Method:         "GET",
+			Method:         http.MethodGet,
 			RequestPath:    "authorization-models",
 		}
 
@@ -306,11 +411,11 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s/%s", fgaClient.Config.ApiScheme, fgaClient.Config.ApiHost, fgaClient.Config.StoreId, test.RequestPath, modelId),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s/%s", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost, fgaClient.Config.StoreId, test.RequestPath, modelId),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
 				}
 				return resp, nil
 			},
@@ -340,9 +445,9 @@ func TestOpenFgaClient(t *testing.T) {
 	t.Run("ReadLatestAuthorizationModel", func(t *testing.T) {
 		test := TestDefinition{
 			Name:           "ReadAuthorizationModels",
-			JsonResponse:   `{"authorization_models":[{"id":"1uHxCSuTP0VKPYSnkq1pbb1jeZw","schema_version":"1.1","type_definitions":[{"type":"github-repo", "relations":{"viewer":{"this":{}}}}]}]}`,
+			JsonResponse:   `{"authorization_models":[{"id":"01GXSA8YR785C4FYS3C0RTG7B1","schema_version":"1.1","type_definitions":[{"type":"github-repo", "relations":{"viewer":{"this":{}}}}]}]}`,
 			ResponseStatus: http.StatusOK,
-			Method:         "GET",
+			Method:         http.MethodGet,
 			RequestPath:    "authorization-models",
 		}
 
@@ -354,11 +459,11 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", fgaClient.Config.ApiScheme, fgaClient.Config.ApiHost, fgaClient.Config.StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost, fgaClient.Config.StoreId, test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
 				}
 				return resp, nil
 			},
@@ -377,7 +482,7 @@ func TestOpenFgaClient(t *testing.T) {
 			t.Fatalf("%v", err)
 		}
 
-		if (*(*got.AuthorizationModel).Id) != modelId {
+		if (*got.AuthorizationModel).GetId() != modelId {
 			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
 		}
 	})
@@ -388,7 +493,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Name:           "ReadChanges",
 			JsonResponse:   `{"changes":[{"tuple_key":{"user":"user:81684243-9356-4421-8fbf-a4f8d36aa31b","relation":"viewer","object":"document:roadmap"},"operation":"TUPLE_OPERATION_WRITE","timestamp": "2000-01-01T00:00:00Z"}],"continuation_token":"eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="}`,
 			ResponseStatus: http.StatusOK,
-			Method:         "GET",
+			Method:         http.MethodGet,
 			RequestPath:    "changes",
 		}
 
@@ -399,17 +504,17 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", fgaClient.Config.ApiScheme, fgaClient.Config.ApiHost, fgaClient.Config.StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost, fgaClient.Config.StoreId, test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
 				}
 				return resp, nil
 			},
 		)
 		body := ClientReadChangesRequest{
-			Type: "repo",
+			Type: "document",
 		}
 		options := ClientReadChangesOptions{ContinuationToken: openfga.PtrString("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="), PageSize: openfga.PtrInt32(25)}
 		got, response, err := fgaClient.ReadChanges(context.Background()).Body(body).Options(options).Execute()
@@ -436,7 +541,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Name:           "Read",
 			JsonResponse:   `{"tuples":[{"key":{"user":"user:81684243-9356-4421-8fbf-a4f8d36aa31b","relation":"viewer","object":"document:roadmap"},"timestamp": "2000-01-01T00:00:00Z"}]}`,
 			ResponseStatus: http.StatusOK,
-			Method:         "POST",
+			Method:         http.MethodPost,
 			RequestPath:    "read",
 		}
 
@@ -453,16 +558,21 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", fgaClient.Config.ApiScheme, fgaClient.Config.ApiHost, fgaClient.Config.StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost, fgaClient.Config.StoreId, test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
 				}
 				return resp, nil
 			},
 		)
-		got, response, err := fgaClient.Read(context.Background()).Body(requestBody).Execute()
+
+		options := ClientReadOptions{
+			PageSize:          openfga.PtrInt32(10),
+			ContinuationToken: openfga.PtrString("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="),
+		}
+		got, response, err := fgaClient.Read(context.Background()).Body(requestBody).Options(options).Execute()
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
@@ -486,7 +596,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Name:           "Write",
 			JsonResponse:   `{}`,
 			ResponseStatus: http.StatusOK,
-			Method:         "POST",
+			Method:         http.MethodPost,
 			RequestPath:    "write",
 		}
 		requestBody := ClientWriteRequest{
@@ -507,32 +617,65 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", fgaClient.Config.ApiScheme, fgaClient.Config.ApiHost, fgaClient.Config.StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost, fgaClient.Config.StoreId, test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
 				}
 				return resp, nil
 			},
 		)
-		_, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
+		data, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
 
-		//if response.StatusCode != test.ResponseStatus {
-		//	t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
-		//}
+		if len(data.Writes) != 1 {
+			t.Fatalf("OpenFgaClient.%v() - expected %v Writes, got %v", test.Name, 1, len(data.Writes))
+		}
+
+		if len(data.Deletes) != 0 {
+			t.Fatalf("OpenFgaClient.%v() - expected %v Deletes, got %v", test.Name, 0, len(data.Deletes))
+		}
+
+		for index := 0; index < len(data.Writes); index++ {
+			response := data.Writes[index]
+			if response.Error != nil {
+				t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
+			}
+			if response.HttpResponse.StatusCode != test.ResponseStatus {
+				t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
+			}
+
+			_, err := response.MarshalJSON()
+			if err != nil {
+				t.Fatalf("%v", err)
+			}
+		}
+
+		for index := 0; index < len(data.Deletes); index++ {
+			response := data.Deletes[index]
+			if response.Error != nil {
+				t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
+			}
+			if response.HttpResponse.StatusCode != test.ResponseStatus {
+				t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
+			}
+
+			_, err := response.MarshalJSON()
+			if err != nil {
+				t.Fatalf("%v", err)
+			}
+		}
 	})
 
 	t.Run("WriteNonTransaction", func(t *testing.T) {
-		t.Skip()
 		test := TestDefinition{
 			Name:           "Write",
 			JsonResponse:   `{}`,
 			ResponseStatus: http.StatusOK,
-			Method:         "POST",
+			Method:         http.MethodPost,
 			RequestPath:    "write",
 		}
 		requestBody := ClientWriteRequest{
@@ -540,11 +683,24 @@ func TestOpenFgaClient(t *testing.T) {
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "viewer",
 				Object:   "document:roadmap",
+			}, {
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "viewer",
+				Object:   "document:budget",
+			}},
+			Deletes: &[]ClientTupleKey{{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "viewer",
+				Object:   "document:planning",
 			}},
 		}
 		options := ClientWriteOptions{
 			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
-			Transaction:          &TransactionOptions{Disable: true},
+			Transaction: &TransactionOptions{
+				Disable:             true,
+				MaxParallelRequests: 5,
+				MaxPerChunk:         1,
+			},
 		}
 
 		var expectedResponse map[string]interface{}
@@ -554,23 +710,57 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", fgaClient.Config.ApiScheme, fgaClient.Config.ApiHost, fgaClient.Config.StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost, fgaClient.Config.StoreId, test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
 				}
 				return resp, nil
 			},
 		)
-		_, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
+		data, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
 
-		//if response.StatusCode != test.ResponseStatus {
-		//	t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
-		//}
+		if len(data.Writes) != 2 {
+			t.Fatalf("OpenFgaClient.%v() - expected %v Writes, got %v", test.Name, 2, len(data.Writes))
+		}
+
+		if len(data.Deletes) != 1 {
+			t.Fatalf("OpenFgaClient.%v() - expected %v Deletes, got %v", test.Name, 1, len(data.Deletes))
+		}
+
+		for index := 0; index < len(data.Writes); index++ {
+			response := data.Writes[index]
+			if response.Error != nil {
+				t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
+			}
+			if response.HttpResponse.StatusCode != test.ResponseStatus {
+				t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
+			}
+
+			_, err := response.MarshalJSON()
+			if err != nil {
+				t.Fatalf("%v", err)
+			}
+		}
+
+		for index := 0; index < len(data.Deletes); index++ {
+			response := data.Deletes[index]
+			if response.Error != nil {
+				t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
+			}
+			if response.HttpResponse.StatusCode != test.ResponseStatus {
+				t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
+			}
+
+			_, err := response.MarshalJSON()
+			if err != nil {
+				t.Fatalf("%v", err)
+			}
+		}
 	})
 
 	t.Run("WriteTuples", func(t *testing.T) {
@@ -578,7 +768,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Name:           "Write",
 			JsonResponse:   `{}`,
 			ResponseStatus: http.StatusOK,
-			Method:         "POST",
+			Method:         http.MethodPost,
 			RequestPath:    "write",
 		}
 		requestBody := ClientWriteRequest{
@@ -599,23 +789,57 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", fgaClient.Config.ApiScheme, fgaClient.Config.ApiHost, fgaClient.Config.StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost, fgaClient.Config.StoreId, test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
 				}
 				return resp, nil
 			},
 		)
-		_, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
+		data, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
 
-		//if response.StatusCode != test.ResponseStatus {
-		//	t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
-		//}
+		if len(data.Writes) != 1 {
+			t.Fatalf("OpenFgaClient.%v() - expected %v Writes, got %v", test.Name, 1, len(data.Writes))
+		}
+
+		if len(data.Deletes) != 0 {
+			t.Fatalf("OpenFgaClient.%v() - expected %v Deletes, got %v", test.Name, 0, len(data.Deletes))
+		}
+
+		for index := 0; index < len(data.Writes); index++ {
+			response := data.Writes[index]
+			if response.Error != nil {
+				t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
+			}
+			if response.HttpResponse.StatusCode != test.ResponseStatus {
+				t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
+			}
+
+			_, err := response.MarshalJSON()
+			if err != nil {
+				t.Fatalf("%v", err)
+			}
+		}
+
+		for index := 0; index < len(data.Deletes); index++ {
+			response := data.Deletes[index]
+			if response.Error != nil {
+				t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
+			}
+			if response.HttpResponse.StatusCode != test.ResponseStatus {
+				t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
+			}
+
+			_, err := response.MarshalJSON()
+			if err != nil {
+				t.Fatalf("%v", err)
+			}
+		}
 	})
 
 	t.Run("DeleteTuples", func(t *testing.T) {
@@ -623,7 +847,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Name:           "Write",
 			JsonResponse:   `{}`,
 			ResponseStatus: http.StatusOK,
-			Method:         "POST",
+			Method:         http.MethodPost,
 			RequestPath:    "write",
 		}
 
@@ -643,23 +867,57 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", fgaClient.Config.ApiScheme, fgaClient.Config.ApiHost, fgaClient.Config.StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost, fgaClient.Config.StoreId, test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
 				}
 				return resp, nil
 			},
 		)
-		_, err := fgaClient.DeleteTuples(context.Background()).Body(requestBody).Options(options).Execute()
+		data, err := fgaClient.DeleteTuples(context.Background()).Body(requestBody).Options(options).Execute()
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
 
-		//if response.StatusCode != test.ResponseStatus {
-		//	t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
-		//}
+		if len(data.Writes) != 0 {
+			t.Fatalf("OpenFgaClient.%v() - expected no Writes, got %v", test.Name, len(data.Writes))
+		}
+
+		if len(data.Deletes) != 1 {
+			t.Fatalf("OpenFgaClient.%v() - expected no Deletes, got %v", test.Name, len(data.Deletes))
+		}
+
+		for index := 0; index < len(data.Writes); index++ {
+			response := data.Writes[index]
+			if response.Error != nil {
+				t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
+			}
+			if response.HttpResponse.StatusCode != test.ResponseStatus {
+				t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
+			}
+
+			_, err := response.MarshalJSON()
+			if err != nil {
+				t.Fatalf("%v", err)
+			}
+		}
+
+		for index := 0; index < len(data.Deletes); index++ {
+			response := data.Deletes[index]
+			if response.Error != nil {
+				t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
+			}
+			if response.HttpResponse.StatusCode != test.ResponseStatus {
+				t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
+			}
+
+			_, err := response.MarshalJSON()
+			if err != nil {
+				t.Fatalf("%v", err)
+			}
+		}
 	})
 
 	/* Relationship Queries */
@@ -668,13 +926,18 @@ func TestOpenFgaClient(t *testing.T) {
 			Name:           "Check",
 			JsonResponse:   `{"allowed":true, "resolution":""}`,
 			ResponseStatus: http.StatusOK,
-			Method:         "POST",
+			Method:         http.MethodPost,
 			RequestPath:    "check",
 		}
 		requestBody := ClientCheckRequest{
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "viewer",
 			Object:   "document:roadmap",
+			ContextualTuples: &[]ClientTupleKey{{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "editor",
+				Object:   "document:roadmap",
+			}},
 		}
 
 		options := ClientCheckOptions{
@@ -688,11 +951,11 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", fgaClient.Config.ApiScheme, fgaClient.Config.ApiHost, fgaClient.Config.StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost, fgaClient.Config.StoreId, test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
 				}
 				return resp, nil
 			},
@@ -711,7 +974,7 @@ func TestOpenFgaClient(t *testing.T) {
 			t.Fatalf("%v", err)
 		}
 
-		if *got.Allowed != *expectedResponse.Allowed {
+		if got.GetAllowed() != *expectedResponse.Allowed {
 			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
 		}
 	})
@@ -721,7 +984,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Name:           "Check",
 			JsonResponse:   `{"allowed":true, "resolution":""}`,
 			ResponseStatus: http.StatusOK,
-			Method:         "POST",
+			Method:         http.MethodPost,
 			RequestPath:    "check",
 		}
 		requestBody := ClientBatchCheckBody{{
@@ -754,6 +1017,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		options := ClientBatchCheckOptions{
 			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			MaxParallelRequests:  openfga.PtrInt32(5),
 		}
 
 		var expectedResponse openfga.CheckResponse
@@ -763,11 +1027,11 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", fgaClient.Config.ApiScheme, fgaClient.Config.ApiHost, fgaClient.Config.StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost, fgaClient.Config.StoreId, test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
 				}
 				return resp, nil
 			},
@@ -810,7 +1074,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Name:           "Expand",
 			JsonResponse:   `{"tree":{"root":{"name":"document:roadmap#viewer","union":{"nodes":[{"name": "document:roadmap#viewer","leaf":{"users":{"users":["user:81684243-9356-4421-8fbf-a4f8d36aa31b"]}}}]}}}}`,
 			ResponseStatus: http.StatusOK,
-			Method:         "POST",
+			Method:         http.MethodPost,
 			RequestPath:    "expand",
 		}
 
@@ -829,11 +1093,11 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", fgaClient.Config.ApiScheme, fgaClient.Config.ApiHost, fgaClient.Config.StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost, fgaClient.Config.StoreId, test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
 				}
 				return resp, nil
 			},
@@ -858,7 +1122,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Name:           "ListObjects",
 			JsonResponse:   `{"objects":["document:roadmap"]}`,
 			ResponseStatus: http.StatusOK,
-			Method:         "POST",
+			Method:         http.MethodPost,
 			RequestPath:    "list-objects",
 		}
 
@@ -887,11 +1151,11 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", fgaClient.Config.ApiScheme, fgaClient.Config.ApiHost, fgaClient.Config.StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost, fgaClient.Config.StoreId, test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
 				}
 				return resp, nil
 			},
@@ -923,7 +1187,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Name:           "ListRelations",
 			JsonResponse:   `{"allowed":true, "resolution":""}`,
 			ResponseStatus: http.StatusOK,
-			Method:         "POST",
+			Method:         http.MethodPost,
 			RequestPath:    "check",
 		}
 
@@ -948,21 +1212,21 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", fgaClient.Config.ApiScheme, fgaClient.Config.ApiHost, fgaClient.Config.StoreId, test.RequestPath),
+		httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost, fgaClient.Config.StoreId, test.RequestPath),
 			httpmock.BodyContainsString(`"relation":"can_delete"`),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, openfga.CheckResponse{Allowed: openfga.PtrBool(false)})
 				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
 				}
 				return resp, nil
 			},
 		)
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", fgaClient.Config.ApiScheme, fgaClient.Config.ApiHost, fgaClient.Config.StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost, fgaClient.Config.StoreId, test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
 				}
 				return resp, nil
 			},
@@ -980,24 +1244,22 @@ func TestOpenFgaClient(t *testing.T) {
 			t.Fatalf("OpenFgaClient.%v() - wanted %v calls to /check, got %v", test.Name, 4, httpmock.GetTotalCallCount())
 		}
 
-		// TODO
-		//responseJson, err := got.MarshalJSON()
-		//if err != nil {
-		//	t.Fatalf("%v", err)
-		//}
-		//
+		_, err = got.MarshalJSON()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
 		if len(got.Relations) != 3 {
 			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, len(got.Relations), 3)
 		}
 	})
 
 	t.Run("ListRelationsNoRelationsProvided", func(t *testing.T) {
-		t.Skip()
 		test := TestDefinition{
 			Name:           "ListRelations",
 			JsonResponse:   ``,
 			ResponseStatus: http.StatusOK,
-			Method:         "POST",
+			Method:         http.MethodPost,
 			RequestPath:    "check",
 		}
 
@@ -1013,11 +1275,6 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 		options := ClientListRelationsOptions{
 			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
-		}
-
-		var expectedResponse ClientListRelationsResponse
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
 		}
 
 		httpmock.Activate()
@@ -1054,11 +1311,11 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s/%s", fgaClient.Config.ApiScheme, fgaClient.Config.ApiHost, fgaClient.Config.StoreId, test.RequestPath, modelId),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s/%s", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost, fgaClient.Config.StoreId, test.RequestPath, modelId),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
 				}
 				return resp, nil
 			},
@@ -1095,7 +1352,7 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 
 		requestBody := ClientWriteAssertionsRequest{
-			ClientAssertion{
+			{
 				User:        "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation:    "can_view",
 				Object:      "document:roadmap",
@@ -1108,11 +1365,11 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s/%s", fgaClient.Config.ApiScheme, fgaClient.Config.ApiHost, fgaClient.Config.StoreId, test.RequestPath, modelId),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s/%s", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost, fgaClient.Config.StoreId, test.RequestPath, modelId),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, "")
 				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
 				}
 				return resp, nil
 			},

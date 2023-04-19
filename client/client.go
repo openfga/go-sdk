@@ -2,10 +2,12 @@ package client
 
 import (
 	_context "context"
+	"encoding/json"
 	"fmt"
 	"github.com/openfga/go-sdk"
 	"github.com/openfga/go-sdk/credentials"
 	"golang.org/x/sync/errgroup"
+	"math"
 	_nethttp "net/http"
 )
 
@@ -304,17 +306,8 @@ type SdkClientDeleteStoreRequest struct {
 	ctx    _context.Context
 	Client OpenFgaClient
 
-	body    *ClientDeleteStoreRequest
 	options *ClientDeleteStoreOptions
 }
-
-type ClientDeleteStoreRequest struct {
-	User             string            `json:"user,omitempty"`
-	Relation         string            `json:"relation,omitempty"`
-	Object           string            `json:"object,omitempty"`
-	ContextualTuples *[]ClientTupleKey `json:"contextual_tuples,omitempty"`
-}
-
 type ClientDeleteStoreOptions struct {
 	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
 }
@@ -323,11 +316,6 @@ type ClientDeleteStoreResponse struct{}
 
 func (request SdkClientDeleteStoreRequest) Options(options ClientDeleteStoreOptions) SdkClientDeleteStoreRequest {
 	request.options = &options
-	return request
-}
-
-func (request SdkClientDeleteStoreRequest) Body(body ClientDeleteStoreRequest) SdkClientDeleteStoreRequest {
-	request.body = &body
 	return request
 }
 
@@ -354,15 +342,7 @@ type SdkClientReadAuthorizationModelsRequest struct {
 	ctx    _context.Context
 	Client OpenFgaClient
 
-	body    *ClientReadAuthorizationModelsRequest
 	options *ClientReadAuthorizationModelsOptions
-}
-
-type ClientReadAuthorizationModelsRequest struct {
-	User             string            `json:"user,omitempty"`
-	Relation         string            `json:"relation,omitempty"`
-	Object           string            `json:"object,omitempty"`
-	ContextualTuples *[]ClientTupleKey `json:"contextual_tuples,omitempty"`
 }
 
 type ClientReadAuthorizationModelsOptions struct {
@@ -372,11 +352,6 @@ type ClientReadAuthorizationModelsOptions struct {
 
 func (request SdkClientReadAuthorizationModelsRequest) Options(options ClientReadAuthorizationModelsOptions) SdkClientReadAuthorizationModelsRequest {
 	request.options = &options
-	return request
-}
-
-func (request SdkClientReadAuthorizationModelsRequest) Body(body ClientReadAuthorizationModelsRequest) SdkClientReadAuthorizationModelsRequest {
-	request.body = &body
 	return request
 }
 
@@ -656,8 +631,11 @@ type ClientWriteRequest struct {
 }
 
 type TransactionOptions struct {
-	Disable             bool  `json:"disable,omitempty"`
-	MaxPerChunk         int32 `json:"max_per_chunk,omitempty"`
+	// If set to true will disable running in transaction mode (transaction mode means everything is sent in a single transaction to the server)
+	Disable bool `json:"disable,omitempty"`
+	// When transaction mode is disabled, the requests are chunked and sent separately and each chunk is a transaction (default = 1)
+	MaxPerChunk int32 `json:"max_per_chunk,omitempty"`
+	// Number of requests to issue in parallel
 	MaxParallelRequests int32 `json:"max_parallel_requests,omitempty"`
 }
 
@@ -680,15 +658,39 @@ const (
 //}
 
 type ClientWriteSingleResponse struct {
-	TupleKey ClientTupleKey
-	Status   ClientWriteStatus
-	Response *_nethttp.Response
-	Error    error
+	TupleKey     ClientTupleKey     `json:"tuple_key,omitempty"`
+	Status       ClientWriteStatus  `json:"status,omitempty"`
+	HttpResponse *_nethttp.Response `json:"http_response,omitempty"`
+	Error        error              `json:"error,omitempty"`
+}
+
+func (o ClientWriteSingleResponse) MarshalJSON() ([]byte, error) {
+	toSerialize := map[string]interface{}{}
+	toSerialize["tuple_key"] = o.TupleKey
+	toSerialize["status"] = o.Status
+	if o.HttpResponse != nil {
+		toSerialize["http_response"] = o.HttpResponse
+	}
+	if o.Error != nil {
+		toSerialize["error"] = o.Error
+	}
+	return json.Marshal(toSerialize)
 }
 
 type ClientWriteResponse struct {
-	Writes  []ClientWriteSingleResponse
-	Deletes []ClientWriteSingleResponse
+	Writes  []ClientWriteSingleResponse `json:"writes,omitempty"`
+	Deletes []ClientWriteSingleResponse `json:"deletes,omitempty"`
+}
+
+func (o ClientWriteResponse) MarshalJSON() ([]byte, error) {
+	toSerialize := map[string]interface{}{}
+	if o.Writes != nil {
+		toSerialize["writes"] = o.Writes
+	}
+	if o.Deletes != nil {
+		toSerialize["writes"] = o.Deletes
+	}
+	return json.Marshal(toSerialize)
 }
 
 func (client *OpenFgaClient) Write(ctx _context.Context) SdkClientWriteRequest {
@@ -722,6 +724,13 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequest) (Client
 		maxParallelReqs = request.options.Transaction.MaxParallelRequests
 	}
 
+	response := ClientWriteResponse{
+		Writes:  []ClientWriteSingleResponse{},
+		Deletes: []ClientWriteSingleResponse{},
+	}
+
+	// Unless explicitly disabled, transaction mode is enabled
+	// In transaction mode, the client will send the request to the server as is
 	if request.options == nil || request.options.Transaction == nil || !request.options.Transaction.Disable {
 		writeRequest := openfga.WriteRequest{
 			AuthorizationModelId: client.getAuthorizationModelId(request.options.AuthorizationModelId),
@@ -742,40 +751,46 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequest) (Client
 		}
 		_, httpResponse, err := client.OpenFgaApi.Write(request.ctx).Body(writeRequest).Execute()
 
-		response := ClientWriteResponse{Writes: []ClientWriteSingleResponse{{}}, Deletes: []ClientWriteSingleResponse{{}}}
-
 		clientWriteStatus := SUCCESS
 		if err != nil {
 			clientWriteStatus = FAILURE
 		}
 
-		for index := 0; index < len(writeRequest.Writes.GetTupleKeys()); index++ {
-			response.Writes = append(response.Writes, ClientWriteSingleResponse{
-				TupleKey: (*request.body.Writes)[index],
-				Response: httpResponse,
-				Status:   clientWriteStatus,
-				Error:    err,
-			})
+		if request.body.Writes != nil {
+			writeRequestTupleKeys := *request.body.Writes
+			for index := 0; index < len(writeRequestTupleKeys); index++ {
+				response.Writes = append(response.Writes, ClientWriteSingleResponse{
+					TupleKey:     writeRequestTupleKeys[index],
+					HttpResponse: httpResponse,
+					Status:       clientWriteStatus,
+					Error:        err,
+				})
+			}
 		}
-		for index := 0; index < len(writeRequest.Deletes.GetTupleKeys()); index++ {
-			response.Deletes = append(response.Deletes, ClientWriteSingleResponse{
-				TupleKey: (*request.body.Deletes)[index],
-				Response: httpResponse,
-				Status:   clientWriteStatus,
-				Error:    err,
-			})
+
+		if request.body.Deletes != nil {
+			deleteRequestTupleKeys := *request.body.Deletes
+			for index := 0; index < len(deleteRequestTupleKeys); index++ {
+				response.Deletes = append(response.Deletes, ClientWriteSingleResponse{
+					TupleKey:     deleteRequestTupleKeys[index],
+					HttpResponse: httpResponse,
+					Status:       clientWriteStatus,
+					Error:        err,
+				})
+			}
 		}
+
 		return response, err
 	}
 
+	// If the transaction mode is disabled:
+	// - the client will attempt to chunk the writes and deletes into multiple requests
+	// - each request is a transaction
+	// - the max items in each request are based on maxPerChunk (default=1)
 	var writeChunkSize = int(maxPerChunk)
 	var writeChunks [][]ClientTupleKey
 	for i := 0; i < len(*request.body.Writes); i += writeChunkSize {
-		end := i + writeChunkSize
-
-		if end > len(*request.body.Writes) {
-			end = len(*request.body.Writes)
-		}
+		end := int(math.Min(float64(i+writeChunkSize), float64(len(*request.body.Writes))))
 
 		writeChunks = append(writeChunks, (*request.body.Writes)[i:end])
 	}
@@ -808,11 +823,7 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequest) (Client
 	var deleteChunkSize = int(maxPerChunk)
 	var deleteChunks [][]ClientTupleKey
 	for i := 0; i < len(*request.body.Deletes); i += deleteChunkSize {
-		end := i + deleteChunkSize
-
-		if end > len(*request.body.Deletes) {
-			end = len(*request.body.Deletes)
-		}
+		end := int(math.Min(float64(i+writeChunkSize), float64(len(*request.body.Deletes))))
 
 		deleteChunks = append(deleteChunks, (*request.body.Deletes)[i:end])
 	}
@@ -841,11 +852,6 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequest) (Client
 	}
 
 	_ = deleteGroup.Wait()
-
-	response := ClientWriteResponse{
-		Writes:  []ClientWriteSingleResponse{},
-		Deletes: []ClientWriteSingleResponse{},
-	}
 
 	for _, writeResponse := range writeResponses {
 		for _, writeSingleResponse := range writeResponse.Writes {
@@ -1016,6 +1022,7 @@ type ClientBatchCheckBody = []ClientCheckRequest
 
 type ClientBatchCheckOptions struct {
 	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
+	MaxParallelRequests  *int32  `json:"max_parallel_requests,omitempty"`
 }
 
 type ClientBatchCheckSingleResponse struct {
@@ -1050,7 +1057,13 @@ func (request SdkClientBatchCheckRequest) Execute() (ClientBatchCheckResponse, e
 
 func (client *OpenFgaClient) BatchCheckExecute(request SdkClientBatchCheckRequest) (ClientBatchCheckResponse, error) {
 	group, ctx := errgroup.WithContext(request.ctx)
-	group.SetLimit(10)
+	var maxParallelReqs int
+	if request.options == nil || request.options.MaxParallelRequests == nil {
+		maxParallelReqs = int(DEFAULT_MAX_METHOD_PARALLEL_REQS)
+	} else {
+		maxParallelReqs = int(*request.options.MaxParallelRequests)
+	}
+	group.SetLimit(maxParallelReqs)
 	var numOfChecks = len(*request.body)
 	response := make(ClientBatchCheckResponse, numOfChecks)
 	for index, checkBody := range *request.body {
@@ -1210,14 +1223,14 @@ type ClientListRelationsOptions struct {
 	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
 }
 
-type ClientListRelationsSingleResponse struct {
-	openfga.CheckResponse
-	Request      ClientCheckRequest
-	HttpResponse *_nethttp.Response
-	Error        error
-}
 type ClientListRelationsResponse struct {
-	Relations []string
+	Relations []string `json:"response,omitempty"`
+}
+
+func (o ClientListRelationsResponse) MarshalJSON() ([]byte, error) {
+	toSerialize := map[string]interface{}{}
+	toSerialize["relations"] = o.Relations
+	return json.Marshal(toSerialize)
 }
 
 func (client *OpenFgaClient) ListRelations(ctx _context.Context) SdkClientListRelationsRequest {
