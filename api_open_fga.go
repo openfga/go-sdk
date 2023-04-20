@@ -32,44 +32,44 @@ var (
 type OpenFgaApi interface {
 
 	/*
-			 * Check Check whether a user is authorized to access an object
-			 * The Check API queries to check if the user has a certain relationship with an object in a certain store.
-		A `contextual_tuples` object may also be included in the body of the request. This object contains one field `tuple_keys`, which is an array of tuple keys.
-		You may also provide an `authorization_model_id` in the body. This will be used to assert that the input `tuple_key` is valid for the model specified. If not specified, the assertion will be made against the latest authorization model ID. It is strongly recommended to specify authorization model id for better performance.
-		The response will return whether the relationship exists in the field `allowed`.
+		 * Check Check whether a user is authorized to access an object
+		 * The Check API queries to check if the user has a certain relationship with an object in a certain store.
+	A `contextual_tuples` object may also be included in the body of the request. This object contains one field `tuple_keys`, which is an array of tuple keys.
+	You may also provide an `authorization_model_id` in the body. This will be used to assert that the input `tuple_key` is valid for the model specified. If not specified, the assertion will be made against the latest authorization model ID. It is strongly recommended to specify authorization model id for better performance.
+	The response will return whether the relationship exists in the field `allowed`.
 
-		## Example
-		In order to check if user `user:anne` of type `user` has a `reader` relationship with object `document:2021-budget` given the following contextual tuple
-		```json
-		{
-		  "user": "user:anne",
-		  "relation": "member",
-		  "object": "time_slot:office_hours"
-		}
-		```
-		the Check API can be used with the following request body:
-		```json
-		{
-		  "tuple_key": {
-		    "user": "user:anne",
-		    "relation": "reader",
-		    "object": "document:2021-budget"
-		  },
-		  "contextual_tuples": {
-		    "tuple_keys": [
-		      {
-		        "user": "user:anne",
-		        "relation": "member",
-		        "object": "time_slot:office_hours"
-		      }
-		    ]
-		  },
-		  "authorization_model_id": "01G50QVV17PECNVAHX1GG4Y5NC"
-		}
-		```
-		OpenFGA's response will include `{ "allowed": true }` if there is a relationship and `{ "allowed": false }` if there isn't.
-			 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return ApiCheckRequest
+	## Example
+	In order to check if user `user:anne` of type `user` has a `reader` relationship with object `document:2021-budget` given the following contextual tuple
+	```json
+	{
+	  "user": "user:anne",
+	  "relation": "member",
+	  "object": "time_slot:office_hours"
+	}
+	```
+	the Check API can be used with the following request body:
+	```json
+	{
+	  "tuple_key": {
+	    "user": "user:anne",
+	    "relation": "reader",
+	    "object": "document:2021-budget"
+	  },
+	  "contextual_tuples": {
+	    "tuple_keys": [
+	      {
+	        "user": "user:anne",
+	        "relation": "member",
+	        "object": "time_slot:office_hours"
+	      }
+	    ]
+	  },
+	  "authorization_model_id": "01G50QVV17PECNVAHX1GG4Y5NC"
+	}
+	```
+	OpenFGA's response will include `{ "allowed": true }` if there is a relationship and `{ "allowed": false }` if there isn't.
+		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @return ApiCheckRequest
 	*/
 	Check(ctx _context.Context) ApiCheckRequest
 
@@ -107,58 +107,58 @@ type OpenFgaApi interface {
 	DeleteStoreExecute(r ApiDeleteStoreRequest) (*_nethttp.Response, error)
 
 	/*
-			 * Expand Expand all relationships in userset tree format, and following userset rewrite rules.  Useful to reason about and debug a certain relationship
-			 * The Expand API will return all users and usersets that have certain relationship with an object in a certain store.
-		This is different from the `/stores/{store_id}/read` API in that both users and computed usersets are returned.
-		Body parameters `tuple_key.object` and `tuple_key.relation` are all required.
-		The response will return a tree whose leaves are the specific users and usersets. Union, intersection and difference operator are located in the intermediate nodes.
+		 * Expand Expand all relationships in userset tree format, and following userset rewrite rules.  Useful to reason about and debug a certain relationship
+		 * The Expand API will return all users and usersets that have certain relationship with an object in a certain store.
+	This is different from the `/stores/{store_id}/read` API in that both users and computed usersets are returned.
+	Body parameters `tuple_key.object` and `tuple_key.relation` are all required.
+	The response will return a tree whose leaves are the specific users and usersets. Union, intersection and difference operator are located in the intermediate nodes.
 
-		## Example
-		To expand all users that have the `reader` relationship with object `document:2021-budget`, use the Expand API with the following request body
-		```json
-		{
-		  "tuple_key": {
-		    "object": "document:2021-budget",
-		    "relation": "reader"
-		  },
-		  "authorization_model_id": "01G50QVV17PECNVAHX1GG4Y5NC"
-		}
-		```
-		OpenFGA's response will be a userset tree of the users and usersets that have read access to the document.
-		```json
-		{
-		  "tree":{
-		    "root":{
-		      "type":"document:2021-budget#reader",
-		      "union":{
-		        "nodes":[
-		          {
-		            "type":"document:2021-budget#reader",
-		            "leaf":{
-		              "users":{
-		                "users":[
-		                  "user:bob"
-		                ]
-		              }
-		            }
-		          },
-		          {
-		            "type":"document:2021-budget#reader",
-		            "leaf":{
-		              "computed":{
-		                "userset":"document:2021-budget#writer"
-		              }
-		            }
-		          }
-		        ]
-		      }
-		    }
-		  }
-		}
-		```
-		The caller can then call expand API for the `writer` relationship for the `document:2021-budget`.
-			 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return ApiExpandRequest
+	## Example
+	To expand all users that have the `reader` relationship with object `document:2021-budget`, use the Expand API with the following request body
+	```json
+	{
+	  "tuple_key": {
+	    "object": "document:2021-budget",
+	    "relation": "reader"
+	  },
+	  "authorization_model_id": "01G50QVV17PECNVAHX1GG4Y5NC"
+	}
+	```
+	OpenFGA's response will be a userset tree of the users and usersets that have read access to the document.
+	```json
+	{
+	  "tree":{
+	    "root":{
+	      "type":"document:2021-budget#reader",
+	      "union":{
+	        "nodes":[
+	          {
+	            "type":"document:2021-budget#reader",
+	            "leaf":{
+	              "users":{
+	                "users":[
+	                  "user:bob"
+	                ]
+	              }
+	            }
+	          },
+	          {
+	            "type":"document:2021-budget#reader",
+	            "leaf":{
+	              "computed":{
+	                "userset":"document:2021-budget#writer"
+	              }
+	            }
+	          }
+	        ]
+	      }
+	    }
+	  }
+	}
+	```
+	The caller can then call expand API for the `writer` relationship for the `document:2021-budget`.
+		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @return ApiExpandRequest
 	*/
 	Expand(ctx _context.Context) ApiExpandRequest
 
@@ -183,15 +183,15 @@ type OpenFgaApi interface {
 	GetStoreExecute(r ApiGetStoreRequest) (GetStoreResponse, *_nethttp.Response, error)
 
 	/*
-			 * ListObjects Get all objects of the given type that the user has a relation with
-			 * The ListObjects API returns a list of all the objects of the given type that the user has a relation with. To achieve this, both the store tuples and the authorization model are used.
-		An `authorization_model_id` may be specified in the body. If it is, it will be used to decide the underlying implementation used. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance.
-		You may also specify `contextual_tuples` that will be treated as regular tuples.
-		The response will contain the related objects in an array in the "objects" field of the response and they will be strings in the object format `<type>:<id>` (e.g. "document:roadmap").
-		Note: If you have `and` or `but not` in your model while using ListObjects, checkout the [caveats](https://openfga.dev/docs/interacting/relationship-queries#caveats-and-when-not-to-use-it-3).
+		 * ListObjects Get all objects of the given type that the user has a relation with
+		 * The ListObjects API returns a list of all the objects of the given type that the user has a relation with. To achieve this, both the store tuples and the authorization model are used.
+	An `authorization_model_id` may be specified in the body. If it is, it will be used to decide the underlying implementation used. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance.
+	You may also specify `contextual_tuples` that will be treated as regular tuples.
+	The response will contain the related objects in an array in the "objects" field of the response and they will be strings in the object format `<type>:<id>` (e.g. "document:roadmap").
+	Note: If you have `and` or `but not` in your model while using ListObjects, checkout the [caveats](https://openfga.dev/docs/interacting/relationship-queries#caveats-and-when-not-to-use-it-3).
 
-			 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return ApiListObjectsRequest
+		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @return ApiListObjectsRequest
 	*/
 	ListObjects(ctx _context.Context) ApiListObjectsRequest
 
@@ -216,101 +216,101 @@ type OpenFgaApi interface {
 	ListStoresExecute(r ApiListStoresRequest) (ListStoresResponse, *_nethttp.Response, error)
 
 	/*
-			 * Read Get tuples from the store that matches a query, without following userset rewrite rules
-			 * The Read API will return the tuples for a certain store that match a query filter specified in the body of the request. It is different from the `/stores/{store_id}/expand` API in that it only returns relationship tuples that are stored in the system and satisfy the query.
-		In the body:
-		1. tuple_key is optional.  If tuple_key is not specified, it will return all tuples in the store.2. `tuple_key.object` is mandatory if tuple_key is specified. It can be a full object (e.g., `type:object_id`) or type only (e.g., `type:`).
-		3. `tuple_key.user` is mandatory if tuple_key is specified in the case the `tuple_key.object` is a type only.
-		## Examples
-		### Query for all objects in a type definition
-		To query for all objects that `user:bob` has `reader` relationship in the document type definition, call read API with body of
-		```json
-		{
-		 "tuple_key": {
-		     "user": "user:bob",
-		     "relation": "reader",
-		     "object": "document:"
-		  }
-		}
-		```
-		The API will return tuples and an optional continuation token, something like
-		```json
-		{
-		  "tuples": [
-		    {
-		      "key": {
-		        "user": "user:bob",
-		        "relation": "reader",
-		        "object": "document:2021-budget"
-		      },
-		      "timestamp": "2021-10-06T15:32:11.128Z"
-		    }
-		  ]
-		}
-		```
-		This means that `user:bob` has a `reader` relationship with 1 document `document:2021-budget`.
-		### Query for all stored relationship tuples that have a particular relation and object
-		To query for all users that have `reader` relationship with `document:2021-budget`, call read API with body of
-		```json
-		{
-		  "tuple_key": {
-		     "object": "document:2021-budget",
-		     "relation": "reader"
-		   }
-		}
-		```
-		The API will return something like
-		```json
-		{
-		  "tuples": [
-		    {
-		      "key": {
-		        "user": "user:bob",
-		        "relation": "reader",
-		        "object": "document:2021-budget"
-		      },
-		      "timestamp": "2021-10-06T15:32:11.128Z"
-		    }
-		  ]
-		}
-		```
-		This means that `document:2021-budget` has 1 `reader` (`user:bob`).  Note that the API will not return writers such as `user:anne` even when all writers are readers.  This is because only direct relationship are returned for the READ API.
-		### Query for all users with all relationships for a particular document
-		To query for all users that have any relationship with `document:2021-budget`, call read API with body of
-		```json
-		{
-		  "tuple_key": {
-		      "object": "document:2021-budget"
-		   }
-		}
-		```
-		The API will return something like
-		```json
-		{
-		  "tuples": [
-		    {
-		      "key": {
-		        "user": "user:anne",
-		        "relation": "writer",
-		        "object": "document:2021-budget"
-		      },
-		      "timestamp": "2021-10-05T13:42:12.356Z"
-		    },
-		    {
-		      "key": {
-		        "user": "user:bob",
-		        "relation": "reader",
-		        "object": "document:2021-budget"
-		      },
-		      "timestamp": "2021-10-06T15:32:11.128Z"
-		    }
-		  ]
-		}
-		```
-		This means that `document:2021-budget` has 1 `reader` (`user:bob`) and 1 `writer` (`user:anne`).
+		 * Read Get tuples from the store that matches a query, without following userset rewrite rules
+		 * The Read API will return the tuples for a certain store that match a query filter specified in the body of the request. It is different from the `/stores/{store_id}/expand` API in that it only returns relationship tuples that are stored in the system and satisfy the query.
+	In the body:
+	1. tuple_key is optional.  If tuple_key is not specified, it will return all tuples in the store.2. `tuple_key.object` is mandatory if tuple_key is specified. It can be a full object (e.g., `type:object_id`) or type only (e.g., `type:`).
+	3. `tuple_key.user` is mandatory if tuple_key is specified in the case the `tuple_key.object` is a type only.
+	## Examples
+	### Query for all objects in a type definition
+	To query for all objects that `user:bob` has `reader` relationship in the document type definition, call read API with body of
+	```json
+	{
+	 "tuple_key": {
+	     "user": "user:bob",
+	     "relation": "reader",
+	     "object": "document:"
+	  }
+	}
+	```
+	The API will return tuples and an optional continuation token, something like
+	```json
+	{
+	  "tuples": [
+	    {
+	      "key": {
+	        "user": "user:bob",
+	        "relation": "reader",
+	        "object": "document:2021-budget"
+	      },
+	      "timestamp": "2021-10-06T15:32:11.128Z"
+	    }
+	  ]
+	}
+	```
+	This means that `user:bob` has a `reader` relationship with 1 document `document:2021-budget`.
+	### Query for all stored relationship tuples that have a particular relation and object
+	To query for all users that have `reader` relationship with `document:2021-budget`, call read API with body of
+	```json
+	{
+	  "tuple_key": {
+	     "object": "document:2021-budget",
+	     "relation": "reader"
+	   }
+	}
+	```
+	The API will return something like
+	```json
+	{
+	  "tuples": [
+	    {
+	      "key": {
+	        "user": "user:bob",
+	        "relation": "reader",
+	        "object": "document:2021-budget"
+	      },
+	      "timestamp": "2021-10-06T15:32:11.128Z"
+	    }
+	  ]
+	}
+	```
+	This means that `document:2021-budget` has 1 `reader` (`user:bob`).  Note that the API will not return writers such as `user:anne` even when all writers are readers.  This is because only direct relationship are returned for the READ API.
+	### Query for all users with all relationships for a particular document
+	To query for all users that have any relationship with `document:2021-budget`, call read API with body of
+	```json
+	{
+	  "tuple_key": {
+	      "object": "document:2021-budget"
+	   }
+	}
+	```
+	The API will return something like
+	```json
+	{
+	  "tuples": [
+	    {
+	      "key": {
+	        "user": "user:anne",
+	        "relation": "writer",
+	        "object": "document:2021-budget"
+	      },
+	      "timestamp": "2021-10-05T13:42:12.356Z"
+	    },
+	    {
+	      "key": {
+	        "user": "user:bob",
+	        "relation": "reader",
+	        "object": "document:2021-budget"
+	      },
+	      "timestamp": "2021-10-06T15:32:11.128Z"
+	    }
+	  ]
+	}
+	```
+	This means that `document:2021-budget` has 1 `reader` (`user:bob`) and 1 `writer` (`user:anne`).
 
-			 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return ApiReadRequest
+		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @return ApiReadRequest
 	*/
 	Read(ctx _context.Context) ApiReadRequest
 
@@ -336,51 +336,51 @@ type OpenFgaApi interface {
 	ReadAssertionsExecute(r ApiReadAssertionsRequest) (ReadAssertionsResponse, *_nethttp.Response, error)
 
 	/*
-			 * ReadAuthorizationModel Return a particular version of an authorization model
-			 * The ReadAuthorizationModel API returns an authorization model by its identifier.
-		The response will return the authorization model for the particular version.
+		 * ReadAuthorizationModel Return a particular version of an authorization model
+		 * The ReadAuthorizationModel API returns an authorization model by its identifier.
+	The response will return the authorization model for the particular version.
 
-		## Example
-		To retrieve the authorization model with ID `01G5JAVJ41T49E9TT3SKVS7X1J` for the store, call the GET authorization-models by ID API with `01G5JAVJ41T49E9TT3SKVS7X1J` as the `id` path parameter.  The API will return:
-		```json
-		{
-		  "authorization_model":{
-		    "id":"01G5JAVJ41T49E9TT3SKVS7X1J",
-		    "type_definitions":[
-		      {
-		        "type":"user"
-		      },
-		      {
-		        "type":"document",
-		        "relations":{
-		          "reader":{
-		            "union":{
-		              "child":[
-		                {
-		                  "this":{}
-		                },
-		                {
-		                  "computedUserset":{
-		                    "object":"",
-		                    "relation":"writer"
-		                  }
-		                }
-		              ]
-		            }
-		          },
-		          "writer":{
-		            "this":{}
-		          }
-		        }
-		      }
-		    ]
-		  }
-		}
-		```
-		In the above example, there are 2 types (`user` and `document`). The `document` type has 2 relations (`writer` and `reader`).
-			 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @param id
-			 * @return ApiReadAuthorizationModelRequest
+	## Example
+	To retrieve the authorization model with ID `01G5JAVJ41T49E9TT3SKVS7X1J` for the store, call the GET authorization-models by ID API with `01G5JAVJ41T49E9TT3SKVS7X1J` as the `id` path parameter.  The API will return:
+	```json
+	{
+	  "authorization_model":{
+	    "id":"01G5JAVJ41T49E9TT3SKVS7X1J",
+	    "type_definitions":[
+	      {
+	        "type":"user"
+	      },
+	      {
+	        "type":"document",
+	        "relations":{
+	          "reader":{
+	            "union":{
+	              "child":[
+	                {
+	                  "this":{}
+	                },
+	                {
+	                  "computedUserset":{
+	                    "object":"",
+	                    "relation":"writer"
+	                  }
+	                }
+	              ]
+	            }
+	          },
+	          "writer":{
+	            "this":{}
+	          }
+	        }
+	      }
+	    ]
+	  }
+	}
+	```
+	In the above example, there are 2 types (`user` and `document`). The `document` type has 2 relations (`writer` and `reader`).
+		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @param id
+		 * @return ApiReadAuthorizationModelRequest
 	*/
 	ReadAuthorizationModel(ctx _context.Context, id string) ApiReadAuthorizationModelRequest
 
@@ -391,45 +391,45 @@ type OpenFgaApi interface {
 	ReadAuthorizationModelExecute(r ApiReadAuthorizationModelRequest) (ReadAuthorizationModelResponse, *_nethttp.Response, error)
 
 	/*
-			 * ReadAuthorizationModels Return all the authorization models for a particular store
-			 * The ReadAuthorizationModels API will return all the authorization models for a certain store.
-		OpenFGA's response will contain an array of all authorization models, sorted in descending order of creation.
+		 * ReadAuthorizationModels Return all the authorization models for a particular store
+		 * The ReadAuthorizationModels API will return all the authorization models for a certain store.
+	OpenFGA's response will contain an array of all authorization models, sorted in descending order of creation.
 
-		## Example
-		Assume that a store's authorization model has been configured twice. To get all the authorization models that have been created in this store, call GET authorization-models. The API will return a response that looks like:
-		```json
-		{
-		  "authorization_models": [
-		    {
-		      "id": "01G50QVV17PECNVAHX1GG4Y5NC",
-		      "type_definitions": [...]
-		    },
-		    {
-		      "id": "01G4ZW8F4A07AKQ8RHSVG9RW04",
-		      "type_definitions": [...]
-		    },
-		  ]
-		}
-		```
-		If there are more authorization models available, the response will contain an extra field `continuation_token`:
-		```json
-		{
-		  "authorization_models": [
-		    {
-		      "id": "01G50QVV17PECNVAHX1GG4Y5NC",
-		      "type_definitions": [...]
-		    },
-		    {
-		      "id": "01G4ZW8F4A07AKQ8RHSVG9RW04",
-		      "type_definitions": [...]
-		    },
-		  ],
-		  "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
-		}
-		```
+	## Example
+	Assume that a store's authorization model has been configured twice. To get all the authorization models that have been created in this store, call GET authorization-models. The API will return a response that looks like:
+	```json
+	{
+	  "authorization_models": [
+	    {
+	      "id": "01G50QVV17PECNVAHX1GG4Y5NC",
+	      "type_definitions": [...]
+	    },
+	    {
+	      "id": "01G4ZW8F4A07AKQ8RHSVG9RW04",
+	      "type_definitions": [...]
+	    },
+	  ]
+	}
+	```
+	If there are more authorization models available, the response will contain an extra field `continuation_token`:
+	```json
+	{
+	  "authorization_models": [
+	    {
+	      "id": "01G50QVV17PECNVAHX1GG4Y5NC",
+	      "type_definitions": [...]
+	    },
+	    {
+	      "id": "01G4ZW8F4A07AKQ8RHSVG9RW04",
+	      "type_definitions": [...]
+	    },
+	  ],
+	  "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
+	}
+	```
 
-			 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return ApiReadAuthorizationModelsRequest
+		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @return ApiReadAuthorizationModelsRequest
 	*/
 	ReadAuthorizationModels(ctx _context.Context) ApiReadAuthorizationModelsRequest
 
@@ -440,12 +440,12 @@ type OpenFgaApi interface {
 	ReadAuthorizationModelsExecute(r ApiReadAuthorizationModelsRequest) (ReadAuthorizationModelsResponse, *_nethttp.Response, error)
 
 	/*
-			 * ReadChanges Return a list of all the tuple changes
-			 * The ReadChanges API will return a paginated list of tuple changes (additions and deletions) that occurred in a given store, sorted by ascending time. The response will include a continuation token that is used to get the next set of changes. If there are no changes after the provided continuation token, the same token will be returned in order for it to be used when new changes are recorded. If the store never had any tuples added or removed, this token will be empty.
-		You can use the `type` parameter to only get the list of tuple changes that affect objects of that type.
+		 * ReadChanges Return a list of all the tuple changes
+		 * The ReadChanges API will return a paginated list of tuple changes (additions and deletions) that occurred in a given store, sorted by ascending time. The response will include a continuation token that is used to get the next set of changes. If there are no changes after the provided continuation token, the same token will be returned in order for it to be used when new changes are recorded. If the store never had any tuples added or removed, this token will be empty.
+	You can use the `type` parameter to only get the list of tuple changes that affect objects of that type.
 
-			 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return ApiReadChangesRequest
+		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @return ApiReadChangesRequest
 	*/
 	ReadChanges(ctx _context.Context) ApiReadChangesRequest
 
@@ -456,45 +456,45 @@ type OpenFgaApi interface {
 	ReadChangesExecute(r ApiReadChangesRequest) (ReadChangesResponse, *_nethttp.Response, error)
 
 	/*
-			 * Write Add or delete tuples from the store
-			 * The Write API will update the tuples for a certain store. Tuples and type definitions allow OpenFGA to determine whether a relationship exists between an object and an user.
-		In the body, `writes` adds new tuples while `deletes` removes existing tuples. The API is not idempotent: if, later on, you try to add the same tuple, or if you try to delete a non-existing tuple, it will throw an error.
-		An `authorization_model_id` may be specified in the body. If it is, it will be used to assert that each written tuple (not deleted) is valid for the model specified. If it is not specified, the latest authorization model ID will be used.
-		## Example
-		### Adding relationships
-		To add `user:anne` as a `writer` for `document:2021-budget`, call write API with the following
-		```json
-		{
-		  "writes": {
-		    "tuple_keys": [
-		      {
-		        "user": "user:anne",
-		        "relation": "writer",
-		        "object": "document:2021-budget"
-		      }
-		    ]
-		  },
-		  "authorization_model_id": "01G50QVV17PECNVAHX1GG4Y5NC"
-		}
-		```
-		### Removing relationships
-		To remove `user:bob` as a `reader` for `document:2021-budget`, call write API with the following
-		```json
-		{
-		  "deletes": {
-		    "tuple_keys": [
-		      {
-		        "user": "user:bob",
-		        "relation": "reader",
-		        "object": "document:2021-budget"
-		      }
-		    ]
-		  }
-		}
-		```
+		 * Write Add or delete tuples from the store
+		 * The Write API will update the tuples for a certain store. Tuples and type definitions allow OpenFGA to determine whether a relationship exists between an object and an user.
+	In the body, `writes` adds new tuples while `deletes` removes existing tuples. The API is not idempotent: if, later on, you try to add the same tuple, or if you try to delete a non-existing tuple, it will throw an error.
+	An `authorization_model_id` may be specified in the body. If it is, it will be used to assert that each written tuple (not deleted) is valid for the model specified. If it is not specified, the latest authorization model ID will be used.
+	## Example
+	### Adding relationships
+	To add `user:anne` as a `writer` for `document:2021-budget`, call write API with the following
+	```json
+	{
+	  "writes": {
+	    "tuple_keys": [
+	      {
+	        "user": "user:anne",
+	        "relation": "writer",
+	        "object": "document:2021-budget"
+	      }
+	    ]
+	  },
+	  "authorization_model_id": "01G50QVV17PECNVAHX1GG4Y5NC"
+	}
+	```
+	### Removing relationships
+	To remove `user:bob` as a `reader` for `document:2021-budget`, call write API with the following
+	```json
+	{
+	  "deletes": {
+	    "tuple_keys": [
+	      {
+	        "user": "user:bob",
+	        "relation": "reader",
+	        "object": "document:2021-budget"
+	      }
+	    ]
+	  }
+	}
+	```
 
-			 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return ApiWriteRequest
+		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @return ApiWriteRequest
 	*/
 	Write(ctx _context.Context) ApiWriteRequest
 
@@ -519,52 +519,52 @@ type OpenFgaApi interface {
 	WriteAssertionsExecute(r ApiWriteAssertionsRequest) (*_nethttp.Response, error)
 
 	/*
-			 * WriteAuthorizationModel Create a new authorization model
-			 * The WriteAuthorizationModel API will add a new authorization model to a store.
-		Each item in the `type_definitions` array is a type definition as specified in the field `type_definition`.
-		The response will return the authorization model's ID in the `id` field.
+		 * WriteAuthorizationModel Create a new authorization model
+		 * The WriteAuthorizationModel API will add a new authorization model to a store.
+	Each item in the `type_definitions` array is a type definition as specified in the field `type_definition`.
+	The response will return the authorization model's ID in the `id` field.
 
-		## Example
-		To add an authorization model with `user` and `document` type definitions, call POST authorization-models API with the body:
-		```json
-		{
-		  "type_definitions":[
-		    {
-		      "type":"user"
-		    },
-		    {
-		      "type":"document",
-		      "relations":{
-		        "reader":{
-		          "union":{
-		            "child":[
-		              {
-		                "this":{}
-		              },
-		              {
-		                "computedUserset":{
-		                  "object":"",
-		                  "relation":"writer"
-		                }
-		              }
-		            ]
-		          }
-		        },
-		        "writer":{
-		          "this":{}
-		        }
-		      }
-		    }
-		  ]
-		}
-		```
-		OpenFGA's response will include the version id for this authorization model, which will look like
-		```
-		{"authorization_model_id": "01G50QVV17PECNVAHX1GG4Y5NC"}
-		```
+	## Example
+	To add an authorization model with `user` and `document` type definitions, call POST authorization-models API with the body:
+	```json
+	{
+	  "type_definitions":[
+	    {
+	      "type":"user"
+	    },
+	    {
+	      "type":"document",
+	      "relations":{
+	        "reader":{
+	          "union":{
+	            "child":[
+	              {
+	                "this":{}
+	              },
+	              {
+	                "computedUserset":{
+	                  "object":"",
+	                  "relation":"writer"
+	                }
+	              }
+	            ]
+	          }
+	        },
+	        "writer":{
+	          "this":{}
+	        }
+	      }
+	    }
+	  ]
+	}
+	```
+	OpenFGA's response will include the version id for this authorization model, which will look like
+	```
+	{"authorization_model_id": "01G50QVV17PECNVAHX1GG4Y5NC"}
+	```
 
-			 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return ApiWriteAuthorizationModelRequest
+		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @return ApiWriteAuthorizationModelRequest
 	*/
 	WriteAuthorizationModel(ctx _context.Context) ApiWriteAuthorizationModelRequest
 
@@ -723,9 +723,9 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= 300 {
+		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == 400 || localVarHTTPResponse.StatusCode == 422 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -751,7 +751,7 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 401 || localVarHTTPResponse.StatusCode == 403 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body: localVarBody,
 
@@ -767,7 +767,7 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 404 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -793,7 +793,7 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 429 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
 					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
@@ -816,7 +816,11 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= 500 {
+			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
+					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
 				newErr := FgaApiInternalError{
 					body: localVarBody,
 
@@ -881,7 +885,7 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 	}
 	// should never have reached this
 	var localVarReturnValue CheckResponse
-	return localVarReturnValue, nil, reportError("RateLimitError not handled properly")
+	return localVarReturnValue, nil, reportError("Error not handled properly")
 }
 
 type ApiCreateStoreRequest struct {
@@ -980,9 +984,9 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= 300 {
+		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == 400 || localVarHTTPResponse.StatusCode == 422 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -1008,7 +1012,7 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 401 || localVarHTTPResponse.StatusCode == 403 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body: localVarBody,
 
@@ -1024,7 +1028,7 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 404 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -1050,7 +1054,7 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 429 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
 					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
@@ -1073,7 +1077,11 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= 500 {
+			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
+					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
 				newErr := FgaApiInternalError{
 					body: localVarBody,
 
@@ -1138,7 +1146,7 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 	}
 	// should never have reached this
 	var localVarReturnValue CreateStoreResponse
-	return localVarReturnValue, nil, reportError("RateLimitError not handled properly")
+	return localVarReturnValue, nil, reportError("Error not handled properly")
 }
 
 type ApiDeleteStoreRequest struct {
@@ -1227,9 +1235,9 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 			return localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= 300 {
+		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == 400 || localVarHTTPResponse.StatusCode == 422 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -1255,7 +1263,7 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 				return localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 401 || localVarHTTPResponse.StatusCode == 403 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body: localVarBody,
 
@@ -1271,7 +1279,7 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 				return localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 404 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -1297,7 +1305,7 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 				return localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 429 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
 					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
@@ -1320,7 +1328,11 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 				return localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= 500 {
+			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
+					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
 				newErr := FgaApiInternalError{
 					body: localVarBody,
 
@@ -1375,7 +1387,7 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 		return localVarHTTPResponse, nil
 	}
 	// should never have reached this
-	return nil, reportError("RateLimitError not handled properly")
+	return nil, reportError("Error not handled properly")
 }
 
 type ApiExpandRequest struct {
@@ -1531,9 +1543,9 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= 300 {
+		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == 400 || localVarHTTPResponse.StatusCode == 422 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -1559,7 +1571,7 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 401 || localVarHTTPResponse.StatusCode == 403 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body: localVarBody,
 
@@ -1575,7 +1587,7 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 404 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -1601,7 +1613,7 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 429 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
 					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
@@ -1624,7 +1636,11 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= 500 {
+			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
+					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
 				newErr := FgaApiInternalError{
 					body: localVarBody,
 
@@ -1689,7 +1705,7 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 	}
 	// should never have reached this
 	var localVarReturnValue ExpandResponse
-	return localVarReturnValue, nil, reportError("RateLimitError not handled properly")
+	return localVarReturnValue, nil, reportError("Error not handled properly")
 }
 
 type ApiGetStoreRequest struct {
@@ -1780,9 +1796,9 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= 300 {
+		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == 400 || localVarHTTPResponse.StatusCode == 422 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -1808,7 +1824,7 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 401 || localVarHTTPResponse.StatusCode == 403 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body: localVarBody,
 
@@ -1824,7 +1840,7 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 404 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -1850,7 +1866,7 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 429 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
 					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
@@ -1873,7 +1889,11 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= 500 {
+			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
+					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
 				newErr := FgaApiInternalError{
 					body: localVarBody,
 
@@ -1938,7 +1958,7 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 	}
 	// should never have reached this
 	var localVarReturnValue GetStoreResponse
-	return localVarReturnValue, nil, reportError("RateLimitError not handled properly")
+	return localVarReturnValue, nil, reportError("Error not handled properly")
 }
 
 type ApiListObjectsRequest struct {
@@ -2047,9 +2067,9 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= 300 {
+		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == 400 || localVarHTTPResponse.StatusCode == 422 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -2075,7 +2095,7 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 401 || localVarHTTPResponse.StatusCode == 403 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body: localVarBody,
 
@@ -2091,7 +2111,7 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 404 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -2117,7 +2137,7 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 429 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
 					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
@@ -2140,7 +2160,11 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= 500 {
+			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
+					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
 				newErr := FgaApiInternalError{
 					body: localVarBody,
 
@@ -2205,7 +2229,7 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 	}
 	// should never have reached this
 	var localVarReturnValue ListObjectsResponse
-	return localVarReturnValue, nil, reportError("RateLimitError not handled properly")
+	return localVarReturnValue, nil, reportError("Error not handled properly")
 }
 
 type ApiListStoresRequest struct {
@@ -2310,9 +2334,9 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= 300 {
+		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == 400 || localVarHTTPResponse.StatusCode == 422 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -2338,7 +2362,7 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 401 || localVarHTTPResponse.StatusCode == 403 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body: localVarBody,
 
@@ -2354,7 +2378,7 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 404 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -2380,7 +2404,7 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 429 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
 					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
@@ -2403,7 +2427,11 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= 500 {
+			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
+					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
 				newErr := FgaApiInternalError{
 					body: localVarBody,
 
@@ -2468,7 +2496,7 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 	}
 	// should never have reached this
 	var localVarReturnValue ListStoresResponse
-	return localVarReturnValue, nil, reportError("RateLimitError not handled properly")
+	return localVarReturnValue, nil, reportError("Error not handled properly")
 }
 
 type ApiReadRequest struct {
@@ -2675,9 +2703,9 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= 300 {
+		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == 400 || localVarHTTPResponse.StatusCode == 422 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -2703,7 +2731,7 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 401 || localVarHTTPResponse.StatusCode == 403 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body: localVarBody,
 
@@ -2719,7 +2747,7 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 404 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -2745,7 +2773,7 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 429 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
 					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
@@ -2768,7 +2796,11 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= 500 {
+			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
+					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
 				newErr := FgaApiInternalError{
 					body: localVarBody,
 
@@ -2833,7 +2865,7 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 	}
 	// should never have reached this
 	var localVarReturnValue ReadResponse
-	return localVarReturnValue, nil, reportError("RateLimitError not handled properly")
+	return localVarReturnValue, nil, reportError("Error not handled properly")
 }
 
 type ApiReadAssertionsRequest struct {
@@ -2929,9 +2961,9 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= 300 {
+		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == 400 || localVarHTTPResponse.StatusCode == 422 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -2957,7 +2989,7 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 401 || localVarHTTPResponse.StatusCode == 403 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body: localVarBody,
 
@@ -2973,7 +3005,7 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 404 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -2999,7 +3031,7 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 429 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
 					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
@@ -3022,7 +3054,11 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= 500 {
+			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
+					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
 				newErr := FgaApiInternalError{
 					body: localVarBody,
 
@@ -3087,7 +3123,7 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 	}
 	// should never have reached this
 	var localVarReturnValue ReadAssertionsResponse
-	return localVarReturnValue, nil, reportError("RateLimitError not handled properly")
+	return localVarReturnValue, nil, reportError("Error not handled properly")
 }
 
 type ApiReadAuthorizationModelRequest struct {
@@ -3226,9 +3262,9 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= 300 {
+		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == 400 || localVarHTTPResponse.StatusCode == 422 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -3254,7 +3290,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 401 || localVarHTTPResponse.StatusCode == 403 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body: localVarBody,
 
@@ -3270,7 +3306,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 404 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -3296,7 +3332,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 429 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
 					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
@@ -3319,7 +3355,11 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= 500 {
+			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
+					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
 				newErr := FgaApiInternalError{
 					body: localVarBody,
 
@@ -3384,7 +3424,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 	}
 	// should never have reached this
 	var localVarReturnValue ReadAuthorizationModelResponse
-	return localVarReturnValue, nil, reportError("RateLimitError not handled properly")
+	return localVarReturnValue, nil, reportError("Error not handled properly")
 }
 
 type ApiReadAuthorizationModelsRequest struct {
@@ -3533,9 +3573,9 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= 300 {
+		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == 400 || localVarHTTPResponse.StatusCode == 422 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -3561,7 +3601,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 401 || localVarHTTPResponse.StatusCode == 403 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body: localVarBody,
 
@@ -3577,7 +3617,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 404 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -3603,7 +3643,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 429 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
 					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
@@ -3626,7 +3666,11 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= 500 {
+			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
+					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
 				newErr := FgaApiInternalError{
 					body: localVarBody,
 
@@ -3691,7 +3735,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 	}
 	// should never have reached this
 	var localVarReturnValue ReadAuthorizationModelsResponse
-	return localVarReturnValue, nil, reportError("RateLimitError not handled properly")
+	return localVarReturnValue, nil, reportError("Error not handled properly")
 }
 
 type ApiReadChangesRequest struct {
@@ -3811,9 +3855,9 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= 300 {
+		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == 400 || localVarHTTPResponse.StatusCode == 422 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -3839,7 +3883,7 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 401 || localVarHTTPResponse.StatusCode == 403 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body: localVarBody,
 
@@ -3855,7 +3899,7 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 404 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -3881,7 +3925,7 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 429 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
 					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
@@ -3904,7 +3948,11 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= 500 {
+			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
+					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
 				newErr := FgaApiInternalError{
 					body: localVarBody,
 
@@ -3969,7 +4017,7 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 	}
 	// should never have reached this
 	var localVarReturnValue ReadChangesResponse
-	return localVarReturnValue, nil, reportError("RateLimitError not handled properly")
+	return localVarReturnValue, nil, reportError("Error not handled properly")
 }
 
 type ApiWriteRequest struct {
@@ -4112,9 +4160,9 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= 300 {
+		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == 400 || localVarHTTPResponse.StatusCode == 422 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -4140,7 +4188,7 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 401 || localVarHTTPResponse.StatusCode == 403 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body: localVarBody,
 
@@ -4156,7 +4204,7 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 404 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -4182,7 +4230,7 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 429 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
 					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
@@ -4205,7 +4253,11 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= 500 {
+			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
+					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
 				newErr := FgaApiInternalError{
 					body: localVarBody,
 
@@ -4270,7 +4322,7 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 	}
 	// should never have reached this
 	var localVarReturnValue map[string]interface{}
-	return localVarReturnValue, nil, reportError("RateLimitError not handled properly")
+	return localVarReturnValue, nil, reportError("Error not handled properly")
 }
 
 type ApiWriteAssertionsRequest struct {
@@ -4527,7 +4579,7 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 		return localVarHTTPResponse, nil
 	}
 	// should never have reached this
-	return nil, reportError("RateLimitError not handled properly")
+	return nil, reportError("Error not handled properly")
 }
 
 type ApiWriteAuthorizationModelRequest struct {
@@ -4675,9 +4727,9 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= 300 {
+		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == 400 || localVarHTTPResponse.StatusCode == 422 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -4703,7 +4755,7 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 401 || localVarHTTPResponse.StatusCode == 403 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body: localVarBody,
 
@@ -4719,7 +4771,7 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 404 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -4745,7 +4797,7 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 429 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
 					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
@@ -4768,7 +4820,11 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= 500 {
+			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
+					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
 				newErr := FgaApiInternalError{
 					body: localVarBody,
 
@@ -4833,5 +4889,5 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 	}
 	// should never have reached this
 	var localVarReturnValue WriteAuthorizationModelResponse
-	return localVarReturnValue, nil, reportError("RateLimitError not handled properly")
+	return localVarReturnValue, nil, reportError("Error not handled properly")
 }

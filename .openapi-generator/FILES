@@ -2,8 +2,6 @@
 .github/CODEOWNERS
 .github/ISSUE_TEMPLATES/bug_report.md
 .github/ISSUE_TEMPLATES/feature_request.md
-.github/PULL_REQUEST_TEMPLATE.md
-.github/SECURITY.md
 .github/workflows/main.yaml
 .github/workflows/semgrep.yaml
 .gitignore
@@ -13,9 +11,11 @@ LICENSE
 NOTICE.txt
 README.md
 VERSION.txt
+api_client.go
 api_open_fga.go
 api_open_fga_test.go
-client.go
+client/client.go
+client/client_test.go
 configuration.go
 credentials/credentials.go
 docs/Any.md

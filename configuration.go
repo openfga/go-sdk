@@ -29,12 +29,12 @@ type RetryParams struct {
 
 // Configuration stores the configuration of the API client
 type Configuration struct {
-	ApiScheme      string                   `json:"apiScheme,omitempty"`
-	ApiHost        string                   `json:"apiHost,omitempty"`
-	StoreId        string                   `json:"storeId,omitempty"`
+	ApiScheme      string                   `json:"api_scheme,omitempty"`
+	ApiHost        string                   `json:"api_host,omitempty"`
+	StoreId        string                   `json:"store_id,omitempty"`
 	Credentials    *credentials.Credentials `json:"credentials,omitempty"`
-	DefaultHeaders map[string]string        `json:"defaultHeader,omitempty"`
-	UserAgent      string                   `json:"userAgent,omitempty"`
+	DefaultHeaders map[string]string        `json:"default_headers,omitempty"`
+	UserAgent      string                   `json:"user_agent,omitempty"`
 	Debug          bool                     `json:"debug,omitempty"`
 	HTTPClient     *http.Client
 	RetryParams    *RetryParams
@@ -43,7 +43,7 @@ type Configuration struct {
 // DefaultRetryParams returns the default retry parameters
 func DefaultRetryParams() *RetryParams {
 	return &RetryParams{
-		MaxRetry:    5,
+		MaxRetry:    15,
 		MinWaitInMs: 100,
 	}
 }

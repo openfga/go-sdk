@@ -63,7 +63,6 @@ type service struct {
 // NewAPIClient creates a new API client. Requires a userAgent string describing your application.
 // optionally a custom http.Client to allow for advanced features such as caching.
 func NewAPIClient(cfg *Configuration) *APIClient {
-
 	if cfg.HTTPClient == nil {
 		if cfg.Credentials == nil {
 			cfg.HTTPClient = http.DefaultClient
@@ -87,22 +86,6 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 
 	// API Services
 	c.OpenFgaApi = (*OpenFgaApiService)(&c.common)
-
-	if cfg.HTTPClient == nil {
-		if cfg.Credentials == nil {
-			cfg.HTTPClient = http.DefaultClient
-		} else {
-			var httpClient, headers = cfg.Credentials.GetHttpClientAndHeaderOverrides()
-			if len(headers) > 0 {
-				for idx := range headers {
-					cfg.AddDefaultHeader(headers[idx].Key, headers[idx].Value)
-				}
-			}
-			if httpClient != nil {
-				cfg.HTTPClient = httpClient
-			}
-		}
-	}
 
 	return c
 }

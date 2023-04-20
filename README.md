@@ -110,10 +110,10 @@ func main() {
         ApiScheme:      os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"
         ApiHost:        os.Getenv("OPENFGA_API_HOST"), // required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
         StoreId:        os.Getenv("OPENFGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
-	  })
-    
-	  if err != nil {
-    // .. Handle error
+    })
+
+	if err != nil {
+        // .. Handle error
     }
 }
 ```
@@ -137,10 +137,10 @@ func main() {
                 ApiToken: os.Getenv("OPENFGA_API_TOKEN"), // will be passed as the "Authorization: Bearer ${ApiToken}" request header
             },
         },
-	  })
+    })
 
     if err != nil {
-    // .. Handle error
+        // .. Handle error
     }
 }
 ```
@@ -149,15 +149,17 @@ func main() {
 
 ```golang
 import (
+    openfga "github.com/openfga/go-sdk"
     . "github.com/openfga/go-sdk/client"
     "os"
 )
 
 func main() {
     fgaClient, err := NewSdkClient(&ClientConfiguration{
-        ApiScheme:      os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"
-        ApiHost:        os.Getenv("OPENFGA_API_HOST"), // required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
-        StoreId:        os.Getenv("OPENFGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
+        ApiScheme:              os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"
+        ApiHost:                os.Getenv("OPENFGA_API_HOST"), // required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
+        StoreId:                os.Getenv("OPENFGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
+        AuthorizationModelId:   .PtrString("OPENFGA_AUTHORIZATION_MODEL_ID"),
         Credentials: &credentials.Credentials{
             Method: credentials.CredentialsMethodClientCredentials,
             Config: &credentials.Config{
@@ -167,10 +169,10 @@ func main() {
                 ClientCredentialsApiTokenIssuer: os.Getenv("OPENFGA_API_TOKEN_ISSUER"),
             },
         },
-	  })
+    })
 
     if err != nil {
-    // .. Handle error
+        // .. Handle error
     }
 }
 ```
@@ -197,7 +199,7 @@ options := ClientListStoresOptions{
   PageSize:          openfga.PtrInt32(10),
   ContinuationToken: openfga.PtrString("..."),
 }
-stores, httpResponse, err := fgaClient.ListStores(context.Background()).Options(options).Execute();
+stores, err := fgaClient.ListStores(context.Background()).Options(options).Execute();
 
 // stores = [{ "id": "01FQH7V8BEG3GPQW93KTRFR8JB", "name": "FGA Demo Store", "created_at": "2022-01-01T00:00:00.000Z", "updated_at": "2022-01-01T00:00:00.000Z" }]
 ```
@@ -210,7 +212,7 @@ Create and initialize a store.
 
 ```golang
 body := ClientCreateStoreRequest{Name: "FGA Demo"}
-store, httpResponse, err := fgaClient.CreateStore(context.Background()).Body(body).Execute()
+store, err := fgaClient.CreateStore(context.Background()).Body(body).Execute()
 if err != nil {
     // handle error
 }
@@ -232,7 +234,7 @@ Get information about the current store.
 > Requires a client initialized with a storeId
 
 ```golang
-store, httpResponse, err := fgaClient.GetStore(context.Background()).Execute()
+store,  err := fgaClient.GetStore(context.Background()).Execute()
 if err != nil {
     // handle error
 }
@@ -249,7 +251,7 @@ Delete a store.
 > Requires a client initialized with a storeId
 
 ```golang
-_, httpResponse, err := fgaClient.DeleteStore(context.Background()).Execute()
+_,  err := fgaClient.DeleteStore(context.Background()).Execute()
 if err != nil {
     // handle error
 }
@@ -444,7 +446,7 @@ By default, write runs in a transaction mode where any invalid operation (deleti
 
 ```golang
 body := ClientWriteRequest{
-    Writes: &[]ClientTupleKey{{
+    Writes: &[]ClientTupleKey{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "viewer",
         Object:   "document:roadmap",
@@ -452,19 +454,19 @@ body := ClientWriteRequest{
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "viewer",
         Object:   "document:budget",
-    }},
-    Deletes: &[]ClientTupleKey{{
+    } },
+    Deletes: &[]ClientTupleKey{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "writer",
         Object:   "document:roadmap",
-    }}
+    } }
 }
 
 options := ClientWriteOptions{
     // You can rely on the model id set in the configuration or override it for this specific request
     AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
 }
-httpResponse, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
+data, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
 ```
 
 Convenience `WriteTuples` and `DeleteTuples` methods are also available.
@@ -475,7 +477,7 @@ The SDK will split the writes into separate chunks and send them in separate req
 
 ```golang
 body := ClientWriteRequest{
-    Writes: &[]ClientTupleKey{{
+    Writes: &[]ClientTupleKey{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "viewer",
         Object:   "document:roadmap",
@@ -483,12 +485,12 @@ body := ClientWriteRequest{
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "viewer",
         Object:   "document:budget",
-    }},
-	  Deletes: &[]ClientTupleKey{{
+    } },
+	  Deletes: &[]ClientTupleKey{ {
       User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
       Relation: "writer",
       Object:   "document:roadmap",
-    }}
+    } }
 }
 
 options := ClientWriteOptions{
@@ -534,11 +536,11 @@ body := ClientCheckRequest{
     User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     Relation: "viewer",
     Object:   "document:roadmap",
-    ContextualTuples: &[]ClientTupleKey{{
+    ContextualTuples: &[]ClientTupleKey{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "editor",
         Object:   "document:roadmap",
-    }},
+    } },
 }
 
 options := ClientCheckOptions{
@@ -564,24 +566,24 @@ options := ClientBatchCheckOptions{
     MaxParallelRequests: openfga.PtrInt32(5), // Max number of requests to issue in parallel, defaults to 10
 }
 
-body := ClientBatchCheckBody{{
+body := ClientBatchCheckBody{ {
     User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     Relation: "viewer",
     Object:   "document:roadmap",
-    ContextualTuples: &[]ClientTupleKey{{
+    ContextualTuples: &[]ClientTupleKey{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "editor",
         Object:   "document:roadmap",
-    }},
+    } },
 }, {
     User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     Relation: "admin",
     Object:   "document:roadmap",
-    ContextualTuples: &[]ClientTupleKey{{
+    ContextualTuples: &[]ClientTupleKey{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "editor",
         Object:   "document:roadmap",
-    }},
+    } },
 }, {
     User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     Relation: "creator",
@@ -590,7 +592,7 @@ body := ClientBatchCheckBody{{
     User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     Relation: "deleter",
     Object:   "document:roadmap",
-}}
+} }
 
 data, err := fgaClient.BatchCheck(context.Background()).Body(requestBody).Options(options).Execute()
 
@@ -677,7 +679,7 @@ body := ClientListObjectsRequest{
     User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     Relation: "can_read",
     Type:     "document",
-    ContextualTuples: &[]ClientTupleKey{{
+    ContextualTuples: &[]ClientTupleKey{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "editor",
         Object:   "folder:product",
@@ -685,7 +687,7 @@ body := ClientListObjectsRequest{
         User:     "folder:product",
         Relation: "parent",
         Object:   "document:roadmap",
-    }},
+    } },
 }
 data, err := fgaClient.ListObjects(context.Background()).
   Body(requestBody).
@@ -708,11 +710,11 @@ body := ClientListRelationsRequest{
     User:      "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     Object:    "document:roadmap",
     Relations: []string{"can_view", "can_edit", "can_delete", "can_rename"},
-    ContextualTuples: &[]ClientTupleKey{{
+    ContextualTuples: &[]ClientTupleKey{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "editor",
         Object:   "document:roadmap",
-    }},
+    } },
 }
 data, err := fgaClient.ListRelations(context.Background()).
   Body(requestBody).
