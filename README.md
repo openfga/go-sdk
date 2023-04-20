@@ -263,7 +263,7 @@ options := ClientReadAuthorizationModelsOptions{
     PageSize: openfga.PtrInt32(10),
     ContinuationToken: openfga.PtrString("..."),
 }
-data, httpResponse, err := fgaClient.ReadAuthorizationModels(context.Background()).Options(options).Execute()
+data, err := fgaClient.ReadAuthorizationModels(context.Background()).Options(options).Execute()
 
 // data.AuthorizationModels = [
 // { Id: "01GXSA8YR785C4FYS3C0RTG7B1", SchemaVersion: "1.1", TypeDefinitions: [...] },
@@ -319,7 +319,7 @@ body := ClientWriteAuthorizationModelRequest{
       },
     }},
 }
-data, httpResponse, err := fgaClient.WriteAuthorizationModel(context.Background()).Body(body).Execute()
+data, err := fgaClient.WriteAuthorizationModel(context.Background()).Body(body).Execute()
 
 fmt.Printf("%s", data.AuthorizationModelId) // 01GXSA8YR785C4FYS3C0RTG7B1
 ```
@@ -335,7 +335,7 @@ options := ClientReadAuthorizationModelOptions{
     // You can rely on the model id set in the configuration or override it for this specific request
     AuthorizationModelId: openfga.PtrString(modelId),
 }
-data, httpRresponse, err := fgaClient.ReadAuthorizationModel(context.Background()).Options(options).Execute()
+data, err := fgaClient.ReadAuthorizationModel(context.Background()).Options(options).Execute()
 
 // data = {"authorization_model":{"id":"01GXSA8YR785C4FYS3C0RTG7B1","schema_version":"1.1","type_definitions":[{"type":"document","relations":{"writer":{"this":{}},"viewer":{ ... }}},{"type":"user"}]}} // JSON
 
@@ -349,7 +349,7 @@ Reads the latest authorization model (note: this ignores the model id in configu
 [API Documentation](https://openfga.dev/api/service#/Authorization%20Models/ReadAuthorizationModel)
 
 ```golang
-data, httpResponse, err := fgaClient.ReadLatestAuthorizationModel(context.Background()).Execute()
+data, err := fgaClient.ReadLatestAuthorizationModel(context.Background()).Execute()
 
 // data.AuthorizationModel.Id = "01GXSA8YR785C4FYS3C0RTG7B1"
 // data.AuthorizationModel.SchemaVersion = "1.1"
@@ -374,7 +374,7 @@ options := ClientReadChangesOptions{
     PageSize: openfga.PtrInt32(10),
     ContinuationToken: openfga.PtrString("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="),
 }
-data, httpResponse, err := fgaClient.ReadChanges(context.Background()).Body(body).Options(options).Execute()
+data, err := fgaClient.ReadChanges(context.Background()).Body(body).Options(options).Execute()
 
 // data.ContinuationToken = ...
 // data.Changes = [
@@ -422,7 +422,7 @@ options := ClientReadOptions{
     PageSize: openfga.PtrInt32(10),
     ContinuationToken: openfga.PtrString("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="),
 }
-data, httpResponse, err := fgaClient.Read(context.Background()).Body(requestBody).Options(options).Execute()
+data, err := fgaClient.Read(context.Background()).Body(requestBody).Options(options).Execute()
 
 // In all the above situations, the response will be of the form:
 // data = { Tuples: [{ Key: { User, Relation, Object }, Timestamp }, ...]}
@@ -540,7 +540,7 @@ body := ClientCheckRequest{
 options := ClientCheckOptions{
     AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
 }
-data, httpResponse, err := fgaClient.Check(context.Background()).Body(body).Options(options).Execute()
+data, err := fgaClient.Check(context.Background()).Body(body).Options(options).Execute()
 
 // data = {"allowed":true,"resolution":""} // in JSON
 
@@ -653,7 +653,7 @@ body := ClientExpandRequest{
     Relation: "viewer",
     Object:   "document:roadmap",
 }
-data, httpResponse, err := fgaClient.Expand(context.Background()).Body(requestBody).Options(options).Execute()
+data, err := fgaClient.Expand(context.Background()).Body(requestBody).Options(options).Execute()
 
 // data.Tree.Root = {"name":"document:roadmap#viewer","leaf":{"users":{"users":["user:81684243-9356-4421-8fbf-a4f8d36aa31b","user:f52a4f7a-054d-47ff-bb6e-3ac81269988f"]}}}
 ```
@@ -683,7 +683,7 @@ body := ClientListObjectsRequest{
         Object:   "document:roadmap",
     }},
 }
-data, httpResponse, err := fgaClient.ListObjects(context.Background()).
+data, err := fgaClient.ListObjects(context.Background()).
   Body(requestBody).
   Options(options).
   Execute()
@@ -731,7 +731,7 @@ options := ClientReadAssertionsOptions{
     // You can rely on the model id set in the configuration or override it for this specific request
     AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
 }
-data, httpResponse, err := fgaClient.ReadAssertions(context.Background()).
+data, err := fgaClient.ReadAssertions(context.Background()).
   Options(options).
   Execute()
 ```
@@ -755,7 +755,7 @@ requestBody := ClientWriteAssertionsRequest{
         Expectation: true,
     },
 }
-httpResponse, err := fgaClient.WriteAssertions(context.Background()).
+data, err := fgaClient.WriteAssertions(context.Background()).
   Body(requestBody).
   Options(options).
   Execute()
