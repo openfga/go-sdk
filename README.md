@@ -204,7 +204,7 @@ stores, httpResponse, err := fgaClient.ListStores(context.Background()).Options(
 
 ##### Create Store
 
-Initialize a store.
+Create and initialize a store.
 
 [API Documentation](https://openfga.dev/api/service/docs/api#/Stores/CreateStore)
 
@@ -225,6 +225,8 @@ apiClient.SetStoreId(*store.Id)
 
 ##### Get Store
 
+Get information about the current store.
+
 [API Documentation](https://openfga.dev/api/service/docs/api#/Stores/GetStore)
 
 > Requires a client initialized with a storeId
@@ -239,6 +241,8 @@ if err != nil {
 ```
 
 ##### Delete Store
+
+Delete a store.
 
 [API Documentation](https://openfga.dev/api/service/docs/api#/Stores/DeleteStore)
 

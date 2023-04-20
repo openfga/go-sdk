@@ -125,53 +125,273 @@ func getContinuationTokenFromRequest(options *ClientPaginationOptions) *string {
 
 type SdkClient interface {
 	/* Stores */
+
+	/*
+	 * ListStores Get a paginated list of stores.
+	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return SdkClientListStoresRequest
+	 */
 	ListStores(ctx _context.Context) SdkClientListStoresRequest
+
+	/*
+	 * ListStoresExecute executes the ListStores request
+	 * @return ClientListStoresResponse
+	 */
 	ListStoresExecute(request SdkClientListStoresRequest) (ClientListStoresResponse, error)
+
+	/*
+	 * CreateStore Create and initialize a store
+	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return SdkClientCreateStoreRequest
+	 */
 	CreateStore(ctx _context.Context) SdkClientCreateStoreRequest
+
+	/*
+	 * CreateStoreExecute executes the CreateStore request
+	 * @return ClientCreateStoreResponse
+	 */
 	CreateStoreExecute(request SdkClientCreateStoreRequest) (ClientCreateStoreResponse, error)
+
+	/*
+	 * GetStore Get information about the current store.
+	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return SdkClientGetStoreRequest
+	 */
 	GetStore(ctx _context.Context) SdkClientGetStoreRequest
+
+	/*
+	 * GetStoreExecute executes the GetStore request
+	 * @return ClientGetStoreResponse
+	 */
 	GetStoreExecute(request SdkClientGetStoreRequest) (ClientGetStoreResponse, error)
+
+	/*
+	 * DeleteStore Delete a store.
+	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return SdkClientDeleteStoreRequest
+	 */
 	DeleteStore(ctx _context.Context) SdkClientDeleteStoreRequest
+
+	/*
+	 * DeleteStoreExecute executes the DeleteStore request
+	 * @return ClientDeleteStoreResponse
+	 */
 	DeleteStoreExecute(request SdkClientDeleteStoreRequest) (ClientDeleteStoreResponse, error)
 
 	/* Authorization Models */
+
+	/*
+	 * ReadAuthorizationModels Read all authorization models in the store.
+	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return SdkClientReadAuthorizationModelsRequest
+	 */
 	ReadAuthorizationModels(ctx _context.Context) SdkClientReadAuthorizationModelsRequest
+
+	/*
+	 * ReadAuthorizationModelsExecute executes the ReadAuthorizationModels request
+	 * @return ClientReadAuthorizationModelsResponse
+	 */
 	ReadAuthorizationModelsExecute(request SdkClientReadAuthorizationModelsRequest) (ClientReadAuthorizationModelsResponse, error)
+
+	/*
+	 * WriteAuthorizationModel Create a new authorization model.
+	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return SdkClientWriteAuthorizationModelRequest
+	 */
 	WriteAuthorizationModel(ctx _context.Context) SdkClientWriteAuthorizationModelRequest
+
+	/*
+	 * WriteAuthorizationModelExecute executes the WriteAuthorizationModel request
+	 * @return ClientWriteAuthorizationModelResponse
+	 */
 	WriteAuthorizationModelExecute(request SdkClientWriteAuthorizationModelRequest) (ClientWriteAuthorizationModelResponse, error)
+
+	/*
+	 * ReadAuthorizationModel Read a particular authorization model.
+	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return SdkClientReadAuthorizationModelRequest
+	 */
 	ReadAuthorizationModel(ctx _context.Context) SdkClientReadAuthorizationModelRequest
+
+	/*
+	 * ReadAuthorizationModelExecute executes the ReadAuthorizationModel request
+	 * @return ClientReadAuthorizationModelResponse
+	 */
 	ReadAuthorizationModelExecute(request SdkClientReadAuthorizationModelRequest) (ClientReadAuthorizationModelResponse, error)
+
+	/*
+	 * ReadLatestAuthorizationModel Reads the latest authorization model (note: this ignores the model id in configuration).
+	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return SdkClientReadLatestAuthorizationModelRequest
+	 */
 	ReadLatestAuthorizationModel(ctx _context.Context) SdkClientReadLatestAuthorizationModelRequest
+
+	/*
+	 * ReadLatestAuthorizationModelExecute executes the ReadLatestAuthorizationModel request
+	 * @return ClientReadAuthorizationModelResponse
+	 */
 	ReadLatestAuthorizationModelExecute(request SdkClientReadLatestAuthorizationModelRequest) (ClientReadAuthorizationModelResponse, error)
 
 	/* Relationship Tuples */
+
+	/*
+	 * ReadChanges Reads the list of historical relationship tuple writes and deletes.
+	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return SdkClientReadChangesRequest
+	 */
 	ReadChanges(ctx _context.Context) SdkClientReadChangesRequest
+
+	/*
+	 * ReadChangesExecute executes the ReadChanges request
+	 * @return ClientReadChangesResponse
+	 */
 	ReadChangesExecute(request SdkClientReadChangesRequest) (ClientReadChangesResponse, error)
+
+	/*
+	 * Read Reads the relationship tuples stored in the database. It does not evaluate nor exclude invalid tuples according to the authorization model.
+	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return SdkClientReadRequest
+	 */
 	Read(ctx _context.Context) SdkClientReadRequest
+
+	/*
+	 * ReadExecute executes the Read request
+	 * @return ClientReadResponse
+	 */
 	ReadExecute(request SdkClientReadRequest) (ClientReadResponse, error)
+
+	/*
+	 * Write Create and/or delete relationship tuples to update the system state.
+	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return SdkClientWriteRequest
+	 */
 	Write(ctx _context.Context) SdkClientWriteRequest
+
+	/*
+	 * WriteExecute executes the Write request
+	 * @return ClientWriteResponse
+	 */
 	WriteExecute(request SdkClientWriteRequest) (ClientWriteResponse, error)
+
+	/*
+	 * WriteTuples Utility method around Write
+	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return SdkClientWriteTuplesRequest
+	 */
 	WriteTuples(ctx _context.Context) SdkClientWriteTuplesRequest
+
+	/*
+	 * WriteTuplesExecute executes the WriteTuples request
+	 * @return ClientWriteResponse
+	 */
 	WriteTuplesExecute(request SdkClientWriteTuplesRequest) (ClientWriteResponse, error)
+
+	/*
+	 * DeleteTuples Utility method around Write
+	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return SdkClientDeleteTuplesRequest
+	 */
 	DeleteTuples(ctx _context.Context) SdkClientDeleteTuplesRequest
+
+	/*
+	 * DeleteTuplesExecute executes the DeleteTuples request
+	 * @return ClientWriteResponse
+	 */
 	DeleteTuplesExecute(request SdkClientDeleteTuplesRequest) (ClientWriteResponse, error)
 
 	/* Relationship Queries */
+
+	/*
+	 * Check Check if a user has a particular relation with an object.
+	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return SdkClientCheckRequest
+	 */
 	Check(ctx _context.Context) SdkClientCheckRequest
+
+	/*
+	 * CheckExecute executes the Check request
+	 * @return ClientCheckResponse
+	 */
 	CheckExecute(request SdkClientCheckRequest) (ClientCheckResponse, error)
+
+	/*
+	 * BatchCheck Run a set of [checks](#check). Batch Check will return `allowed: false` if it encounters an error, and will return the error in the body.
+	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return SdkClientBatchCheckRequest
+	 */
 	BatchCheck(ctx _context.Context) SdkClientBatchCheckRequest
+
+	/*
+	 * BatchCheckExecute executes the BatchCheck request
+	 * @return ClientBatchCheckResponse
+	 */
 	BatchCheckExecute(request SdkClientBatchCheckRequest) (ClientBatchCheckResponse, error)
+
+	/*
+	 * Expand Expands the relationships in userset tree format.
+	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return SdkClientExpandRequest
+	 */
 	Expand(ctx _context.Context) SdkClientExpandRequest
+
+	/*
+	 * ExpandExecute executes the Expand request
+	 * @return ClientExpandResponse
+	 */
 	ExpandExecute(request SdkClientExpandRequest) (ClientExpandResponse, error)
+
+	/*
+	 * ListObjects List the objects of a particular type a user has access to.
+	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return SdkClientListObjectsRequest
+	 */
 	ListObjects(ctx _context.Context) SdkClientListObjectsRequest
+
+	/*
+	 * ListObjectsExecute executes the ListObjects request
+	 * @return ClientListObjectsResponse
+	 */
 	ListObjectsExecute(request SdkClientListObjectsRequest) (ClientListObjectsResponse, error)
+
+	/*
+	 * ListRelations List the relations a user has on an object.
+	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return SdkClientListRelationsRequest
+	 */
 	ListRelations(ctx _context.Context) SdkClientListRelationsRequest
+
+	/*
+	 * ListRelationsExecute executes the ListRelations request
+	 * @return ClientListRelationsResponse
+	 */
 	ListRelationsExecute(request SdkClientListRelationsRequest) (*ClientListRelationsResponse, error)
 
 	/* Assertions */
+
+	/*
+	 * ReadAssertions Read assertions for a particular authorization model.
+	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return SdkClientReadAssertionsRequest
+	 */
 	ReadAssertions(ctx _context.Context) SdkClientReadAssertionsRequest
+
+	/*
+	 * ReadAssertionsExecute executes the ReadAssertions request
+	 * @return ClientReadAssertionsResponse
+	 */
 	ReadAssertionsExecute(request SdkClientReadAssertionsRequest) (ClientReadAssertionsResponse, error)
+
+	/*
+	 * WriteAssertions Update the assertions for a particular authorization model.
+	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return SdkClientWriteAssertionsRequest
+	 */
 	WriteAssertions(ctx _context.Context) SdkClientWriteAssertionsRequest
+
+	/*
+	 * WriteAssertionsExecute executes the WriteAssertions request
+	 * @return ClientWriteAssertionsResponse
+	 */
 	WriteAssertionsExecute(request SdkClientWriteAssertionsRequest) (ClientWriteAssertionsReponse, error)
 }
 
