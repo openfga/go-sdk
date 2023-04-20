@@ -263,9 +263,9 @@ options := ClientReadAuthorizationModelsOptions{
     PageSize: openfga.PtrInt32(10),
     ContinuationToken: openfga.PtrString("..."),
 }
-got, httpResponse, err := fgaClient.ReadAuthorizationModels(context.Background()).Options(options).Execute()
+data, httpResponse, err := fgaClient.ReadAuthorizationModels(context.Background()).Options(options).Execute()
 
-// response.AuthorizationModels = [
+// data.AuthorizationModels = [
 // { Id: "01GXSA8YR785C4FYS3C0RTG7B1", SchemaVersion: "1.1", TypeDefinitions: [...] },
 // { Id: "01GXSBM5PVYHCJNRNKXMB4QZTW", SchemaVersion: "1.1", TypeDefinitions: [...] }];
 ```
@@ -332,7 +332,8 @@ Read a particular authorization model.
 
 ```golang
 options := ClientReadAuthorizationModelOptions{
-  AuthorizationModelId: openfga.PtrString(modelId),
+    // You can rely on the model id set in the configuration or override it for this specific request
+    AuthorizationModelId: openfga.PtrString(modelId),
 }
 data, httpRresponse, err := fgaClient.ReadAuthorizationModel(context.Background()).Options(options).Execute()
 
@@ -367,11 +368,11 @@ Reads the list of historical relationship tuple writes and deletes.
 
 ```golang
 body := ClientReadChangesRequest{
-  Type: "document",
+    Type: "document",
 }
 options := ClientReadChangesOptions{
-	PageSize: openfga.PtrInt32(10),
-	ContinuationToken: openfga.PtrString("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="),
+    PageSize: openfga.PtrInt32(10),
+    ContinuationToken: openfga.PtrString("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="),
 }
 data, httpResponse, err := fgaClient.ReadChanges(context.Background()).Body(body).Options(options).Execute()
 
@@ -440,24 +441,24 @@ By default, write runs in a transaction mode where any invalid operation (deleti
 ```golang
 body := ClientWriteRequest{
     Writes: &[]ClientTupleKey{{
-      User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-      Relation: "viewer",
-      Object:   "document:roadmap",
+        User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+        Relation: "viewer",
+        Object:   "document:roadmap",
     }, {
-      User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-      Relation: "viewer",
-      Object:   "document:budget",
+        User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+        Relation: "viewer",
+        Object:   "document:budget",
     }},
-	  Deletes: &[]ClientTupleKey{{
-      User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-      Relation: "writer",
-      Object:   "document:roadmap",
+    Deletes: &[]ClientTupleKey{{
+        User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+        Relation: "writer",
+        Object:   "document:roadmap",
     }}
 }
 
 options := ClientWriteOptions{
-	// You can rely on the model id set in the configuration or override it for this specific request
-  AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+    // You can rely on the model id set in the configuration or override it for this specific request
+    AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
 }
 httpResponse, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
 ```
@@ -471,13 +472,13 @@ The SDK will split the writes into separate chunks and send them in separate req
 ```golang
 body := ClientWriteRequest{
     Writes: &[]ClientTupleKey{{
-      User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-      Relation: "viewer",
-      Object:   "document:roadmap",
+        User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+        Relation: "viewer",
+        Object:   "document:roadmap",
     }, {
-      User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-      Relation: "viewer",
-      Object:   "document:budget",
+        User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+        Relation: "viewer",
+        Object:   "document:budget",
     }},
 	  Deletes: &[]ClientTupleKey{{
       User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
@@ -487,13 +488,13 @@ body := ClientWriteRequest{
 }
 
 options := ClientWriteOptions{
-	// You can rely on the model id set in the configuration or override it for this specific request
-  AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
-  Transaction: &TransactionOptions{
-	  Disable: true,
-    MaxParallelRequests: 5, // Maximum number of requests to issue in parallel
-    MaxPerChunk: 1, // Maximum number of requests to be sent in a transaction in a particular chunk
-  },
+    // You can rely on the model id set in the configuration or override it for this specific request
+    AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+    Transaction: &TransactionOptions{
+        Disable: true,
+        MaxParallelRequests: 5, // Maximum number of requests to issue in parallel
+        MaxPerChunk: 1, // Maximum number of requests to be sent in a transaction in a particular chunk
+    },
 }
 data, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
 
@@ -526,18 +527,18 @@ Check if a user has a particular relation with an object.
 
 ```golang
 body := ClientCheckRequest{
-  User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-  Relation: "viewer",
-  Object:   "document:roadmap",
-  ContextualTuples: &[]ClientTupleKey{{
     User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-    Relation: "editor",
+    Relation: "viewer",
     Object:   "document:roadmap",
-  }},
+    ContextualTuples: &[]ClientTupleKey{{
+        User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+        Relation: "editor",
+        Object:   "document:roadmap",
+    }},
 }
 
 options := ClientCheckOptions{
-  AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+    AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
 }
 data, httpResponse, err := fgaClient.Check(context.Background()).Body(body).Options(options).Execute()
 
@@ -554,37 +555,37 @@ If 429s or 5xxs are encountered, the underlying check will retry up to 15 times 
 
 ```golang
 options := ClientBatchCheckOptions{
-  // You can rely on the model id set in the configuration or override it for this specific request
-  AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
-  MaxParallelRequests: openfga.PtrInt32(5), // Max number of requests to issue in parallel, defaults to 10
+    // You can rely on the model id set in the configuration or override it for this specific request
+    AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+    MaxParallelRequests: openfga.PtrInt32(5), // Max number of requests to issue in parallel, defaults to 10
 }
 
 body := ClientBatchCheckBody{{
-  User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-  Relation: "viewer",
-  Object:   "document:roadmap",
-  ContextualTuples: &[]ClientTupleKey{{
     User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-    Relation: "editor",
+    Relation: "viewer",
     Object:   "document:roadmap",
-  }},
+    ContextualTuples: &[]ClientTupleKey{{
+        User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+        Relation: "editor",
+        Object:   "document:roadmap",
+    }},
 }, {
-  User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-  Relation: "admin",
-  Object:   "document:roadmap",
-  ContextualTuples: &[]ClientTupleKey{{
     User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-    Relation: "editor",
+    Relation: "admin",
     Object:   "document:roadmap",
-  }},
+    ContextualTuples: &[]ClientTupleKey{{
+        User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+        Relation: "editor",
+        Object:   "document:roadmap",
+    }},
 }, {
-  User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-  Relation: "creator",
-  Object:   "document:roadmap",
+    User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+    Relation: "creator",
+    Object:   "document:roadmap",
 }, {
-  User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-  Relation: "deleter",
-  Object:   "document:roadmap",
+    User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+    Relation: "deleter",
+    Object:   "document:roadmap",
 }}
 
 data, err := fgaClient.BatchCheck(context.Background()).Body(requestBody).Options(options).Execute()
@@ -646,11 +647,11 @@ Expands the relationships in userset tree format.
 ```golang
 options := ClientExpandOptions{
     // You can rely on the model id set in the configuration or override it for this specific request
-  AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+    AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
 }
 body := ClientExpandRequest{
-  Relation: "viewer",
-  Object:   "document:roadmap",
+    Relation: "viewer",
+    Object:   "document:roadmap",
 }
 data, httpResponse, err := fgaClient.Expand(context.Background()).Body(requestBody).Options(options).Execute()
 
@@ -665,29 +666,29 @@ List the objects of a particular type a user has access to.
 
 ```golang
 options := ClientListObjectsOptions{
-	// You can rely on the model id set in the configuration or override it for this specific request
-  AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+    // You can rely on the model id set in the configuration or override it for this specific request
+    AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
 }
 body := ClientListObjectsRequest{
-  User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-  Relation: "can_read",
-  Type:     "document",
-  ContextualTuples: &[]ClientTupleKey{{
     User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-    Relation: "editor",
-    Object:   "folder:product",
-  }, {
-    User:     "folder:product",
-    Relation: "parent",
-    Object:   "document:roadmap",
-  }},
+    Relation: "can_read",
+    Type:     "document",
+    ContextualTuples: &[]ClientTupleKey{{
+        User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+        Relation: "editor",
+        Object:   "folder:product",
+    }, {
+        User:     "folder:product",
+        Relation: "parent",
+        Object:   "document:roadmap",
+    }},
 }
 data, httpResponse, err := fgaClient.ListObjects(context.Background()).
   Body(requestBody).
   Options(options).
   Execute()
 
-// response.Objects = ["document:roadmap"]
+// data.Objects = ["document:roadmap"]
 ```
 
 #### List Relations
@@ -696,25 +697,25 @@ List the relations a user has on an object.
 
 ```golang
 options := ClientListRelationsOptions{
-	// You can rely on the model id set in the configuration or override it for this specific request
-  AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+    // You can rely on the model id set in the configuration or override it for this specific request
+    AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
 }
 body := ClientListRelationsRequest{
-  User:      "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-  Object:    "document:roadmap",
-  Relations: []string{"can_view", "can_edit", "can_delete", "can_rename"},
-  ContextualTuples: &[]ClientTupleKey{{
-    User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-    Relation: "editor",
-    Object:   "document:roadmap",
-  }},
+    User:      "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+    Object:    "document:roadmap",
+    Relations: []string{"can_view", "can_edit", "can_delete", "can_rename"},
+    ContextualTuples: &[]ClientTupleKey{{
+        User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+        Relation: "editor",
+        Object:   "document:roadmap",
+    }},
 }
 data, err := fgaClient.ListRelations(context.Background()).
   Body(requestBody).
   Options(options).
   Execute()
 
-// response.Relations = ["can_view", "can_edit"]
+// data.Relations = ["can_view", "can_edit"]
 ```
 
 ### Assertions
@@ -727,8 +728,8 @@ Read assertions for a particular authorization model.
 
 ```golang
 options := ClientReadAssertionsOptions{
-	// You can rely on the model id set in the configuration or override it for this specific request
-  AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+    // You can rely on the model id set in the configuration or override it for this specific request
+    AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
 }
 data, httpResponse, err := fgaClient.ReadAssertions(context.Background()).
   Options(options).
@@ -743,16 +744,16 @@ Update the assertions for a particular authorization model.
 
 ```golang
 options := ClientWriteAssertionsOptions{
-	// You can rely on the model id set in the configuration or override it for this specific request
-  AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+    // You can rely on the model id set in the configuration or override it for this specific request
+    AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
 }
 requestBody := ClientWriteAssertionsRequest{
-  ClientAssertion{
-    User:        "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-    Relation:    "can_view",
-    Object:      "document:roadmap",
-    Expectation: true,
-  },
+    ClientAssertion{
+        User:        "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+        Relation:    "can_view",
+        Object:      "document:roadmap",
+        Expectation: true,
+    },
 }
 httpResponse, err := fgaClient.WriteAssertions(context.Background()).
   Body(requestBody).
