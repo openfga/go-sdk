@@ -108,11 +108,11 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(200, ReadAuthorizationModelsResponse{AuthorizationModels: &[]AuthorizationModel{
 					{
-						Id:              PtrString("1uHxCSuTP0VKPYSnkq1pbb1jeZw"),
+						Id:              PtrString("01GXSA8YR785C4FYS3C0RTG7B1"),
 						TypeDefinitions: &[]TypeDefinition{},
 					},
 					{
-						Id:              PtrString("GtQpMohWezFmIbyXxVEocOCxxgq"),
+						Id:              PtrString("01GXSBM5PVYHCJNRNKXMB4QZTW"),
 						TypeDefinitions: &[]TypeDefinition{},
 					},
 				}})
@@ -240,11 +240,11 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(200, ReadAuthorizationModelsResponse{AuthorizationModels: &[]AuthorizationModel{
 					{
-						Id:              PtrString("1uHxCSuTP0VKPYSnkq1pbb1jeZw"),
+						Id:              PtrString("01GXSA8YR785C4FYS3C0RTG7B1"),
 						TypeDefinitions: &[]TypeDefinition{},
 					},
 					{
-						Id:              PtrString("GtQpMohWezFmIbyXxVEocOCxxgq"),
+						Id:              PtrString("01GXSBM5PVYHCJNRNKXMB4QZTW"),
 						TypeDefinitions: &[]TypeDefinition{},
 					},
 				}})
@@ -304,11 +304,11 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(200, ReadAuthorizationModelsResponse{AuthorizationModels: &[]AuthorizationModel{
 					{
-						Id:              PtrString("1uHxCSuTP0VKPYSnkq1pbb1jeZw"),
+						Id:              PtrString("01GXSA8YR785C4FYS3C0RTG7B1"),
 						TypeDefinitions: &[]TypeDefinition{},
 					},
 					{
-						Id:              PtrString("GtQpMohWezFmIbyXxVEocOCxxgq"),
+						Id:              PtrString("01GXSBM5PVYHCJNRNKXMB4QZTW"),
 						TypeDefinitions: &[]TypeDefinition{},
 					},
 				}})
@@ -385,7 +385,7 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 
 		_, _, err = apiClient.OpenFgaApi.ReadAuthorizationModels(context.Background()).Execute()
 		if err == nil {
-			t.Fatalf("Expected an error, got non")
+			t.Fatalf("Expected an error, got none")
 		}
 	})
 }
@@ -404,7 +404,7 @@ func TestOpenFgaApi(t *testing.T) {
 	t.Run("ReadAuthorizationModels", func(t *testing.T) {
 		test := TestDefinition{
 			Name:           "ReadAuthorizationModels",
-			JsonResponse:   `{"authorization_models":[{"id":"1uHxCSuTP0VKPYSnkq1pbb1jeZw","schema_version":"1.1","type_definitions":[]}]}`,
+			JsonResponse:   `{"authorization_models":[{"id":"01GXSA8YR785C4FYS3C0RTG7B1","schema_version":"1.1","type_definitions":[]}]}`,
 			ResponseStatus: 200,
 			Method:         "GET",
 			RequestPath:    "authorization-models",
@@ -448,7 +448,7 @@ func TestOpenFgaApi(t *testing.T) {
 	t.Run("WriteAuthorizationModel", func(t *testing.T) {
 		test := TestDefinition{
 			Name:           "WriteAuthorizationModel",
-			JsonResponse:   `{"authorization_model_id":"1uHxCSuTP0VKPYSnkq1pbb1jeZw"}`,
+			JsonResponse:   `{"authorization_model_id":"01GXSA8YR785C4FYS3C0RTG7B1"}`,
 			ResponseStatus: 200,
 			Method:         "POST",
 			RequestPath:    "authorization-models",
@@ -507,7 +507,7 @@ func TestOpenFgaApi(t *testing.T) {
 	t.Run("ReadAuthorizationModel", func(t *testing.T) {
 		test := TestDefinition{
 			Name:           "ReadAuthorizationModel",
-			JsonResponse:   `{"authorization_model":{"id":"1uHxCSuTP0VKPYSnkq1pbb1jeZw", "schema_version":"1.1", "type_definitions":[{"type":"github-repo", "relations":{"viewer":{"this":{}}}}]}}`,
+			JsonResponse:   `{"authorization_model":{"id":"01GXSA8YR785C4FYS3C0RTG7B1", "schema_version":"1.1", "type_definitions":[{"type":"github-repo", "relations":{"viewer":{"this":{}}}}]}}`,
 			ResponseStatus: 200,
 			Method:         "GET",
 			RequestPath:    "authorization-models",

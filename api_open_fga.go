@@ -670,12 +670,9 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 
 	for i := 0; i < maxRetry+1; i++ {
 		var (
-			localVarHTTPMethod   = _nethttp.MethodPost
-			localVarPostBody     interface{}
-			localVarFormFileName string
-			localVarFileName     string
-			localVarFileBytes    []byte
-			localVarReturnValue  CheckResponse
+			localVarHTTPMethod  = _nethttp.MethodPost
+			localVarPostBody    interface{}
+			localVarReturnValue CheckResponse
 		)
 
 		if a.client.cfg.StoreId == "" {
@@ -686,7 +683,6 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 
 		localVarHeaderParams := make(map[string]string)
 		localVarQueryParams := _neturl.Values{}
-		localVarFormParams := _neturl.Values{}
 		if r.body == nil {
 			return localVarReturnValue, nil, reportError("body is required and must be specified")
 		}
@@ -710,7 +706,7 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 		}
 		// body params
 		localVarPostBody = r.body
-		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams)
 		if err != nil {
 			return localVarReturnValue, nil, err
 		}
@@ -727,9 +723,9 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= 300 {
+		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == 400 || localVarHTTPResponse.StatusCode == 422 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -755,7 +751,7 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 401 || localVarHTTPResponse.StatusCode == 403 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body: localVarBody,
 
@@ -771,7 +767,7 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 404 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -797,7 +793,7 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 429 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
 					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
@@ -820,7 +816,11 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= 500 {
+			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
+					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
 				newErr := FgaApiInternalError{
 					body: localVarBody,
 
@@ -885,7 +885,7 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 	}
 	// should never have reached this
 	var localVarReturnValue CheckResponse
-	return localVarReturnValue, nil, reportError("RateLimitError not handled properly")
+	return localVarReturnValue, nil, reportError("Error not handled properly")
 }
 
 type ApiCreateStoreRequest struct {
@@ -935,19 +935,15 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 
 	for i := 0; i < maxRetry+1; i++ {
 		var (
-			localVarHTTPMethod   = _nethttp.MethodPost
-			localVarPostBody     interface{}
-			localVarFormFileName string
-			localVarFileName     string
-			localVarFileBytes    []byte
-			localVarReturnValue  CreateStoreResponse
+			localVarHTTPMethod  = _nethttp.MethodPost
+			localVarPostBody    interface{}
+			localVarReturnValue CreateStoreResponse
 		)
 
 		localVarPath := "/stores"
 
 		localVarHeaderParams := make(map[string]string)
 		localVarQueryParams := _neturl.Values{}
-		localVarFormParams := _neturl.Values{}
 		if r.body == nil {
 			return localVarReturnValue, nil, reportError("body is required and must be specified")
 		}
@@ -971,7 +967,7 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 		}
 		// body params
 		localVarPostBody = r.body
-		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams)
 		if err != nil {
 			return localVarReturnValue, nil, err
 		}
@@ -988,9 +984,9 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= 300 {
+		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == 400 || localVarHTTPResponse.StatusCode == 422 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -1016,7 +1012,7 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 401 || localVarHTTPResponse.StatusCode == 403 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body: localVarBody,
 
@@ -1032,7 +1028,7 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 404 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -1058,7 +1054,7 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 429 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
 					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
@@ -1081,7 +1077,11 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= 500 {
+			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
+					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
 				newErr := FgaApiInternalError{
 					body: localVarBody,
 
@@ -1146,7 +1146,7 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 	}
 	// should never have reached this
 	var localVarReturnValue CreateStoreResponse
-	return localVarReturnValue, nil, reportError("RateLimitError not handled properly")
+	return localVarReturnValue, nil, reportError("Error not handled properly")
 }
 
 type ApiDeleteStoreRequest struct {
@@ -1188,11 +1188,8 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 
 	for i := 0; i < maxRetry+1; i++ {
 		var (
-			localVarHTTPMethod   = _nethttp.MethodDelete
-			localVarPostBody     interface{}
-			localVarFormFileName string
-			localVarFileName     string
-			localVarFileBytes    []byte
+			localVarHTTPMethod = _nethttp.MethodDelete
+			localVarPostBody   interface{}
 		)
 
 		if a.client.cfg.StoreId == "" {
@@ -1203,7 +1200,6 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 
 		localVarHeaderParams := make(map[string]string)
 		localVarQueryParams := _neturl.Values{}
-		localVarFormParams := _neturl.Values{}
 
 		// to determine the Content-Type header
 		localVarHTTPContentTypes := []string{}
@@ -1222,7 +1218,7 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 		if localVarHTTPHeaderAccept != "" {
 			localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 		}
-		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams)
 		if err != nil {
 			return nil, err
 		}
@@ -1239,9 +1235,9 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 			return localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= 300 {
+		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == 400 || localVarHTTPResponse.StatusCode == 422 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -1267,7 +1263,7 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 				return localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 401 || localVarHTTPResponse.StatusCode == 403 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body: localVarBody,
 
@@ -1283,7 +1279,7 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 				return localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 404 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -1309,7 +1305,7 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 				return localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 429 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
 					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
@@ -1332,7 +1328,11 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 				return localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= 500 {
+			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
+					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
 				newErr := FgaApiInternalError{
 					body: localVarBody,
 
@@ -1387,7 +1387,7 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 		return localVarHTTPResponse, nil
 	}
 	// should never have reached this
-	return nil, reportError("RateLimitError not handled properly")
+	return nil, reportError("Error not handled properly")
 }
 
 type ApiExpandRequest struct {
@@ -1490,12 +1490,9 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 
 	for i := 0; i < maxRetry+1; i++ {
 		var (
-			localVarHTTPMethod   = _nethttp.MethodPost
-			localVarPostBody     interface{}
-			localVarFormFileName string
-			localVarFileName     string
-			localVarFileBytes    []byte
-			localVarReturnValue  ExpandResponse
+			localVarHTTPMethod  = _nethttp.MethodPost
+			localVarPostBody    interface{}
+			localVarReturnValue ExpandResponse
 		)
 
 		if a.client.cfg.StoreId == "" {
@@ -1506,7 +1503,6 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 
 		localVarHeaderParams := make(map[string]string)
 		localVarQueryParams := _neturl.Values{}
-		localVarFormParams := _neturl.Values{}
 		if r.body == nil {
 			return localVarReturnValue, nil, reportError("body is required and must be specified")
 		}
@@ -1530,7 +1526,7 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 		}
 		// body params
 		localVarPostBody = r.body
-		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams)
 		if err != nil {
 			return localVarReturnValue, nil, err
 		}
@@ -1547,9 +1543,9 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= 300 {
+		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == 400 || localVarHTTPResponse.StatusCode == 422 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -1575,7 +1571,7 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 401 || localVarHTTPResponse.StatusCode == 403 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body: localVarBody,
 
@@ -1591,7 +1587,7 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 404 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -1617,7 +1613,7 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 429 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
 					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
@@ -1640,7 +1636,11 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= 500 {
+			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
+					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
 				newErr := FgaApiInternalError{
 					body: localVarBody,
 
@@ -1705,7 +1705,7 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 	}
 	// should never have reached this
 	var localVarReturnValue ExpandResponse
-	return localVarReturnValue, nil, reportError("RateLimitError not handled properly")
+	return localVarReturnValue, nil, reportError("Error not handled properly")
 }
 
 type ApiGetStoreRequest struct {
@@ -1748,12 +1748,9 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 
 	for i := 0; i < maxRetry+1; i++ {
 		var (
-			localVarHTTPMethod   = _nethttp.MethodGet
-			localVarPostBody     interface{}
-			localVarFormFileName string
-			localVarFileName     string
-			localVarFileBytes    []byte
-			localVarReturnValue  GetStoreResponse
+			localVarHTTPMethod  = _nethttp.MethodGet
+			localVarPostBody    interface{}
+			localVarReturnValue GetStoreResponse
 		)
 
 		if a.client.cfg.StoreId == "" {
@@ -1764,7 +1761,6 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 
 		localVarHeaderParams := make(map[string]string)
 		localVarQueryParams := _neturl.Values{}
-		localVarFormParams := _neturl.Values{}
 
 		// to determine the Content-Type header
 		localVarHTTPContentTypes := []string{}
@@ -1783,7 +1779,7 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 		if localVarHTTPHeaderAccept != "" {
 			localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 		}
-		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams)
 		if err != nil {
 			return localVarReturnValue, nil, err
 		}
@@ -1800,9 +1796,9 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= 300 {
+		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == 400 || localVarHTTPResponse.StatusCode == 422 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -1828,7 +1824,7 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 401 || localVarHTTPResponse.StatusCode == 403 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body: localVarBody,
 
@@ -1844,7 +1840,7 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 404 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -1870,7 +1866,7 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 429 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
 					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
@@ -1893,7 +1889,11 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= 500 {
+			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
+					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
 				newErr := FgaApiInternalError{
 					body: localVarBody,
 
@@ -1958,7 +1958,7 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 	}
 	// should never have reached this
 	var localVarReturnValue GetStoreResponse
-	return localVarReturnValue, nil, reportError("RateLimitError not handled properly")
+	return localVarReturnValue, nil, reportError("Error not handled properly")
 }
 
 type ApiListObjectsRequest struct {
@@ -2014,12 +2014,9 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 
 	for i := 0; i < maxRetry+1; i++ {
 		var (
-			localVarHTTPMethod   = _nethttp.MethodPost
-			localVarPostBody     interface{}
-			localVarFormFileName string
-			localVarFileName     string
-			localVarFileBytes    []byte
-			localVarReturnValue  ListObjectsResponse
+			localVarHTTPMethod  = _nethttp.MethodPost
+			localVarPostBody    interface{}
+			localVarReturnValue ListObjectsResponse
 		)
 
 		if a.client.cfg.StoreId == "" {
@@ -2030,7 +2027,6 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 
 		localVarHeaderParams := make(map[string]string)
 		localVarQueryParams := _neturl.Values{}
-		localVarFormParams := _neturl.Values{}
 		if r.body == nil {
 			return localVarReturnValue, nil, reportError("body is required and must be specified")
 		}
@@ -2054,7 +2050,7 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 		}
 		// body params
 		localVarPostBody = r.body
-		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams)
 		if err != nil {
 			return localVarReturnValue, nil, err
 		}
@@ -2071,9 +2067,9 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= 300 {
+		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == 400 || localVarHTTPResponse.StatusCode == 422 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -2099,7 +2095,7 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 401 || localVarHTTPResponse.StatusCode == 403 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body: localVarBody,
 
@@ -2115,7 +2111,7 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 404 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -2141,7 +2137,7 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 429 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
 					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
@@ -2164,7 +2160,11 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= 500 {
+			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
+					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
 				newErr := FgaApiInternalError{
 					body: localVarBody,
 
@@ -2229,7 +2229,7 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 	}
 	// should never have reached this
 	var localVarReturnValue ListObjectsResponse
-	return localVarReturnValue, nil, reportError("RateLimitError not handled properly")
+	return localVarReturnValue, nil, reportError("Error not handled properly")
 }
 
 type ApiListStoresRequest struct {
@@ -2284,19 +2284,15 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 
 	for i := 0; i < maxRetry+1; i++ {
 		var (
-			localVarHTTPMethod   = _nethttp.MethodGet
-			localVarPostBody     interface{}
-			localVarFormFileName string
-			localVarFileName     string
-			localVarFileBytes    []byte
-			localVarReturnValue  ListStoresResponse
+			localVarHTTPMethod  = _nethttp.MethodGet
+			localVarPostBody    interface{}
+			localVarReturnValue ListStoresResponse
 		)
 
 		localVarPath := "/stores"
 
 		localVarHeaderParams := make(map[string]string)
 		localVarQueryParams := _neturl.Values{}
-		localVarFormParams := _neturl.Values{}
 
 		if r.pageSize != nil {
 			localVarQueryParams.Add("page_size", parameterToString(*r.pageSize, ""))
@@ -2321,7 +2317,7 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 		if localVarHTTPHeaderAccept != "" {
 			localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 		}
-		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams)
 		if err != nil {
 			return localVarReturnValue, nil, err
 		}
@@ -2338,9 +2334,9 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= 300 {
+		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == 400 || localVarHTTPResponse.StatusCode == 422 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -2366,7 +2362,7 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 401 || localVarHTTPResponse.StatusCode == 403 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body: localVarBody,
 
@@ -2382,7 +2378,7 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 404 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -2408,7 +2404,7 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 429 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
 					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
@@ -2431,7 +2427,11 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= 500 {
+			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
+					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
 				newErr := FgaApiInternalError{
 					body: localVarBody,
 
@@ -2496,7 +2496,7 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 	}
 	// should never have reached this
 	var localVarReturnValue ListStoresResponse
-	return localVarReturnValue, nil, reportError("RateLimitError not handled properly")
+	return localVarReturnValue, nil, reportError("Error not handled properly")
 }
 
 type ApiReadRequest struct {
@@ -2650,12 +2650,9 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 
 	for i := 0; i < maxRetry+1; i++ {
 		var (
-			localVarHTTPMethod   = _nethttp.MethodPost
-			localVarPostBody     interface{}
-			localVarFormFileName string
-			localVarFileName     string
-			localVarFileBytes    []byte
-			localVarReturnValue  ReadResponse
+			localVarHTTPMethod  = _nethttp.MethodPost
+			localVarPostBody    interface{}
+			localVarReturnValue ReadResponse
 		)
 
 		if a.client.cfg.StoreId == "" {
@@ -2666,7 +2663,6 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 
 		localVarHeaderParams := make(map[string]string)
 		localVarQueryParams := _neturl.Values{}
-		localVarFormParams := _neturl.Values{}
 		if r.body == nil {
 			return localVarReturnValue, nil, reportError("body is required and must be specified")
 		}
@@ -2690,7 +2686,7 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 		}
 		// body params
 		localVarPostBody = r.body
-		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams)
 		if err != nil {
 			return localVarReturnValue, nil, err
 		}
@@ -2707,9 +2703,9 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= 300 {
+		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == 400 || localVarHTTPResponse.StatusCode == 422 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -2735,7 +2731,7 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 401 || localVarHTTPResponse.StatusCode == 403 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body: localVarBody,
 
@@ -2751,7 +2747,7 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 404 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -2777,7 +2773,7 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 429 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
 					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
@@ -2800,7 +2796,11 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= 500 {
+			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
+					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
 				newErr := FgaApiInternalError{
 					body: localVarBody,
 
@@ -2865,7 +2865,7 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 	}
 	// should never have reached this
 	var localVarReturnValue ReadResponse
-	return localVarReturnValue, nil, reportError("RateLimitError not handled properly")
+	return localVarReturnValue, nil, reportError("Error not handled properly")
 }
 
 type ApiReadAssertionsRequest struct {
@@ -2912,12 +2912,9 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 
 	for i := 0; i < maxRetry+1; i++ {
 		var (
-			localVarHTTPMethod   = _nethttp.MethodGet
-			localVarPostBody     interface{}
-			localVarFormFileName string
-			localVarFileName     string
-			localVarFileBytes    []byte
-			localVarReturnValue  ReadAssertionsResponse
+			localVarHTTPMethod  = _nethttp.MethodGet
+			localVarPostBody    interface{}
+			localVarReturnValue ReadAssertionsResponse
 		)
 
 		if a.client.cfg.StoreId == "" {
@@ -2929,7 +2926,6 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 
 		localVarHeaderParams := make(map[string]string)
 		localVarQueryParams := _neturl.Values{}
-		localVarFormParams := _neturl.Values{}
 
 		// to determine the Content-Type header
 		localVarHTTPContentTypes := []string{}
@@ -2948,7 +2944,7 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 		if localVarHTTPHeaderAccept != "" {
 			localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 		}
-		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams)
 		if err != nil {
 			return localVarReturnValue, nil, err
 		}
@@ -2965,9 +2961,9 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= 300 {
+		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == 400 || localVarHTTPResponse.StatusCode == 422 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -2993,7 +2989,7 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 401 || localVarHTTPResponse.StatusCode == 403 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body: localVarBody,
 
@@ -3009,7 +3005,7 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 404 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -3035,7 +3031,7 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 429 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
 					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
@@ -3058,7 +3054,11 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= 500 {
+			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
+					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
 				newErr := FgaApiInternalError{
 					body: localVarBody,
 
@@ -3123,7 +3123,7 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 	}
 	// should never have reached this
 	var localVarReturnValue ReadAssertionsResponse
-	return localVarReturnValue, nil, reportError("RateLimitError not handled properly")
+	return localVarReturnValue, nil, reportError("Error not handled properly")
 }
 
 type ApiReadAuthorizationModelRequest struct {
@@ -3213,12 +3213,9 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 
 	for i := 0; i < maxRetry+1; i++ {
 		var (
-			localVarHTTPMethod   = _nethttp.MethodGet
-			localVarPostBody     interface{}
-			localVarFormFileName string
-			localVarFileName     string
-			localVarFileBytes    []byte
-			localVarReturnValue  ReadAuthorizationModelResponse
+			localVarHTTPMethod  = _nethttp.MethodGet
+			localVarPostBody    interface{}
+			localVarReturnValue ReadAuthorizationModelResponse
 		)
 
 		if a.client.cfg.StoreId == "" {
@@ -3230,7 +3227,6 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 
 		localVarHeaderParams := make(map[string]string)
 		localVarQueryParams := _neturl.Values{}
-		localVarFormParams := _neturl.Values{}
 
 		// to determine the Content-Type header
 		localVarHTTPContentTypes := []string{}
@@ -3249,7 +3245,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 		if localVarHTTPHeaderAccept != "" {
 			localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 		}
-		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams)
 		if err != nil {
 			return localVarReturnValue, nil, err
 		}
@@ -3266,9 +3262,9 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= 300 {
+		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == 400 || localVarHTTPResponse.StatusCode == 422 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -3294,7 +3290,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 401 || localVarHTTPResponse.StatusCode == 403 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body: localVarBody,
 
@@ -3310,7 +3306,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 404 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -3336,7 +3332,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 429 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
 					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
@@ -3359,7 +3355,11 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= 500 {
+			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
+					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
 				newErr := FgaApiInternalError{
 					body: localVarBody,
 
@@ -3424,7 +3424,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 	}
 	// should never have reached this
 	var localVarReturnValue ReadAuthorizationModelResponse
-	return localVarReturnValue, nil, reportError("RateLimitError not handled properly")
+	return localVarReturnValue, nil, reportError("Error not handled properly")
 }
 
 type ApiReadAuthorizationModelsRequest struct {
@@ -3519,12 +3519,9 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 
 	for i := 0; i < maxRetry+1; i++ {
 		var (
-			localVarHTTPMethod   = _nethttp.MethodGet
-			localVarPostBody     interface{}
-			localVarFormFileName string
-			localVarFileName     string
-			localVarFileBytes    []byte
-			localVarReturnValue  ReadAuthorizationModelsResponse
+			localVarHTTPMethod  = _nethttp.MethodGet
+			localVarPostBody    interface{}
+			localVarReturnValue ReadAuthorizationModelsResponse
 		)
 
 		if a.client.cfg.StoreId == "" {
@@ -3535,7 +3532,6 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 
 		localVarHeaderParams := make(map[string]string)
 		localVarQueryParams := _neturl.Values{}
-		localVarFormParams := _neturl.Values{}
 
 		if r.pageSize != nil {
 			localVarQueryParams.Add("page_size", parameterToString(*r.pageSize, ""))
@@ -3560,7 +3556,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 		if localVarHTTPHeaderAccept != "" {
 			localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 		}
-		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams)
 		if err != nil {
 			return localVarReturnValue, nil, err
 		}
@@ -3577,9 +3573,9 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= 300 {
+		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == 400 || localVarHTTPResponse.StatusCode == 422 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -3605,7 +3601,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 401 || localVarHTTPResponse.StatusCode == 403 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body: localVarBody,
 
@@ -3621,7 +3617,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 404 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -3647,7 +3643,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 429 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
 					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
@@ -3670,7 +3666,11 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= 500 {
+			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
+					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
 				newErr := FgaApiInternalError{
 					body: localVarBody,
 
@@ -3735,7 +3735,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 	}
 	// should never have reached this
 	var localVarReturnValue ReadAuthorizationModelsResponse
-	return localVarReturnValue, nil, reportError("RateLimitError not handled properly")
+	return localVarReturnValue, nil, reportError("Error not handled properly")
 }
 
 type ApiReadChangesRequest struct {
@@ -3798,12 +3798,9 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 
 	for i := 0; i < maxRetry+1; i++ {
 		var (
-			localVarHTTPMethod   = _nethttp.MethodGet
-			localVarPostBody     interface{}
-			localVarFormFileName string
-			localVarFileName     string
-			localVarFileBytes    []byte
-			localVarReturnValue  ReadChangesResponse
+			localVarHTTPMethod  = _nethttp.MethodGet
+			localVarPostBody    interface{}
+			localVarReturnValue ReadChangesResponse
 		)
 
 		if a.client.cfg.StoreId == "" {
@@ -3814,7 +3811,6 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 
 		localVarHeaderParams := make(map[string]string)
 		localVarQueryParams := _neturl.Values{}
-		localVarFormParams := _neturl.Values{}
 
 		if r.type_ != nil {
 			localVarQueryParams.Add("type", parameterToString(*r.type_, ""))
@@ -3842,7 +3838,7 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 		if localVarHTTPHeaderAccept != "" {
 			localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 		}
-		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams)
 		if err != nil {
 			return localVarReturnValue, nil, err
 		}
@@ -3859,9 +3855,9 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= 300 {
+		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == 400 || localVarHTTPResponse.StatusCode == 422 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -3887,7 +3883,7 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 401 || localVarHTTPResponse.StatusCode == 403 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body: localVarBody,
 
@@ -3903,7 +3899,7 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 404 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -3929,7 +3925,7 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 429 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
 					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
@@ -3952,7 +3948,11 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= 500 {
+			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
+					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
 				newErr := FgaApiInternalError{
 					body: localVarBody,
 
@@ -4017,7 +4017,7 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 	}
 	// should never have reached this
 	var localVarReturnValue ReadChangesResponse
-	return localVarReturnValue, nil, reportError("RateLimitError not handled properly")
+	return localVarReturnValue, nil, reportError("Error not handled properly")
 }
 
 type ApiWriteRequest struct {
@@ -4107,12 +4107,9 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 
 	for i := 0; i < maxRetry+1; i++ {
 		var (
-			localVarHTTPMethod   = _nethttp.MethodPost
-			localVarPostBody     interface{}
-			localVarFormFileName string
-			localVarFileName     string
-			localVarFileBytes    []byte
-			localVarReturnValue  map[string]interface{}
+			localVarHTTPMethod  = _nethttp.MethodPost
+			localVarPostBody    interface{}
+			localVarReturnValue map[string]interface{}
 		)
 
 		if a.client.cfg.StoreId == "" {
@@ -4123,7 +4120,6 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 
 		localVarHeaderParams := make(map[string]string)
 		localVarQueryParams := _neturl.Values{}
-		localVarFormParams := _neturl.Values{}
 		if r.body == nil {
 			return localVarReturnValue, nil, reportError("body is required and must be specified")
 		}
@@ -4147,7 +4143,7 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 		}
 		// body params
 		localVarPostBody = r.body
-		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams)
 		if err != nil {
 			return localVarReturnValue, nil, err
 		}
@@ -4164,9 +4160,9 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= 300 {
+		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == 400 || localVarHTTPResponse.StatusCode == 422 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -4192,7 +4188,7 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 401 || localVarHTTPResponse.StatusCode == 403 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body: localVarBody,
 
@@ -4208,7 +4204,7 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 404 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -4234,7 +4230,7 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 429 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
 					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
@@ -4257,7 +4253,11 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= 500 {
+			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
+					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
 				newErr := FgaApiInternalError{
 					body: localVarBody,
 
@@ -4322,7 +4322,7 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 	}
 	// should never have reached this
 	var localVarReturnValue map[string]interface{}
-	return localVarReturnValue, nil, reportError("RateLimitError not handled properly")
+	return localVarReturnValue, nil, reportError("Error not handled properly")
 }
 
 type ApiWriteAssertionsRequest struct {
@@ -4374,11 +4374,8 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 
 	for i := 0; i < maxRetry+1; i++ {
 		var (
-			localVarHTTPMethod   = _nethttp.MethodPut
-			localVarPostBody     interface{}
-			localVarFormFileName string
-			localVarFileName     string
-			localVarFileBytes    []byte
+			localVarHTTPMethod = _nethttp.MethodPut
+			localVarPostBody   interface{}
 		)
 
 		if a.client.cfg.StoreId == "" {
@@ -4390,7 +4387,6 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 
 		localVarHeaderParams := make(map[string]string)
 		localVarQueryParams := _neturl.Values{}
-		localVarFormParams := _neturl.Values{}
 		if r.body == nil {
 			return nil, reportError("body is required and must be specified")
 		}
@@ -4414,7 +4410,7 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 		}
 		// body params
 		localVarPostBody = r.body
-		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams)
 		if err != nil {
 			return nil, err
 		}
@@ -4431,9 +4427,9 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 			return localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= 300 {
+		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == 400 || localVarHTTPResponse.StatusCode == 422 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -4459,7 +4455,7 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 				return localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 401 || localVarHTTPResponse.StatusCode == 403 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body: localVarBody,
 
@@ -4475,7 +4471,7 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 				return localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 404 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -4501,7 +4497,7 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 				return localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 429 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
 					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
@@ -4524,7 +4520,11 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 				return localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= 500 {
+			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
+					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
 				newErr := FgaApiInternalError{
 					body: localVarBody,
 
@@ -4579,7 +4579,7 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 		return localVarHTTPResponse, nil
 	}
 	// should never have reached this
-	return nil, reportError("RateLimitError not handled properly")
+	return nil, reportError("Error not handled properly")
 }
 
 type ApiWriteAuthorizationModelRequest struct {
@@ -4674,12 +4674,9 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 
 	for i := 0; i < maxRetry+1; i++ {
 		var (
-			localVarHTTPMethod   = _nethttp.MethodPost
-			localVarPostBody     interface{}
-			localVarFormFileName string
-			localVarFileName     string
-			localVarFileBytes    []byte
-			localVarReturnValue  WriteAuthorizationModelResponse
+			localVarHTTPMethod  = _nethttp.MethodPost
+			localVarPostBody    interface{}
+			localVarReturnValue WriteAuthorizationModelResponse
 		)
 
 		if a.client.cfg.StoreId == "" {
@@ -4690,7 +4687,6 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 
 		localVarHeaderParams := make(map[string]string)
 		localVarQueryParams := _neturl.Values{}
-		localVarFormParams := _neturl.Values{}
 		if r.body == nil {
 			return localVarReturnValue, nil, reportError("body is required and must be specified")
 		}
@@ -4714,7 +4710,7 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 		}
 		// body params
 		localVarPostBody = r.body
-		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams)
 		if err != nil {
 			return localVarReturnValue, nil, err
 		}
@@ -4731,9 +4727,9 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= 300 {
+		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == 400 || localVarHTTPResponse.StatusCode == 422 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -4759,7 +4755,7 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 401 || localVarHTTPResponse.StatusCode == 403 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body: localVarBody,
 
@@ -4775,7 +4771,7 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 404 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            a.client.cfg.StoreId,
@@ -4801,7 +4797,7 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == 429 {
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
 					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
@@ -4824,7 +4820,11 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= 500 {
+			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
+					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
 				newErr := FgaApiInternalError{
 					body: localVarBody,
 
@@ -4889,5 +4889,5 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 	}
 	// should never have reached this
 	var localVarReturnValue WriteAuthorizationModelResponse
-	return localVarReturnValue, nil, reportError("RateLimitError not handled properly")
+	return localVarReturnValue, nil, reportError("Error not handled properly")
 }
