@@ -735,13 +735,11 @@ func TestOpenFgaClient(t *testing.T) {
 			Method:         http.MethodPost,
 			RequestPath:    "write",
 		}
-		requestBody := ClientWriteRequest{
-			Writes: &[]ClientTupleKey{ {
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "viewer",
-				Object:   "document:roadmap",
-			} },
-		}
+		requestBody := []ClientTupleKey{ {
+			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+			Relation: "viewer",
+			Object:   "document:roadmap",
+		} }
 		options := ClientWriteOptions{
 			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
 		}
@@ -762,7 +760,7 @@ func TestOpenFgaClient(t *testing.T) {
 				return resp, nil
 			},
 		)
-		data, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
+		data, err := fgaClient.WriteTuples(context.Background()).Body(requestBody).Options(options).Execute()
 		if err != nil {
 			t.Fatalf("%v", err)
 		}

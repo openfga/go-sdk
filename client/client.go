@@ -475,7 +475,6 @@ type ClientCreateStoreRequest struct {
 }
 
 type ClientCreateStoreOptions struct {
-	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
 }
 
 type ClientCreateStoreResponse = openfga.CreateStoreResponse
@@ -550,7 +549,6 @@ type SdkClientDeleteStoreRequest struct {
 	options *ClientDeleteStoreOptions
 }
 type ClientDeleteStoreOptions struct {
-	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
 }
 
 type ClientDeleteStoreResponse struct{}
@@ -945,7 +943,7 @@ func (o ClientWriteResponse) MarshalJSON() ([]byte, error) {
 		toSerialize["writes"] = o.Writes
 	}
 	if o.Deletes != nil {
-		toSerialize["writes"] = o.Deletes
+		toSerialize["deletes"] = o.Deletes
 	}
 	return json.Marshal(toSerialize)
 }

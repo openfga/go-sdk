@@ -9,6 +9,7 @@
 - feat(client): implement `ListRelations` to check in one call whether a user has multiple relations to an objects
 - feat(client): add support for a non-transactional `Write`
 - chore(config): bump default max retries to `15`
+- fix(config)!: make the capitalization of the json equivalent of the configuration consistent
 - fix: retry on 5xx errors
 
 ## v0.2.1

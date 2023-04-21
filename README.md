@@ -123,6 +123,7 @@ func main() {
 ```golang
 import (
     . "github.com/openfga/go-sdk/client"
+    "github.com/openfga/go-sdk/credentials"
     "os"
 )
 
@@ -151,6 +152,7 @@ func main() {
 import (
     openfga "github.com/openfga/go-sdk"
     . "github.com/openfga/go-sdk/client"
+    "github.com/openfga/go-sdk/credentials"
     "os"
 )
 
@@ -159,7 +161,7 @@ func main() {
         ApiScheme:              os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"
         ApiHost:                os.Getenv("OPENFGA_API_HOST"), // required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
         StoreId:                os.Getenv("OPENFGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
-        AuthorizationModelId:   .PtrString("OPENFGA_AUTHORIZATION_MODEL_ID"),
+        AuthorizationModelId:   openfga.PtrString("OPENFGA_AUTHORIZATION_MODEL_ID"),
         Credentials: &credentials.Credentials{
             Method: credentials.CredentialsMethodClientCredentials,
             Config: &credentials.Config{
@@ -199,7 +201,7 @@ options := ClientListStoresOptions{
   PageSize:          openfga.PtrInt32(10),
   ContinuationToken: openfga.PtrString("..."),
 }
-stores, err := fgaClient.ListStores(context.Background()).Options(options).Execute();
+stores, err := fgaClient.ListStores(context.Background()).Options(options).Execute()
 
 // stores = [{ "id": "01FQH7V8BEG3GPQW93KTRFR8JB", "name": "FGA Demo Store", "created_at": "2022-01-01T00:00:00.000Z", "updated_at": "2022-01-01T00:00:00.000Z" }]
 ```
@@ -221,7 +223,7 @@ if err != nil {
 
 // store store.Id in database
 // update the storeId of the current instance
-apiClient.SetStoreId(*store.Id)
+fgaClient.SetStoreId(*store.Id)
 // continue calling the API normally, scoped to this store
 ```
 
