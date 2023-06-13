@@ -16,11 +16,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"testing"
+
 	"github.com/jarcoal/httpmock"
 	"github.com/openfga/go-sdk"
 	. "github.com/openfga/go-sdk/client"
-	"net/http"
-	"testing"
 )
 
 type TestDefinition struct {
@@ -82,6 +83,11 @@ func TestOpenFgaClient(t *testing.T) {
 		if *((*got.Stores)[0].Id) != *((*expectedResponse.Stores)[0].Id) {
 			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, *((*got.Stores)[0].Id), *((*expectedResponse.Stores)[0].Id))
 		}
+		// ListStores without options should work
+		_, err = fgaClient.ListStores(context.Background()).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
 	})
 
 	t.Run("CreateStore", func(t *testing.T) {
@@ -123,6 +129,11 @@ func TestOpenFgaClient(t *testing.T) {
 		if *got.Name != *expectedResponse.Name {
 			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, *got.Name, *expectedResponse.Name)
 		}
+		// CreateStore without options should work
+		_, err = fgaClient.CreateStore(context.Background()).Body(requestBody).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
 	})
 
 	t.Run("GetStore", func(t *testing.T) {
@@ -157,6 +168,11 @@ func TestOpenFgaClient(t *testing.T) {
 
 		if *got.Id != *expectedResponse.Id {
 			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, *got.Id, *expectedResponse.Id)
+		}
+		// GetStore without options should work
+		_, err = fgaClient.GetStore(context.Background()).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
 		}
 	})
 
@@ -250,6 +266,11 @@ func TestOpenFgaClient(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
+		// DeleteStore without options should work
+		_, err = fgaClient.DeleteStore(context.Background()).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
 	})
 
 	/* Authorization Models */
@@ -294,6 +315,11 @@ func TestOpenFgaClient(t *testing.T) {
 
 		if *((*got.AuthorizationModels)[0].Id) != *((*expectedResponse.AuthorizationModels)[0].Id) {
 			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, *((*got.AuthorizationModels)[0].Id), *((*expectedResponse.AuthorizationModels)[0].Id))
+		}
+		// ReadAuthorizationModels without options should work
+		_, err = fgaClient.ReadAuthorizationModels(context.Background()).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
 		}
 	})
 
@@ -358,7 +384,8 @@ func TestOpenFgaClient(t *testing.T) {
 				return resp, nil
 			},
 		)
-		got, err := fgaClient.WriteAuthorizationModel(context.Background()).Body(requestBody).Execute()
+		options := ClientWriteAuthorizationModelOptions{}
+		got, err := fgaClient.WriteAuthorizationModel(context.Background()).Body(requestBody).Options(options).Execute()
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
@@ -371,7 +398,11 @@ func TestOpenFgaClient(t *testing.T) {
 		if got.GetAuthorizationModelId() != expectedResponse.GetAuthorizationModelId() {
 			t.Fatalf("OpenFgaClient.%v() / AuthorizationModelId = %v, want %v", test.Name, got.GetAuthorizationModelId(), expectedResponse.GetAuthorizationModelId())
 		}
-
+		// WriteAuthorizationModel without options should work
+		_, err = fgaClient.WriteAuthorizationModel(context.Background()).Body(requestBody).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
 	})
 
 	t.Run("ReadAuthorizationModel", func(t *testing.T) {
@@ -416,6 +447,12 @@ func TestOpenFgaClient(t *testing.T) {
 		if *(*got.AuthorizationModel).Id != modelId {
 			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
 		}
+		// ReadAuthorizationModel without options should work
+		_, err = fgaClient.ReadAuthorizationModel(context.Background()).Execute()
+		expectedError := "Required parameter AuthorizationModelId was not provided"
+		if err == nil || err.Error() != expectedError {
+			t.Fatalf("Expected error:%v, got: %v", expectedError, err)
+		}
 	})
 
 	t.Run("ReadLatestAuthorizationModel", func(t *testing.T) {
@@ -444,7 +481,8 @@ func TestOpenFgaClient(t *testing.T) {
 				return resp, nil
 			},
 		)
-		got, err := fgaClient.ReadLatestAuthorizationModel(context.Background()).Execute()
+		options := ClientReadLatestAuthorizationModelOptions{}
+		got, err := fgaClient.ReadLatestAuthorizationModel(context.Background()).Options(options).Execute()
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
@@ -456,6 +494,11 @@ func TestOpenFgaClient(t *testing.T) {
 
 		if (*got.AuthorizationModel).GetId() != modelId {
 			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
+		}
+		// ReadLatestAuthorizationModel without options should work
+		_, err = fgaClient.ReadLatestAuthorizationModel(context.Background()).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
 		}
 	})
 
@@ -501,6 +544,11 @@ func TestOpenFgaClient(t *testing.T) {
 
 		if len(*got.Changes) != len(*expectedResponse.Changes) {
 			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
+		}
+		// ReadChanges without options should work
+		_, err = fgaClient.ReadChanges(context.Background()).Body(body).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
 		}
 	})
 
@@ -552,6 +600,11 @@ func TestOpenFgaClient(t *testing.T) {
 
 		if len(*got.Tuples) != len(*expectedResponse.Tuples) {
 			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
+		}
+		// Read without options should work
+		_, err = fgaClient.Read(context.Background()).Body(requestBody).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
 		}
 	})
 
@@ -631,6 +684,11 @@ func TestOpenFgaClient(t *testing.T) {
 			if err != nil {
 				t.Fatalf("%v", err)
 			}
+		}
+		// Write without options should work
+		_, err = fgaClient.Write(context.Background()).Body(requestBody).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
 		}
 	})
 
@@ -802,6 +860,11 @@ func TestOpenFgaClient(t *testing.T) {
 				t.Fatalf("%v", err)
 			}
 		}
+		// WriteTuples without options should work
+		_, err = fgaClient.WriteTuples(context.Background()).Body(requestBody).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
 	})
 
 	t.Run("DeleteTuples", func(t *testing.T) {
@@ -880,6 +943,11 @@ func TestOpenFgaClient(t *testing.T) {
 				t.Fatalf("%v", err)
 			}
 		}
+		// DeleteTuples without options should work
+		_, err = fgaClient.DeleteTuples(context.Background()).Body(requestBody).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
 	})
 
 	/* Relationship Queries */
@@ -934,6 +1002,11 @@ func TestOpenFgaClient(t *testing.T) {
 
 		if got.GetAllowed() != *expectedResponse.Allowed {
 			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
+		}
+		// Check without options should work
+		_, err = fgaClient.Check(context.Background()).Body(requestBody).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
 		}
 	})
 
@@ -1025,6 +1098,11 @@ func TestOpenFgaClient(t *testing.T) {
 				t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
 			}
 		}
+		// BatchCheck without options should work
+		_, err = fgaClient.BatchCheck(context.Background()).Body(requestBody).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
 	})
 
 	t.Run("Expand", func(t *testing.T) {
@@ -1066,6 +1144,11 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 
 		_, err = got.MarshalJSON()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+		// Expand without options should work
+		_, err = fgaClient.Expand(context.Background()).Body(requestBody).Execute()
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
@@ -1129,6 +1212,11 @@ func TestOpenFgaClient(t *testing.T) {
 
 		if len(*got.Objects) != len(*expectedResponse.Objects) || (*got.Objects)[0] != (*expectedResponse.Objects)[0] {
 			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
+		}
+		// ListObjects without options should work
+		_, err = fgaClient.ListObjects(context.Background()).Body(requestBody).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
 		}
 	})
 
@@ -1201,6 +1289,11 @@ func TestOpenFgaClient(t *testing.T) {
 
 		if len(got.Relations) != 3 {
 			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, len(got.Relations), 3)
+		}
+		// ListRelations without options should work
+		_, err = fgaClient.ListRelations(context.Background()).Body(requestBody).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
 		}
 	})
 
@@ -1285,6 +1378,12 @@ func TestOpenFgaClient(t *testing.T) {
 		if len(*got.Assertions) != len(*expectedResponse.Assertions) || (*got.Assertions)[0].Expectation != (*expectedResponse.Assertions)[0].Expectation {
 			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
 		}
+		// ReadAssertions without options should work
+		_, err = fgaClient.ReadAssertions(context.Background()).Execute()
+		expectedError := "Required parameter AuthorizationModelId was not provided"
+		if err == nil || err.Error() != expectedError {
+			t.Fatalf("Expected error:%v, got: %v", expectedError, err)
+		}
 	})
 
 	t.Run("WriteAssertions", func(t *testing.T) {
@@ -1326,6 +1425,12 @@ func TestOpenFgaClient(t *testing.T) {
 			Execute()
 		if err != nil {
 			t.Fatalf("%v", err)
+		}
+		// WriteAssertions without options should work
+		_, err = fgaClient.WriteAssertions(context.Background()).Body(requestBody).Execute()
+		expectedError := "Required parameter AuthorizationModelId was not provided"
+		if err == nil || err.Error() != expectedError {
+			t.Fatalf("Expected error:%v, got: %v", expectedError, err)
 		}
 	})
 }
