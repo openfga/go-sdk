@@ -889,7 +889,7 @@ func (client *OpenFgaClient) ReadExecute(request SdkClientReadRequest) (*ClientR
 		PageSize:          getPageSizeFromRequest((*ClientPaginationOptions)(request.options)),
 		ContinuationToken: getContinuationTokenFromRequest((*ClientPaginationOptions)(request.options)),
 	}
-	if request.body != nil && request.body.User != nil || request.body.Relation != nil || request.body.Object != nil {
+	if request.body != nil && (request.body.User != nil || request.body.Relation != nil || request.body.Object != nil) {
 		body.TupleKey = &openfga.TupleKey{
 			User:     request.body.User,
 			Relation: request.body.Relation,
