@@ -398,6 +398,7 @@ func TestOpenFgaClient(t *testing.T) {
 		if got.GetAuthorizationModelId() != expectedResponse.GetAuthorizationModelId() {
 			t.Fatalf("OpenFgaClient.%v() / AuthorizationModelId = %v, want %v", test.Name, got.GetAuthorizationModelId(), expectedResponse.GetAuthorizationModelId())
 		}
+
 		// WriteAuthorizationModel without options should work
 		_, err = fgaClient.WriteAuthorizationModel(context.Background()).Body(requestBody).Execute()
 		if err != nil {
@@ -617,11 +618,11 @@ func TestOpenFgaClient(t *testing.T) {
 			RequestPath:    "write",
 		}
 		requestBody := ClientWriteRequest{
-			Writes: &[]ClientTupleKey{{
+			Writes: &[]ClientTupleKey{ {
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "viewer",
 				Object:   "document:roadmap",
-			}},
+			} },
 		}
 		options := ClientWriteOptions{
 			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
@@ -701,7 +702,7 @@ func TestOpenFgaClient(t *testing.T) {
 			RequestPath:    "write",
 		}
 		requestBody := ClientWriteRequest{
-			Writes: &[]ClientTupleKey{{
+			Writes: &[]ClientTupleKey{ {
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "viewer",
 				Object:   "document:roadmap",
@@ -709,12 +710,12 @@ func TestOpenFgaClient(t *testing.T) {
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "viewer",
 				Object:   "document:budget",
-			}},
-			Deletes: &[]ClientTupleKey{{
+			} },
+			Deletes: &[]ClientTupleKey{ {
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "viewer",
 				Object:   "document:planning",
-			}},
+			} },
 		}
 		options := ClientWriteOptions{
 			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
@@ -793,11 +794,11 @@ func TestOpenFgaClient(t *testing.T) {
 			Method:         http.MethodPost,
 			RequestPath:    "write",
 		}
-		requestBody := []ClientTupleKey{{
+		requestBody := []ClientTupleKey{ {
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "viewer",
 			Object:   "document:roadmap",
-		}}
+		} }
 		options := ClientWriteOptions{
 			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
 		}
@@ -876,11 +877,11 @@ func TestOpenFgaClient(t *testing.T) {
 			RequestPath:    "write",
 		}
 
-		requestBody := []ClientTupleKey{{
+		requestBody := []ClientTupleKey{ {
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "viewer",
 			Object:   "document:roadmap",
-		}}
+		} }
 		options := ClientWriteOptions{
 			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
 		}
@@ -963,11 +964,11 @@ func TestOpenFgaClient(t *testing.T) {
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "viewer",
 			Object:   "document:roadmap",
-			ContextualTuples: &[]ClientTupleKey{{
+			ContextualTuples: &[]ClientTupleKey{ {
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "editor",
 				Object:   "document:roadmap",
-			}},
+			} },
 		}
 
 		options := ClientCheckOptions{
@@ -1018,24 +1019,24 @@ func TestOpenFgaClient(t *testing.T) {
 			Method:         http.MethodPost,
 			RequestPath:    "check",
 		}
-		requestBody := ClientBatchCheckBody{{
+		requestBody := ClientBatchCheckBody{ {
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "viewer",
 			Object:   "document:roadmap",
-			ContextualTuples: &[]ClientTupleKey{{
+			ContextualTuples: &[]ClientTupleKey{ {
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "editor",
 				Object:   "document:roadmap",
-			}},
+			} },
 		}, {
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "admin",
 			Object:   "document:roadmap",
-			ContextualTuples: &[]ClientTupleKey{{
+			ContextualTuples: &[]ClientTupleKey{ {
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "editor",
 				Object:   "document:roadmap",
-			}},
+			} },
 		}, {
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "creator",
@@ -1044,7 +1045,7 @@ func TestOpenFgaClient(t *testing.T) {
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "deleter",
 			Object:   "document:roadmap",
-		}}
+		} }
 
 		options := ClientBatchCheckOptions{
 			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
@@ -1167,7 +1168,7 @@ func TestOpenFgaClient(t *testing.T) {
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "can_read",
 			Type:     "document",
-			ContextualTuples: &[]ClientTupleKey{{
+			ContextualTuples: &[]ClientTupleKey{ {
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "editor",
 				Object:   "folder:product",
@@ -1175,7 +1176,7 @@ func TestOpenFgaClient(t *testing.T) {
 				User:     "folder:product",
 				Relation: "parent",
 				Object:   "document:roadmap",
-			}},
+			} },
 		}
 		options := ClientListObjectsOptions{
 			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
@@ -1233,11 +1234,11 @@ func TestOpenFgaClient(t *testing.T) {
 			User:      "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Object:    "document:roadmap",
 			Relations: []string{"can_view", "can_edit", "can_delete", "can_rename"},
-			ContextualTuples: &[]ClientTupleKey{{
+			ContextualTuples: &[]ClientTupleKey{ {
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "editor",
 				Object:   "document:roadmap",
-			}},
+			} },
 		}
 		options := ClientListRelationsOptions{
 			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
@@ -1310,11 +1311,11 @@ func TestOpenFgaClient(t *testing.T) {
 			User:      "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Object:    "document:roadmap",
 			Relations: []string{},
-			ContextualTuples: &[]ClientTupleKey{{
+			ContextualTuples: &[]ClientTupleKey{ {
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "editor",
 				Object:   "document:roadmap",
-			}},
+			} },
 		}
 		options := ClientListRelationsOptions{
 			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),

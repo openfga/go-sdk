@@ -17,22 +17,48 @@ By submitting an issue to this repository, you agree to the terms within the [Op
 
 > Provide a clear and concise description of the issue, including what you expected to happen.
 
+### Version of SDK
+
+> v0.2.0
+
+### Version of OpenFGA (if known)
+
+> v1.1.0
+
+### OpenFGA Flags/Custom Configuration Applicable
+
+>    environment:
+>      - OPENFGA_DATASTORE_ENGINE=postgres
+>      - OPENFGA_DATASTORE_URI=postgres://postgres:password@postgres:5432/postgres?sslmode=disable
+>      - OPENFGA_TRACE_ENABLED=true
+>      - OPENFGA_TRACE_SAMPLE_RATIO=1
+>      - OPENFGA_TRACE_OTLP_ENDPOINT=otel-collector:4317
+>      - OPENFGA_METRICS_ENABLE_RPC_HISTOGRAMS=true
+
 ### Reproduction
 
 > Detail the steps taken to reproduce this error, what was expected, and whether this issue can be reproduced consistently or if it is intermittent.
 >
-> Where applicable, please include:
+> 1. Initialize OpenFgaClient with openfga_sdk.ClientConfiguration parameter api_host=127.0.0.1, credentials method client_credentials
+> 2. Invoke method read_authorization_models
+> 3. See exception thrown
+
+### Sample Code the Produces Issues
+
 >
-> - Code sample to reproduce the issue
-> - Log files (redact/remove sensitive information)
-> - Application settings (redact/remove sensitive information)
-> - Screenshots
+> ```
+> <code snippet>
+> ```
 
-### Environment
+### Backtrace (if applicable)
 
-> Please provide the following:
+> ```
+> <backtrace>
+> ```
 
-- **Version of this library used:**
-- **Version of the platform or framework used, if applicable:**
-- **Other relevant versions (language, server software, OS, browser):**
-- **Other modules/plugins/libraries that might be involved:**
+
+### Expected behavior
+> A clear and concise description of what you expected to happen.
+
+### Additional context
+> Add any other context about the problem here.
