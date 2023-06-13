@@ -142,54 +142,54 @@ type SdkClient interface {
 	/*
 	 * ListStores Get a paginated list of stores.
 	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	 * @return SdkClientListStoresRequest
+	 * @return SdkClientListStoresRequestInterface
 	 */
-	ListStores(ctx _context.Context) SdkClientListStoresRequest
+	ListStores(ctx _context.Context) SdkClientListStoresRequestInterface
 
 	/*
 	 * ListStoresExecute executes the ListStores request
 	 * @return *ClientListStoresResponse
 	 */
-	ListStoresExecute(request SdkClientListStoresRequest) (*ClientListStoresResponse, error)
+	ListStoresExecute(request SdkClientListStoresRequestInterface) (*ClientListStoresResponse, error)
 
 	/*
 	 * CreateStore Create and initialize a store
 	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	 * @return SdkClientCreateStoreRequest
+	 * @return SdkClientCreateStoreRequestInterface
 	 */
-	CreateStore(ctx _context.Context) SdkClientCreateStoreRequest
+	CreateStore(ctx _context.Context) SdkClientCreateStoreRequestInterface
 
 	/*
 	 * CreateStoreExecute executes the CreateStore request
 	 * @return *ClientCreateStoreResponse
 	 */
-	CreateStoreExecute(request SdkClientCreateStoreRequest) (*ClientCreateStoreResponse, error)
+	CreateStoreExecute(request SdkClientCreateStoreRequestInterface) (*ClientCreateStoreResponse, error)
 
 	/*
 	 * GetStore Get information about the current store.
 	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	 * @return SdkClientGetStoreRequest
+	 * @return SdkClientGetStoreRequestInterface
 	 */
-	GetStore(ctx _context.Context) SdkClientGetStoreRequest
+	GetStore(ctx _context.Context) SdkClientGetStoreRequestInterface
 
 	/*
 	 * GetStoreExecute executes the GetStore request
 	 * @return *ClientGetStoreResponse
 	 */
-	GetStoreExecute(request SdkClientGetStoreRequest) (*ClientGetStoreResponse, error)
+	GetStoreExecute(request SdkClientGetStoreRequestInterface) (*ClientGetStoreResponse, error)
 
 	/*
 	 * DeleteStore Delete a store.
 	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	 * @return SdkClientDeleteStoreRequest
+	 * @return SdkClientDeleteStoreRequestInterface
 	 */
-	DeleteStore(ctx _context.Context) SdkClientDeleteStoreRequest
+	DeleteStore(ctx _context.Context) SdkClientDeleteStoreRequestInterface
 
 	/*
 	 * DeleteStoreExecute executes the DeleteStore request
 	 * @return *ClientDeleteStoreResponse
 	 */
-	DeleteStoreExecute(request SdkClientDeleteStoreRequest) (*ClientDeleteStoreResponse, error)
+	DeleteStoreExecute(request SdkClientDeleteStoreRequestInterface) (*ClientDeleteStoreResponse, error)
 
 	/* Authorization Models */
 
@@ -198,26 +198,26 @@ type SdkClient interface {
 	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	 * @return SdkClientReadAuthorizationModelsRequest
 	 */
-	ReadAuthorizationModels(ctx _context.Context) SdkClientReadAuthorizationModelsRequest
+	ReadAuthorizationModels(ctx _context.Context) SdkClientReadAuthorizationModelsRequestInterface
 
 	/*
 	 * ReadAuthorizationModelsExecute executes the ReadAuthorizationModels request
 	 * @return *ClientReadAuthorizationModelsResponse
 	 */
-	ReadAuthorizationModelsExecute(request SdkClientReadAuthorizationModelsRequest) (*ClientReadAuthorizationModelsResponse, error)
+	ReadAuthorizationModelsExecute(request SdkClientReadAuthorizationModelsRequestInterface) (*ClientReadAuthorizationModelsResponse, error)
 
 	/*
 	 * WriteAuthorizationModel Create a new authorization model.
 	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	 * @return SdkClientWriteAuthorizationModelRequest
 	 */
-	WriteAuthorizationModel(ctx _context.Context) SdkClientWriteAuthorizationModelRequest
+	WriteAuthorizationModel(ctx _context.Context) SdkClientWriteAuthorizationModelRequestInterface
 
 	/*
 	 * WriteAuthorizationModelExecute executes the WriteAuthorizationModel request
 	 * @return *ClientWriteAuthorizationModelResponse
 	 */
-	WriteAuthorizationModelExecute(request SdkClientWriteAuthorizationModelRequest) (*ClientWriteAuthorizationModelResponse, error)
+	WriteAuthorizationModelExecute(request SdkClientWriteAuthorizationModelRequestInterface) (*ClientWriteAuthorizationModelResponse, error)
 
 	/*
 	 * ReadAuthorizationModel Read a particular authorization model.
@@ -250,162 +250,162 @@ type SdkClient interface {
 	/*
 	 * ReadChanges Reads the list of historical relationship tuple writes and deletes.
 	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	 * @return SdkClientReadChangesRequest
+	 * @return SdkClientReadChangesRequestInterface
 	 */
-	ReadChanges(ctx _context.Context) SdkClientReadChangesRequest
+	ReadChanges(ctx _context.Context) SdkClientReadChangesRequestInterface
 
 	/*
 	 * ReadChangesExecute executes the ReadChanges request
 	 * @return *ClientReadChangesResponse
 	 */
-	ReadChangesExecute(request SdkClientReadChangesRequest) (*ClientReadChangesResponse, error)
+	ReadChangesExecute(request SdkClientReadChangesRequestInterface) (*ClientReadChangesResponse, error)
 
 	/*
 	 * Read Reads the relationship tuples stored in the database. It does not evaluate nor exclude invalid tuples according to the authorization model.
 	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	 * @return SdkClientReadRequest
+	 * @return SdkClientReadRequestInterface
 	 */
-	Read(ctx _context.Context) SdkClientReadRequest
+	Read(ctx _context.Context) SdkClientReadRequestInterface
 
 	/*
 	 * ReadExecute executes the Read request
 	 * @return *ClientReadResponse
 	 */
-	ReadExecute(request SdkClientReadRequest) (*ClientReadResponse, error)
+	ReadExecute(request SdkClientReadRequestInterface) (*ClientReadResponse, error)
 
 	/*
 	 * Write Create and/or delete relationship tuples to update the system state.
 	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	 * @return SdkClientWriteRequest
+	 * @return SdkClientWriteRequestInterface
 	 */
-	Write(ctx _context.Context) SdkClientWriteRequest
+	Write(ctx _context.Context) SdkClientWriteRequestInterface
 
 	/*
 	 * WriteExecute executes the Write request
 	 * @return *ClientWriteResponse
 	 */
-	WriteExecute(request SdkClientWriteRequest) (*ClientWriteResponse, error)
+	WriteExecute(request SdkClientWriteRequestInterface) (*ClientWriteResponse, error)
 
 	/*
 	 * WriteTuples Utility method around Write
 	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	 * @return SdkClientWriteTuplesRequest
+	 * @return SdkClientWriteTuplesRequestInterface
 	 */
-	WriteTuples(ctx _context.Context) SdkClientWriteTuplesRequest
+	WriteTuples(ctx _context.Context) SdkClientWriteTuplesRequestInterface
 
 	/*
 	 * WriteTuplesExecute executes the WriteTuples request
 	 * @return *ClientWriteResponse
 	 */
-	WriteTuplesExecute(request SdkClientWriteTuplesRequest) (*ClientWriteResponse, error)
+	WriteTuplesExecute(request SdkClientWriteTuplesRequestInterface) (*ClientWriteResponse, error)
 
 	/*
 	 * DeleteTuples Utility method around Write
 	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	 * @return SdkClientDeleteTuplesRequest
+	 * @return SdkClientDeleteTuplesRequestInterface
 	 */
-	DeleteTuples(ctx _context.Context) SdkClientDeleteTuplesRequest
+	DeleteTuples(ctx _context.Context) SdkClientDeleteTuplesRequestInterface
 
 	/*
 	 * DeleteTuplesExecute executes the DeleteTuples request
 	 * @return *ClientWriteResponse
 	 */
-	DeleteTuplesExecute(request SdkClientDeleteTuplesRequest) (*ClientWriteResponse, error)
+	DeleteTuplesExecute(request SdkClientDeleteTuplesRequestInterface) (*ClientWriteResponse, error)
 
 	/* Relationship Queries */
 
 	/*
 	 * Check Check if a user has a particular relation with an object.
 	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	 * @return SdkClientCheckRequest
+	 * @return SdkClientCheckRequestInterface
 	 */
-	Check(ctx _context.Context) SdkClientCheckRequest
+	Check(ctx _context.Context) SdkClientCheckRequestInterface
 
 	/*
 	 * CheckExecute executes the Check request
 	 * @return *ClientCheckResponse
 	 */
-	CheckExecute(request SdkClientCheckRequest) (*ClientCheckResponse, error)
+	CheckExecute(request SdkClientCheckRequestInterface) (*ClientCheckResponse, error)
 
 	/*
 	 * BatchCheck Run a set of [checks](#check). Batch Check will return `allowed: false` if it encounters an error, and will return the error in the body.
 	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	 * @return SdkClientBatchCheckRequest
+	 * @return SdkClientBatchCheckRequestInterface
 	 */
-	BatchCheck(ctx _context.Context) SdkClientBatchCheckRequest
+	BatchCheck(ctx _context.Context) SdkClientBatchCheckRequestInterface
 
 	/*
 	 * BatchCheckExecute executes the BatchCheck request
 	 * @return *ClientBatchCheckResponse
 	 */
-	BatchCheckExecute(request SdkClientBatchCheckRequest) (*ClientBatchCheckResponse, error)
+	BatchCheckExecute(request SdkClientBatchCheckRequestInterface) (*ClientBatchCheckResponse, error)
 
 	/*
 	 * Expand Expands the relationships in userset tree format.
 	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	 * @return SdkClientExpandRequest
+	 * @return SdkClientExpandRequestInterface
 	 */
-	Expand(ctx _context.Context) SdkClientExpandRequest
+	Expand(ctx _context.Context) SdkClientExpandRequestInterface
 
 	/*
 	 * ExpandExecute executes the Expand request
 	 * @return *ClientExpandResponse
 	 */
-	ExpandExecute(request SdkClientExpandRequest) (*ClientExpandResponse, error)
+	ExpandExecute(request SdkClientExpandRequestInterface) (*ClientExpandResponse, error)
 
 	/*
 	 * ListObjects List the objects of a particular type a user has access to.
 	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	 * @return SdkClientListObjectsRequest
+	 * @return SdkClientListObjectsRequestInterface
 	 */
-	ListObjects(ctx _context.Context) SdkClientListObjectsRequest
+	ListObjects(ctx _context.Context) SdkClientListObjectsRequestInterface
 
 	/*
 	 * ListObjectsExecute executes the ListObjects request
 	 * @return *ClientListObjectsResponse
 	 */
-	ListObjectsExecute(request SdkClientListObjectsRequest) (*ClientListObjectsResponse, error)
+	ListObjectsExecute(request SdkClientListObjectsRequestInterface) (*ClientListObjectsResponse, error)
 
 	/*
 	 * ListRelations List the relations a user has on an object.
 	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	 * @return SdkClientListRelationsRequest
+	 * @return SdkClientListRelationsRequestInterface
 	 */
-	ListRelations(ctx _context.Context) SdkClientListRelationsRequest
+	ListRelations(ctx _context.Context) SdkClientListRelationsRequestInterface
 
 	/*
 	 * ListRelationsExecute executes the ListRelations request
 	 * @return *ClientListRelationsResponse
 	 */
-	ListRelationsExecute(request SdkClientListRelationsRequest) (*ClientListRelationsResponse, error)
+	ListRelationsExecute(request SdkClientListRelationsRequestInterface) (*ClientListRelationsResponse, error)
 
 	/* Assertions */
 
 	/*
 	 * ReadAssertions Read assertions for a particular authorization model.
 	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	 * @return SdkClientReadAssertionsRequest
+	 * @return SdkClientReadAssertionsRequestInterface
 	 */
-	ReadAssertions(ctx _context.Context) SdkClientReadAssertionsRequest
+	ReadAssertions(ctx _context.Context) SdkClientReadAssertionsRequestInterface
 
 	/*
 	 * ReadAssertionsExecute executes the ReadAssertions request
 	 * @return *ClientReadAssertionsResponse
 	 */
-	ReadAssertionsExecute(request SdkClientReadAssertionsRequest) (*ClientReadAssertionsResponse, error)
+	ReadAssertionsExecute(request SdkClientReadAssertionsRequestInterface) (*ClientReadAssertionsResponse, error)
 
 	/*
 	 * WriteAssertions Update the assertions for a particular authorization model.
 	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	 * @return SdkClientWriteAssertionsRequest
+	 * @return SdkClientWriteAssertionsRequestInterface
 	 */
-	WriteAssertions(ctx _context.Context) SdkClientWriteAssertionsRequest
+	WriteAssertions(ctx _context.Context) SdkClientWriteAssertionsRequestInterface
 
 	/*
 	 * WriteAssertionsExecute executes the WriteAssertions request
 	 * @return *ClientWriteAssertionsResponse
 	 */
-	WriteAssertionsExecute(request SdkClientWriteAssertionsRequest) (*ClientWriteAssertionsResponse, error)
+	WriteAssertionsExecute(request SdkClientWriteAssertionsRequestInterface) (*ClientWriteAssertionsResponse, error)
 }
 
 func (client *OpenFgaClient) getAuthorizationModelId(authorizationModelId *string) *string {
@@ -420,9 +420,16 @@ func (client *OpenFgaClient) getAuthorizationModelId(authorizationModelId *strin
 // / ListStores
 type SdkClientListStoresRequest struct {
 	ctx    _context.Context
-	Client OpenFgaClient
+	Client *OpenFgaClient
 
 	options *ClientListStoresOptions
+}
+
+type SdkClientListStoresRequestInterface interface {
+	Options(options ClientListStoresOptions) SdkClientListStoresRequestInterface
+	Execute() (*ClientListStoresResponse, error)
+	GetContext()  _context.Context
+	GetOptions() *ClientListStoresOptions
 }
 
 type ClientListStoresOptions struct {
@@ -432,22 +439,30 @@ type ClientListStoresOptions struct {
 
 type ClientListStoresResponse = openfga.ListStoresResponse
 
-func (request SdkClientListStoresRequest) Options(options ClientListStoresOptions) SdkClientListStoresRequest {
+func (request *SdkClientListStoresRequest) Options(options ClientListStoresOptions) SdkClientListStoresRequestInterface {
 	request.options = &options
 	return request
 }
 
-func (request SdkClientListStoresRequest) Execute() (*ClientListStoresResponse, error) {
+func (request *SdkClientListStoresRequest) Execute() (*ClientListStoresResponse, error) {
 	return request.Client.ListStoresExecute(request)
 }
 
-func (client *OpenFgaClient) ListStoresExecute(request SdkClientListStoresRequest) (*ClientListStoresResponse, error) {
-	req := client.OpenFgaApi.ListStores(request.ctx)
-	pageSize := getPageSizeFromRequest((*ClientPaginationOptions)(request.options))
+func (request *SdkClientListStoresRequest) GetContext() _context.Context {
+	return request.ctx
+}
+
+func (request *SdkClientListStoresRequest) GetOptions() *ClientListStoresOptions {
+	return request.options
+}
+
+func (client *OpenFgaClient) ListStoresExecute(request SdkClientListStoresRequestInterface) (*ClientListStoresResponse, error) {
+	req := client.OpenFgaApi.ListStores(request.GetContext())
+	pageSize := getPageSizeFromRequest((*ClientPaginationOptions)(request.GetOptions()))
 	if pageSize != nil {
 		req.PageSize(*pageSize)
 	}
-	continuationToken := getContinuationTokenFromRequest((*ClientPaginationOptions)(request.options))
+	continuationToken := getContinuationTokenFromRequest((*ClientPaginationOptions)(request.GetOptions()))
 	if continuationToken != nil {
 		req.ContinuationToken(*continuationToken)
 	}
@@ -458,20 +473,30 @@ func (client *OpenFgaClient) ListStoresExecute(request SdkClientListStoresReques
 	return &data, nil
 }
 
-func (client *OpenFgaClient) ListStores(ctx _context.Context) SdkClientListStoresRequest {
-	return SdkClientListStoresRequest{
+func (client *OpenFgaClient) ListStores(ctx _context.Context) SdkClientListStoresRequestInterface {
+	return &SdkClientListStoresRequest{
 		ctx:    ctx,
-		Client: *client,
+		Client: client,
 	}
 }
 
 // / CreateStore
 type SdkClientCreateStoreRequest struct {
 	ctx    _context.Context
-	Client OpenFgaClient
+	Client *OpenFgaClient
 
 	body    *ClientCreateStoreRequest
 	options *ClientCreateStoreOptions
+}
+
+type SdkClientCreateStoreRequestInterface interface {
+    Options(options ClientCreateStoreOptions) SdkClientCreateStoreRequestInterface
+    Body(body ClientCreateStoreRequest) SdkClientCreateStoreRequestInterface
+    Execute()  (*ClientCreateStoreResponse, error)
+
+    GetContext() _context.Context
+    GetOptions() *ClientCreateStoreOptions
+    GetBody() *ClientCreateStoreRequest
 }
 
 type ClientCreateStoreRequest struct {
@@ -483,23 +508,35 @@ type ClientCreateStoreOptions struct {
 
 type ClientCreateStoreResponse = openfga.CreateStoreResponse
 
-func (request SdkClientCreateStoreRequest) Options(options ClientCreateStoreOptions) SdkClientCreateStoreRequest {
+func (request *SdkClientCreateStoreRequest) Options(options ClientCreateStoreOptions) SdkClientCreateStoreRequestInterface {
 	request.options = &options
 	return request
 }
 
-func (request SdkClientCreateStoreRequest) Body(body ClientCreateStoreRequest) SdkClientCreateStoreRequest {
+func (request *SdkClientCreateStoreRequest) Body(body ClientCreateStoreRequest) SdkClientCreateStoreRequestInterface {
 	request.body = &body
 	return request
 }
 
-func (request SdkClientCreateStoreRequest) Execute() (*ClientCreateStoreResponse, error) {
+func (request *SdkClientCreateStoreRequest) Execute() (*ClientCreateStoreResponse, error) {
 	return request.Client.CreateStoreExecute(request)
 }
 
-func (client *OpenFgaClient) CreateStoreExecute(request SdkClientCreateStoreRequest) (*ClientCreateStoreResponse, error) {
-	data, _, err := client.OpenFgaApi.CreateStore(request.ctx).Body(openfga.CreateStoreRequest{
-		Name: request.body.Name,
+func (request *SdkClientCreateStoreRequest) GetContext() _context.Context{
+	return request.ctx
+}
+
+func (request *SdkClientCreateStoreRequest) GetOptions() *ClientCreateStoreOptions{
+	return request.options
+}
+
+func (request *SdkClientCreateStoreRequest) GetBody() *ClientCreateStoreRequest{
+	return request.body
+}
+
+func (client *OpenFgaClient) CreateStoreExecute(request SdkClientCreateStoreRequestInterface) (*ClientCreateStoreResponse, error) {
+	data, _, err := client.OpenFgaApi.CreateStore(request.GetContext()).Body(openfga.CreateStoreRequest{
+		Name: request.GetBody().Name,
 	}).Execute()
 	if err != nil {
 		return nil, err
@@ -507,9 +544,9 @@ func (client *OpenFgaClient) CreateStoreExecute(request SdkClientCreateStoreRequ
 	return &data, nil
 }
 
-func (client *OpenFgaClient) CreateStore(ctx _context.Context) SdkClientCreateStoreRequest {
-	return SdkClientCreateStoreRequest{
-		Client: *client,
+func (client *OpenFgaClient) CreateStore(ctx _context.Context) SdkClientCreateStoreRequestInterface {
+	return &SdkClientCreateStoreRequest{
+		Client: client,
 		ctx:    ctx,
 	}
 }
@@ -517,9 +554,17 @@ func (client *OpenFgaClient) CreateStore(ctx _context.Context) SdkClientCreateSt
 // / GetStore
 type SdkClientGetStoreRequest struct {
 	ctx    _context.Context
-	Client OpenFgaClient
+	Client *OpenFgaClient
 
 	options *ClientGetStoreOptions
+}
+
+type SdkClientGetStoreRequestInterface interface{
+	Options(options ClientGetStoreOptions) SdkClientGetStoreRequestInterface
+	Execute() (*ClientGetStoreResponse, error)
+
+    GetContext() _context.Context
+    GetOptions() *ClientGetStoreOptions
 }
 
 type ClientGetStoreOptions struct {
@@ -527,26 +572,34 @@ type ClientGetStoreOptions struct {
 
 type ClientGetStoreResponse = openfga.GetStoreResponse
 
-func (request SdkClientGetStoreRequest) Options(options ClientGetStoreOptions) SdkClientGetStoreRequest {
+func (request *SdkClientGetStoreRequest) Options(options ClientGetStoreOptions) SdkClientGetStoreRequestInterface {
 	request.options = &options
 	return request
 }
 
-func (request SdkClientGetStoreRequest) Execute() (*ClientGetStoreResponse, error) {
+func (request *SdkClientGetStoreRequest) Execute() (*ClientGetStoreResponse, error) {
 	return request.Client.GetStoreExecute(request)
 }
 
-func (client *OpenFgaClient) GetStoreExecute(request SdkClientGetStoreRequest) (*ClientGetStoreResponse, error) {
-	data, _, err := client.OpenFgaApi.GetStore(request.ctx).Execute()
+func (request *SdkClientGetStoreRequest) GetContext() _context.Context{
+	return request.ctx
+}
+
+func (request *SdkClientGetStoreRequest) GetOptions() *ClientGetStoreOptions{
+	return request.options
+}
+
+func (client *OpenFgaClient) GetStoreExecute(request SdkClientGetStoreRequestInterface) (*ClientGetStoreResponse, error) {
+	data, _, err := client.OpenFgaApi.GetStore(request.GetContext()).Execute()
 	if err != nil {
 		return nil, err
 	}
 	return &data, nil
 }
 
-func (client *OpenFgaClient) GetStore(ctx _context.Context) SdkClientGetStoreRequest {
-	return SdkClientGetStoreRequest{
-		Client: *client,
+func (client *OpenFgaClient) GetStore(ctx _context.Context) SdkClientGetStoreRequestInterface {
+	return &SdkClientGetStoreRequest{
+		Client: client,
 		ctx:    ctx,
 	}
 }
@@ -554,35 +607,53 @@ func (client *OpenFgaClient) GetStore(ctx _context.Context) SdkClientGetStoreReq
 // / DeleteStore
 type SdkClientDeleteStoreRequest struct {
 	ctx    _context.Context
-	Client OpenFgaClient
+	Client *OpenFgaClient
 
 	options *ClientDeleteStoreOptions
 }
+
+type SdkClientDeleteStoreRequestInterface interface{
+	Options(options ClientDeleteStoreOptions) SdkClientDeleteStoreRequestInterface
+	Execute() (*ClientDeleteStoreResponse, error)	
+
+    GetContext() _context.Context
+    GetOptions() *ClientDeleteStoreOptions
+}
+
 type ClientDeleteStoreOptions struct {
 }
 
 type ClientDeleteStoreResponse struct{}
 
-func (request SdkClientDeleteStoreRequest) Options(options ClientDeleteStoreOptions) SdkClientDeleteStoreRequest {
+func (request *SdkClientDeleteStoreRequest) Options(options ClientDeleteStoreOptions) SdkClientDeleteStoreRequestInterface {
 	request.options = &options
 	return request
 }
 
-func (request SdkClientDeleteStoreRequest) Execute() (*ClientDeleteStoreResponse, error) {
+func (request *SdkClientDeleteStoreRequest) Execute() (*ClientDeleteStoreResponse, error) {
 	return request.Client.DeleteStoreExecute(request)
 }
 
-func (client *OpenFgaClient) DeleteStoreExecute(request SdkClientDeleteStoreRequest) (*ClientDeleteStoreResponse, error) {
-	_, err := client.OpenFgaApi.DeleteStore(request.ctx).Execute()
+func (request *SdkClientDeleteStoreRequest) GetContext() _context.Context {
+	return request.ctx
+}
+
+func (request *SdkClientDeleteStoreRequest) GetOptions() *ClientDeleteStoreOptions {
+	return request.options
+}
+
+
+func (client *OpenFgaClient) DeleteStoreExecute(request SdkClientDeleteStoreRequestInterface) (*ClientDeleteStoreResponse, error) {
+	_, err := client.OpenFgaApi.DeleteStore(request.GetContext()).Execute()
 	if err != nil {
 		return nil, err
 	}
 	return &ClientDeleteStoreResponse{}, nil
 }
 
-func (client *OpenFgaClient) DeleteStore(ctx _context.Context) SdkClientDeleteStoreRequest {
-	return SdkClientDeleteStoreRequest{
-		Client: *client,
+func (client *OpenFgaClient) DeleteStore(ctx _context.Context) SdkClientDeleteStoreRequestInterface {
+	return &SdkClientDeleteStoreRequest{
+		Client: client,
 		ctx:    ctx,
 	}
 }
@@ -592,9 +663,17 @@ func (client *OpenFgaClient) DeleteStore(ctx _context.Context) SdkClientDeleteSt
 // / ReadAuthorizationModels
 type SdkClientReadAuthorizationModelsRequest struct {
 	ctx    _context.Context
-	Client OpenFgaClient
+	Client *OpenFgaClient
 
 	options *ClientReadAuthorizationModelsOptions
+}
+
+type SdkClientReadAuthorizationModelsRequestInterface interface{
+    Options(options ClientReadAuthorizationModelsOptions) SdkClientReadAuthorizationModelsRequestInterface
+	Execute() (*ClientReadAuthorizationModelsResponse, error)
+
+	GetContext() _context.Context
+	GetOptions() *ClientReadAuthorizationModelsOptions
 }
 
 type ClientReadAuthorizationModelsOptions struct {
@@ -604,22 +683,30 @@ type ClientReadAuthorizationModelsOptions struct {
 
 type ClientReadAuthorizationModelsResponse = openfga.ReadAuthorizationModelsResponse
 
-func (request SdkClientReadAuthorizationModelsRequest) Options(options ClientReadAuthorizationModelsOptions) SdkClientReadAuthorizationModelsRequest {
+func (request *SdkClientReadAuthorizationModelsRequest) Options(options ClientReadAuthorizationModelsOptions) SdkClientReadAuthorizationModelsRequestInterface {
 	request.options = &options
 	return request
 }
 
-func (request SdkClientReadAuthorizationModelsRequest) Execute() (*ClientReadAuthorizationModelsResponse, error) {
+func (request *SdkClientReadAuthorizationModelsRequest) Execute() (*ClientReadAuthorizationModelsResponse, error) {
 	return request.Client.ReadAuthorizationModelsExecute(request)
 }
 
-func (client *OpenFgaClient) ReadAuthorizationModelsExecute(request SdkClientReadAuthorizationModelsRequest) (*ClientReadAuthorizationModelsResponse, error) {
-	req := client.OpenFgaApi.ReadAuthorizationModels(request.ctx)
-	pageSize := getPageSizeFromRequest((*ClientPaginationOptions)(request.options))
+func (request *SdkClientReadAuthorizationModelsRequest) GetContext() _context.Context {
+    return request.ctx
+}
+
+func (request *SdkClientReadAuthorizationModelsRequest) GetOptions() *ClientReadAuthorizationModelsOptions {
+    return request.options
+}
+
+func (client *OpenFgaClient) ReadAuthorizationModelsExecute(request SdkClientReadAuthorizationModelsRequestInterface) (*ClientReadAuthorizationModelsResponse, error) {
+	req := client.OpenFgaApi.ReadAuthorizationModels(request.GetContext())
+	pageSize := getPageSizeFromRequest((*ClientPaginationOptions)(request.GetOptions()))
 	if pageSize != nil {
 		req.PageSize(*pageSize)
 	}
-	continuationToken := getContinuationTokenFromRequest((*ClientPaginationOptions)(request.options))
+	continuationToken := getContinuationTokenFromRequest((*ClientPaginationOptions)(request.GetOptions()))
 	if continuationToken != nil {
 		req.ContinuationToken(*continuationToken)
 	}
@@ -630,9 +717,9 @@ func (client *OpenFgaClient) ReadAuthorizationModelsExecute(request SdkClientRea
 	return &data, nil
 }
 
-func (client *OpenFgaClient) ReadAuthorizationModels(ctx _context.Context) SdkClientReadAuthorizationModelsRequest {
-	return SdkClientReadAuthorizationModelsRequest{
-		Client: *client,
+func (client *OpenFgaClient) ReadAuthorizationModels(ctx _context.Context) SdkClientReadAuthorizationModelsRequestInterface {
+	return &SdkClientReadAuthorizationModelsRequest{
+		Client: client,
 		ctx:    ctx,
 	}
 }
@@ -640,11 +727,22 @@ func (client *OpenFgaClient) ReadAuthorizationModels(ctx _context.Context) SdkCl
 // / WriteAuthorizationModel
 type SdkClientWriteAuthorizationModelRequest struct {
 	ctx    _context.Context
-	Client OpenFgaClient
+	Client *OpenFgaClient
 
 	body    *ClientWriteAuthorizationModelRequest
 	options *ClientWriteAuthorizationModelOptions
 }
+
+type SdkClientWriteAuthorizationModelRequestInterface interface {
+    Options(options ClientWriteAuthorizationModelOptions) SdkClientWriteAuthorizationModelRequestInterface
+	Body(body ClientWriteAuthorizationModelRequest) SdkClientWriteAuthorizationModelRequestInterface
+	Execute() (*ClientWriteAuthorizationModelResponse, error)
+
+	GetBody() *ClientWriteAuthorizationModelRequest
+	GetOptions() *ClientWriteAuthorizationModelOptions
+	GetContext() _context.Context
+}
+
 
 type ClientWriteAuthorizationModelRequest struct {
 	TypeDefinitions []openfga.TypeDefinition `json:"type_definitions"`
@@ -656,24 +754,36 @@ type ClientWriteAuthorizationModelOptions struct {
 
 type ClientWriteAuthorizationModelResponse = openfga.WriteAuthorizationModelResponse
 
-func (request SdkClientWriteAuthorizationModelRequest) Options(options ClientWriteAuthorizationModelOptions) SdkClientWriteAuthorizationModelRequest {
+func (request *SdkClientWriteAuthorizationModelRequest) Options(options ClientWriteAuthorizationModelOptions) SdkClientWriteAuthorizationModelRequestInterface {
 	request.options = &options
 	return request
 }
 
-func (request SdkClientWriteAuthorizationModelRequest) Body(body ClientWriteAuthorizationModelRequest) SdkClientWriteAuthorizationModelRequest {
+func (request *SdkClientWriteAuthorizationModelRequest) Body(body ClientWriteAuthorizationModelRequest) SdkClientWriteAuthorizationModelRequestInterface {
 	request.body = &body
 	return request
 }
 
-func (request SdkClientWriteAuthorizationModelRequest) Execute() (*ClientWriteAuthorizationModelResponse, error) {
+func (request *SdkClientWriteAuthorizationModelRequest) Execute() (*ClientWriteAuthorizationModelResponse, error) {
 	return request.Client.WriteAuthorizationModelExecute(request)
 }
 
-func (client *OpenFgaClient) WriteAuthorizationModelExecute(request SdkClientWriteAuthorizationModelRequest) (*ClientWriteAuthorizationModelResponse, error) {
-	data, _, err := client.OpenFgaApi.WriteAuthorizationModel(request.ctx).Body(openfga.WriteAuthorizationModelRequest{
-		TypeDefinitions: request.body.TypeDefinitions,
-		SchemaVersion:   openfga.PtrString(request.body.SchemaVersion),
+func (request *SdkClientWriteAuthorizationModelRequest) GetBody() *ClientWriteAuthorizationModelRequest{
+	return request.body
+}
+
+func (request *SdkClientWriteAuthorizationModelRequest) GetOptions() *ClientWriteAuthorizationModelOptions{
+	return request.options
+}
+
+func (request *SdkClientWriteAuthorizationModelRequest) GetContext() _context.Context {
+	return request.ctx
+}
+
+func (client *OpenFgaClient) WriteAuthorizationModelExecute(request SdkClientWriteAuthorizationModelRequestInterface) (*ClientWriteAuthorizationModelResponse, error) {
+	data, _, err := client.OpenFgaApi.WriteAuthorizationModel(request.GetContext()).Body(openfga.WriteAuthorizationModelRequest{
+		TypeDefinitions: request.GetBody().TypeDefinitions,
+		SchemaVersion:   openfga.PtrString(request.GetBody().SchemaVersion),
 	}).Execute()
 	if err != nil {
 		return nil, err
@@ -681,9 +791,9 @@ func (client *OpenFgaClient) WriteAuthorizationModelExecute(request SdkClientWri
 	return &data, nil
 }
 
-func (client *OpenFgaClient) WriteAuthorizationModel(ctx _context.Context) SdkClientWriteAuthorizationModelRequest {
-	return SdkClientWriteAuthorizationModelRequest{
-		Client: *client,
+func (client *OpenFgaClient) WriteAuthorizationModel(ctx _context.Context) SdkClientWriteAuthorizationModelRequestInterface {
+	return &SdkClientWriteAuthorizationModelRequest{
+		Client: client,
 		ctx:    ctx,
 	}
 }
@@ -691,10 +801,21 @@ func (client *OpenFgaClient) WriteAuthorizationModel(ctx _context.Context) SdkCl
 // / ReadAuthorizationModel
 type SdkClientReadAuthorizationModelRequest struct {
 	ctx    _context.Context
-	Client OpenFgaClient
+	Client *OpenFgaClient
 
 	body    *ClientReadAuthorizationModelRequest
 	options *ClientReadAuthorizationModelOptions
+}
+
+type SdkClientReadAuthorizationModelRequestInterface interface {
+    Options(options ClientReadAuthorizationModelOptions) SdkClientReadAuthorizationModelRequestInterface
+    Body(body ClientReadAuthorizationModelRequest) SdkClientReadAuthorizationModelRequestInterface
+    Execute() (*ClientReadAuthorizationModelResponse, error)
+	GetAuthorizationModelIdOverride() *string
+
+	GetContext() _context.Context
+	GetBody()  *ClientReadAuthorizationModelRequest
+	GetOptions()  *ClientReadAuthorizationModelOptions
 }
 
 type ClientReadAuthorizationModelRequest struct {
@@ -706,42 +827,55 @@ type ClientReadAuthorizationModelOptions struct {
 
 type ClientReadAuthorizationModelResponse = openfga.ReadAuthorizationModelResponse
 
-func (request SdkClientReadAuthorizationModelRequest) Options(options ClientReadAuthorizationModelOptions) SdkClientReadAuthorizationModelRequest {
+func (request *SdkClientReadAuthorizationModelRequest) Options(options ClientReadAuthorizationModelOptions) SdkClientReadAuthorizationModelRequestInterface {
 	request.options = &options
 	return request
 }
 
-func (request SdkClientReadAuthorizationModelRequest) getAuthorizationModelIdOverride() *string {
+func (request *SdkClientReadAuthorizationModelRequest) GetAuthorizationModelIdOverride() *string {
 	if request.options == nil {
 		return nil
 	}
 	return request.options.AuthorizationModelId
 }
 
-func (request SdkClientReadAuthorizationModelRequest) Body(body ClientReadAuthorizationModelRequest) SdkClientReadAuthorizationModelRequest {
+func (request *SdkClientReadAuthorizationModelRequest) Body(body ClientReadAuthorizationModelRequest) SdkClientReadAuthorizationModelRequestInterface {
 	request.body = &body
 	return request
 }
 
-func (request SdkClientReadAuthorizationModelRequest) Execute() (*ClientReadAuthorizationModelResponse, error) {
+func (request *SdkClientReadAuthorizationModelRequest) Execute() (*ClientReadAuthorizationModelResponse, error) {
 	return request.Client.ReadAuthorizationModelExecute(request)
 }
 
-func (client *OpenFgaClient) ReadAuthorizationModelExecute(request SdkClientReadAuthorizationModelRequest) (*ClientReadAuthorizationModelResponse, error) {
-	authorizationModelId := client.getAuthorizationModelId(request.getAuthorizationModelIdOverride())
+func (request *SdkClientReadAuthorizationModelRequest) GetBody()  *ClientReadAuthorizationModelRequest {
+	return request.body
+}
+
+func (request *SdkClientReadAuthorizationModelRequest) GetOptions()  *ClientReadAuthorizationModelOptions {
+	return request.options
+}
+
+func (request *SdkClientReadAuthorizationModelRequest) GetContext() _context.Context {
+    return request.ctx
+}
+
+func (client *OpenFgaClient) ReadAuthorizationModelExecute(request SdkClientReadAuthorizationModelRequestInterface) (*ClientReadAuthorizationModelResponse, error) {
+	authorizationModelId := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
 	if authorizationModelId == nil {
 		return nil, FgaRequiredParamError{param: "AuthorizationModelId"}
 	}
-	data, _, err := client.OpenFgaApi.ReadAuthorizationModel(request.ctx, *authorizationModelId).Execute()
+	data, _, err := client.OpenFgaApi.ReadAuthorizationModel(request.GetContext(), *authorizationModelId).Execute()
+
 	if err != nil {
 		return nil, err
 	}
 	return &data, nil
 }
 
-func (client *OpenFgaClient) ReadAuthorizationModel(ctx _context.Context) SdkClientReadAuthorizationModelRequest {
-	return SdkClientReadAuthorizationModelRequest{
-		Client: *client,
+func (client *OpenFgaClient) ReadAuthorizationModel(ctx _context.Context) SdkClientReadAuthorizationModelRequestInterface {
+	return &SdkClientReadAuthorizationModelRequest{
+		Client: client,
 		ctx:    ctx,
 	}
 }
@@ -754,27 +888,43 @@ type SdkClientReadLatestAuthorizationModelRequest struct {
 	options *ClientReadLatestAuthorizationModelOptions
 }
 
+type SdkClientReadLatestAuthorizationModelRequestInterface interface {
+    Options(options ClientReadLatestAuthorizationModelOptions) SdkClientReadLatestAuthorizationModelRequestInterface
+    Execute() (*ClientReadAuthorizationModelResponse, error)
+
+    GetContext()  _context.Context
+	GetOptions() *ClientReadLatestAuthorizationModelOptions 
+}
+
 type ClientReadLatestAuthorizationModelOptions struct {
 }
 
-func (client *OpenFgaClient) ReadLatestAuthorizationModel(ctx _context.Context) SdkClientReadLatestAuthorizationModelRequest {
-	return SdkClientReadLatestAuthorizationModelRequest{
+func (client *OpenFgaClient) ReadLatestAuthorizationModel(ctx _context.Context) SdkClientReadLatestAuthorizationModelRequestInterface {
+	return &SdkClientReadLatestAuthorizationModelRequest{
 		Client: *client,
 		ctx:    ctx,
 	}
 }
 
-func (request SdkClientReadLatestAuthorizationModelRequest) Options(options ClientReadLatestAuthorizationModelOptions) SdkClientReadLatestAuthorizationModelRequest {
+func (request *SdkClientReadLatestAuthorizationModelRequest) Options(options ClientReadLatestAuthorizationModelOptions) SdkClientReadLatestAuthorizationModelRequestInterface {
 	request.options = &options
 	return request
 }
 
-func (request SdkClientReadLatestAuthorizationModelRequest) Execute() (*ClientReadAuthorizationModelResponse, error) {
+func (request *SdkClientReadLatestAuthorizationModelRequest) Execute() (*ClientReadAuthorizationModelResponse, error) {
 	return request.Client.ReadLatestAuthorizationModelExecute(request)
 }
 
-func (client *OpenFgaClient) ReadLatestAuthorizationModelExecute(request SdkClientReadLatestAuthorizationModelRequest) (*ClientReadAuthorizationModelResponse, error) {
-	response, err := client.ReadAuthorizationModels(request.ctx).Options(ClientReadAuthorizationModelsOptions{
+func (request *SdkClientReadLatestAuthorizationModelRequest) GetContext() _context.Context {
+	return request.ctx
+}
+
+func (request *SdkClientReadLatestAuthorizationModelRequest) GetOptions() *ClientReadLatestAuthorizationModelOptions {
+	return request.options
+}
+
+func (client *OpenFgaClient) ReadLatestAuthorizationModelExecute(request SdkClientReadLatestAuthorizationModelRequestInterface) (*ClientReadAuthorizationModelResponse, error) {
+	response, err := client.ReadAuthorizationModels(request.GetContext()).Options(ClientReadAuthorizationModelsOptions{
 		PageSize: openfga.PtrInt32(1),
 	}).Execute()
 	if err != nil {
@@ -798,10 +948,20 @@ func (client *OpenFgaClient) ReadLatestAuthorizationModelExecute(request SdkClie
 // / ReadChanges
 type SdkClientReadChangesRequest struct {
 	ctx    _context.Context
-	Client OpenFgaClient
+	Client *OpenFgaClient
 
 	body    *ClientReadChangesRequest
 	options *ClientReadChangesOptions
+}
+
+type SdkClientReadChangesRequestInterface interface {
+    Options(options ClientReadChangesOptions) SdkClientReadChangesRequestInterface
+    Body(body ClientReadChangesRequest) SdkClientReadChangesRequestInterface
+	Execute() (*ClientReadChangesResponse, error)
+
+	GetContext() _context.Context
+	GetBody() *ClientReadChangesRequest
+    GetOptions() *ClientReadChangesOptions
 }
 
 type ClientReadChangesRequest struct {
@@ -815,34 +975,46 @@ type ClientReadChangesOptions struct {
 
 type ClientReadChangesResponse = openfga.ReadChangesResponse
 
-func (client *OpenFgaClient) ReadChanges(ctx _context.Context) SdkClientReadChangesRequest {
-	return SdkClientReadChangesRequest{
-		Client: *client,
+func (client *OpenFgaClient) ReadChanges(ctx _context.Context) SdkClientReadChangesRequestInterface {
+	return &SdkClientReadChangesRequest{
+		Client: client,
 		ctx:    ctx,
 	}
 }
 
-func (request SdkClientReadChangesRequest) Options(options ClientReadChangesOptions) SdkClientReadChangesRequest {
+func (request *SdkClientReadChangesRequest) Options(options ClientReadChangesOptions) SdkClientReadChangesRequestInterface {
 	request.options = &options
 	return request
 }
 
-func (request SdkClientReadChangesRequest) Body(body ClientReadChangesRequest) SdkClientReadChangesRequest {
+func (request *SdkClientReadChangesRequest) Body(body ClientReadChangesRequest) SdkClientReadChangesRequestInterface {
 	request.body = &body
 	return request
 }
 
-func (request SdkClientReadChangesRequest) Execute() (*ClientReadChangesResponse, error) {
+func (request *SdkClientReadChangesRequest) Execute() (*ClientReadChangesResponse, error) {
 	return request.Client.ReadChangesExecute(request)
 }
 
-func (client *OpenFgaClient) ReadChangesExecute(request SdkClientReadChangesRequest) (*ClientReadChangesResponse, error) {
-	req := client.OpenFgaApi.ReadChanges(request.ctx)
-	pageSize := getPageSizeFromRequest((*ClientPaginationOptions)(request.options))
+func (request *SdkClientReadChangesRequest) GetContext() _context.Context{
+	return request.ctx
+}
+
+func (request *SdkClientReadChangesRequest) GetBody() *ClientReadChangesRequest{
+	return request.body
+}
+
+func (request *SdkClientReadChangesRequest) GetOptions() *ClientReadChangesOptions{
+	return request.options
+}
+
+func (client *OpenFgaClient) ReadChangesExecute(request SdkClientReadChangesRequestInterface) (*ClientReadChangesResponse, error) {
+	req := client.OpenFgaApi.ReadChanges(request.GetContext())
+	pageSize := getPageSizeFromRequest((*ClientPaginationOptions)(request.GetOptions()))
 	if pageSize != nil {
 		req.PageSize(*pageSize)
 	}
-	continuationToken := getContinuationTokenFromRequest((*ClientPaginationOptions)(request.options))
+	continuationToken := getContinuationTokenFromRequest((*ClientPaginationOptions)(request.GetOptions()))
 	if continuationToken != nil {
 		req.ContinuationToken(*continuationToken)
 	}
@@ -856,10 +1028,20 @@ func (client *OpenFgaClient) ReadChangesExecute(request SdkClientReadChangesRequ
 // / Read
 type SdkClientReadRequest struct {
 	ctx    _context.Context
-	Client OpenFgaClient
+	Client *OpenFgaClient
 
 	body    *ClientReadRequest
 	options *ClientReadOptions
+}
+
+type SdkClientReadRequestInterface interface {
+    Options(options ClientReadOptions) SdkClientReadRequestInterface
+    Body(body ClientReadRequest) SdkClientReadRequestInterface
+    Execute() (*ClientReadResponse, error)
+
+    GetContext() _context.Context
+	GetBody() *ClientReadRequest
+	GetOptions() *ClientReadOptions
 }
 
 type ClientReadRequest struct {
@@ -875,40 +1057,52 @@ type ClientReadOptions struct {
 
 type ClientReadResponse = openfga.ReadResponse
 
-func (client *OpenFgaClient) Read(ctx _context.Context) SdkClientReadRequest {
-	return SdkClientReadRequest{
-		Client: *client,
+func (client *OpenFgaClient) Read(ctx _context.Context) SdkClientReadRequestInterface {
+	return &SdkClientReadRequest{
+		Client: client,
 		ctx:    ctx,
 	}
 }
 
-func (request SdkClientReadRequest) Options(options ClientReadOptions) SdkClientReadRequest {
+func (request *SdkClientReadRequest) Options(options ClientReadOptions) SdkClientReadRequestInterface {
 	request.options = &options
 	return request
 }
 
-func (request SdkClientReadRequest) Body(body ClientReadRequest) SdkClientReadRequest {
+func (request *SdkClientReadRequest) Body(body ClientReadRequest) SdkClientReadRequestInterface {
 	request.body = &body
 	return request
 }
 
-func (request SdkClientReadRequest) Execute() (*ClientReadResponse, error) {
+func (request *SdkClientReadRequest) Execute() (*ClientReadResponse, error) {
 	return request.Client.ReadExecute(request)
 }
 
-func (client *OpenFgaClient) ReadExecute(request SdkClientReadRequest) (*ClientReadResponse, error) {
+func (request *SdkClientReadRequest) GetContext() _context.Context {
+	return request.ctx
+}
+
+func (request *SdkClientReadRequest) GetBody() *ClientReadRequest{
+	return request.body
+}
+
+func (request *SdkClientReadRequest) GetOptions() *ClientReadOptions {
+	return request.options
+}
+
+func (client *OpenFgaClient) ReadExecute(request SdkClientReadRequestInterface) (*ClientReadResponse, error) {
 	body := openfga.ReadRequest{
-		PageSize:          getPageSizeFromRequest((*ClientPaginationOptions)(request.options)),
-		ContinuationToken: getContinuationTokenFromRequest((*ClientPaginationOptions)(request.options)),
+		PageSize:          getPageSizeFromRequest((*ClientPaginationOptions)(request.GetOptions())),
+		ContinuationToken: getContinuationTokenFromRequest((*ClientPaginationOptions)(request.GetOptions())),
 	}
-	if request.body != nil && (request.body.User != nil || request.body.Relation != nil || request.body.Object != nil) {
+	if request.GetBody() != nil && (request.GetBody().User != nil || request.GetBody().Relation != nil || request.GetBody().Object != nil) {
 		body.TupleKey = &openfga.TupleKey{
-			User:     request.body.User,
-			Relation: request.body.Relation,
-			Object:   request.body.Object,
+			User:     request.GetBody().User,
+			Relation: request.GetBody().Relation,
+			Object:   request.GetBody().Object,
 		}
 	}
-	data, _, err := client.OpenFgaApi.Read(request.ctx).Body(body).Execute()
+	data, _, err := client.OpenFgaApi.Read(request.GetContext()).Body(body).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -918,10 +1112,22 @@ func (client *OpenFgaClient) ReadExecute(request SdkClientReadRequest) (*ClientR
 // / Write
 type SdkClientWriteRequest struct {
 	ctx    _context.Context
-	Client OpenFgaClient
+	Client *OpenFgaClient
 
 	body    *ClientWriteRequest
 	options *ClientWriteOptions
+}
+
+type SdkClientWriteRequestInterface interface {
+    Options(options ClientWriteOptions) SdkClientWriteRequestInterface
+	Body(body ClientWriteRequest) SdkClientWriteRequestInterface
+    Execute() (*ClientWriteResponse, error)
+	GetAuthorizationModelIdOverride() *string
+
+	GetContext() _context.Context
+	GetOptions() *ClientWriteOptions
+	GetBody() *ClientWriteRequest
+
 }
 
 type ClientWriteRequest struct {
@@ -987,42 +1193,54 @@ func (o ClientWriteResponse) MarshalJSON() ([]byte, error) {
 	return json.Marshal(toSerialize)
 }
 
-func (client *OpenFgaClient) Write(ctx _context.Context) SdkClientWriteRequest {
-	return SdkClientWriteRequest{
-		Client: *client,
+func (client *OpenFgaClient) Write(ctx _context.Context) SdkClientWriteRequestInterface {
+	return &SdkClientWriteRequest{
+		Client: client,
 		ctx:    ctx,
 	}
 }
 
-func (request SdkClientWriteRequest) Options(options ClientWriteOptions) SdkClientWriteRequest {
+func (request *SdkClientWriteRequest) Options(options ClientWriteOptions) SdkClientWriteRequestInterface {
 	request.options = &options
 	return request
 }
 
-func (request SdkClientWriteRequest) getAuthorizationModelIdOverride() *string {
+func (request *SdkClientWriteRequest) GetAuthorizationModelIdOverride() *string {
 	if request.options == nil {
 		return nil
 	}
 	return request.options.AuthorizationModelId
 }
 
-func (request SdkClientWriteRequest) Body(body ClientWriteRequest) SdkClientWriteRequest {
+func (request *SdkClientWriteRequest) Body(body ClientWriteRequest) SdkClientWriteRequestInterface {
 	request.body = &body
 	return request
 }
 
-func (request SdkClientWriteRequest) Execute() (*ClientWriteResponse, error) {
+func (request *SdkClientWriteRequest) Execute() (*ClientWriteResponse, error) {
 	return request.Client.WriteExecute(request)
 }
 
-func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequest) (*ClientWriteResponse, error) {
+func (request *SdkClientWriteRequest) GetContext() _context.Context {
+	return request.ctx
+}
+
+func (request *SdkClientWriteRequest) GetOptions() *ClientWriteOptions {
+	return request.options
+}
+
+func (request *SdkClientWriteRequest) GetBody() *ClientWriteRequest {
+	return request.body
+}
+
+func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface) (*ClientWriteResponse, error) {
 	var maxPerChunk = int32(1) // 1 has to be the default otherwise the chunks will be sent in transactions
-	if request.options != nil && request.options.Transaction != nil {
-		maxPerChunk = request.options.Transaction.MaxPerChunk
+	if request.GetOptions() != nil && request.GetOptions() .Transaction != nil {
+		maxPerChunk = request.GetOptions().Transaction.MaxPerChunk
 	}
 	var maxParallelReqs = DEFAULT_MAX_METHOD_PARALLEL_REQS
-	if request.options != nil && request.options.Transaction != nil {
-		maxParallelReqs = request.options.Transaction.MaxParallelRequests
+	if request.GetOptions() != nil && request.GetOptions().Transaction != nil {
+		maxParallelReqs = request.GetOptions().Transaction.MaxParallelRequests
 	}
 
 	response := ClientWriteResponse{
@@ -1032,33 +1250,33 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequest) (*Clien
 
 	// Unless explicitly disabled, transaction mode is enabled
 	// In transaction mode, the client will send the request to the server as is
-	if request.options == nil || request.options.Transaction == nil || !request.options.Transaction.Disable {
+	if request.GetOptions() == nil || request.GetOptions().Transaction == nil || !request.GetOptions().Transaction.Disable {
 		writeRequest := openfga.WriteRequest{
-			AuthorizationModelId: client.getAuthorizationModelId(request.getAuthorizationModelIdOverride()),
+			AuthorizationModelId: client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride()),
 		}
-		if request.body.Writes != nil && len(*request.body.Writes) > 0 {
+		if request.GetBody().Writes != nil && len(*request.GetBody().Writes) > 0 {
 			writes := openfga.TupleKeys{}
-			for index := 0; index < len(*request.body.Writes); index++ {
-				writes.TupleKeys = append(writes.TupleKeys, (*request.body.Writes)[index].ToTupleKey())
+			for index := 0; index < len(*request.GetBody().Writes); index++ {
+				writes.TupleKeys = append(writes.TupleKeys, (*request.GetBody().Writes)[index].ToTupleKey())
 			}
 			writeRequest.Writes = &writes
 		}
-		if request.body.Deletes != nil && len(*request.body.Deletes) > 0 {
+		if request.GetBody().Deletes != nil && len(*request.GetBody().Deletes) > 0 {
 			deletes := openfga.TupleKeys{}
-			for index := 0; index < len(*request.body.Deletes); index++ {
-				deletes.TupleKeys = append(deletes.TupleKeys, (*request.body.Deletes)[index].ToTupleKey())
+			for index := 0; index < len(*request.GetBody().Deletes); index++ {
+				deletes.TupleKeys = append(deletes.TupleKeys, (*request.GetBody().Deletes)[index].ToTupleKey())
 			}
 			writeRequest.Deletes = &deletes
 		}
-		_, httpResponse, err := client.OpenFgaApi.Write(request.ctx).Body(writeRequest).Execute()
+		_, httpResponse, err := client.OpenFgaApi.Write(request.GetContext()).Body(writeRequest).Execute()
 
 		clientWriteStatus := SUCCESS
 		if err != nil {
 			clientWriteStatus = FAILURE
 		}
 
-		if request.body != nil && request.body.Writes != nil {
-			writeRequestTupleKeys := *request.body.Writes
+		if request.GetBody() != nil && request.GetBody().Writes != nil {
+			writeRequestTupleKeys := *request.GetBody().Writes
 			for index := 0; index < len(writeRequestTupleKeys); index++ {
 				response.Writes = append(response.Writes, ClientWriteSingleResponse{
 					TupleKey:     writeRequestTupleKeys[index],
@@ -1069,8 +1287,8 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequest) (*Clien
 			}
 		}
 
-		if request.body != nil && request.body.Deletes != nil {
-			deleteRequestTupleKeys := *request.body.Deletes
+		if request.GetBody() != nil && request.GetBody().Deletes != nil {
+			deleteRequestTupleKeys := *request.GetBody().Deletes
 			for index := 0; index < len(deleteRequestTupleKeys); index++ {
 				response.Deletes = append(response.Deletes, ClientWriteSingleResponse{
 					TupleKey:     deleteRequestTupleKeys[index],
@@ -1090,28 +1308,28 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequest) (*Clien
 	// - the max items in each request are based on maxPerChunk (default=1)
 	var writeChunkSize = int(maxPerChunk)
 	var writeChunks [][]ClientTupleKey
-	if request.body != nil {
-		for i := 0; i < len(*request.body.Writes); i += writeChunkSize {
-			end := int(math.Min(float64(i+writeChunkSize), float64(len(*request.body.Writes))))
+    if request.GetBody() != nil {
+        for i := 0; i < len(*request.GetBody().Writes); i += writeChunkSize {
+            end := int(math.Min(float64(i+writeChunkSize), float64(len(*request.GetBody().Writes))))
 
-			writeChunks = append(writeChunks, (*request.body.Writes)[i:end])
-		}
-	}
+            writeChunks = append(writeChunks, (*request.GetBody().Writes)[i:end])
+        }
+    }
 
-	writeGroup, ctx := errgroup.WithContext(request.ctx)
+	writeGroup, ctx := errgroup.WithContext(request.GetContext())
 	writeGroup.SetLimit(int(maxParallelReqs))
 	writeResponses := make([]ClientWriteResponse, len(writeChunks))
 	for index, writeBody := range writeChunks {
 		index, writeBody := index, writeBody
 		writeGroup.Go(func() error {
-			singleResponse, _ := client.WriteExecute(SdkClientWriteRequest{
+			singleResponse, _ := client.WriteExecute(&SdkClientWriteRequest{
 				ctx:    ctx,
-				Client: *client,
+				Client: client,
 				body: &ClientWriteRequest{
 					Writes: &writeBody,
 				},
 				options: &ClientWriteOptions{
-					AuthorizationModelId: client.getAuthorizationModelId(request.getAuthorizationModelIdOverride()),
+					AuthorizationModelId: client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride()),
 				},
 			})
 
@@ -1125,28 +1343,28 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequest) (*Clien
 
 	var deleteChunkSize = int(maxPerChunk)
 	var deleteChunks [][]ClientTupleKey
-	if request.body != nil {
-		for i := 0; i < len(*request.body.Deletes); i += deleteChunkSize {
-			end := int(math.Min(float64(i+writeChunkSize), float64(len(*request.body.Deletes))))
+    if request.GetBody() != nil {
+        for i := 0; i < len(*request.GetBody().Deletes); i += deleteChunkSize {
+            end := int(math.Min(float64(i+writeChunkSize), float64(len(*request.GetBody().Deletes))))
 
-			deleteChunks = append(deleteChunks, (*request.body.Deletes)[i:end])
-		}
-	}
+            deleteChunks = append(deleteChunks, (*request.GetBody().Deletes)[i:end])
+        }
+    }
 
-	deleteGroup, ctx := errgroup.WithContext(request.ctx)
+	deleteGroup, ctx := errgroup.WithContext(request.GetContext())
 	deleteGroup.SetLimit(int(maxParallelReqs))
 	deleteResponses := make([]ClientWriteResponse, len(deleteChunks))
 	for index, deleteBody := range deleteChunks {
 		index, deleteBody := index, deleteBody
 		deleteGroup.Go(func() error {
-			singleResponse, _ := client.WriteExecute(SdkClientWriteRequest{
+			singleResponse, _ := client.WriteExecute(&SdkClientWriteRequest{
 				ctx:    ctx,
-				Client: *client,
+				Client: client,
 				body: &ClientWriteRequest{
 					Deletes: &deleteBody,
 				},
 				options: &ClientWriteOptions{
-					AuthorizationModelId: client.getAuthorizationModelId(request.getAuthorizationModelIdOverride()),
+					AuthorizationModelId: client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride()),
 				},
 			})
 
@@ -1176,41 +1394,63 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequest) (*Clien
 // / WriteTuples
 type SdkClientWriteTuplesRequest struct {
 	ctx    _context.Context
-	Client OpenFgaClient
+	Client *OpenFgaClient
 
 	body    *ClientWriteTuplesBody
 	options *ClientWriteOptions
 }
 
+type SdkClientWriteTuplesRequestInterface interface {
+    Options(options ClientWriteOptions) SdkClientWriteTuplesRequestInterface
+	Body(body ClientWriteTuplesBody) SdkClientWriteTuplesRequestInterface
+	Execute() (*ClientWriteResponse, error)
+
+	GetContext() _context.Context
+	GetBody() *ClientWriteTuplesBody
+	GetOptions() *ClientWriteOptions
+}
+
 type ClientWriteTuplesBody = []ClientTupleKey
 
-func (client *OpenFgaClient) WriteTuples(ctx _context.Context) SdkClientWriteTuplesRequest {
-	return SdkClientWriteTuplesRequest{
-		Client: *client,
+func (client *OpenFgaClient) WriteTuples(ctx _context.Context) SdkClientWriteTuplesRequestInterface {
+	return &SdkClientWriteTuplesRequest{
+		Client: client,
 		ctx:    ctx,
 	}
 }
 
-func (request SdkClientWriteTuplesRequest) Options(options ClientWriteOptions) SdkClientWriteTuplesRequest {
+func (request *SdkClientWriteTuplesRequest) Options(options ClientWriteOptions) SdkClientWriteTuplesRequestInterface {
 	request.options = &options
 	return request
 }
 
-func (request SdkClientWriteTuplesRequest) Body(body ClientWriteTuplesBody) SdkClientWriteTuplesRequest {
+func (request *SdkClientWriteTuplesRequest) Body(body ClientWriteTuplesBody) SdkClientWriteTuplesRequestInterface {
 	request.body = &body
 	return request
 }
 
-func (request SdkClientWriteTuplesRequest) Execute() (*ClientWriteResponse, error) {
+func (request *SdkClientWriteTuplesRequest) Execute() (*ClientWriteResponse, error) {
 	return request.Client.WriteTuplesExecute(request)
 }
 
-func (client *OpenFgaClient) WriteTuplesExecute(request SdkClientWriteTuplesRequest) (*ClientWriteResponse, error) {
-	baseReq := client.Write(request.ctx).Body(ClientWriteRequest{
-		Writes: request.body,
+func (request *SdkClientWriteTuplesRequest) GetContext() _context.Context {
+	return request.ctx
+}
+
+func (request *SdkClientWriteTuplesRequest) GetBody() *ClientWriteTuplesBody {
+    return request.body
+}
+
+func (request *SdkClientWriteTuplesRequest) GetOptions() *ClientWriteOptions {
+    return request.options
+}
+
+func (client *OpenFgaClient) WriteTuplesExecute(request SdkClientWriteTuplesRequestInterface) (*ClientWriteResponse, error) {
+	baseReq := client.Write(request.GetContext()).Body(ClientWriteRequest{
+		Writes: request.GetBody(),
 	})
-	if request.options != nil {
-		baseReq.Options(*request.options)
+	if request.GetOptions() != nil {
+		baseReq.Options(*request.GetOptions())
 	}
 	return baseReq.Execute()
 }
@@ -1218,41 +1458,63 @@ func (client *OpenFgaClient) WriteTuplesExecute(request SdkClientWriteTuplesRequ
 // / DeleteTuples
 type SdkClientDeleteTuplesRequest struct {
 	ctx    _context.Context
-	Client OpenFgaClient
+	Client *OpenFgaClient
 
 	body    *ClientDeleteTuplesBody
 	options *ClientWriteOptions
 }
 
+type SdkClientDeleteTuplesRequestInterface interface {
+    Options(options ClientWriteOptions) SdkClientDeleteTuplesRequestInterface
+    Body(body ClientDeleteTuplesBody) SdkClientDeleteTuplesRequestInterface
+	Execute() (*ClientWriteResponse, error)
+
+	GetContext() _context.Context
+	GetBody() *ClientDeleteTuplesBody
+	GetOptions() *ClientWriteOptions
+}
+
 type ClientDeleteTuplesBody = []ClientTupleKey
 
-func (client *OpenFgaClient) DeleteTuples(ctx _context.Context) SdkClientDeleteTuplesRequest {
-	return SdkClientDeleteTuplesRequest{
-		Client: *client,
+func (client *OpenFgaClient) DeleteTuples(ctx _context.Context) SdkClientDeleteTuplesRequestInterface {
+	return &SdkClientDeleteTuplesRequest{
+		Client: client,
 		ctx:    ctx,
 	}
 }
 
-func (request SdkClientDeleteTuplesRequest) Options(options ClientWriteOptions) SdkClientDeleteTuplesRequest {
+func (request *SdkClientDeleteTuplesRequest) Options(options ClientWriteOptions) SdkClientDeleteTuplesRequestInterface {
 	request.options = &options
 	return request
 }
 
-func (request SdkClientDeleteTuplesRequest) Body(body ClientDeleteTuplesBody) SdkClientDeleteTuplesRequest {
+func (request *SdkClientDeleteTuplesRequest) Body(body ClientDeleteTuplesBody) SdkClientDeleteTuplesRequestInterface {
 	request.body = &body
 	return request
 }
 
-func (request SdkClientDeleteTuplesRequest) Execute() (*ClientWriteResponse, error) {
+func (request *SdkClientDeleteTuplesRequest) Execute() (*ClientWriteResponse, error) {
 	return request.Client.DeleteTuplesExecute(request)
 }
 
-func (client *OpenFgaClient) DeleteTuplesExecute(request SdkClientDeleteTuplesRequest) (*ClientWriteResponse, error) {
-	baseReq := client.Write(request.ctx).Body(ClientWriteRequest{
-		Deletes: request.body,
+func (request *SdkClientDeleteTuplesRequest) GetContext() _context.Context {
+	return request.ctx
+}
+
+func (request *SdkClientDeleteTuplesRequest) GetBody() *ClientDeleteTuplesBody {
+    return request.body
+}
+
+func (request *SdkClientDeleteTuplesRequest) GetOptions() *ClientWriteOptions {
+    return request.options
+}
+
+func (client *OpenFgaClient) DeleteTuplesExecute(request SdkClientDeleteTuplesRequestInterface) (*ClientWriteResponse, error) {
+	baseReq := client.Write(request.GetContext()).Body(ClientWriteRequest{
+		Deletes: request.GetBody(),
 	})
-	if request.options != nil {
-		baseReq.Options(*request.options)
+	if request.GetOptions() != nil {
+		baseReq.Options(*request.GetOptions())
 	}
 	return baseReq.Execute()
 }
@@ -1263,10 +1525,21 @@ func (client *OpenFgaClient) DeleteTuplesExecute(request SdkClientDeleteTuplesRe
 
 type SdkClientCheckRequest struct {
 	ctx    _context.Context
-	Client OpenFgaClient
+	Client *OpenFgaClient
 
 	body    *ClientCheckRequest
 	options *ClientCheckOptions
+}
+
+type SdkClientCheckRequestInterface interface {
+	Options(options ClientCheckOptions) SdkClientCheckRequestInterface
+	Body(body ClientCheckRequest) SdkClientCheckRequestInterface
+	Execute() (*ClientCheckResponse, error)
+	GetAuthorizationModelIdOverride() *string
+
+	GetContext()    _context.Context
+	GetBody()    *ClientCheckRequest
+	GetOptions() *ClientCheckOptions
 }
 
 type ClientCheckRequest struct {
@@ -1285,52 +1558,64 @@ type ClientCheckResponse struct {
 	HttpResponse *_nethttp.Response
 }
 
-func (client *OpenFgaClient) Check(ctx _context.Context) SdkClientCheckRequest {
-	return SdkClientCheckRequest{
-		Client: *client,
+func (client *OpenFgaClient) Check(ctx _context.Context) SdkClientCheckRequestInterface {
+	return &SdkClientCheckRequest{
+		Client: client,
 		ctx:    ctx,
 	}
 }
 
-func (request SdkClientCheckRequest) Options(options ClientCheckOptions) SdkClientCheckRequest {
+func (request *SdkClientCheckRequest) Options(options ClientCheckOptions) SdkClientCheckRequestInterface {
 	request.options = &options
 	return request
 }
 
-func (request SdkClientCheckRequest) getAuthorizationModelIdOverride() *string {
+func (request *SdkClientCheckRequest) GetAuthorizationModelIdOverride() *string {
 	if request.options == nil {
 		return nil
 	}
 	return request.options.AuthorizationModelId
 }
 
-func (request SdkClientCheckRequest) Body(body ClientCheckRequest) SdkClientCheckRequest {
+func (request *SdkClientCheckRequest) Body(body ClientCheckRequest) SdkClientCheckRequestInterface {
 	request.body = &body
 	return request
 }
 
-func (request SdkClientCheckRequest) Execute() (*ClientCheckResponse, error) {
+func (request *SdkClientCheckRequest) Execute() (*ClientCheckResponse, error) {
 	return request.Client.CheckExecute(request)
 }
 
-func (client *OpenFgaClient) CheckExecute(request SdkClientCheckRequest) (*ClientCheckResponse, error) {
+func (request *SdkClientCheckRequest) GetContext() _context.Context {
+	return request.ctx
+}
+
+func (request *SdkClientCheckRequest) GetBody() *ClientCheckRequest {
+	return request.body
+}
+
+func (request *SdkClientCheckRequest) GetOptions() *ClientCheckOptions {
+	return request.options
+}
+
+func (client *OpenFgaClient) CheckExecute(request SdkClientCheckRequestInterface) (*ClientCheckResponse, error) {
 	var contextualTuples []openfga.TupleKey
-	if request.body.ContextualTuples != nil {
-		for index := 0; index < len(*request.body.ContextualTuples); index++ {
-			contextualTuples = append(contextualTuples, (*request.body.ContextualTuples)[index].ToTupleKey())
+	if request.GetBody().ContextualTuples != nil {
+		for index := 0; index < len(*request.GetBody().ContextualTuples); index++ {
+			contextualTuples = append(contextualTuples, (*request.GetBody().ContextualTuples)[index].ToTupleKey())
 		}
 	}
 	requestBody := openfga.CheckRequest{
 		TupleKey: openfga.TupleKey{
-			User:     openfga.PtrString(request.body.User),
-			Relation: openfga.PtrString(request.body.Relation),
-			Object:   openfga.PtrString(request.body.Object),
+			User:     openfga.PtrString(request.GetBody().User),
+			Relation: openfga.PtrString(request.GetBody().Relation),
+			Object:   openfga.PtrString(request.GetBody().Object),
 		},
 		ContextualTuples:     openfga.NewContextualTupleKeys(contextualTuples),
-		AuthorizationModelId: client.getAuthorizationModelId(request.getAuthorizationModelIdOverride()),
+		AuthorizationModelId: client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride()),
 	}
 
-	data, httpResponse, err := client.OpenFgaApi.Check(request.ctx).Body(requestBody).Execute()
+	data, httpResponse, err := client.OpenFgaApi.Check(request.GetContext()).Body(requestBody).Execute()
 	return &ClientCheckResponse{CheckResponse: data, HttpResponse: httpResponse}, err
 }
 
@@ -1338,10 +1623,21 @@ func (client *OpenFgaClient) CheckExecute(request SdkClientCheckRequest) (*Clien
 
 type SdkClientBatchCheckRequest struct {
 	ctx    _context.Context
-	Client OpenFgaClient
+	Client *OpenFgaClient
 
 	body    *ClientBatchCheckBody
 	options *ClientBatchCheckOptions
+}
+
+type SdkClientBatchCheckRequestInterface interface {
+	Options(options ClientBatchCheckOptions) SdkClientBatchCheckRequestInterface
+	Body(body ClientBatchCheckBody) SdkClientBatchCheckRequestInterface
+	Execute() (*ClientBatchCheckResponse, error)
+	GetAuthorizationModelIdOverride() *string 
+
+	GetContext() _context.Context
+	GetBody() *ClientBatchCheckBody
+	GetOptions() *ClientBatchCheckOptions
 }
 
 type ClientBatchCheckBody = []ClientCheckRequest
@@ -1359,54 +1655,66 @@ type ClientBatchCheckSingleResponse struct {
 
 type ClientBatchCheckResponse = []ClientBatchCheckSingleResponse
 
-func (client *OpenFgaClient) BatchCheck(ctx _context.Context) SdkClientBatchCheckRequest {
-	return SdkClientBatchCheckRequest{
-		Client: *client,
+func (client *OpenFgaClient) BatchCheck(ctx _context.Context) SdkClientBatchCheckRequestInterface {
+	return &SdkClientBatchCheckRequest{
+		Client: client,
 		ctx:    ctx,
 	}
 }
 
-func (request SdkClientBatchCheckRequest) Options(options ClientBatchCheckOptions) SdkClientBatchCheckRequest {
+func (request *SdkClientBatchCheckRequest) Options(options ClientBatchCheckOptions) SdkClientBatchCheckRequestInterface {
 	request.options = &options
 	return request
 }
 
-func (request SdkClientBatchCheckRequest) getAuthorizationModelIdOverride() *string {
+func (request *SdkClientBatchCheckRequest) GetAuthorizationModelIdOverride() *string {
 	if request.options == nil {
 		return nil
 	}
 	return request.options.AuthorizationModelId
 }
 
-func (request SdkClientBatchCheckRequest) Body(body ClientBatchCheckBody) SdkClientBatchCheckRequest {
+func (request *SdkClientBatchCheckRequest) Body(body ClientBatchCheckBody) SdkClientBatchCheckRequestInterface {
 	request.body = &body
 	return request
 }
 
-func (request SdkClientBatchCheckRequest) Execute() (*ClientBatchCheckResponse, error) {
+func (request *SdkClientBatchCheckRequest) Execute() (*ClientBatchCheckResponse, error) {
 	return request.Client.BatchCheckExecute(request)
 }
 
-func (client *OpenFgaClient) BatchCheckExecute(request SdkClientBatchCheckRequest) (*ClientBatchCheckResponse, error) {
-	group, ctx := errgroup.WithContext(request.ctx)
+func (request *SdkClientBatchCheckRequest) GetContext() _context.Context {
+	return request.ctx
+}
+
+func (request *SdkClientBatchCheckRequest) GetBody() *ClientBatchCheckBody {
+	return request.body
+}
+
+func (request *SdkClientBatchCheckRequest) GetOptions() *ClientBatchCheckOptions {
+    return request.options
+}
+
+func (client *OpenFgaClient) BatchCheckExecute(request SdkClientBatchCheckRequestInterface) (*ClientBatchCheckResponse, error) {
+	group, ctx := errgroup.WithContext(request.GetContext())
 	var maxParallelReqs int
-	if request.options == nil || request.options.MaxParallelRequests == nil {
+	if request.GetOptions() == nil || request.GetOptions().MaxParallelRequests == nil {
 		maxParallelReqs = int(DEFAULT_MAX_METHOD_PARALLEL_REQS)
 	} else {
-		maxParallelReqs = int(*request.options.MaxParallelRequests)
+		maxParallelReqs = int(*request.GetOptions().MaxParallelRequests)
 	}
 	group.SetLimit(maxParallelReqs)
-	var numOfChecks = len(*request.body)
+	var numOfChecks = len(*request.GetBody())
 	response := make(ClientBatchCheckResponse, numOfChecks)
-	for index, checkBody := range *request.body {
+	for index, checkBody := range *request.GetBody() {
 		index, checkBody := index, checkBody
 		group.Go(func() error {
-			singleResponse, err := client.CheckExecute(SdkClientCheckRequest{
+			singleResponse, err := client.CheckExecute(&SdkClientCheckRequest{
 				ctx:    ctx,
-				Client: *client,
+				Client: client,
 				body:   &checkBody,
 				options: &ClientCheckOptions{
-					AuthorizationModelId: client.getAuthorizationModelId(request.getAuthorizationModelIdOverride()),
+					AuthorizationModelId: client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride()),
 				},
 			})
 
@@ -1430,10 +1738,21 @@ func (client *OpenFgaClient) BatchCheckExecute(request SdkClientBatchCheckReques
 // / Expand
 type SdkClientExpandRequest struct {
 	ctx    _context.Context
-	Client OpenFgaClient
+	Client *OpenFgaClient
 
 	body    *ClientExpandRequest
 	options *ClientExpandOptions
+}
+
+type SdkClientExpandRequestInterface interface {
+	Options(options ClientExpandOptions) SdkClientExpandRequestInterface
+    Body(body ClientExpandRequest) SdkClientExpandRequestInterface
+	Execute() (*ClientExpandResponse, error)
+	GetAuthorizationModelIdOverride() *string
+
+	GetContext() _context.Context
+	GetBody() *ClientExpandRequest
+	GetOptions() *ClientExpandOptions
 }
 
 type ClientExpandRequest struct {
@@ -1447,41 +1766,53 @@ type ClientExpandOptions struct {
 
 type ClientExpandResponse = openfga.ExpandResponse
 
-func (client *OpenFgaClient) Expand(ctx _context.Context) SdkClientExpandRequest {
-	return SdkClientExpandRequest{
-		Client: *client,
+func (client *OpenFgaClient) Expand(ctx _context.Context) SdkClientExpandRequestInterface {
+	return &SdkClientExpandRequest{
+		Client: client,
 		ctx:    ctx,
 	}
 }
 
-func (request SdkClientExpandRequest) Options(options ClientExpandOptions) SdkClientExpandRequest {
+func (request *SdkClientExpandRequest) Options(options ClientExpandOptions) SdkClientExpandRequestInterface {
 	request.options = &options
 	return request
 }
 
-func (request SdkClientExpandRequest) getAuthorizationModelIdOverride() *string {
+func (request *SdkClientExpandRequest) GetAuthorizationModelIdOverride() *string {
 	if request.options == nil {
 		return nil
 	}
 	return request.options.AuthorizationModelId
 }
 
-func (request SdkClientExpandRequest) Body(body ClientExpandRequest) SdkClientExpandRequest {
+func (request *SdkClientExpandRequest) Body(body ClientExpandRequest) SdkClientExpandRequestInterface {
 	request.body = &body
 	return request
 }
 
-func (request SdkClientExpandRequest) Execute() (*ClientExpandResponse, error) {
+func (request *SdkClientExpandRequest) Execute() (*ClientExpandResponse, error) {
 	return request.Client.ExpandExecute(request)
 }
 
-func (client *OpenFgaClient) ExpandExecute(request SdkClientExpandRequest) (*ClientExpandResponse, error) {
-	data, _, err := client.OpenFgaApi.Expand(request.ctx).Body(openfga.ExpandRequest{
+func (request *SdkClientExpandRequest) GetContext() _context.Context {
+    return request.ctx
+}
+
+func (request *SdkClientExpandRequest) GetBody() *ClientExpandRequest {
+    return request.body
+}
+
+func (request *SdkClientExpandRequest) GetOptions() *ClientExpandOptions {
+    return request.options
+}
+
+func (client *OpenFgaClient) ExpandExecute(request SdkClientExpandRequestInterface) (*ClientExpandResponse, error) {
+	data, _, err := client.OpenFgaApi.Expand(request.GetContext()).Body(openfga.ExpandRequest{
 		TupleKey: openfga.TupleKey{
-			Relation: &request.body.Relation,
-			Object:   &request.body.Object,
+			Relation: &request.GetBody().Relation,
+			Object:   &request.GetBody().Object,
 		},
-		AuthorizationModelId: client.getAuthorizationModelId(request.getAuthorizationModelIdOverride()),
+		AuthorizationModelId: client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride()),
 	}).Execute()
 	if err != nil {
 		return nil, err
@@ -1492,10 +1823,21 @@ func (client *OpenFgaClient) ExpandExecute(request SdkClientExpandRequest) (*Cli
 // / ListObjects
 type SdkClientListObjectsRequest struct {
 	ctx    _context.Context
-	Client OpenFgaClient
+	Client *OpenFgaClient
 
 	body    *ClientListObjectsRequest
 	options *ClientListObjectsOptions
+}
+
+type SdkClientListObjectsRequestInterface interface {
+	Options(options ClientListObjectsOptions) SdkClientListObjectsRequestInterface
+	Body(body ClientListObjectsRequest) SdkClientListObjectsRequestInterface
+	Execute() (*ClientListObjectsResponse, error)
+	GetAuthorizationModelIdOverride() *string
+
+	GetContext() _context.Context
+	GetBody() *ClientListObjectsRequest
+	GetOptions() *ClientListObjectsOptions
 }
 
 type ClientListObjectsRequest struct {
@@ -1511,47 +1853,59 @@ type ClientListObjectsOptions struct {
 
 type ClientListObjectsResponse = openfga.ListObjectsResponse
 
-func (client *OpenFgaClient) ListObjects(ctx _context.Context) SdkClientListObjectsRequest {
-	return SdkClientListObjectsRequest{
-		Client: *client,
+func (client *OpenFgaClient) ListObjects(ctx _context.Context) SdkClientListObjectsRequestInterface {
+	return &SdkClientListObjectsRequest{
+		Client: client,
 		ctx:    ctx,
 	}
 }
 
-func (request SdkClientListObjectsRequest) Options(options ClientListObjectsOptions) SdkClientListObjectsRequest {
+func (request *SdkClientListObjectsRequest) Options(options ClientListObjectsOptions) SdkClientListObjectsRequestInterface {
 	request.options = &options
 	return request
 }
 
-func (request SdkClientListObjectsRequest) getAuthorizationModelIdOverride() *string {
+func (request *SdkClientListObjectsRequest) GetAuthorizationModelIdOverride() *string {
 	if request.options == nil {
 		return nil
 	}
 	return request.options.AuthorizationModelId
 }
 
-func (request SdkClientListObjectsRequest) Body(body ClientListObjectsRequest) SdkClientListObjectsRequest {
+func (request *SdkClientListObjectsRequest) Body(body ClientListObjectsRequest) SdkClientListObjectsRequestInterface {
 	request.body = &body
 	return request
 }
 
-func (request SdkClientListObjectsRequest) Execute() (*ClientListObjectsResponse, error) {
+func (request *SdkClientListObjectsRequest) Execute() (*ClientListObjectsResponse, error) {
 	return request.Client.ListObjectsExecute(request)
 }
 
-func (client *OpenFgaClient) ListObjectsExecute(request SdkClientListObjectsRequest) (*ClientListObjectsResponse, error) {
+func (request *SdkClientListObjectsRequest) GetContext() _context.Context {
+    return request.ctx
+}
+
+func (request *SdkClientListObjectsRequest)	GetBody() *ClientListObjectsRequest {
+    return request.body
+}
+
+func (request *SdkClientListObjectsRequest)	GetOptions() *ClientListObjectsOptions {
+    return request.options
+}
+
+func (client *OpenFgaClient) ListObjectsExecute(request SdkClientListObjectsRequestInterface) (*ClientListObjectsResponse, error) {
 	var contextualTuples []openfga.TupleKey
-	if request.body.ContextualTuples != nil {
-		for index := 0; index < len(*request.body.ContextualTuples); index++ {
-			contextualTuples = append(contextualTuples, (*request.body.ContextualTuples)[index].ToTupleKey())
+	if request.GetBody().ContextualTuples != nil {
+		for index := 0; index < len(*request.GetBody().ContextualTuples); index++ {
+			contextualTuples = append(contextualTuples, (*request.GetBody().ContextualTuples)[index].ToTupleKey())
 		}
 	}
-	data, _, err := client.OpenFgaApi.ListObjects(request.ctx).Body(openfga.ListObjectsRequest{
-		User:                 request.body.User,
-		Relation:             request.body.Relation,
-		Type:                 request.body.Type,
+	data, _, err := client.OpenFgaApi.ListObjects(request.GetContext()).Body(openfga.ListObjectsRequest{
+		User:                 request.GetBody().User,
+		Relation:             request.GetBody().Relation,
+		Type:                 request.GetBody().Type,
 		ContextualTuples:     openfga.NewContextualTupleKeys(contextualTuples),
-		AuthorizationModelId: client.getAuthorizationModelId(request.getAuthorizationModelIdOverride()),
+		AuthorizationModelId: client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride()),
 	}).Execute()
 	if err != nil {
 		return nil, err
@@ -1563,10 +1917,21 @@ func (client *OpenFgaClient) ListObjectsExecute(request SdkClientListObjectsRequ
 
 type SdkClientListRelationsRequest struct {
 	ctx    _context.Context
-	Client OpenFgaClient
+	Client *OpenFgaClient
 
 	body    *ClientListRelationsRequest
 	options *ClientListRelationsOptions
+}
+
+type SdkClientListRelationsRequestInterface interface {
+	Options(options ClientListRelationsOptions) SdkClientListRelationsRequestInterface
+	Body(body ClientListRelationsRequest) SdkClientListRelationsRequestInterface
+    Execute() (*ClientListRelationsResponse, error)
+	GetAuthorizationModelIdOverride() *string
+	
+	GetContext() _context.Context
+	GetBody() *ClientListRelationsRequest
+	GetOptions() *ClientListRelationsOptions
 }
 
 type ClientListRelationsRequest struct {
@@ -1590,55 +1955,67 @@ func (o ClientListRelationsResponse) MarshalJSON() ([]byte, error) {
 	return json.Marshal(toSerialize)
 }
 
-func (client *OpenFgaClient) ListRelations(ctx _context.Context) SdkClientListRelationsRequest {
-	return SdkClientListRelationsRequest{
-		Client: *client,
+func (client *OpenFgaClient) ListRelations(ctx _context.Context) SdkClientListRelationsRequestInterface {
+	return &SdkClientListRelationsRequest{
+		Client: client,
 		ctx:    ctx,
 	}
 }
 
-func (request SdkClientListRelationsRequest) Options(options ClientListRelationsOptions) SdkClientListRelationsRequest {
+func (request *SdkClientListRelationsRequest) Options(options ClientListRelationsOptions) SdkClientListRelationsRequestInterface {
 	request.options = &options
 	return request
 }
 
-func (request SdkClientListRelationsRequest) getAuthorizationModelIdOverride() *string {
+func (request *SdkClientListRelationsRequest) GetAuthorizationModelIdOverride() *string {
 	if request.options == nil {
 		return nil
 	}
 	return request.options.AuthorizationModelId
 }
 
-func (request SdkClientListRelationsRequest) Body(body ClientListRelationsRequest) SdkClientListRelationsRequest {
+func (request *SdkClientListRelationsRequest) Body(body ClientListRelationsRequest) SdkClientListRelationsRequestInterface {
 	request.body = &body
 	return request
 }
 
-func (request SdkClientListRelationsRequest) Execute() (*ClientListRelationsResponse, error) {
+func (request *SdkClientListRelationsRequest) Execute() (*ClientListRelationsResponse, error) {
 	return request.Client.ListRelationsExecute(request)
 }
 
-func (client *OpenFgaClient) ListRelationsExecute(request SdkClientListRelationsRequest) (*ClientListRelationsResponse, error) {
-	if len(request.body.Relations) <= 0 {
+func (request *SdkClientListRelationsRequest) GetContext() _context.Context {
+    return request.ctx
+}
+
+func (request *SdkClientListRelationsRequest) GetBody() *ClientListRelationsRequest {
+	return request.body
+}
+
+func (request *SdkClientListRelationsRequest) GetOptions() *ClientListRelationsOptions {
+	return request.options
+}
+
+func (client *OpenFgaClient) ListRelationsExecute(request SdkClientListRelationsRequestInterface) (*ClientListRelationsResponse, error) {
+	if len(request.GetBody().Relations) <= 0 {
 		return nil, fmt.Errorf("ListRelations - expected len(Relations) > 0")
 	}
 
 	batchRequestBody := ClientBatchCheckBody{}
-	for index := 0; index < len(request.body.Relations); index++ {
+	for index := 0; index < len(request.GetBody().Relations); index++ {
 		batchRequestBody = append(batchRequestBody, ClientCheckRequest{
-			User:             request.body.User,
-			Relation:         request.body.Relations[index],
-			Object:           request.body.Object,
-			ContextualTuples: request.body.ContextualTuples,
+			User:             request.GetBody().User,
+			Relation:         request.GetBody().Relations[index],
+			Object:           request.GetBody().Object,
+			ContextualTuples: request.GetBody().ContextualTuples,
 		})
 	}
 
-	batchResponse, err := client.BatchCheckExecute(SdkClientBatchCheckRequest{
-		ctx:    request.ctx,
-		Client: *client,
+	batchResponse, err := client.BatchCheckExecute(&SdkClientBatchCheckRequest{
+		ctx:    request.GetContext(),
+		Client: client,
 		body:   &batchRequestBody,
 		options: &ClientBatchCheckOptions{
-			AuthorizationModelId: client.getAuthorizationModelId(request.getAuthorizationModelIdOverride()),
+			AuthorizationModelId: client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride()),
 		},
 	})
 
@@ -1659,9 +2036,18 @@ func (client *OpenFgaClient) ListRelationsExecute(request SdkClientListRelations
 // / ReadAssertions
 type SdkClientReadAssertionsRequest struct {
 	ctx    _context.Context
-	Client OpenFgaClient
+	Client *OpenFgaClient
 
 	options *ClientReadAssertionsOptions
+}
+
+type SdkClientReadAssertionsRequestInterface interface {
+	Options(options ClientReadAssertionsOptions) SdkClientReadAssertionsRequestInterface
+    Execute() (*ClientReadAssertionsResponse, error)
+	GetAuthorizationModelIdOverride() *string
+
+	GetContext() _context.Context
+	GetOptions() *ClientReadAssertionsOptions
 }
 
 type ClientReadAssertionsOptions struct {
@@ -1670,35 +2056,43 @@ type ClientReadAssertionsOptions struct {
 
 type ClientReadAssertionsResponse = openfga.ReadAssertionsResponse
 
-func (client *OpenFgaClient) ReadAssertions(ctx _context.Context) SdkClientReadAssertionsRequest {
-	return SdkClientReadAssertionsRequest{
-		Client: *client,
+func (client *OpenFgaClient) ReadAssertions(ctx _context.Context) SdkClientReadAssertionsRequestInterface {
+	return &SdkClientReadAssertionsRequest{
+		Client: client,
 		ctx:    ctx,
 	}
 }
 
-func (request SdkClientReadAssertionsRequest) Options(options ClientReadAssertionsOptions) SdkClientReadAssertionsRequest {
+func (request *SdkClientReadAssertionsRequest) Options(options ClientReadAssertionsOptions) SdkClientReadAssertionsRequestInterface {
 	request.options = &options
 	return request
 }
 
-func (request SdkClientReadAssertionsRequest) getAuthorizationModelIdOverride() *string {
+func (request *SdkClientReadAssertionsRequest) GetAuthorizationModelIdOverride() *string {
 	if request.options == nil {
 		return nil
 	}
 	return request.options.AuthorizationModelId
 }
 
-func (request SdkClientReadAssertionsRequest) Execute() (*ClientReadAssertionsResponse, error) {
+func (request *SdkClientReadAssertionsRequest) Execute() (*ClientReadAssertionsResponse, error) {
 	return request.Client.ReadAssertionsExecute(request)
 }
 
-func (client *OpenFgaClient) ReadAssertionsExecute(request SdkClientReadAssertionsRequest) (*ClientReadAssertionsResponse, error) {
-	authorizationModelId := client.getAuthorizationModelId(request.getAuthorizationModelIdOverride())
+func (request *SdkClientReadAssertionsRequest) GetContext() _context.Context {
+    return request.ctx
+}
+
+func (request *SdkClientReadAssertionsRequest) GetOptions() *ClientReadAssertionsOptions {
+    return request.options
+}
+
+func (client *OpenFgaClient) ReadAssertionsExecute(request SdkClientReadAssertionsRequestInterface) (*ClientReadAssertionsResponse, error) {
+	authorizationModelId := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
 	if authorizationModelId == nil {
 		return nil, FgaRequiredParamError{param: "AuthorizationModelId"}
 	}
-	data, _, err := client.OpenFgaApi.ReadAssertions(request.ctx, *authorizationModelId).Execute()
+	data, _, err := client.OpenFgaApi.ReadAssertions(request.GetContext(), *authorizationModelId).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -1708,11 +2102,23 @@ func (client *OpenFgaClient) ReadAssertionsExecute(request SdkClientReadAssertio
 // / WriteAssertions
 type SdkClientWriteAssertionsRequest struct {
 	ctx    _context.Context
-	Client OpenFgaClient
+	Client *OpenFgaClient
 
 	body    *ClientWriteAssertionsRequest
 	options *ClientWriteAssertionsOptions
 }
+
+type SdkClientWriteAssertionsRequestInterface interface {
+	Options(options ClientWriteAssertionsOptions) SdkClientWriteAssertionsRequestInterface
+    Body(body ClientWriteAssertionsRequest) SdkClientWriteAssertionsRequestInterface
+	Execute() (*ClientWriteAssertionsResponse, error) 
+	GetAuthorizationModelIdOverride() *string
+
+	GetContext() _context.Context
+	GetBody() *ClientWriteAssertionsRequest
+	GetOptions() *ClientWriteAssertionsOptions
+}
+
 
 type ClientAssertion struct {
 	User        string `json:"user,omitempty"`
@@ -1741,45 +2147,58 @@ type ClientWriteAssertionsOptions struct {
 type ClientWriteAssertionsResponse struct {
 }
 
-func (client *OpenFgaClient) WriteAssertions(ctx _context.Context) SdkClientWriteAssertionsRequest {
-	return SdkClientWriteAssertionsRequest{
-		Client: *client,
+func (client *OpenFgaClient) WriteAssertions(ctx _context.Context) SdkClientWriteAssertionsRequestInterface {
+	return &SdkClientWriteAssertionsRequest{
+		Client: client,
 		ctx:    ctx,
 	}
 }
 
-func (request SdkClientWriteAssertionsRequest) Options(options ClientWriteAssertionsOptions) SdkClientWriteAssertionsRequest {
+func (request *SdkClientWriteAssertionsRequest) Options(options ClientWriteAssertionsOptions) SdkClientWriteAssertionsRequestInterface {
 	request.options = &options
 	return request
 }
 
-func (request SdkClientWriteAssertionsRequest) getAuthorizationModelIdOverride() *string {
+func (request *SdkClientWriteAssertionsRequest) GetAuthorizationModelIdOverride() *string {
 	if request.options == nil {
 		return nil
 	}
 	return request.options.AuthorizationModelId
 }
 
-func (request SdkClientWriteAssertionsRequest) Body(body ClientWriteAssertionsRequest) SdkClientWriteAssertionsRequest {
+func (request *SdkClientWriteAssertionsRequest) Body(body ClientWriteAssertionsRequest) SdkClientWriteAssertionsRequestInterface {
 	request.body = &body
 	return request
 }
 
-func (request SdkClientWriteAssertionsRequest) Execute() (*ClientWriteAssertionsResponse, error) {
+func (request *SdkClientWriteAssertionsRequest) Execute() (*ClientWriteAssertionsResponse, error) {
 	return request.Client.WriteAssertionsExecute(request)
 }
 
-func (client *OpenFgaClient) WriteAssertionsExecute(request SdkClientWriteAssertionsRequest) (*ClientWriteAssertionsResponse, error) {
+func (request *SdkClientWriteAssertionsRequest) GetContext() _context.Context {
+    return request.ctx
+}
+
+func (request *SdkClientWriteAssertionsRequest) GetBody() *ClientWriteAssertionsRequest {
+    return request.body
+}
+
+func (request *SdkClientWriteAssertionsRequest) GetOptions() *ClientWriteAssertionsOptions {
+	return request.options
+}
+
+func (client *OpenFgaClient) WriteAssertionsExecute(request SdkClientWriteAssertionsRequestInterface) (*ClientWriteAssertionsResponse, error) {
 	writeAssertionsRequest := openfga.WriteAssertionsRequest{}
-	authorizationModelId := client.getAuthorizationModelId(request.getAuthorizationModelIdOverride())
+	authorizationModelId := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
 	if authorizationModelId == nil {
 		return nil, FgaRequiredParamError{param: "AuthorizationModelId"}
 	}
-	for index := 0; index < len(*request.body); index++ {
-		clientAssertion := (*request.body)[index]
+	for index := 0; index < len(*request.GetBody()); index++ {
+		clientAssertion := (*request.GetBody())[index]
 		writeAssertionsRequest.Assertions = append(writeAssertionsRequest.Assertions, clientAssertion.ToAssertion())
 	}
-	_, err := client.OpenFgaApi.WriteAssertions(request.ctx, *authorizationModelId).Body(writeAssertionsRequest).Execute()
+	_, err := client.OpenFgaApi.WriteAssertions(request.GetContext(), *authorizationModelId).Body(writeAssertionsRequest).Execute()
+
 	if err != nil {
 		return nil, err
 	}
