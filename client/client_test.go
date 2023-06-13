@@ -398,6 +398,7 @@ func TestOpenFgaClient(t *testing.T) {
 		if got.GetAuthorizationModelId() != expectedResponse.GetAuthorizationModelId() {
 			t.Fatalf("OpenFgaClient.%v() / AuthorizationModelId = %v, want %v", test.Name, got.GetAuthorizationModelId(), expectedResponse.GetAuthorizationModelId())
 		}
+
 		// WriteAuthorizationModel without options should work
 		_, err = fgaClient.WriteAuthorizationModel(context.Background()).Body(requestBody).Execute()
 		if err != nil {

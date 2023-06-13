@@ -405,7 +405,7 @@ type SdkClient interface {
 	 * WriteAssertionsExecute executes the WriteAssertions request
 	 * @return *ClientWriteAssertionsResponse
 	 */
-	WriteAssertionsExecute(request SdkClientWriteAssertionsRequest) (*ClientWriteAssertionsReponse, error)
+	WriteAssertionsExecute(request SdkClientWriteAssertionsRequest) (*ClientWriteAssertionsResponse, error)
 }
 
 func (client *OpenFgaClient) getAuthorizationModelId(authorizationModelId *string) *string {
@@ -1057,7 +1057,7 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequest) (*Clien
 			clientWriteStatus = FAILURE
 		}
 
-		if request.body.Writes != nil {
+		if request.body != nil && request.body.Writes != nil {
 			writeRequestTupleKeys := *request.body.Writes
 			for index := 0; index < len(writeRequestTupleKeys); index++ {
 				response.Writes = append(response.Writes, ClientWriteSingleResponse{
@@ -1069,7 +1069,7 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequest) (*Clien
 			}
 		}
 
-		if request.body.Deletes != nil {
+		if request.body != nil && request.body.Deletes != nil {
 			deleteRequestTupleKeys := *request.body.Deletes
 			for index := 0; index < len(deleteRequestTupleKeys); index++ {
 				response.Deletes = append(response.Deletes, ClientWriteSingleResponse{
@@ -1090,10 +1090,12 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequest) (*Clien
 	// - the max items in each request are based on maxPerChunk (default=1)
 	var writeChunkSize = int(maxPerChunk)
 	var writeChunks [][]ClientTupleKey
-	for i := 0; i < len(*request.body.Writes); i += writeChunkSize {
-		end := int(math.Min(float64(i+writeChunkSize), float64(len(*request.body.Writes))))
+	if request.body != nil {
+		for i := 0; i < len(*request.body.Writes); i += writeChunkSize {
+			end := int(math.Min(float64(i+writeChunkSize), float64(len(*request.body.Writes))))
 
-		writeChunks = append(writeChunks, (*request.body.Writes)[i:end])
+			writeChunks = append(writeChunks, (*request.body.Writes)[i:end])
+		}
 	}
 
 	writeGroup, ctx := errgroup.WithContext(request.ctx)
@@ -1123,10 +1125,12 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequest) (*Clien
 
 	var deleteChunkSize = int(maxPerChunk)
 	var deleteChunks [][]ClientTupleKey
-	for i := 0; i < len(*request.body.Deletes); i += deleteChunkSize {
-		end := int(math.Min(float64(i+writeChunkSize), float64(len(*request.body.Deletes))))
+	if request.body != nil {
+		for i := 0; i < len(*request.body.Deletes); i += deleteChunkSize {
+			end := int(math.Min(float64(i+writeChunkSize), float64(len(*request.body.Deletes))))
 
-		deleteChunks = append(deleteChunks, (*request.body.Deletes)[i:end])
+			deleteChunks = append(deleteChunks, (*request.body.Deletes)[i:end])
+		}
 	}
 
 	deleteGroup, ctx := errgroup.WithContext(request.ctx)
@@ -1734,7 +1738,7 @@ type ClientWriteAssertionsOptions struct {
 	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
 }
 
-type ClientWriteAssertionsReponse struct {
+type ClientWriteAssertionsResponse struct {
 }
 
 func (client *OpenFgaClient) WriteAssertions(ctx _context.Context) SdkClientWriteAssertionsRequest {
@@ -1761,23 +1765,23 @@ func (request SdkClientWriteAssertionsRequest) Body(body ClientWriteAssertionsRe
 	return request
 }
 
-func (request SdkClientWriteAssertionsRequest) Execute() (*ClientWriteAssertionsReponse, error) {
+func (request SdkClientWriteAssertionsRequest) Execute() (*ClientWriteAssertionsResponse, error) {
 	return request.Client.WriteAssertionsExecute(request)
 }
 
-func (client *OpenFgaClient) WriteAssertionsExecute(request SdkClientWriteAssertionsRequest) (*ClientWriteAssertionsReponse, error) {
+func (client *OpenFgaClient) WriteAssertionsExecute(request SdkClientWriteAssertionsRequest) (*ClientWriteAssertionsResponse, error) {
 	writeAssertionsRequest := openfga.WriteAssertionsRequest{}
-	for index := 0; index < len(*request.body); index++ {
-		clientAssertion := (*request.body)[index]
-		writeAssertionsRequest.Assertions = append(writeAssertionsRequest.Assertions, clientAssertion.ToAssertion())
-	}
 	authorizationModelId := client.getAuthorizationModelId(request.getAuthorizationModelIdOverride())
 	if authorizationModelId == nil {
 		return nil, FgaRequiredParamError{param: "AuthorizationModelId"}
+	}
+	for index := 0; index < len(*request.body); index++ {
+		clientAssertion := (*request.body)[index]
+		writeAssertionsRequest.Assertions = append(writeAssertionsRequest.Assertions, clientAssertion.ToAssertion())
 	}
 	_, err := client.OpenFgaApi.WriteAssertions(request.ctx, *authorizationModelId).Body(writeAssertionsRequest).Execute()
 	if err != nil {
 		return nil, err
 	}
-	return &ClientWriteAssertionsReponse{}, nil
+	return &ClientWriteAssertionsResponse{}, nil
 }
