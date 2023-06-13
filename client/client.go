@@ -1090,13 +1090,13 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequest) (*Clien
 	// - the max items in each request are based on maxPerChunk (default=1)
 	var writeChunkSize = int(maxPerChunk)
 	var writeChunks [][]ClientTupleKey
-    if request.body != nil {
-        for i := 0; i < len(*request.body.Writes); i += writeChunkSize {
-            end := int(math.Min(float64(i+writeChunkSize), float64(len(*request.body.Writes))))
+	if request.body != nil {
+		for i := 0; i < len(*request.body.Writes); i += writeChunkSize {
+			end := int(math.Min(float64(i+writeChunkSize), float64(len(*request.body.Writes))))
 
-            writeChunks = append(writeChunks, (*request.body.Writes)[i:end])
-        }
-    }
+			writeChunks = append(writeChunks, (*request.body.Writes)[i:end])
+		}
+	}
 
 	writeGroup, ctx := errgroup.WithContext(request.ctx)
 	writeGroup.SetLimit(int(maxParallelReqs))
@@ -1125,13 +1125,13 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequest) (*Clien
 
 	var deleteChunkSize = int(maxPerChunk)
 	var deleteChunks [][]ClientTupleKey
-    if request.body != nil {
-        for i := 0; i < len(*request.body.Deletes); i += deleteChunkSize {
-            end := int(math.Min(float64(i+writeChunkSize), float64(len(*request.body.Deletes))))
+	if request.body != nil {
+		for i := 0; i < len(*request.body.Deletes); i += deleteChunkSize {
+			end := int(math.Min(float64(i+writeChunkSize), float64(len(*request.body.Deletes))))
 
-            deleteChunks = append(deleteChunks, (*request.body.Deletes)[i:end])
-        }
-    }
+			deleteChunks = append(deleteChunks, (*request.body.Deletes)[i:end])
+		}
+	}
 
 	deleteGroup, ctx := errgroup.WithContext(request.ctx)
 	deleteGroup.SetLimit(int(maxParallelReqs))
