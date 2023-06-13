@@ -885,15 +885,18 @@ func (request SdkClientReadRequest) Execute() (*ClientReadResponse, error) {
 }
 
 func (client *OpenFgaClient) ReadExecute(request SdkClientReadRequest) (*ClientReadResponse, error) {
-	data, _, err := client.OpenFgaApi.Read(request.ctx).Body(openfga.ReadRequest{
-		TupleKey: &openfga.TupleKey{
+	body := openfga.ReadRequest{
+		PageSize:          getPageSizeFromRequest((*ClientPaginationOptions)(request.options)),
+		ContinuationToken: getContinuationTokenFromRequest((*ClientPaginationOptions)(request.options)),
+	}
+	if request.body != nil && request.body.User != nil || request.body.Relation != nil || request.body.Object != nil {
+		body.TupleKey = &openfga.TupleKey{
 			User:     request.body.User,
 			Relation: request.body.Relation,
 			Object:   request.body.Object,
-		},
-		PageSize:          getPageSizeFromRequest((*ClientPaginationOptions)(request.options)),
-		ContinuationToken: getContinuationTokenFromRequest((*ClientPaginationOptions)(request.options)),
-	}).Execute()
+		}
+	}
+	data, _, err := client.OpenFgaApi.Read(request.ctx).Body(body).Execute()
 	if err != nil {
 		return nil, err
 	}
