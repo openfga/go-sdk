@@ -17,6 +17,7 @@ import (
 	"strings"
 
 	"github.com/openfga/go-sdk/credentials"
+	"github.com/openfga/go-sdk/utils"
 )
 
 var SdkVersion = "0.2.2"
@@ -108,6 +109,10 @@ func (c *Configuration) ValidateConfig() error {
 
 	if c.RetryParams != nil && c.RetryParams.MaxRetry > 15 {
 		return reportError("Configuration.RetryParams.MaxRetry exceeds maximum allowed limit of 15")
+	}
+
+	if c.StoreId != "" && !utils.IsWellFormedUlidString(c.StoreId) {
+		return reportError("Configuration.StoreId is not a valid ulid")
 	}
 
 	return nil
