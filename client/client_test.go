@@ -1505,7 +1505,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Options(badOptions).
 			Execute()
 		if err == nil {
-			t.Fatalf("Invalid auth model ID shoudl result in error")
+			t.Fatalf("Invalid auth model ID should result in error")
 		}
 	})
 

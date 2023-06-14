@@ -31,21 +31,22 @@ func (e FgaRequiredParamError) Param() string {
 	return e.param
 }
 
-// FgaInvalidUlidError Provides access to the body, error and model on returned errors.
-type FgaInvalidUlidError struct {
-	error string
-	param string
+// FgaInvalidError Provides access to the body, error and model on returned errors.
+type FgaInvalidError struct {
+	error       string
+	param       string
+	description string
 }
 
 // Error returns non-empty string if there was an error.
-func (e FgaInvalidUlidError) Error() string {
+func (e FgaInvalidError) Error() string {
 	if e.error == "" {
-		return "Parameter " + e.Param() + " is not a valid ULID"
+		return "Parameter " + e.Param() + " is not a valid " + e.description
 	}
 	return e.error
 }
 
 // Param returns the name of the invalid parameter
-func (e FgaInvalidUlidError) Param() string {
+func (e FgaInvalidError) Param() string {
 	return e.param
 }

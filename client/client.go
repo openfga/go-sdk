@@ -83,13 +83,10 @@ func NewSdkClient(cfg *ClientConfiguration) (*OpenFgaClient, error) {
 	clientConfig := newClientConfiguration(apiConfiguration)
 	clientConfig.AuthorizationModelId = cfg.AuthorizationModelId
 
-	// validate the store id and model id if they are defined
-	if cfg.StoreId != "" && !utils.IsWellFormedUlidString(cfg.StoreId) {
-		return nil, FgaInvalidUlidError{param: "StoreId"}
-	}
+	// store id is already validate as part of configuraiton validation
 
 	if cfg.AuthorizationModelId != nil && !utils.IsWellFormedUlidString(*cfg.AuthorizationModelId) {
-		return nil, FgaInvalidUlidError{param: "AuthorizationModelId"}
+		return nil, FgaInvalidError{param: "AuthorizationModelId", description: "ULID"}
 	}
 
 	apiClient := openfga.NewAPIClient(apiConfiguration)
@@ -418,11 +415,16 @@ type SdkClient interface {
 	WriteAssertionsExecute(request SdkClientWriteAssertionsRequestInterface) (*ClientWriteAssertionsResponse, error)
 }
 
-func (client *OpenFgaClient) getAuthorizationModelId(authorizationModelId *string) *string {
+func (client *OpenFgaClient) getAuthorizationModelId(authorizationModelId *string) (*string, error) {
+	modelId := client.config.AuthorizationModelId
 	if authorizationModelId != nil {
-		return authorizationModelId
+		modelId = authorizationModelId
 	}
-	return client.config.AuthorizationModelId
+
+	if modelId != nil && !utils.IsWellFormedUlidString(*modelId) {
+		return nil, FgaInvalidError{param: "AuthorizationModelId", description: "ULID"}
+	}
+	return modelId, nil
 }
 
 /* Stores */
@@ -869,12 +871,12 @@ func (request *SdkClientReadAuthorizationModelRequest) GetContext() _context.Con
 }
 
 func (client *OpenFgaClient) ReadAuthorizationModelExecute(request SdkClientReadAuthorizationModelRequestInterface) (*ClientReadAuthorizationModelResponse, error) {
-	authorizationModelId := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
+	authorizationModelId, err := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
+	if err != nil {
+		return nil, err
+	}
 	if authorizationModelId == nil {
 		return nil, FgaRequiredParamError{param: "AuthorizationModelId"}
-	}
-	if !utils.IsWellFormedUlidString(*authorizationModelId) {
-		return nil, FgaInvalidUlidError{param: "AuthorizationModelId"}
 	}
 	data, _, err := client.OpenFgaApi.ReadAuthorizationModel(request.GetContext(), *authorizationModelId).Execute()
 
@@ -1258,9 +1260,9 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 		Deletes: []ClientWriteSingleResponse{},
 	}
 
-	authorizationModelId := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
-	if authorizationModelId != nil && !utils.IsWellFormedUlidString(*authorizationModelId) {
-		return nil, FgaInvalidUlidError{param: "AuthorizationModelId"}
+	authorizationModelId, err := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
+	if err != nil {
+		return nil, err
 	}
 
 	// Unless explicitly disabled, transaction mode is enabled
@@ -1620,9 +1622,9 @@ func (client *OpenFgaClient) CheckExecute(request SdkClientCheckRequestInterface
 			contextualTuples = append(contextualTuples, (*request.GetBody().ContextualTuples)[index].ToTupleKey())
 		}
 	}
-	authorizationModelId := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
-	if authorizationModelId != nil && !utils.IsWellFormedUlidString(*authorizationModelId) {
-		return nil, FgaInvalidUlidError{param: "AuthorizationModelId"}
+	authorizationModelId, err := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
+	if err != nil {
+		return nil, err
 	}
 	requestBody := openfga.CheckRequest{
 		TupleKey: openfga.TupleKey{
@@ -1725,9 +1727,9 @@ func (client *OpenFgaClient) BatchCheckExecute(request SdkClientBatchCheckReques
 	group.SetLimit(maxParallelReqs)
 	var numOfChecks = len(*request.GetBody())
 	response := make(ClientBatchCheckResponse, numOfChecks)
-	authorizationModelId := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
-	if authorizationModelId != nil && !utils.IsWellFormedUlidString(*authorizationModelId) {
-		return nil, FgaInvalidUlidError{param: "AuthorizationModelId"}
+	authorizationModelId, err := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
+	if err != nil {
+		return nil, err
 	}
 
 	for index, checkBody := range *request.GetBody() {
@@ -1831,9 +1833,9 @@ func (request *SdkClientExpandRequest) GetOptions() *ClientExpandOptions {
 }
 
 func (client *OpenFgaClient) ExpandExecute(request SdkClientExpandRequestInterface) (*ClientExpandResponse, error) {
-	authorizationModelId := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
-	if authorizationModelId != nil && !utils.IsWellFormedUlidString(*authorizationModelId) {
-		return nil, FgaInvalidUlidError{param: "AuthorizationModelId"}
+	authorizationModelId, err := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
+	if err != nil {
+		return nil, err
 	}
 
 	data, _, err := client.OpenFgaApi.Expand(request.GetContext()).Body(openfga.ExpandRequest{
@@ -1929,9 +1931,9 @@ func (client *OpenFgaClient) ListObjectsExecute(request SdkClientListObjectsRequ
 			contextualTuples = append(contextualTuples, (*request.GetBody().ContextualTuples)[index].ToTupleKey())
 		}
 	}
-	authorizationModelId := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
-	if authorizationModelId != nil && !utils.IsWellFormedUlidString(*authorizationModelId) {
-		return nil, FgaInvalidUlidError{param: "AuthorizationModelId"}
+	authorizationModelId, err := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
+	if err != nil {
+		return nil, err
 	}
 	data, _, err := client.OpenFgaApi.ListObjects(request.GetContext()).Body(openfga.ListObjectsRequest{
 		User:                 request.GetBody().User,
@@ -2042,9 +2044,9 @@ func (client *OpenFgaClient) ListRelationsExecute(request SdkClientListRelations
 			ContextualTuples: request.GetBody().ContextualTuples,
 		})
 	}
-	authorizationModelId := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
-	if authorizationModelId != nil && !utils.IsWellFormedUlidString(*authorizationModelId) {
-		return nil, FgaInvalidUlidError{param: "AuthorizationModelId"}
+	authorizationModelId, err := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
+	if err != nil {
+		return nil, err
 	}
 	batchResponse, err := client.BatchCheckExecute(&SdkClientBatchCheckRequest{
 		ctx:    request.GetContext(),
@@ -2124,12 +2126,12 @@ func (request *SdkClientReadAssertionsRequest) GetOptions() *ClientReadAssertion
 }
 
 func (client *OpenFgaClient) ReadAssertionsExecute(request SdkClientReadAssertionsRequestInterface) (*ClientReadAssertionsResponse, error) {
-	authorizationModelId := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
+	authorizationModelId, err := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
+	if err != nil {
+		return nil, err
+	}
 	if authorizationModelId == nil {
 		return nil, FgaRequiredParamError{param: "AuthorizationModelId"}
-	}
-	if !utils.IsWellFormedUlidString(*authorizationModelId) {
-		return nil, FgaInvalidUlidError{param: "AuthorizationModelId"}
 	}
 	data, _, err := client.OpenFgaApi.ReadAssertions(request.GetContext(), *authorizationModelId).Execute()
 	if err != nil {
@@ -2227,18 +2229,18 @@ func (request *SdkClientWriteAssertionsRequest) GetOptions() *ClientWriteAsserti
 
 func (client *OpenFgaClient) WriteAssertionsExecute(request SdkClientWriteAssertionsRequestInterface) (*ClientWriteAssertionsResponse, error) {
 	writeAssertionsRequest := openfga.WriteAssertionsRequest{}
-	authorizationModelId := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
+	authorizationModelId, err := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
+	if err != nil {
+		return nil, err
+	}
 	if authorizationModelId == nil {
 		return nil, FgaRequiredParamError{param: "AuthorizationModelId"}
-	}
-	if !utils.IsWellFormedUlidString(*authorizationModelId) {
-		return nil, FgaInvalidUlidError{param: "AuthorizationModelId"}
 	}
 	for index := 0; index < len(*request.GetBody()); index++ {
 		clientAssertion := (*request.GetBody())[index]
 		writeAssertionsRequest.Assertions = append(writeAssertionsRequest.Assertions, clientAssertion.ToAssertion())
 	}
-	_, err := client.OpenFgaApi.WriteAssertions(request.GetContext(), *authorizationModelId).Body(writeAssertionsRequest).Execute()
+	_, err = client.OpenFgaApi.WriteAssertions(request.GetContext(), *authorizationModelId).Body(writeAssertionsRequest).Execute()
 
 	if err != nil {
 		return nil, err
