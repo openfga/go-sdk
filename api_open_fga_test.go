@@ -72,6 +72,17 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 		}
 	})
 
+	t.Run("Providing invalid storeid should result in error", func(t *testing.T) {
+		_, err := NewConfiguration(Configuration{
+			ApiHost: "api.fga.example",
+			StoreId: "invalid",
+		})
+
+		if err == nil {
+			t.Fatalf("Expect error when invalid storeid is provided")
+		}
+	})
+
 	t.Run("In ApiToken credential method, apiToken is required in the Credentials Config", func(t *testing.T) {
 		_, err := NewConfiguration(Configuration{
 			ApiHost: "https://api.fga.example",
@@ -88,7 +99,7 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 	t.Run("should issue a successful network call when using ApiToken credential method", func(t *testing.T) {
 		configuration, err := NewConfiguration(Configuration{
 			ApiHost: "api.fga.example",
-			StoreId: "6c181474-aaa1-4df7-8929-6e7b3a992754",
+			StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
 			Credentials: &credentials.Credentials{
 				Method: credentials.CredentialsMethodApiToken,
 				Config: &credentials.Config{
@@ -131,7 +142,7 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 	t.Run("In ClientCredentials method, providing no client id, secret, audience or issuer should error", func(t *testing.T) {
 		_, err := NewConfiguration(Configuration{
 			ApiHost: "https://api.fga.example",
-			StoreId: "6c181474-aaa1-4df7-8929-6e7b3a992754",
+			StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
 			Credentials: &credentials.Credentials{
 				Method: credentials.CredentialsMethodApiToken,
 				Config: &credentials.Config{
@@ -146,7 +157,7 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 
 		_, err = NewConfiguration(Configuration{
 			ApiHost: "https://api.fga.example",
-			StoreId: "6c181474-aaa1-4df7-8929-6e7b3a992754",
+			StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
 			Credentials: &credentials.Credentials{
 				Method: credentials.CredentialsMethodApiToken,
 				Config: &credentials.Config{
@@ -163,7 +174,7 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 
 		_, err = NewConfiguration(Configuration{
 			ApiHost: "https://api.fga.example",
-			StoreId: "6c181474-aaa1-4df7-8929-6e7b3a992754",
+			StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
 			Credentials: &credentials.Credentials{
 				Method: credentials.CredentialsMethodApiToken,
 				Config: &credentials.Config{
@@ -180,7 +191,7 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 
 		_, err = NewConfiguration(Configuration{
 			ApiHost: "https://api.fga.example",
-			StoreId: "6c181474-aaa1-4df7-8929-6e7b3a992754",
+			StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
 			Credentials: &credentials.Credentials{
 				Method: credentials.CredentialsMethodApiToken,
 				Config: &credentials.Config{
@@ -197,7 +208,7 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 
 		_, err = NewConfiguration(Configuration{
 			ApiHost: "api.fga.example",
-			StoreId: "6c181474-aaa1-4df7-8929-6e7b3a992754",
+			StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
 			Credentials: &credentials.Credentials{
 				Method: credentials.CredentialsMethodClientCredentials,
 				Config: &credentials.Config{
@@ -217,7 +228,7 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 	t.Run("should issue a network call to get the token at the first request if client id is provided", func(t *testing.T) {
 		configuration, err := NewConfiguration(Configuration{
 			ApiHost: "api.fga.example",
-			StoreId: "6c181474-aaa1-4df7-8929-6e7b3a992754",
+			StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
 			Credentials: &credentials.Credentials{
 				Method: credentials.CredentialsMethodClientCredentials,
 				Config: &credentials.Config{
@@ -285,7 +296,7 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 	t.Run("should not issue a network call to get the token at the first request if the clientId is not provided", func(t *testing.T) {
 		configuration, err := NewConfiguration(Configuration{
 			ApiHost: "api.fga.example",
-			StoreId: "6c181474-aaa1-4df7-8929-6e7b3a992754",
+			StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
 			Credentials: &credentials.Credentials{
 				Method: credentials.CredentialsMethodNone,
 				Config: &credentials.Config{ClientCredentialsApiTokenIssuer: "tokenissuer.api.example"},
@@ -393,7 +404,7 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 func TestOpenFgaApi(t *testing.T) {
 	configuration, err := NewConfiguration(Configuration{
 		ApiHost: "api.fga.example",
-		StoreId: "6c181474-aaa1-4df7-8929-6e7b3a992754",
+		StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
 	})
 	if err != nil {
 		t.Fatalf("%v", err)
@@ -1121,7 +1132,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		updatedConfiguration, err := NewConfiguration(Configuration{
 			ApiHost: "api.fga.example",
-			StoreId: "6c181474-aaa1-4df7-8929-6e7b3a992754",
+			StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
 			RetryParams: &RetryParams{
 				MaxRetry:    3,
 				MinWaitInMs: 5,
@@ -1187,7 +1198,7 @@ func TestOpenFgaApi(t *testing.T) {
 		)
 		updatedConfiguration, err := NewConfiguration(Configuration{
 			ApiHost: "api.fga.example",
-			StoreId: "6c181474-aaa1-4df7-8929-6e7b3a992754",
+			StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
 			RetryParams: &RetryParams{
 				MaxRetry:    2,
 				MinWaitInMs: 5,

@@ -35,11 +35,41 @@ type TestDefinition struct {
 func TestOpenFgaClient(t *testing.T) {
 	fgaClient, err := NewSdkClient(&ClientConfiguration{
 		ApiHost: "api.fga.example",
-		StoreId: "6c181474-aaa1-4df7-8929-6e7b3a992754",
+		StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
 	})
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
+	t.Run("Allow client to have no store ID specified", func(t *testing.T) {
+		_, err := NewSdkClient(&ClientConfiguration{
+			ApiHost: "api.fga.example",
+		})
+		if err != nil {
+			t.Fatalf("Expect no error when store id is not specified but has %v", err)
+		}
+	})
+
+	t.Run("Validate store ID when specified", func(t *testing.T) {
+		_, err := NewSdkClient(&ClientConfiguration{
+			ApiHost: "api.fga.example",
+			StoreId: "error",
+		})
+		if err == nil {
+			t.Fatalf("Expect invalid store ID to result in error but there is none")
+		}
+	})
+
+	t.Run("Validate auth model ID when specified", func(t *testing.T) {
+		_, err := NewSdkClient(&ClientConfiguration{
+			ApiHost:              "api.fga.example",
+			StoreId:              "01GXSB9YR785C4FYS3C0RTG7B2",
+			AuthorizationModelId: openfga.PtrString("BadAuthID"),
+		})
+		if err == nil {
+			t.Fatalf("Expect invalid auth mode ID to result in error but there is none")
+		}
+	})
 
 	/* Stores */
 	t.Run("ListStores", func(t *testing.T) {
@@ -693,6 +723,36 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 	})
 
+	t.Run("Write with invalid auth model id", func(t *testing.T) {
+		test := TestDefinition{
+			Name:           "Write",
+			JsonResponse:   `{}`,
+			ResponseStatus: http.StatusOK,
+			Method:         http.MethodPost,
+			RequestPath:    "write",
+		}
+		requestBody := ClientWriteRequest{
+			Writes: &[]ClientTupleKey{{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "viewer",
+				Object:   "document:roadmap",
+			}},
+		}
+		options := ClientWriteOptions{
+			AuthorizationModelId: openfga.PtrString("INVALID"),
+		}
+
+		var expectedResponse map[string]interface{}
+		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		_, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
+		if err == nil {
+			t.Fatalf("Expect error due to invalid auth model ID but there is none")
+		}
+	})
+
 	t.Run("WriteNonTransaction", func(t *testing.T) {
 		test := TestDefinition{
 			Name:           "Write",
@@ -717,8 +777,9 @@ func TestOpenFgaClient(t *testing.T) {
 				Object:   "document:planning",
 			}},
 		}
+		const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
 		options := ClientWriteOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			AuthorizationModelId: openfga.PtrString(authModelId),
 			Transaction: &TransactionOptions{
 				Disable:             true,
 				MaxParallelRequests: 5,
@@ -740,6 +801,11 @@ func TestOpenFgaClient(t *testing.T) {
 					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
 				}
 				return resp, nil
+			},
+		)
+		httpmock.RegisterResponder("GET", fmt.Sprintf("%s://%s/stores/%s/authorization-models/%s", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost, fgaClient.GetConfig().StoreId, authModelId),
+			func(req *http.Request) (*http.Response, error) {
+				return httpmock.NewStringResponse(http.StatusOK, ""), nil
 			},
 		)
 		data, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
@@ -1009,6 +1075,16 @@ func TestOpenFgaClient(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
+
+		// check with invalid auth model id should result in error
+		badOptions := ClientCheckOptions{
+			AuthorizationModelId: openfga.PtrString("INVALID"),
+		}
+		_, err = fgaClient.Check(context.Background()).Body(requestBody).Options(badOptions).Execute()
+		if err == nil {
+			t.Fatalf("Expect error with bad auth model id but there is none")
+		}
+
 	})
 
 	t.Run("BatchCheck", func(t *testing.T) {
@@ -1047,8 +1123,10 @@ func TestOpenFgaClient(t *testing.T) {
 			Object:   "document:roadmap",
 		}}
 
+		const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
+
 		options := ClientBatchCheckOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			AuthorizationModelId: openfga.PtrString(authModelId),
 			MaxParallelRequests:  openfga.PtrInt32(5),
 		}
 
@@ -1068,13 +1146,23 @@ func TestOpenFgaClient(t *testing.T) {
 				return resp, nil
 			},
 		)
+		httpmock.RegisterResponder("GET", fmt.Sprintf("%s://%s/stores/%s/authorization-models", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost, fgaClient.GetConfig().StoreId),
+			func(req *http.Request) (*http.Response, error) {
+				return httpmock.NewStringResponse(http.StatusOK, ""), nil
+			},
+		)
+		httpmock.RegisterResponder("GET", fmt.Sprintf("%s://%s/stores/%s/authorization-models/%s", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost, fgaClient.GetConfig().StoreId, authModelId),
+			func(req *http.Request) (*http.Response, error) {
+				return httpmock.NewStringResponse(http.StatusOK, ""), nil
+			},
+		)
 		got, err := fgaClient.BatchCheck(context.Background()).Body(requestBody).Options(options).Execute()
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
 
-		if httpmock.GetTotalCallCount() != 4 {
-			t.Fatalf("OpenFgaClient.%v() - wanted %v calls to /check, got %v", test.Name, 4, httpmock.GetTotalCallCount())
+		if httpmock.GetTotalCallCount() != 5 {
+			t.Fatalf("OpenFgaClient.%v() - wanted %v calls to /check + 1 call to validate auth model, got %v", test.Name, 4, httpmock.GetTotalCallCount())
 		}
 
 		if len(*got) != len(requestBody) {
@@ -1104,6 +1192,92 @@ func TestOpenFgaClient(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
+		// BatchCheck with invalid auth model ID should fail
+		badOptions := ClientBatchCheckOptions{
+			AuthorizationModelId: openfga.PtrString("INVALID"),
+			MaxParallelRequests:  openfga.PtrInt32(5),
+		}
+		_, err = fgaClient.BatchCheck(context.Background()).Body(requestBody).Options(badOptions).Execute()
+		if err == nil {
+			t.Fatalf("Expect error with invalid auth model id but there is none")
+		}
+
+	})
+
+	t.Run("BatchCheckConnectionProblem", func(t *testing.T) {
+		test := TestDefinition{
+			Name:           "Check",
+			JsonResponse:   `{"allowed":true, "resolution":""}`,
+			ResponseStatus: http.StatusOK,
+			Method:         http.MethodPost,
+			RequestPath:    "check",
+		}
+		requestBody := ClientBatchCheckBody{{
+			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+			Relation: "viewer",
+			Object:   "document:roadmap",
+			ContextualTuples: &[]ClientTupleKey{{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "editor",
+				Object:   "document:roadmap",
+			}},
+		}, {
+			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+			Relation: "admin",
+			Object:   "document:roadmap",
+			ContextualTuples: &[]ClientTupleKey{{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "editor",
+				Object:   "document:roadmap",
+			}},
+		}, {
+			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+			Relation: "creator",
+			Object:   "document:roadmap",
+		}, {
+			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+			Relation: "deleter",
+			Object:   "document:roadmap",
+		}}
+
+		const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
+
+		options := ClientBatchCheckOptions{
+			AuthorizationModelId: openfga.PtrString(authModelId),
+			MaxParallelRequests:  openfga.PtrInt32(5),
+		}
+
+		var expectedResponse openfga.CheckResponse
+		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost, fgaClient.GetConfig().StoreId, test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		httpmock.RegisterResponder("GET", fmt.Sprintf("%s://%s/stores/%s/authorization-models", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost, fgaClient.GetConfig().StoreId),
+			func(req *http.Request) (*http.Response, error) {
+				return httpmock.NewStringResponse(http.StatusUnauthorized, ""), nil
+			},
+		)
+		httpmock.RegisterResponder("GET", fmt.Sprintf("%s://%s/stores/%s/authorization-models/%s", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost, fgaClient.GetConfig().StoreId, authModelId),
+			func(req *http.Request) (*http.Response, error) {
+				return httpmock.NewStringResponse(http.StatusUnauthorized, ""), nil
+			},
+		)
+		_, err := fgaClient.BatchCheck(context.Background()).Body(requestBody).Options(options).Execute()
+		if err == nil {
+			t.Fatalf("Expect error but there is none")
+		}
+
 	})
 
 	t.Run("Expand", func(t *testing.T) {
@@ -1152,6 +1326,14 @@ func TestOpenFgaClient(t *testing.T) {
 		_, err = fgaClient.Expand(context.Background()).Body(requestBody).Execute()
 		if err != nil {
 			t.Fatalf("%v", err)
+		}
+		// Invalid auth model ID should result in error
+		badOptions := ClientExpandOptions{
+			AuthorizationModelId: openfga.PtrString("INVALID"),
+		}
+		_, err = fgaClient.Expand(context.Background()).Body(requestBody).Options(badOptions).Execute()
+		if err == nil {
+			t.Fatalf("Expect error for invalid auth model id but there is none")
 		}
 	})
 
@@ -1219,6 +1401,17 @@ func TestOpenFgaClient(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
+		// Invalid auth model id should result in error
+		badOptions := ClientListObjectsOptions{
+			AuthorizationModelId: openfga.PtrString("INVALID"),
+		}
+		_, err = fgaClient.ListObjects(context.Background()).
+			Body(requestBody).
+			Options(badOptions).
+			Execute()
+		if err == nil {
+			t.Fatalf("Expect error with invalid auth model id but there is none")
+		}
 	})
 
 	t.Run("ListRelations", func(t *testing.T) {
@@ -1240,8 +1433,9 @@ func TestOpenFgaClient(t *testing.T) {
 				Object:   "document:roadmap",
 			}},
 		}
+		const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
 		options := ClientListRelationsOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			AuthorizationModelId: openfga.PtrString(authModelId),
 		}
 
 		var expectedResponse openfga.CheckResponse
@@ -1270,6 +1464,16 @@ func TestOpenFgaClient(t *testing.T) {
 				return resp, nil
 			},
 		)
+		httpmock.RegisterResponder("GET", fmt.Sprintf("%s://%s/stores/%s/authorization-models", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost, fgaClient.GetConfig().StoreId),
+			func(req *http.Request) (*http.Response, error) {
+				return httpmock.NewStringResponse(http.StatusOK, ""), nil
+			},
+		)
+		httpmock.RegisterResponder("GET", fmt.Sprintf("%s://%s/stores/%s/authorization-models/%s", fgaClient.GetConfig().ApiScheme, fgaClient.GetConfig().ApiHost, fgaClient.GetConfig().StoreId, authModelId),
+			func(req *http.Request) (*http.Response, error) {
+				return httpmock.NewStringResponse(http.StatusOK, ""), nil
+			},
+		)
 
 		got, err := fgaClient.ListRelations(context.Background()).
 			Body(requestBody).
@@ -1279,8 +1483,8 @@ func TestOpenFgaClient(t *testing.T) {
 			t.Fatalf("%v", err)
 		}
 
-		if httpmock.GetTotalCallCount() != 4 {
-			t.Fatalf("OpenFgaClient.%v() - wanted %v calls to /check, got %v", test.Name, 4, httpmock.GetTotalCallCount())
+		if httpmock.GetTotalCallCount() != 5 {
+			t.Fatalf("OpenFgaClient.%v() - wanted %v calls to /check + 1 call to validate auth model, got %v", test.Name, 4, httpmock.GetTotalCallCount())
 		}
 
 		_, err = got.MarshalJSON()
@@ -1296,6 +1500,18 @@ func TestOpenFgaClient(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
+		// Invalid auth model ID should result in error
+		badOptions := ClientListRelationsOptions{
+			AuthorizationModelId: openfga.PtrString("INVALID"),
+		}
+		_, err = fgaClient.ListRelations(context.Background()).
+			Body(requestBody).
+			Options(badOptions).
+			Execute()
+		if err == nil {
+			t.Fatalf("Expect error with invalid auth model id but there is none")
+		}
+
 	})
 
 	t.Run("ListRelationsNoRelationsProvided", func(t *testing.T) {
@@ -1385,6 +1601,17 @@ func TestOpenFgaClient(t *testing.T) {
 		if err == nil || err.Error() != expectedError {
 			t.Fatalf("Expected error:%v, got: %v", expectedError, err)
 		}
+
+		// Invalid auth model id should result in error
+		badOptions := ClientReadAssertionsOptions{
+			AuthorizationModelId: openfga.PtrString("INVALID"),
+		}
+		_, err = fgaClient.ReadAssertions(context.Background()).
+			Options(badOptions).
+			Execute()
+		if err == nil {
+			t.Fatalf("Invalid auth model ID should result in error")
+		}
 	})
 
 	t.Run("WriteAssertions", func(t *testing.T) {
@@ -1432,6 +1659,16 @@ func TestOpenFgaClient(t *testing.T) {
 		expectedError := "Required parameter AuthorizationModelId was not provided"
 		if err == nil || err.Error() != expectedError {
 			t.Fatalf("Expected error:%v, got: %v", expectedError, err)
+		}
+		badOptions := ClientWriteAssertionsOptions{
+			AuthorizationModelId: openfga.PtrString("INVALID"),
+		}
+		_, err = fgaClient.WriteAssertions(context.Background()).
+			Body(requestBody).
+			Options(badOptions).
+			Execute()
+		if err == nil {
+			t.Fatalf("Invalid auth model id should result in error but there is none")
 		}
 	})
 }
