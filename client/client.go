@@ -83,7 +83,7 @@ func NewSdkClient(cfg *ClientConfiguration) (*OpenFgaClient, error) {
 	clientConfig := newClientConfiguration(apiConfiguration)
 	clientConfig.AuthorizationModelId = cfg.AuthorizationModelId
 
-	// store id is already validate as part of configuraiton validation
+	// store id is already validate as part of configuration validation
 
 	if cfg.AuthorizationModelId != nil && !utils.IsWellFormedUlidString(*cfg.AuthorizationModelId) {
 		return nil, FgaInvalidError{param: "AuthorizationModelId", description: "ULID"}
@@ -425,6 +425,19 @@ func (client *OpenFgaClient) getAuthorizationModelId(authorizationModelId *strin
 		return nil, FgaInvalidError{param: "AuthorizationModelId", description: "ULID"}
 	}
 	return modelId, nil
+}
+
+// helper function to validate the connection (i.e., get token)
+func (client *OpenFgaClient) checkValidApiConnection(ctx _context.Context, authorizationModelId *string) error {
+	if authorizationModelId != nil {
+		_, _, err := client.OpenFgaApi.ReadAuthorizationModel(ctx, *authorizationModelId).Execute()
+		return err
+	} else {
+		_, err := client.ReadAuthorizationModels(ctx).Options(ClientReadAuthorizationModelsOptions{
+			PageSize: openfga.PtrInt32(1),
+		}).Execute()
+		return err
+	}
 }
 
 /* Stores */
@@ -1334,6 +1347,11 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 	}
 
 	writeGroup, ctx := errgroup.WithContext(request.GetContext())
+	err = client.checkValidApiConnection(ctx, authorizationModelId)
+	if err != nil {
+		return nil, err
+	}
+
 	writeGroup.SetLimit(int(maxParallelReqs))
 	writeResponses := make([]ClientWriteResponse, len(writeChunks))
 	for index, writeBody := range writeChunks {
@@ -1732,6 +1750,11 @@ func (client *OpenFgaClient) BatchCheckExecute(request SdkClientBatchCheckReques
 		return nil, err
 	}
 
+	group.Go(func() error {
+		// if the connection is probelmatic, we will return error to the overall
+		// response rather than individual response
+		return client.checkValidApiConnection(ctx, authorizationModelId)
+	})
 	for index, checkBody := range *request.GetBody() {
 		index, checkBody := index, checkBody
 		group.Go(func() error {
