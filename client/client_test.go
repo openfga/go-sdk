@@ -1162,7 +1162,7 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 
 		if httpmock.GetTotalCallCount() != 5 {
-			t.Fatalf("OpenFgaClient.%v() - wanted %v calls to /check, got %v", test.Name, 4, httpmock.GetTotalCallCount())
+			t.Fatalf("OpenFgaClient.%v() - wanted %v calls to /check + 1 call to validate auth model, got %v", test.Name, 4, httpmock.GetTotalCallCount())
 		}
 
 		if len(*got) != len(requestBody) {
@@ -1484,7 +1484,7 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 
 		if httpmock.GetTotalCallCount() != 5 {
-			t.Fatalf("OpenFgaClient.%v() - wanted %v calls to /check, got %v", test.Name, 4, httpmock.GetTotalCallCount())
+			t.Fatalf("OpenFgaClient.%v() - wanted %v calls to /check + 1 call to validate auth model, got %v", test.Name, 4, httpmock.GetTotalCallCount())
 		}
 
 		_, err = got.MarshalJSON()

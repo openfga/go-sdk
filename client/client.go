@@ -428,7 +428,7 @@ func (client *OpenFgaClient) getAuthorizationModelId(authorizationModelId *strin
 }
 
 // helper function to validate the connection (i.e., get token)
-func (client *OpenFgaClient) validateAuthorizationModel(ctx _context.Context, authorizationModelId *string) error {
+func (client *OpenFgaClient) checkValidApiConnection(ctx _context.Context, authorizationModelId *string) error {
 	if authorizationModelId != nil {
 		_, _, err := client.OpenFgaApi.ReadAuthorizationModel(ctx, *authorizationModelId).Execute()
 		return err
@@ -1347,7 +1347,7 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 	}
 
 	writeGroup, ctx := errgroup.WithContext(request.GetContext())
-	err = client.validateAuthorizationModel(ctx, authorizationModelId)
+	err = client.checkValidApiConnection(ctx, authorizationModelId)
 	if err != nil {
 		return nil, err
 	}
@@ -1753,7 +1753,7 @@ func (client *OpenFgaClient) BatchCheckExecute(request SdkClientBatchCheckReques
 	group.Go(func() error {
 		// if the connection is probelmatic, we will return error to the overall
 		// response rather than individual response
-		return client.validateAuthorizationModel(ctx, authorizationModelId)
+		return client.checkValidApiConnection(ctx, authorizationModelId)
 	})
 	for index, checkBody := range *request.GetBody() {
 		index, checkBody := index, checkBody
