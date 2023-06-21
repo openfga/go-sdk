@@ -23,7 +23,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/openfga/go-sdk/utils"
+	"github.com/openfga/go-sdk/internal/utils"
 )
 
 // Linger please
@@ -681,7 +681,7 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 		if a.client.cfg.StoreId == "" {
 			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
 		}
-		if !utils.IsWellFormedUlidString(a.client.cfg.StoreId) {
+		if !internalutils.IsWellFormedUlidString(a.client.cfg.StoreId) {
 			return localVarReturnValue, nil, reportError("Configuration.StoreId is invalid")
 		}
 		localVarPath := "/stores/{store_id}/check"
@@ -1201,7 +1201,7 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 		if a.client.cfg.StoreId == "" {
 			return nil, reportError("Configuration.StoreId is required and must be specified to call this method")
 		}
-		if !utils.IsWellFormedUlidString(a.client.cfg.StoreId) {
+		if !internalutils.IsWellFormedUlidString(a.client.cfg.StoreId) {
 			return nil, reportError("Configuration.StoreId is invalid")
 		}
 		localVarPath := "/stores/{store_id}"
@@ -1507,7 +1507,7 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 		if a.client.cfg.StoreId == "" {
 			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
 		}
-		if !utils.IsWellFormedUlidString(a.client.cfg.StoreId) {
+		if !internalutils.IsWellFormedUlidString(a.client.cfg.StoreId) {
 			return localVarReturnValue, nil, reportError("Configuration.StoreId is invalid")
 		}
 		localVarPath := "/stores/{store_id}/expand"
@@ -1768,7 +1768,7 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 		if a.client.cfg.StoreId == "" {
 			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
 		}
-		if !utils.IsWellFormedUlidString(a.client.cfg.StoreId) {
+		if !internalutils.IsWellFormedUlidString(a.client.cfg.StoreId) {
 			return localVarReturnValue, nil, reportError("Configuration.StoreId is invalid")
 		}
 		localVarPath := "/stores/{store_id}"
@@ -2038,7 +2038,7 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 		if a.client.cfg.StoreId == "" {
 			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
 		}
-		if !utils.IsWellFormedUlidString(a.client.cfg.StoreId) {
+		if !internalutils.IsWellFormedUlidString(a.client.cfg.StoreId) {
 			return localVarReturnValue, nil, reportError("Configuration.StoreId is invalid")
 		}
 		localVarPath := "/stores/{store_id}/list-objects"
@@ -2677,7 +2677,7 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 		if a.client.cfg.StoreId == "" {
 			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
 		}
-		if !utils.IsWellFormedUlidString(a.client.cfg.StoreId) {
+		if !internalutils.IsWellFormedUlidString(a.client.cfg.StoreId) {
 			return localVarReturnValue, nil, reportError("Configuration.StoreId is invalid")
 		}
 		localVarPath := "/stores/{store_id}/read"
@@ -2942,7 +2942,7 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 		if a.client.cfg.StoreId == "" {
 			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
 		}
-		if !utils.IsWellFormedUlidString(a.client.cfg.StoreId) {
+		if !internalutils.IsWellFormedUlidString(a.client.cfg.StoreId) {
 			return localVarReturnValue, nil, reportError("Configuration.StoreId is invalid")
 		}
 		localVarPath := "/stores/{store_id}/assertions/{authorization_model_id}"
@@ -3246,7 +3246,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 		if a.client.cfg.StoreId == "" {
 			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
 		}
-		if !utils.IsWellFormedUlidString(a.client.cfg.StoreId) {
+		if !internalutils.IsWellFormedUlidString(a.client.cfg.StoreId) {
 			return localVarReturnValue, nil, reportError("Configuration.StoreId is invalid")
 		}
 		localVarPath := "/stores/{store_id}/authorization-models/{id}"
@@ -3555,7 +3555,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 		if a.client.cfg.StoreId == "" {
 			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
 		}
-		if !utils.IsWellFormedUlidString(a.client.cfg.StoreId) {
+		if !internalutils.IsWellFormedUlidString(a.client.cfg.StoreId) {
 			return localVarReturnValue, nil, reportError("Configuration.StoreId is invalid")
 		}
 		localVarPath := "/stores/{store_id}/authorization-models"
@@ -3837,7 +3837,7 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 		if a.client.cfg.StoreId == "" {
 			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
 		}
-		if !utils.IsWellFormedUlidString(a.client.cfg.StoreId) {
+		if !internalutils.IsWellFormedUlidString(a.client.cfg.StoreId) {
 			return localVarReturnValue, nil, reportError("Configuration.StoreId is invalid")
 		}
 		localVarPath := "/stores/{store_id}/changes"
@@ -4149,7 +4149,7 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 		if a.client.cfg.StoreId == "" {
 			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
 		}
-		if !utils.IsWellFormedUlidString(a.client.cfg.StoreId) {
+		if !internalutils.IsWellFormedUlidString(a.client.cfg.StoreId) {
 			return localVarReturnValue, nil, reportError("Configuration.StoreId is invalid")
 		}
 		localVarPath := "/stores/{store_id}/write"
@@ -4418,7 +4418,7 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 		if a.client.cfg.StoreId == "" {
 			return nil, reportError("Configuration.StoreId is required and must be specified to call this method")
 		}
-		if !utils.IsWellFormedUlidString(a.client.cfg.StoreId) {
+		if !internalutils.IsWellFormedUlidString(a.client.cfg.StoreId) {
 			return nil, reportError("Configuration.StoreId is invalid")
 		}
 		localVarPath := "/stores/{store_id}/assertions/{authorization_model_id}"
@@ -4722,7 +4722,7 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 		if a.client.cfg.StoreId == "" {
 			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
 		}
-		if !utils.IsWellFormedUlidString(a.client.cfg.StoreId) {
+		if !internalutils.IsWellFormedUlidString(a.client.cfg.StoreId) {
 			return localVarReturnValue, nil, reportError("Configuration.StoreId is invalid")
 		}
 		localVarPath := "/stores/{store_id}/authorization-models"
