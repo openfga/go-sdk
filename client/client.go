@@ -70,8 +70,8 @@ func NewSdkClient(cfg *ClientConfiguration) (*OpenFgaClient, error) {
 		ApiHost:        cfg.ApiHost,
 		StoreId:        cfg.StoreId,
 		Credentials:    cfg.Credentials,
-		DefaultHeaders: make(map[string]string),
-		UserAgent:      openfga.GetSdkUserAgent(),
+		DefaultHeaders: cfg.DefaultHeaders,
+		UserAgent:      cfg.UserAgent,
 		Debug:          cfg.Debug,
 		RetryParams:    cfg.RetryParams,
 	})

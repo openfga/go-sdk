@@ -14,13 +14,16 @@ package openfga
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/openfga/go-sdk/credentials"
 	"github.com/openfga/go-sdk/utils"
 )
 
-var SdkVersion = "0.2.2"
+const (
+	SdkVersion = "0.2.2"
+
+	defaultUserAgent = "openfga-sdk go/0.2.2"
+)
 
 // RetryParams configures configuration for retry in case of HTTP too many request
 type RetryParams struct {
@@ -50,10 +53,7 @@ func DefaultRetryParams() *RetryParams {
 }
 
 func GetSdkUserAgent() string {
-	userAgent := strings.Replace("openfga-sdk {sdkId}/{packageVersion}", "{sdkId}", "go", -1)
-	userAgent = strings.Replace(userAgent, "{packageVersion}", SdkVersion, -1)
-
-	return userAgent
+	return defaultUserAgent
 }
 
 // NewConfiguration returns a new Configuration object
@@ -63,14 +63,22 @@ func NewConfiguration(config Configuration) (*Configuration, error) {
 		ApiHost:        config.ApiHost,
 		StoreId:        config.StoreId,
 		Credentials:    config.Credentials,
-		DefaultHeaders: make(map[string]string),
-		UserAgent:      GetSdkUserAgent(),
+		DefaultHeaders: config.DefaultHeaders,
+		UserAgent:      config.UserAgent,
 		Debug:          false,
 		RetryParams:    config.RetryParams,
 	}
 
 	if cfg.ApiScheme == "" {
 		cfg.ApiScheme = "https"
+	}
+
+	if cfg.UserAgent == "" {
+		cfg.UserAgent = GetSdkUserAgent()
+	}
+
+	if cfg.DefaultHeaders == nil {
+		cfg.DefaultHeaders = make(map[string]string)
 	}
 
 	err := cfg.ValidateConfig()
