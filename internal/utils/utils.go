@@ -13,6 +13,8 @@
 package internalutils
 
 import (
+	_math "math"
+	_rand "math/rand"
 	"regexp"
 )
 
@@ -23,4 +25,11 @@ const cUlidRegex = "^[0-7][0-9A-HJKMNP-TV-Z]{25}$"
 func IsWellFormedUlidString(ulidString string) bool {
 	re := regexp.MustCompile(cUlidRegex)
 	return re.MatchString(ulidString)
+}
+
+// RandomTime provides a randomized time
+func RandomTime(loopCount int, minWaitInMs int) int {
+	min := int(_math.Pow(2, float64(loopCount))) * minWaitInMs
+	max := int(_math.Pow(2, float64(loopCount+1))) * minWaitInMs
+	return _rand.Intn(max-min+1) + min
 }

@@ -13,6 +13,8 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
+
+	"github.com/jarcoal/httpmock"
 )
 
 func TestRetrieveToken_InParams(t *testing.T) {
@@ -62,6 +64,60 @@ func TestRetrieveTokenWithContexts(t *testing.T) {
 	close(retrieved)
 	if err == nil {
 		t.Errorf("RetrieveToken (with cancelled context) = nil; want error")
+	}
+}
+
+// Test the retry logic where request is successful at the end
+func TestRetrieveTokenWithContextsRetry(t *testing.T) {
+	ResetAuthCache()
+	const clientID = "client-id"
+
+	type JSONResponse struct {
+		AccessToken string `json:"access_token"`
+		TokenType   string `json:"token_type"`
+	}
+	expectedResponse := JSONResponse{
+		AccessToken: "ACCESS_TOKEN",
+		TokenType:   "bearer",
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	firstMock := httpmock.NewStringResponder(429, "")
+	secondMock, _ := httpmock.NewJsonResponder(200, expectedResponse)
+
+	const testURL = "http://testserver.com"
+	httpmock.RegisterResponder("POST", testURL,
+		firstMock.Then(firstMock).Then(firstMock).Then(secondMock),
+	)
+
+	_, err := RetrieveToken(context.Background(), clientID, "", testURL, url.Values{}, AuthStyleUnknown)
+	if err != nil {
+		t.Errorf("RetrieveToken (with background context) = %v; want no error", err)
+	}
+}
+
+func TestRetrieveTokenWithContextsFailure(t *testing.T) {
+	ResetAuthCache()
+	const clientID = "client-id"
+
+	type JSONResponse struct {
+		AccessToken string `json:"access_token"`
+		TokenType   string `json:"token_type"`
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	firstMock := httpmock.NewStringResponder(429, "")
+
+	const testURL = "http://testserver.com"
+	httpmock.RegisterResponder("POST", testURL,
+		firstMock,
+	)
+
+	_, err := RetrieveToken(context.Background(), clientID, "", testURL, url.Values{}, AuthStyleUnknown)
+	if err == nil {
+		t.Errorf("Expect error to be returned when oauth server fails consistently")
 	}
 }
 
