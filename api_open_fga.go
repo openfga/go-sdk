@@ -16,8 +16,6 @@ import (
 	"bytes"
 	_context "context"
 	_ioutil "io/ioutil"
-	_math "math"
-	_rand "math/rand"
 	_nethttp "net/http"
 	_neturl "net/url"
 	"strings"
@@ -581,12 +579,6 @@ type OpenFgaApi interface {
 // OpenFgaApiService OpenFgaApi service
 type OpenFgaApiService service
 
-func randomTime(loopCount int, minWaitInMs int) int {
-	min := int(_math.Pow(2, float64(loopCount))) * minWaitInMs
-	max := int(_math.Pow(2, float64(loopCount+1))) * minWaitInMs
-	return _rand.Intn(max-min+1) + min
-}
-
 type ApiCheckRequest struct {
 	ctx        _context.Context
 	ApiService OpenFgaApi
@@ -801,7 +793,7 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
-					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
 				}
 				// maximum number of retry reached
@@ -824,7 +816,7 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 
 			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
 				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
 				}
 				newErr := FgaApiInternalError{
@@ -1062,7 +1054,7 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
-					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
 				}
 				// maximum number of retry reached
@@ -1085,7 +1077,7 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 
 			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
 				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
 				}
 				newErr := FgaApiInternalError{
@@ -1316,7 +1308,7 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
-					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
 				}
 				// maximum number of retry reached
@@ -1339,7 +1331,7 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 
 			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
 				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
 				}
 				newErr := FgaApiInternalError{
@@ -1627,7 +1619,7 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
-					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
 				}
 				// maximum number of retry reached
@@ -1650,7 +1642,7 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 
 			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
 				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
 				}
 				newErr := FgaApiInternalError{
@@ -1883,7 +1875,7 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
-					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
 				}
 				// maximum number of retry reached
@@ -1906,7 +1898,7 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 
 			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
 				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
 				}
 				newErr := FgaApiInternalError{
@@ -2158,7 +2150,7 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
-					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
 				}
 				// maximum number of retry reached
@@ -2181,7 +2173,7 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 
 			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
 				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
 				}
 				newErr := FgaApiInternalError{
@@ -2425,7 +2417,7 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
-					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
 				}
 				// maximum number of retry reached
@@ -2448,7 +2440,7 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 
 			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
 				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
 				}
 				newErr := FgaApiInternalError{
@@ -2797,7 +2789,7 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
-					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
 				}
 				// maximum number of retry reached
@@ -2820,7 +2812,7 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 
 			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
 				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
 				}
 				newErr := FgaApiInternalError{
@@ -3058,7 +3050,7 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
-					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
 				}
 				// maximum number of retry reached
@@ -3081,7 +3073,7 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 
 			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
 				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
 				}
 				newErr := FgaApiInternalError{
@@ -3362,7 +3354,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
-					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
 				}
 				// maximum number of retry reached
@@ -3385,7 +3377,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 
 			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
 				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
 				}
 				newErr := FgaApiInternalError{
@@ -3676,7 +3668,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
-					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
 				}
 				// maximum number of retry reached
@@ -3699,7 +3691,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 
 			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
 				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
 				}
 				newErr := FgaApiInternalError{
@@ -3961,7 +3953,7 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
-					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
 				}
 				// maximum number of retry reached
@@ -3984,7 +3976,7 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 
 			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
 				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
 				}
 				newErr := FgaApiInternalError{
@@ -4269,7 +4261,7 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
-					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
 				}
 				// maximum number of retry reached
@@ -4292,7 +4284,7 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 
 			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
 				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
 				}
 				newErr := FgaApiInternalError{
@@ -4539,7 +4531,7 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
-					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
 				}
 				// maximum number of retry reached
@@ -4562,7 +4554,7 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 
 			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
 				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
 				}
 				newErr := FgaApiInternalError{
@@ -4842,7 +4834,7 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
 				if i < maxRetry {
-					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
 				}
 				// maximum number of retry reached
@@ -4865,7 +4857,7 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 
 			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
 				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(randomTime(i, minWaitInMs)) * time.Millisecond)
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
 					continue
 				}
 				newErr := FgaApiInternalError{
