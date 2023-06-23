@@ -16,7 +16,7 @@ import (
 	"net/http"
 
 	"github.com/openfga/go-sdk/credentials"
-	"github.com/openfga/go-sdk/utils"
+	"github.com/openfga/go-sdk/internal/utils"
 )
 
 const (
@@ -119,7 +119,7 @@ func (c *Configuration) ValidateConfig() error {
 		return reportError("Configuration.RetryParams.MaxRetry exceeds maximum allowed limit of 15")
 	}
 
-	if c.StoreId != "" && !utils.IsWellFormedUlidString(c.StoreId) {
+	if c.StoreId != "" && !internalutils.IsWellFormedUlidString(c.StoreId) {
 		return reportError("Configuration.StoreId is not a valid ulid")
 	}
 

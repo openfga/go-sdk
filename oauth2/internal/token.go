@@ -19,7 +19,12 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	internalutils "github.com/openfga/go-sdk/internal/utils"
 )
+
+const cMaxRetry = 3
+const cMinWaitInMs = 50
 
 // Token represents the credentials used to authorize
 // the requests to access protected resources on the OAuth 2.0
@@ -226,7 +231,7 @@ func RetrieveToken(ctx context.Context, clientID, clientSecret, tokenURL string,
 	return token, err
 }
 
-func doTokenRoundTrip(ctx context.Context, req *http.Request) (*Token, error) {
+func singleTokenRoundTrip(ctx context.Context, req *http.Request) (*Token, error) {
 	r, err := ContextClient(ctx).Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, err
@@ -280,6 +285,21 @@ func doTokenRoundTrip(ctx context.Context, req *http.Request) (*Token, error) {
 		return nil, errors.New("oauth2: server response missing access_token")
 	}
 	return token, nil
+}
+
+func doTokenRoundTrip(ctx context.Context, req *http.Request) (*Token, error) {
+	var token *Token
+	var err error
+
+	for i := 0; i < cMaxRetry; i++ {
+
+		token, err = singleTokenRoundTrip(ctx, req)
+		if err == nil {
+			return token, err
+		}
+		time.Sleep(time.Duration(internalutils.RandomTime(i, cMinWaitInMs)) * time.Millisecond)
+	}
+	return nil, err
 }
 
 type RetrieveError struct {
