@@ -77,6 +77,9 @@ docs/WriteRequest.md
 git_push.sh
 go.mod
 go.sum
+internal/utils/randomtime.go
+internal/utils/ulid.go
+internal/utils/ulid_test.go
 model_any.go
 model_assertion.go
 model_authorization_model.go
@@ -149,5 +152,3 @@ oauth2/transport.go
 oauth2/transport_test.go
 response.go
 utils.go
-utils/utils.go
-utils/utils_test.go

@@ -21,7 +21,7 @@ import (
 
 	"github.com/openfga/go-sdk"
 	"github.com/openfga/go-sdk/credentials"
-	"github.com/openfga/go-sdk/utils"
+	"github.com/openfga/go-sdk/internal/utils"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -70,8 +70,8 @@ func NewSdkClient(cfg *ClientConfiguration) (*OpenFgaClient, error) {
 		ApiHost:        cfg.ApiHost,
 		StoreId:        cfg.StoreId,
 		Credentials:    cfg.Credentials,
-		DefaultHeaders: make(map[string]string),
-		UserAgent:      openfga.GetSdkUserAgent(),
+		DefaultHeaders: cfg.DefaultHeaders,
+		UserAgent:      cfg.UserAgent,
 		Debug:          cfg.Debug,
 		RetryParams:    cfg.RetryParams,
 	})
@@ -85,7 +85,7 @@ func NewSdkClient(cfg *ClientConfiguration) (*OpenFgaClient, error) {
 
 	// store id is already validate as part of configuration validation
 
-	if cfg.AuthorizationModelId != nil && !utils.IsWellFormedUlidString(*cfg.AuthorizationModelId) {
+	if cfg.AuthorizationModelId != nil && !internalutils.IsWellFormedUlidString(*cfg.AuthorizationModelId) {
 		return nil, FgaInvalidError{param: "AuthorizationModelId", description: "ULID"}
 	}
 
@@ -421,7 +421,7 @@ func (client *OpenFgaClient) getAuthorizationModelId(authorizationModelId *strin
 		modelId = authorizationModelId
 	}
 
-	if modelId != nil && !utils.IsWellFormedUlidString(*modelId) {
+	if modelId != nil && !internalutils.IsWellFormedUlidString(*modelId) {
 		return nil, FgaInvalidError{param: "AuthorizationModelId", description: "ULID"}
 	}
 	return modelId, nil

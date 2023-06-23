@@ -282,16 +282,17 @@ func (c *APIClient) prepareRequest(
 	}
 
 	// Add the user agent to the request.
-	localVarRequest.Header.Add("User-Agent", c.cfg.UserAgent)
+	localVarRequest.Header.Set("User-Agent", c.cfg.UserAgent)
+
+	for header, value := range c.cfg.DefaultHeaders {
+		localVarRequest.Header.Set(header, value)
+	}
 
 	if ctx != nil {
 		// add context to the request
 		localVarRequest = localVarRequest.WithContext(ctx)
 	}
 
-	for header, value := range c.cfg.DefaultHeaders {
-		localVarRequest.Header.Add(header, value)
-	}
 	return localVarRequest, nil
 }
 
