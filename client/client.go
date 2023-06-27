@@ -27,6 +27,8 @@ import (
 
 var (
 	_ _context.Context
+	// Ensure the SdkClient fits OpenFgaClient interface
+	_ SdkClient = (*OpenFgaClient)(nil)
 )
 
 var DEFAULT_MAX_METHOD_PARALLEL_REQS = int32(10)
@@ -229,28 +231,28 @@ type SdkClient interface {
 	/*
 	 * ReadAuthorizationModel Read a particular authorization model.
 	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	 * @return SdkClientReadAuthorizationModelRequest
+	 * @return SdkClientReadAuthorizationModelRequestInterface
 	 */
-	ReadAuthorizationModel(ctx _context.Context) SdkClientReadAuthorizationModelRequest
+	ReadAuthorizationModel(ctx _context.Context) SdkClientReadAuthorizationModelRequestInterface
 
 	/*
 	 * ReadAuthorizationModelExecute executes the ReadAuthorizationModel request
 	 * @return *ClientReadAuthorizationModelResponse
 	 */
-	ReadAuthorizationModelExecute(request SdkClientReadAuthorizationModelRequest) (*ClientReadAuthorizationModelResponse, error)
+	ReadAuthorizationModelExecute(request SdkClientReadAuthorizationModelRequestInterface) (*ClientReadAuthorizationModelResponse, error)
 
 	/*
 	 * ReadLatestAuthorizationModel Reads the latest authorization model (note: this ignores the model id in configuration).
 	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	 * @return SdkClientReadLatestAuthorizationModelRequest
+	 * @return SdkClientReadLatestAuthorizationModelRequestInterface
 	 */
-	ReadLatestAuthorizationModel(ctx _context.Context) SdkClientReadLatestAuthorizationModelRequest
+	ReadLatestAuthorizationModel(ctx _context.Context) SdkClientReadLatestAuthorizationModelRequestInterface
 
 	/*
 	 * ReadLatestAuthorizationModelExecute executes the ReadLatestAuthorizationModel request
 	 * @return *ClientReadAuthorizationModelResponse
 	 */
-	ReadLatestAuthorizationModelExecute(request SdkClientReadLatestAuthorizationModelRequest) (*ClientReadAuthorizationModelResponse, error)
+	ReadLatestAuthorizationModelExecute(request SdkClientReadLatestAuthorizationModelRequestInterface) (*ClientReadAuthorizationModelResponse, error)
 
 	/* Relationship Tuples */
 
