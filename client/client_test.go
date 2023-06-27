@@ -50,6 +50,16 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 	})
 
+	t.Run("Allow client to have empty store ID specified", func(t *testing.T) {
+		_, err := NewSdkClient(&ClientConfiguration{
+			ApiHost: "api.fga.example",
+			StoreId: "",
+		})
+		if err != nil {
+			t.Fatalf("Expect no error when store id is empty but has %v", err)
+		}
+	})
+
 	t.Run("Validate store ID when specified", func(t *testing.T) {
 		_, err := NewSdkClient(&ClientConfiguration{
 			ApiHost: "api.fga.example",
@@ -68,6 +78,17 @@ func TestOpenFgaClient(t *testing.T) {
 		})
 		if err == nil {
 			t.Fatalf("Expect invalid auth mode ID to result in error but there is none")
+		}
+	})
+
+	t.Run("Allow auth model ID to be empty when specified", func(t *testing.T) {
+		_, err := NewSdkClient(&ClientConfiguration{
+			ApiHost:              "api.fga.example",
+			StoreId:              "01GXSB9YR785C4FYS3C0RTG7B2",
+			AuthorizationModelId: openfga.PtrString(""),
+		})
+		if err != nil {
+			t.Fatalf("Expect no error when auth model id is empty but has %v", err)
 		}
 	})
 
