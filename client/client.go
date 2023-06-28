@@ -87,7 +87,7 @@ func NewSdkClient(cfg *ClientConfiguration) (*OpenFgaClient, error) {
 
 	// store id is already validate as part of configuration validation
 
-	if cfg.AuthorizationModelId != nil && !internalutils.IsWellFormedUlidString(*cfg.AuthorizationModelId) {
+	if cfg.AuthorizationModelId != nil && *cfg.AuthorizationModelId != "" && !internalutils.IsWellFormedUlidString(*cfg.AuthorizationModelId) {
 		return nil, FgaInvalidError{param: "AuthorizationModelId", description: "ULID"}
 	}
 
