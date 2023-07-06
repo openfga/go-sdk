@@ -423,7 +423,7 @@ func (client *OpenFgaClient) getAuthorizationModelId(authorizationModelId *strin
 		modelId = authorizationModelId
 	}
 
-	if modelId != nil && !internalutils.IsWellFormedUlidString(*modelId) {
+	if modelId != nil && *modelId != "" && !internalutils.IsWellFormedUlidString(*modelId) {
 		return nil, FgaInvalidError{param: "AuthorizationModelId", description: "ULID"}
 	}
 	return modelId, nil
