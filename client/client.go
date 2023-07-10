@@ -487,11 +487,11 @@ func (client *OpenFgaClient) ListStoresExecute(request SdkClientListStoresReques
 	req := client.OpenFgaApi.ListStores(request.GetContext())
 	pageSize := getPageSizeFromRequest((*ClientPaginationOptions)(request.GetOptions()))
 	if pageSize != nil {
-		req.PageSize(*pageSize)
+		req = req.PageSize(*pageSize)
 	}
 	continuationToken := getContinuationTokenFromRequest((*ClientPaginationOptions)(request.GetOptions()))
 	if continuationToken != nil {
-		req.ContinuationToken(*continuationToken)
+		req = req.ContinuationToken(*continuationToken)
 	}
 	data, _, err := req.Execute()
 	if err != nil {
@@ -730,11 +730,11 @@ func (client *OpenFgaClient) ReadAuthorizationModelsExecute(request SdkClientRea
 	req := client.OpenFgaApi.ReadAuthorizationModels(request.GetContext())
 	pageSize := getPageSizeFromRequest((*ClientPaginationOptions)(request.GetOptions()))
 	if pageSize != nil {
-		req.PageSize(*pageSize)
+		req = req.PageSize(*pageSize)
 	}
 	continuationToken := getContinuationTokenFromRequest((*ClientPaginationOptions)(request.GetOptions()))
 	if continuationToken != nil {
-		req.ContinuationToken(*continuationToken)
+		req = req.ContinuationToken(*continuationToken)
 	}
 	data, _, err := req.Execute()
 	if err != nil {
@@ -890,7 +890,7 @@ func (client *OpenFgaClient) ReadAuthorizationModelExecute(request SdkClientRead
 	if err != nil {
 		return nil, err
 	}
-	if authorizationModelId == nil {
+	if authorizationModelId == nil || *authorizationModelId == "" {
 		return nil, FgaRequiredParamError{param: "AuthorizationModelId"}
 	}
 	data, _, err := client.OpenFgaApi.ReadAuthorizationModel(request.GetContext(), *authorizationModelId).Execute()
@@ -1040,12 +1040,17 @@ func (client *OpenFgaClient) ReadChangesExecute(request SdkClientReadChangesRequ
 	req := client.OpenFgaApi.ReadChanges(request.GetContext())
 	pageSize := getPageSizeFromRequest((*ClientPaginationOptions)(request.GetOptions()))
 	if pageSize != nil {
-		req.PageSize(*pageSize)
+		req = req.PageSize(*pageSize)
 	}
 	continuationToken := getContinuationTokenFromRequest((*ClientPaginationOptions)(request.GetOptions()))
 	if continuationToken != nil {
-		req.ContinuationToken(*continuationToken)
+		req = req.ContinuationToken(*continuationToken)
 	}
+	requestBody := request.GetBody()
+	if requestBody != nil {
+		req = req.Type_(requestBody.Type)
+	}
+
 	data, _, err := req.Execute()
 	if err != nil {
 		return nil, err
@@ -1487,7 +1492,7 @@ func (client *OpenFgaClient) WriteTuplesExecute(request SdkClientWriteTuplesRequ
 		Writes: request.GetBody(),
 	})
 	if request.GetOptions() != nil {
-		baseReq.Options(*request.GetOptions())
+		baseReq = baseReq.Options(*request.GetOptions())
 	}
 	return baseReq.Execute()
 }
@@ -1551,7 +1556,7 @@ func (client *OpenFgaClient) DeleteTuplesExecute(request SdkClientDeleteTuplesRe
 		Deletes: request.GetBody(),
 	})
 	if request.GetOptions() != nil {
-		baseReq.Options(*request.GetOptions())
+		baseReq = baseReq.Options(*request.GetOptions())
 	}
 	return baseReq.Execute()
 }
@@ -2155,7 +2160,7 @@ func (client *OpenFgaClient) ReadAssertionsExecute(request SdkClientReadAssertio
 	if err != nil {
 		return nil, err
 	}
-	if authorizationModelId == nil {
+	if authorizationModelId == nil || *authorizationModelId == "" {
 		return nil, FgaRequiredParamError{param: "AuthorizationModelId"}
 	}
 	data, _, err := client.OpenFgaApi.ReadAssertions(request.GetContext(), *authorizationModelId).Execute()
@@ -2258,7 +2263,7 @@ func (client *OpenFgaClient) WriteAssertionsExecute(request SdkClientWriteAssert
 	if err != nil {
 		return nil, err
 	}
-	if authorizationModelId == nil {
+	if authorizationModelId == nil || *authorizationModelId == "" {
 		return nil, FgaRequiredParamError{param: "AuthorizationModelId"}
 	}
 	for index := 0; index < len(*request.GetBody()); index++ {
