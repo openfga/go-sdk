@@ -499,9 +499,17 @@ func TestOpenFgaClient(t *testing.T) {
 		if *(*got.AuthorizationModel).Id != modelId {
 			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
 		}
-		// ReadAuthorizationModel without options should work
+		// ReadAuthorizationModel without options should not work
 		_, err = fgaClient.ReadAuthorizationModel(context.Background()).Execute()
 		expectedError := "Required parameter AuthorizationModelId was not provided"
+		if err == nil || err.Error() != expectedError {
+			t.Fatalf("Expected error:%v, got: %v", expectedError, err)
+		}
+		// ReadAuthorizationModel with options of empty string should not work
+		badOptions := ClientReadAuthorizationModelOptions{
+			AuthorizationModelId: openfga.PtrString(""),
+		}
+		_, err = fgaClient.ReadAuthorizationModel(context.Background()).Options(badOptions).Execute()
 		if err == nil || err.Error() != expectedError {
 			t.Fatalf("Expected error:%v, got: %v", expectedError, err)
 		}
