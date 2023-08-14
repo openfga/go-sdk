@@ -16,13 +16,11 @@ import (
 	"net/http"
 
 	"github.com/openfga/go-sdk/credentials"
-	"github.com/openfga/go-sdk/internal/utils"
+	internalutils "github.com/openfga/go-sdk/internal/utils"
 )
 
 const (
 	SdkVersion = "0.2.2"
-
-	defaultUserAgent = "openfga-sdk go/0.2.2"
 )
 
 // RetryParams configures configuration for retry in case of HTTP too many request
@@ -38,7 +36,6 @@ type Configuration struct {
 	StoreId        string                   `json:"store_id,omitempty"`
 	Credentials    *credentials.Credentials `json:"credentials,omitempty"`
 	DefaultHeaders map[string]string        `json:"default_headers,omitempty"`
-	UserAgent      string                   `json:"user_agent,omitempty"`
 	Debug          bool                     `json:"debug,omitempty"`
 	HTTPClient     *http.Client
 	RetryParams    *RetryParams
@@ -52,10 +49,6 @@ func DefaultRetryParams() *RetryParams {
 	}
 }
 
-func GetSdkUserAgent() string {
-	return defaultUserAgent
-}
-
 // NewConfiguration returns a new Configuration object
 func NewConfiguration(config Configuration) (*Configuration, error) {
 	cfg := &Configuration{
@@ -64,17 +57,12 @@ func NewConfiguration(config Configuration) (*Configuration, error) {
 		StoreId:        config.StoreId,
 		Credentials:    config.Credentials,
 		DefaultHeaders: config.DefaultHeaders,
-		UserAgent:      config.UserAgent,
 		Debug:          false,
 		RetryParams:    config.RetryParams,
 	}
 
 	if cfg.ApiScheme == "" {
 		cfg.ApiScheme = "https"
-	}
-
-	if cfg.UserAgent == "" {
-		cfg.UserAgent = GetSdkUserAgent()
 	}
 
 	if cfg.DefaultHeaders == nil {

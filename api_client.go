@@ -60,7 +60,7 @@ type service struct {
 	RetryParams *RetryParams
 }
 
-// NewAPIClient creates a new API client. Requires a userAgent string describing your application.
+// NewAPIClient creates a new API client.
 // optionally a custom http.Client to allow for advanced features such as caching.
 func NewAPIClient(cfg *Configuration) *APIClient {
 	if cfg.HTTPClient == nil {
@@ -280,9 +280,6 @@ func (c *APIClient) prepareRequest(
 		}
 		localVarRequest.Header = headers
 	}
-
-	// Add the user agent to the request.
-	localVarRequest.Header.Set("User-Agent", c.cfg.UserAgent)
 
 	for header, value := range c.cfg.DefaultHeaders {
 		localVarRequest.Header.Set(header, value)

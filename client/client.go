@@ -19,9 +19,9 @@ import (
 	"math"
 	_nethttp "net/http"
 
-	"github.com/openfga/go-sdk"
+	openfga "github.com/openfga/go-sdk"
 	"github.com/openfga/go-sdk/credentials"
-	"github.com/openfga/go-sdk/internal/utils"
+	internalutils "github.com/openfga/go-sdk/internal/utils"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -41,7 +41,6 @@ type ClientConfiguration struct {
 	AuthorizationModelId *string                  `json:"authorization_model_id,omitempty"`
 	Credentials          *credentials.Credentials `json:"credentials,omitempty"`
 	DefaultHeaders       map[string]string        `json:"default_headers,omitempty"`
-	UserAgent            string                   `json:"user_agent,omitempty"`
 	Debug                bool                     `json:"debug,omitempty"`
 	HTTPClient           *_nethttp.Client
 	RetryParams          *openfga.RetryParams
@@ -54,7 +53,6 @@ func newClientConfiguration(cfg *openfga.Configuration) ClientConfiguration {
 		StoreId:        cfg.StoreId,
 		Credentials:    cfg.Credentials,
 		DefaultHeaders: cfg.DefaultHeaders,
-		UserAgent:      cfg.UserAgent,
 		Debug:          cfg.Debug,
 		RetryParams:    cfg.RetryParams,
 	}
@@ -73,7 +71,6 @@ func NewSdkClient(cfg *ClientConfiguration) (*OpenFgaClient, error) {
 		StoreId:        cfg.StoreId,
 		Credentials:    cfg.Credentials,
 		DefaultHeaders: cfg.DefaultHeaders,
-		UserAgent:      cfg.UserAgent,
 		Debug:          cfg.Debug,
 		RetryParams:    cfg.RetryParams,
 	})
