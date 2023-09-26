@@ -185,12 +185,10 @@ type OpenFgaApi interface {
 	/*
 		 * ListObjects List all objects of the given type that the user has a relation with
 		 * The ListObjects API returns a list of all the objects of the given type that the user has a relation with. To achieve this, both the store tuples and the authorization model are used.
-	An `authorization_model_id` may be specified in the body. If it is, it will be used to decide the underlying implementation used. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance.
+	An `authorization_model_id` may be specified in the body. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance.
 	You may also specify `contextual_tuples` that will be treated as regular tuples.
 	The response will contain the related objects in an array in the "objects" field of the response and they will be strings in the object format `<type>:<id>` (e.g. "document:roadmap").
 	The number of objects in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_OBJECTS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_OBJECTS_MAX_RESULTS, whichever is hit first.
-	Note: If you have `and` or `but not` in your model while using ListObjects, checkout the [caveats](https://openfga.dev/docs/interacting/relationship-queries#caveats-and-when-not-to-use-it-3).
-
 		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 		 * @return ApiListObjectsRequest
 	*/
@@ -203,11 +201,13 @@ type OpenFgaApi interface {
 	ListObjectsExecute(r ApiListObjectsRequest) (ListObjectsResponse, *_nethttp.Response, error)
 
 	/*
-	 * ListStores List all stores
-	 * Returns a paginated list of OpenFGA stores.
-	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	 * @return ApiListStoresRequest
-	 */
+		 * ListStores List all stores
+		 * Returns a paginated list of OpenFGA stores and a continuation token to get additional stores.
+	The continuation token will be empty if there are no more stores.
+
+		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @return ApiListStoresRequest
+	*/
 	ListStores(ctx _context.Context) ApiListStoresRequest
 
 	/*
@@ -220,11 +220,12 @@ type OpenFgaApi interface {
 		 * Read Get tuples from the store that matches a query, without following userset rewrite rules
 		 * The Read API will return the tuples for a certain store that match a query filter specified in the body of the request. It is different from the `/stores/{store_id}/expand` API in that it only returns relationship tuples that are stored in the system and satisfy the query.
 	In the body:
-	1. tuple_key is optional.  If tuple_key is not specified, it will return all tuples in the store.2. `tuple_key.object` is mandatory if tuple_key is specified. It can be a full object (e.g., `type:object_id`) or type only (e.g., `type:`).
+	1. `tuple_key` is optional. If not specified, it will return all tuples in the store.
+	2. `tuple_key.object` is mandatory if `tuple_key` is specified. It can be a full object (e.g., `type:object_id`) or type only (e.g., `type:`).
 	3. `tuple_key.user` is mandatory if tuple_key is specified in the case the `tuple_key.object` is a type only.
 	## Examples
 	### Query for all objects in a type definition
-	To query for all objects that `user:bob` has `reader` relationship in the document type definition, call read API with body of
+	To query for all objects that `user:bob` has `reader` relationship in the `document` type definition, call read API with body of
 	```json
 	{
 	 "tuple_key": {
@@ -234,7 +235,7 @@ type OpenFgaApi interface {
 	  }
 	}
 	```
-	The API will return tuples and an optional continuation token, something like
+	The API will return tuples and a continuation token, something like
 	```json
 	{
 	  "tuples": [
@@ -246,10 +247,12 @@ type OpenFgaApi interface {
 	      },
 	      "timestamp": "2021-10-06T15:32:11.128Z"
 	    }
-	  ]
+	  ],
+	  "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
 	}
 	```
-	This means that `user:bob` has a `reader` relationship with 1 document `document:2021-budget`.
+	This means that `user:bob` has a `reader` relationship with 1 document `document:2021-budget`. Note that this API, unlike the List Objects API, does not evaluate the tuples in the store.
+	The continuation token will be empty if there are no more tuples to query.
 	### Query for all stored relationship tuples that have a particular relation and object
 	To query for all users that have `reader` relationship with `document:2021-budget`, call read API with body of
 	```json
@@ -272,10 +275,11 @@ type OpenFgaApi interface {
 	      },
 	      "timestamp": "2021-10-06T15:32:11.128Z"
 	    }
-	  ]
+	  ],
+	  "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
 	}
 	```
-	This means that `document:2021-budget` has 1 `reader` (`user:bob`).  Note that the API will not return writers such as `user:anne` even when all writers are readers.  This is because only direct relationship are returned for the READ API.
+	This means that `document:2021-budget` has 1 `reader` (`user:bob`).  Note that, even if the model said that all `writers` are also `readers`, the API will not return writers such as `user:anne` because it only returns tuples and does not evaluate them.
 	### Query for all users with all relationships for a particular document
 	To query for all users that have any relationship with `document:2021-budget`, call read API with body of
 	```json
@@ -305,7 +309,8 @@ type OpenFgaApi interface {
 	      },
 	      "timestamp": "2021-10-06T15:32:11.128Z"
 	    }
-	  ]
+	  ],
+	  "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
 	}
 	```
 	This means that `document:2021-budget` has 1 `reader` (`user:bob`) and 1 `writer` (`user:anne`).
@@ -409,10 +414,11 @@ type OpenFgaApi interface {
 	      "id": "01G4ZW8F4A07AKQ8RHSVG9RW04",
 	      "type_definitions": [...]
 	    },
-	  ]
+	  ],
+	  "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
 	}
 	```
-	If there are more authorization models available, the response will contain an extra field `continuation_token`:
+	If there are no more authorization models available, the `continuation_token` field will be empty
 	```json
 	{
 	  "authorization_models": [
@@ -425,7 +431,7 @@ type OpenFgaApi interface {
 	      "type_definitions": [...]
 	    },
 	  ],
-	  "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
+	  "continuation_token": ""
 	}
 	```
 
@@ -1988,12 +1994,10 @@ func (r ApiListObjectsRequest) Execute() (ListObjectsResponse, *_nethttp.Respons
   - ListObjects List all objects of the given type that the user has a relation with
   - The ListObjects API returns a list of all the objects of the given type that the user has a relation with. To achieve this, both the store tuples and the authorization model are used.
 
-An `authorization_model_id` may be specified in the body. If it is, it will be used to decide the underlying implementation used. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance.
+An `authorization_model_id` may be specified in the body. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance.
 You may also specify `contextual_tuples` that will be treated as regular tuples.
 The response will contain the related objects in an array in the "objects" field of the response and they will be strings in the object format `<type>:<id>` (e.g. "document:roadmap").
 The number of objects in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_OBJECTS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_OBJECTS_MAX_RESULTS, whichever is hit first.
-Note: If you have `and` or `but not` in your model while using ListObjects, checkout the [caveats](https://openfga.dev/docs/interacting/relationship-queries#caveats-and-when-not-to-use-it-3).
-
   - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @return ApiListObjectsRequest
 */
@@ -2265,11 +2269,14 @@ func (r ApiListStoresRequest) Execute() (ListStoresResponse, *_nethttp.Response,
 }
 
 /*
- * ListStores List all stores
- * Returns a paginated list of OpenFGA stores.
- * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return ApiListStoresRequest
- */
+  - ListStores List all stores
+  - Returns a paginated list of OpenFGA stores and a continuation token to get additional stores.
+
+The continuation token will be empty if there are no more stores.
+
+  - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @return ApiListStoresRequest
+*/
 func (a *OpenFgaApiService) ListStores(ctx _context.Context) ApiListStoresRequest {
 	return ApiListStoresRequest{
 		ApiService: a,
@@ -2531,11 +2538,12 @@ func (r ApiReadRequest) Execute() (ReadResponse, *_nethttp.Response, error) {
   - The Read API will return the tuples for a certain store that match a query filter specified in the body of the request. It is different from the `/stores/{store_id}/expand` API in that it only returns relationship tuples that are stored in the system and satisfy the query.
 
 In the body:
-1. tuple_key is optional.  If tuple_key is not specified, it will return all tuples in the store.2. `tuple_key.object` is mandatory if tuple_key is specified. It can be a full object (e.g., `type:object_id`) or type only (e.g., `type:`).
+1. `tuple_key` is optional. If not specified, it will return all tuples in the store.
+2. `tuple_key.object` is mandatory if `tuple_key` is specified. It can be a full object (e.g., `type:object_id`) or type only (e.g., `type:`).
 3. `tuple_key.user` is mandatory if tuple_key is specified in the case the `tuple_key.object` is a type only.
 ## Examples
 ### Query for all objects in a type definition
-To query for all objects that `user:bob` has `reader` relationship in the document type definition, call read API with body of
+To query for all objects that `user:bob` has `reader` relationship in the `document` type definition, call read API with body of
 ```json
 
 	{
@@ -2547,7 +2555,7 @@ To query for all objects that `user:bob` has `reader` relationship in the docume
 	}
 
 ```
-The API will return tuples and an optional continuation token, something like
+The API will return tuples and a continuation token, something like
 ```json
 
 	{
@@ -2560,11 +2568,13 @@ The API will return tuples and an optional continuation token, something like
 	      },
 	      "timestamp": "2021-10-06T15:32:11.128Z"
 	    }
-	  ]
+	  ],
+	  "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
 	}
 
 ```
-This means that `user:bob` has a `reader` relationship with 1 document `document:2021-budget`.
+This means that `user:bob` has a `reader` relationship with 1 document `document:2021-budget`. Note that this API, unlike the List Objects API, does not evaluate the tuples in the store.
+The continuation token will be empty if there are no more tuples to query.
 ### Query for all stored relationship tuples that have a particular relation and object
 To query for all users that have `reader` relationship with `document:2021-budget`, call read API with body of
 ```json
@@ -2590,11 +2600,12 @@ The API will return something like
 	      },
 	      "timestamp": "2021-10-06T15:32:11.128Z"
 	    }
-	  ]
+	  ],
+	  "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
 	}
 
 ```
-This means that `document:2021-budget` has 1 `reader` (`user:bob`).  Note that the API will not return writers such as `user:anne` even when all writers are readers.  This is because only direct relationship are returned for the READ API.
+This means that `document:2021-budget` has 1 `reader` (`user:bob`).  Note that, even if the model said that all `writers` are also `readers`, the API will not return writers such as `user:anne` because it only returns tuples and does not evaluate them.
 ### Query for all users with all relationships for a particular document
 To query for all users that have any relationship with `document:2021-budget`, call read API with body of
 ```json
@@ -2627,7 +2638,8 @@ The API will return something like
 	      },
 	      "timestamp": "2021-10-06T15:32:11.128Z"
 	    }
-	  ]
+	  ],
+	  "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
 	}
 
 ```
@@ -3488,11 +3500,12 @@ Assume that a store's authorization model has been configured twice. To get all 
 	      "id": "01G4ZW8F4A07AKQ8RHSVG9RW04",
 	      "type_definitions": [...]
 	    },
-	  ]
+	  ],
+	  "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
 	}
 
 ```
-If there are more authorization models available, the response will contain an extra field `continuation_token`:
+If there are no more authorization models available, the `continuation_token` field will be empty
 ```json
 
 	{
@@ -3506,7 +3519,7 @@ If there are more authorization models available, the response will contain an e
 	      "type_definitions": [...]
 	    },
 	  ],
-	  "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
+	  "continuation_token": ""
 	}
 
 ```
