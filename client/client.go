@@ -121,9 +121,17 @@ type ClientTupleKey struct {
 
 func (tupleKey ClientTupleKey) ToTupleKey() openfga.TupleKey {
 	return openfga.TupleKey{
-		User:     openfga.PtrString(tupleKey.User),
-		Relation: openfga.PtrString(tupleKey.Relation),
-		Object:   openfga.PtrString(tupleKey.Object),
+		User:     tupleKey.User,
+		Relation: tupleKey.Relation,
+		Object:   tupleKey.Object,
+	}
+}
+
+func (tupleKey ClientTupleKey) ToWriteRequestTupleKey() openfga.WriteRequestTupleKey {
+	return openfga.WriteRequestTupleKey{
+		User:     tupleKey.User,
+		Relation: tupleKey.Relation,
+		Object:   tupleKey.Object,
 	}
 }
 
@@ -1129,7 +1137,7 @@ func (client *OpenFgaClient) ReadExecute(request SdkClientReadRequestInterface) 
 		ContinuationToken: getContinuationTokenFromRequest((*ClientPaginationOptions)(request.GetOptions())),
 	}
 	if request.GetBody() != nil && (request.GetBody().User != nil || request.GetBody().Relation != nil || request.GetBody().Object != nil) {
-		body.TupleKey = &openfga.TupleKey{
+		body.TupleKey = &openfga.ReadRequestTupleKey{
 			User:     request.GetBody().User,
 			Relation: request.GetBody().Relation,
 			Object:   request.GetBody().Object,
@@ -1292,16 +1300,16 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 			AuthorizationModelId: authorizationModelId,
 		}
 		if request.GetBody().Writes != nil && len(*request.GetBody().Writes) > 0 {
-			writes := openfga.TupleKeys{}
+			writes := openfga.WriteRequestTupleKeys{}
 			for index := 0; index < len(*request.GetBody().Writes); index++ {
-				writes.TupleKeys = append(writes.TupleKeys, (*request.GetBody().Writes)[index].ToTupleKey())
+				writes.TupleKeys = append(writes.TupleKeys, (*request.GetBody().Writes)[index].ToWriteRequestTupleKey())
 			}
 			writeRequest.Writes = &writes
 		}
 		if request.GetBody().Deletes != nil && len(*request.GetBody().Deletes) > 0 {
-			deletes := openfga.TupleKeys{}
+			deletes := openfga.WriteRequestTupleKeys{}
 			for index := 0; index < len(*request.GetBody().Deletes); index++ {
-				deletes.TupleKeys = append(deletes.TupleKeys, (*request.GetBody().Deletes)[index].ToTupleKey())
+				deletes.TupleKeys = append(deletes.TupleKeys, (*request.GetBody().Deletes)[index].ToWriteRequestTupleKey())
 			}
 			writeRequest.Deletes = &deletes
 		}
@@ -1652,10 +1660,10 @@ func (client *OpenFgaClient) CheckExecute(request SdkClientCheckRequestInterface
 		return nil, err
 	}
 	requestBody := openfga.CheckRequest{
-		TupleKey: openfga.TupleKey{
-			User:     openfga.PtrString(request.GetBody().User),
-			Relation: openfga.PtrString(request.GetBody().Relation),
-			Object:   openfga.PtrString(request.GetBody().Object),
+		TupleKey: openfga.CheckRequestTupleKey{
+			User:     request.GetBody().User,
+			Relation: request.GetBody().Relation,
+			Object:   request.GetBody().Object,
 		},
 		ContextualTuples:     openfga.NewContextualTupleKeys(contextualTuples),
 		AuthorizationModelId: authorizationModelId,
@@ -1869,9 +1877,9 @@ func (client *OpenFgaClient) ExpandExecute(request SdkClientExpandRequestInterfa
 	}
 
 	data, _, err := client.OpenFgaApi.Expand(request.GetContext()).Body(openfga.ExpandRequest{
-		TupleKey: openfga.TupleKey{
-			Relation: &request.GetBody().Relation,
-			Object:   &request.GetBody().Object,
+		TupleKey: openfga.ExpandRequestTupleKey{
+			Relation: request.GetBody().Relation,
+			Object:   request.GetBody().Object,
 		},
 		AuthorizationModelId: authorizationModelId,
 	}).Execute()
@@ -2201,10 +2209,10 @@ type ClientWriteAssertionsRequest = []ClientAssertion
 
 func (clientAssertion ClientAssertion) ToAssertion() openfga.Assertion {
 	return openfga.Assertion{
-		TupleKey: openfga.TupleKey{
-			User:     openfga.PtrString(clientAssertion.User),
-			Relation: openfga.PtrString(clientAssertion.Relation),
-			Object:   openfga.PtrString(clientAssertion.Object),
+		TupleKey: openfga.CheckRequestTupleKey{
+			User:     clientAssertion.User,
+			Relation: clientAssertion.Relation,
+			Object:   clientAssertion.Object,
 		},
 		Expectation: clientAssertion.Expectation,
 	}

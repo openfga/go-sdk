@@ -569,10 +569,10 @@ func TestOpenFgaApi(t *testing.T) {
 			RequestPath:    "check",
 		}
 		requestBody := CheckRequest{
-			TupleKey: TupleKey{
-				User:     PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-				Relation: PtrString("viewer"),
-				Object:   PtrString("document:roadmap"),
+			TupleKey: CheckRequestTupleKey{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "viewer",
+				Object:   "document:roadmap",
 			},
 			AuthorizationModelId: PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
 		}
@@ -621,11 +621,11 @@ func TestOpenFgaApi(t *testing.T) {
 			RequestPath:    "write",
 		}
 		requestBody := WriteRequest{
-			Writes: &TupleKeys{
-				TupleKeys: []TupleKey{{
-					User:     PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-					Relation: PtrString("viewer"),
-					Object:   PtrString("document:roadmap"),
+			Writes: &WriteRequestTupleKeys{
+				TupleKeys: []WriteRequestTupleKey{{
+					User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+					Relation: "viewer",
+					Object:   "document:roadmap",
 				}},
 			},
 			AuthorizationModelId: PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
@@ -667,11 +667,11 @@ func TestOpenFgaApi(t *testing.T) {
 		}
 
 		requestBody := WriteRequest{
-			Deletes: &TupleKeys{
-				TupleKeys: []TupleKey{{
-					User:     PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-					Relation: PtrString("viewer"),
-					Object:   PtrString("document:roadmap"),
+			Deletes: &WriteRequestTupleKeys{
+				TupleKeys: []WriteRequestTupleKey{{
+					User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+					Relation: "viewer",
+					Object:   "document:roadmap",
 				}},
 			},
 			AuthorizationModelId: PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
@@ -713,9 +713,9 @@ func TestOpenFgaApi(t *testing.T) {
 		}
 
 		requestBody := ExpandRequest{
-			TupleKey: TupleKey{
-				Relation: PtrString("viewer"),
-				Object:   PtrString("document:roadmap"),
+			TupleKey: ExpandRequestTupleKey{
+				Relation: "viewer",
+				Object:   "document:roadmap",
 			},
 			AuthorizationModelId: PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
 		}
@@ -761,7 +761,7 @@ func TestOpenFgaApi(t *testing.T) {
 		}
 
 		requestBody := ReadRequest{
-			TupleKey: &TupleKey{
+			TupleKey: &ReadRequestTupleKey{
 				User:     PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
 				Relation: PtrString("viewer"),
 				Object:   PtrString("document:roadmap"),
@@ -866,14 +866,14 @@ func TestOpenFgaApi(t *testing.T) {
 			Relation:             "can_read",
 			Type:                 "document",
 			ContextualTuples: &ContextualTupleKeys{
-				TupleKeys: []TupleKey{{
-					User:     PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-					Relation: PtrString("editor"),
-					Object:   PtrString("folder:product"),
+				TupleKeys: []WriteRequestTupleKey{{
+					User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+					Relation: "editor",
+					Object:   "folder:product",
 				}, {
-					User:     PtrString("folder:product"),
-					Relation: PtrString("parent"),
-					Object:   PtrString("document:roadmap"),
+					User:     "folder:product",
+					Relation: "parent",
+					Object:   "document:roadmap",
 				}},
 			},
 		}
@@ -924,10 +924,10 @@ func TestOpenFgaApi(t *testing.T) {
 			RequestPath:    "check",
 		}
 		requestBody := CheckRequest{
-			TupleKey: TupleKey{
-				User:     PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-				Relation: PtrString("viewer"),
-				Object:   PtrString("document:roadmap"),
+			TupleKey: CheckRequestTupleKey{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "viewer",
+				Object:   "document:roadmap",
 			},
 		}
 
@@ -987,10 +987,10 @@ func TestOpenFgaApi(t *testing.T) {
 			RequestPath:    "check",
 		}
 		requestBody := CheckRequest{
-			TupleKey: TupleKey{
-				User:     PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-				Relation: PtrString("viewer"),
-				Object:   PtrString("document:roadmap"),
+			TupleKey: CheckRequestTupleKey{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "viewer",
+				Object:   "document:roadmap",
 			},
 		}
 
@@ -1043,10 +1043,10 @@ func TestOpenFgaApi(t *testing.T) {
 			RequestPath:    "check",
 		}
 		requestBody := CheckRequest{
-			TupleKey: TupleKey{
-				User:     PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-				Relation: PtrString("viewer"),
-				Object:   PtrString("document:roadmap"),
+			TupleKey: CheckRequestTupleKey{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "viewer",
+				Object:   "document:roadmap",
 			},
 		}
 
@@ -1106,10 +1106,10 @@ func TestOpenFgaApi(t *testing.T) {
 			RequestPath:    "check",
 		}
 		requestBody := CheckRequest{
-			TupleKey: TupleKey{
-				User:     PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-				Relation: PtrString("viewer"),
-				Object:   PtrString("document:roadmap"),
+			TupleKey: CheckRequestTupleKey{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "viewer",
+				Object:   "document:roadmap",
 			},
 		}
 
@@ -1177,10 +1177,10 @@ func TestOpenFgaApi(t *testing.T) {
 			RequestPath:    "check",
 		}
 		requestBody := CheckRequest{
-			TupleKey: TupleKey{
-				User:     PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-				Relation: PtrString("viewer"),
-				Object:   PtrString("document:roadmap"),
+			TupleKey: CheckRequestTupleKey{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "viewer",
+				Object:   "document:roadmap",
 			},
 		}
 
@@ -1239,10 +1239,10 @@ func TestOpenFgaApi(t *testing.T) {
 			RequestPath:    "check",
 		}
 		requestBody := CheckRequest{
-			TupleKey: TupleKey{
-				User:     PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-				Relation: PtrString("viewer"),
-				Object:   PtrString("document:roadmap"),
+			TupleKey: CheckRequestTupleKey{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "viewer",
+				Object:   "document:roadmap",
 			},
 		}
 

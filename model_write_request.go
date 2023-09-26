@@ -18,9 +18,9 @@ import (
 
 // WriteRequest struct for WriteRequest
 type WriteRequest struct {
-	Writes               *TupleKeys `json:"writes,omitempty"`
-	Deletes              *TupleKeys `json:"deletes,omitempty"`
-	AuthorizationModelId *string    `json:"authorization_model_id,omitempty"`
+	Writes               *WriteRequestTupleKeys `json:"writes,omitempty"`
+	Deletes              *WriteRequestTupleKeys `json:"deletes,omitempty"`
+	AuthorizationModelId *string                `json:"authorization_model_id,omitempty"`
 }
 
 // NewWriteRequest instantiates a new WriteRequest object
@@ -41,9 +41,9 @@ func NewWriteRequestWithDefaults() *WriteRequest {
 }
 
 // GetWrites returns the Writes field value if set, zero value otherwise.
-func (o *WriteRequest) GetWrites() TupleKeys {
+func (o *WriteRequest) GetWrites() WriteRequestTupleKeys {
 	if o == nil || o.Writes == nil {
-		var ret TupleKeys
+		var ret WriteRequestTupleKeys
 		return ret
 	}
 	return *o.Writes
@@ -51,7 +51,7 @@ func (o *WriteRequest) GetWrites() TupleKeys {
 
 // GetWritesOk returns a tuple with the Writes field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *WriteRequest) GetWritesOk() (*TupleKeys, bool) {
+func (o *WriteRequest) GetWritesOk() (*WriteRequestTupleKeys, bool) {
 	if o == nil || o.Writes == nil {
 		return nil, false
 	}
@@ -67,15 +67,15 @@ func (o *WriteRequest) HasWrites() bool {
 	return false
 }
 
-// SetWrites gets a reference to the given TupleKeys and assigns it to the Writes field.
-func (o *WriteRequest) SetWrites(v TupleKeys) {
+// SetWrites gets a reference to the given WriteRequestTupleKeys and assigns it to the Writes field.
+func (o *WriteRequest) SetWrites(v WriteRequestTupleKeys) {
 	o.Writes = &v
 }
 
 // GetDeletes returns the Deletes field value if set, zero value otherwise.
-func (o *WriteRequest) GetDeletes() TupleKeys {
+func (o *WriteRequest) GetDeletes() WriteRequestTupleKeys {
 	if o == nil || o.Deletes == nil {
-		var ret TupleKeys
+		var ret WriteRequestTupleKeys
 		return ret
 	}
 	return *o.Deletes
@@ -83,7 +83,7 @@ func (o *WriteRequest) GetDeletes() TupleKeys {
 
 // GetDeletesOk returns a tuple with the Deletes field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *WriteRequest) GetDeletesOk() (*TupleKeys, bool) {
+func (o *WriteRequest) GetDeletesOk() (*WriteRequestTupleKeys, bool) {
 	if o == nil || o.Deletes == nil {
 		return nil, false
 	}
@@ -99,8 +99,8 @@ func (o *WriteRequest) HasDeletes() bool {
 	return false
 }
 
-// SetDeletes gets a reference to the given TupleKeys and assigns it to the Deletes field.
-func (o *WriteRequest) SetDeletes(v TupleKeys) {
+// SetDeletes gets a reference to the given WriteRequestTupleKeys and assigns it to the Deletes field.
+func (o *WriteRequest) SetDeletes(v WriteRequestTupleKeys) {
 	o.Deletes = &v
 }
 

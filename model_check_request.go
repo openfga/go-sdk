@@ -18,18 +18,20 @@ import (
 
 // CheckRequest struct for CheckRequest
 type CheckRequest struct {
-	TupleKey             TupleKey             `json:"tuple_key"`
+	TupleKey             CheckRequestTupleKey `json:"tuple_key"`
 	ContextualTuples     *ContextualTupleKeys `json:"contextual_tuples,omitempty"`
 	AuthorizationModelId *string              `json:"authorization_model_id,omitempty"`
 	// Defaults to false. Making it true has performance implications.
 	Trace *bool `json:"trace,omitempty"`
+	// Additional request context that will be used to evaluate any ABAC conditions encountered in the query evaluation.
+	Context *map[string]interface{} `json:"context,omitempty"`
 }
 
 // NewCheckRequest instantiates a new CheckRequest object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewCheckRequest(tupleKey TupleKey) *CheckRequest {
+func NewCheckRequest(tupleKey CheckRequestTupleKey) *CheckRequest {
 	this := CheckRequest{}
 	this.TupleKey = tupleKey
 	return &this
@@ -44,9 +46,9 @@ func NewCheckRequestWithDefaults() *CheckRequest {
 }
 
 // GetTupleKey returns the TupleKey field value
-func (o *CheckRequest) GetTupleKey() TupleKey {
+func (o *CheckRequest) GetTupleKey() CheckRequestTupleKey {
 	if o == nil {
-		var ret TupleKey
+		var ret CheckRequestTupleKey
 		return ret
 	}
 
@@ -55,7 +57,7 @@ func (o *CheckRequest) GetTupleKey() TupleKey {
 
 // GetTupleKeyOk returns a tuple with the TupleKey field value
 // and a boolean to check if the value has been set.
-func (o *CheckRequest) GetTupleKeyOk() (*TupleKey, bool) {
+func (o *CheckRequest) GetTupleKeyOk() (*CheckRequestTupleKey, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -63,7 +65,7 @@ func (o *CheckRequest) GetTupleKeyOk() (*TupleKey, bool) {
 }
 
 // SetTupleKey sets field value
-func (o *CheckRequest) SetTupleKey(v TupleKey) {
+func (o *CheckRequest) SetTupleKey(v CheckRequestTupleKey) {
 	o.TupleKey = v
 }
 
@@ -163,6 +165,38 @@ func (o *CheckRequest) SetTrace(v bool) {
 	o.Trace = &v
 }
 
+// GetContext returns the Context field value if set, zero value otherwise.
+func (o *CheckRequest) GetContext() map[string]interface{} {
+	if o == nil || o.Context == nil {
+		var ret map[string]interface{}
+		return ret
+	}
+	return *o.Context
+}
+
+// GetContextOk returns a tuple with the Context field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *CheckRequest) GetContextOk() (*map[string]interface{}, bool) {
+	if o == nil || o.Context == nil {
+		return nil, false
+	}
+	return o.Context, true
+}
+
+// HasContext returns a boolean if a field has been set.
+func (o *CheckRequest) HasContext() bool {
+	if o != nil && o.Context != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetContext gets a reference to the given map[string]interface{} and assigns it to the Context field.
+func (o *CheckRequest) SetContext(v map[string]interface{}) {
+	o.Context = &v
+}
+
 func (o CheckRequest) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["tuple_key"] = o.TupleKey
@@ -174,6 +208,9 @@ func (o CheckRequest) MarshalJSON() ([]byte, error) {
 	}
 	if o.Trace != nil {
 		toSerialize["trace"] = o.Trace
+	}
+	if o.Context != nil {
+		toSerialize["context"] = o.Context
 	}
 	return json.Marshal(toSerialize)
 }

@@ -16,36 +16,36 @@ import (
 	"encoding/json"
 )
 
-// TupleKey struct for TupleKey
-type TupleKey struct {
+// WriteRequestTupleKey struct for WriteRequestTupleKey
+type WriteRequestTupleKey struct {
 	User      string                 `json:"user"`
 	Relation  string                 `json:"relation"`
 	Object    string                 `json:"object"`
 	Condition *RelationshipCondition `json:"condition,omitempty"`
 }
 
-// NewTupleKey instantiates a new TupleKey object
+// NewWriteRequestTupleKey instantiates a new WriteRequestTupleKey object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewTupleKey(user string, relation string, object string) *TupleKey {
-	this := TupleKey{}
+func NewWriteRequestTupleKey(user string, relation string, object string) *WriteRequestTupleKey {
+	this := WriteRequestTupleKey{}
 	this.User = user
 	this.Relation = relation
 	this.Object = object
 	return &this
 }
 
-// NewTupleKeyWithDefaults instantiates a new TupleKey object
+// NewWriteRequestTupleKeyWithDefaults instantiates a new WriteRequestTupleKey object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewTupleKeyWithDefaults() *TupleKey {
-	this := TupleKey{}
+func NewWriteRequestTupleKeyWithDefaults() *WriteRequestTupleKey {
+	this := WriteRequestTupleKey{}
 	return &this
 }
 
 // GetUser returns the User field value
-func (o *TupleKey) GetUser() string {
+func (o *WriteRequestTupleKey) GetUser() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -56,7 +56,7 @@ func (o *TupleKey) GetUser() string {
 
 // GetUserOk returns a tuple with the User field value
 // and a boolean to check if the value has been set.
-func (o *TupleKey) GetUserOk() (*string, bool) {
+func (o *WriteRequestTupleKey) GetUserOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -64,12 +64,12 @@ func (o *TupleKey) GetUserOk() (*string, bool) {
 }
 
 // SetUser sets field value
-func (o *TupleKey) SetUser(v string) {
+func (o *WriteRequestTupleKey) SetUser(v string) {
 	o.User = v
 }
 
 // GetRelation returns the Relation field value
-func (o *TupleKey) GetRelation() string {
+func (o *WriteRequestTupleKey) GetRelation() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -80,7 +80,7 @@ func (o *TupleKey) GetRelation() string {
 
 // GetRelationOk returns a tuple with the Relation field value
 // and a boolean to check if the value has been set.
-func (o *TupleKey) GetRelationOk() (*string, bool) {
+func (o *WriteRequestTupleKey) GetRelationOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -88,12 +88,12 @@ func (o *TupleKey) GetRelationOk() (*string, bool) {
 }
 
 // SetRelation sets field value
-func (o *TupleKey) SetRelation(v string) {
+func (o *WriteRequestTupleKey) SetRelation(v string) {
 	o.Relation = v
 }
 
 // GetObject returns the Object field value
-func (o *TupleKey) GetObject() string {
+func (o *WriteRequestTupleKey) GetObject() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -104,7 +104,7 @@ func (o *TupleKey) GetObject() string {
 
 // GetObjectOk returns a tuple with the Object field value
 // and a boolean to check if the value has been set.
-func (o *TupleKey) GetObjectOk() (*string, bool) {
+func (o *WriteRequestTupleKey) GetObjectOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -112,12 +112,12 @@ func (o *TupleKey) GetObjectOk() (*string, bool) {
 }
 
 // SetObject sets field value
-func (o *TupleKey) SetObject(v string) {
+func (o *WriteRequestTupleKey) SetObject(v string) {
 	o.Object = v
 }
 
 // GetCondition returns the Condition field value if set, zero value otherwise.
-func (o *TupleKey) GetCondition() RelationshipCondition {
+func (o *WriteRequestTupleKey) GetCondition() RelationshipCondition {
 	if o == nil || o.Condition == nil {
 		var ret RelationshipCondition
 		return ret
@@ -127,7 +127,7 @@ func (o *TupleKey) GetCondition() RelationshipCondition {
 
 // GetConditionOk returns a tuple with the Condition field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *TupleKey) GetConditionOk() (*RelationshipCondition, bool) {
+func (o *WriteRequestTupleKey) GetConditionOk() (*RelationshipCondition, bool) {
 	if o == nil || o.Condition == nil {
 		return nil, false
 	}
@@ -135,7 +135,7 @@ func (o *TupleKey) GetConditionOk() (*RelationshipCondition, bool) {
 }
 
 // HasCondition returns a boolean if a field has been set.
-func (o *TupleKey) HasCondition() bool {
+func (o *WriteRequestTupleKey) HasCondition() bool {
 	if o != nil && o.Condition != nil {
 		return true
 	}
@@ -144,11 +144,11 @@ func (o *TupleKey) HasCondition() bool {
 }
 
 // SetCondition gets a reference to the given RelationshipCondition and assigns it to the Condition field.
-func (o *TupleKey) SetCondition(v RelationshipCondition) {
+func (o *WriteRequestTupleKey) SetCondition(v RelationshipCondition) {
 	o.Condition = &v
 }
 
-func (o TupleKey) MarshalJSON() ([]byte, error) {
+func (o WriteRequestTupleKey) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["user"] = o.User
 	toSerialize["relation"] = o.Relation
@@ -159,38 +159,38 @@ func (o TupleKey) MarshalJSON() ([]byte, error) {
 	return json.Marshal(toSerialize)
 }
 
-type NullableTupleKey struct {
-	value *TupleKey
+type NullableWriteRequestTupleKey struct {
+	value *WriteRequestTupleKey
 	isSet bool
 }
 
-func (v NullableTupleKey) Get() *TupleKey {
+func (v NullableWriteRequestTupleKey) Get() *WriteRequestTupleKey {
 	return v.value
 }
 
-func (v *NullableTupleKey) Set(val *TupleKey) {
+func (v *NullableWriteRequestTupleKey) Set(val *WriteRequestTupleKey) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableTupleKey) IsSet() bool {
+func (v NullableWriteRequestTupleKey) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableTupleKey) Unset() {
+func (v *NullableWriteRequestTupleKey) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableTupleKey(val *TupleKey) *NullableTupleKey {
-	return &NullableTupleKey{value: val, isSet: true}
+func NewNullableWriteRequestTupleKey(val *WriteRequestTupleKey) *NullableWriteRequestTupleKey {
+	return &NullableWriteRequestTupleKey{value: val, isSet: true}
 }
 
-func (v NullableTupleKey) MarshalJSON() ([]byte, error) {
+func (v NullableWriteRequestTupleKey) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableTupleKey) UnmarshalJSON(src []byte) error {
+func (v *NullableWriteRequestTupleKey) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }

@@ -16,33 +16,33 @@ import (
 	"encoding/json"
 )
 
-// TupleKeys struct for TupleKeys
-type TupleKeys struct {
-	TupleKeys []TupleKey `json:"tuple_keys"`
+// WriteRequestTupleKeys struct for WriteRequestTupleKeys
+type WriteRequestTupleKeys struct {
+	TupleKeys []WriteRequestTupleKey `json:"tuple_keys"`
 }
 
-// NewTupleKeys instantiates a new TupleKeys object
+// NewWriteRequestTupleKeys instantiates a new WriteRequestTupleKeys object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewTupleKeys(tupleKeys []TupleKey) *TupleKeys {
-	this := TupleKeys{}
+func NewWriteRequestTupleKeys(tupleKeys []WriteRequestTupleKey) *WriteRequestTupleKeys {
+	this := WriteRequestTupleKeys{}
 	this.TupleKeys = tupleKeys
 	return &this
 }
 
-// NewTupleKeysWithDefaults instantiates a new TupleKeys object
+// NewWriteRequestTupleKeysWithDefaults instantiates a new WriteRequestTupleKeys object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewTupleKeysWithDefaults() *TupleKeys {
-	this := TupleKeys{}
+func NewWriteRequestTupleKeysWithDefaults() *WriteRequestTupleKeys {
+	this := WriteRequestTupleKeys{}
 	return &this
 }
 
 // GetTupleKeys returns the TupleKeys field value
-func (o *TupleKeys) GetTupleKeys() []TupleKey {
+func (o *WriteRequestTupleKeys) GetTupleKeys() []WriteRequestTupleKey {
 	if o == nil {
-		var ret []TupleKey
+		var ret []WriteRequestTupleKey
 		return ret
 	}
 
@@ -51,7 +51,7 @@ func (o *TupleKeys) GetTupleKeys() []TupleKey {
 
 // GetTupleKeysOk returns a tuple with the TupleKeys field value
 // and a boolean to check if the value has been set.
-func (o *TupleKeys) GetTupleKeysOk() (*[]TupleKey, bool) {
+func (o *WriteRequestTupleKeys) GetTupleKeysOk() (*[]WriteRequestTupleKey, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -59,48 +59,48 @@ func (o *TupleKeys) GetTupleKeysOk() (*[]TupleKey, bool) {
 }
 
 // SetTupleKeys sets field value
-func (o *TupleKeys) SetTupleKeys(v []TupleKey) {
+func (o *WriteRequestTupleKeys) SetTupleKeys(v []WriteRequestTupleKey) {
 	o.TupleKeys = v
 }
 
-func (o TupleKeys) MarshalJSON() ([]byte, error) {
+func (o WriteRequestTupleKeys) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["tuple_keys"] = o.TupleKeys
 	return json.Marshal(toSerialize)
 }
 
-type NullableTupleKeys struct {
-	value *TupleKeys
+type NullableWriteRequestTupleKeys struct {
+	value *WriteRequestTupleKeys
 	isSet bool
 }
 
-func (v NullableTupleKeys) Get() *TupleKeys {
+func (v NullableWriteRequestTupleKeys) Get() *WriteRequestTupleKeys {
 	return v.value
 }
 
-func (v *NullableTupleKeys) Set(val *TupleKeys) {
+func (v *NullableWriteRequestTupleKeys) Set(val *WriteRequestTupleKeys) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableTupleKeys) IsSet() bool {
+func (v NullableWriteRequestTupleKeys) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableTupleKeys) Unset() {
+func (v *NullableWriteRequestTupleKeys) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableTupleKeys(val *TupleKeys) *NullableTupleKeys {
-	return &NullableTupleKeys{value: val, isSet: true}
+func NewNullableWriteRequestTupleKeys(val *WriteRequestTupleKeys) *NullableWriteRequestTupleKeys {
+	return &NullableWriteRequestTupleKeys{value: val, isSet: true}
 }
 
-func (v NullableTupleKeys) MarshalJSON() ([]byte, error) {
+func (v NullableWriteRequestTupleKeys) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableTupleKeys) UnmarshalJSON(src []byte) error {
+func (v *NullableWriteRequestTupleKeys) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }

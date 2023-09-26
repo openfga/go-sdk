@@ -4,14 +4,14 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**TupleKey** | [**TupleKey**](TupleKey.md) |  | 
+**TupleKey** | [**ExpandRequestTupleKey**](ExpandRequestTupleKey.md) |  | 
 **AuthorizationModelId** | Pointer to **string** |  | [optional] 
 
 ## Methods
 
 ### NewExpandRequest
 
-`func NewExpandRequest(tupleKey TupleKey, ) *ExpandRequest`
+`func NewExpandRequest(tupleKey ExpandRequestTupleKey, ) *ExpandRequest`
 
 NewExpandRequest instantiates a new ExpandRequest object
 This constructor will assign default values to properties that have it defined,
@@ -28,20 +28,20 @@ but it doesn't guarantee that properties required by API are set
 
 ### GetTupleKey
 
-`func (o *ExpandRequest) GetTupleKey() TupleKey`
+`func (o *ExpandRequest) GetTupleKey() ExpandRequestTupleKey`
 
 GetTupleKey returns the TupleKey field if non-nil, zero value otherwise.
 
 ### GetTupleKeyOk
 
-`func (o *ExpandRequest) GetTupleKeyOk() (*TupleKey, bool)`
+`func (o *ExpandRequest) GetTupleKeyOk() (*ExpandRequestTupleKey, bool)`
 
 GetTupleKeyOk returns a tuple with the TupleKey field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetTupleKey
 
-`func (o *ExpandRequest) SetTupleKey(v TupleKey)`
+`func (o *ExpandRequest) SetTupleKey(v ExpandRequestTupleKey)`
 
 SetTupleKey sets TupleKey field to given value.
 

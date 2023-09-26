@@ -18,15 +18,15 @@ import (
 
 // ExpandRequest struct for ExpandRequest
 type ExpandRequest struct {
-	TupleKey             TupleKey `json:"tuple_key"`
-	AuthorizationModelId *string  `json:"authorization_model_id,omitempty"`
+	TupleKey             ExpandRequestTupleKey `json:"tuple_key"`
+	AuthorizationModelId *string               `json:"authorization_model_id,omitempty"`
 }
 
 // NewExpandRequest instantiates a new ExpandRequest object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewExpandRequest(tupleKey TupleKey) *ExpandRequest {
+func NewExpandRequest(tupleKey ExpandRequestTupleKey) *ExpandRequest {
 	this := ExpandRequest{}
 	this.TupleKey = tupleKey
 	return &this
@@ -41,9 +41,9 @@ func NewExpandRequestWithDefaults() *ExpandRequest {
 }
 
 // GetTupleKey returns the TupleKey field value
-func (o *ExpandRequest) GetTupleKey() TupleKey {
+func (o *ExpandRequest) GetTupleKey() ExpandRequestTupleKey {
 	if o == nil {
-		var ret TupleKey
+		var ret ExpandRequestTupleKey
 		return ret
 	}
 
@@ -52,7 +52,7 @@ func (o *ExpandRequest) GetTupleKey() TupleKey {
 
 // GetTupleKeyOk returns a tuple with the TupleKey field value
 // and a boolean to check if the value has been set.
-func (o *ExpandRequest) GetTupleKeyOk() (*TupleKey, bool) {
+func (o *ExpandRequest) GetTupleKeyOk() (*ExpandRequestTupleKey, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -60,7 +60,7 @@ func (o *ExpandRequest) GetTupleKeyOk() (*TupleKey, bool) {
 }
 
 // SetTupleKey sets field value
-func (o *ExpandRequest) SetTupleKey(v TupleKey) {
+func (o *ExpandRequest) SetTupleKey(v ExpandRequestTupleKey) {
 	o.TupleKey = v
 }
 

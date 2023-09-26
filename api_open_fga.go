@@ -252,8 +252,7 @@ type OpenFgaApi interface {
 	}
 	```
 	This means that `user:bob` has a `reader` relationship with 1 document `document:2021-budget`. Note that this API, unlike the List Objects API, does not evaluate the tuples in the store.
-	The continuation token will be empty if there are no more tuples to query.
-	### Query for all stored relationship tuples that have a particular relation and object
+	The continuation token will be empty if there are no more tuples to query.### Query for all stored relationship tuples that have a particular relation and object
 	To query for all users that have `reader` relationship with `document:2021-budget`, call read API with body of
 	```json
 	{
@@ -2574,8 +2573,7 @@ The API will return tuples and a continuation token, something like
 
 ```
 This means that `user:bob` has a `reader` relationship with 1 document `document:2021-budget`. Note that this API, unlike the List Objects API, does not evaluate the tuples in the store.
-The continuation token will be empty if there are no more tuples to query.
-### Query for all stored relationship tuples that have a particular relation and object
+The continuation token will be empty if there are no more tuples to query.### Query for all stored relationship tuples that have a particular relation and object
 To query for all users that have `reader` relationship with `document:2021-budget`, call read API with body of
 ```json
 

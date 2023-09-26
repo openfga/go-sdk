@@ -18,8 +18,9 @@ import (
 
 // WriteAuthorizationModelRequest struct for WriteAuthorizationModelRequest
 type WriteAuthorizationModelRequest struct {
-	TypeDefinitions []TypeDefinition `json:"type_definitions"`
-	SchemaVersion   *string          `json:"schema_version,omitempty"`
+	TypeDefinitions []TypeDefinition      `json:"type_definitions"`
+	SchemaVersion   *string               `json:"schema_version,omitempty"`
+	Conditions      *map[string]Condition `json:"conditions,omitempty"`
 }
 
 // NewWriteAuthorizationModelRequest instantiates a new WriteAuthorizationModelRequest object
@@ -96,11 +97,46 @@ func (o *WriteAuthorizationModelRequest) SetSchemaVersion(v string) {
 	o.SchemaVersion = &v
 }
 
+// GetConditions returns the Conditions field value if set, zero value otherwise.
+func (o *WriteAuthorizationModelRequest) GetConditions() map[string]Condition {
+	if o == nil || o.Conditions == nil {
+		var ret map[string]Condition
+		return ret
+	}
+	return *o.Conditions
+}
+
+// GetConditionsOk returns a tuple with the Conditions field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *WriteAuthorizationModelRequest) GetConditionsOk() (*map[string]Condition, bool) {
+	if o == nil || o.Conditions == nil {
+		return nil, false
+	}
+	return o.Conditions, true
+}
+
+// HasConditions returns a boolean if a field has been set.
+func (o *WriteAuthorizationModelRequest) HasConditions() bool {
+	if o != nil && o.Conditions != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetConditions gets a reference to the given map[string]Condition and assigns it to the Conditions field.
+func (o *WriteAuthorizationModelRequest) SetConditions(v map[string]Condition) {
+	o.Conditions = &v
+}
+
 func (o WriteAuthorizationModelRequest) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["type_definitions"] = o.TypeDefinitions
 	if o.SchemaVersion != nil {
 		toSerialize["schema_version"] = o.SchemaVersion
+	}
+	if o.Conditions != nil {
+		toSerialize["conditions"] = o.Conditions
 	}
 	return json.Marshal(toSerialize)
 }

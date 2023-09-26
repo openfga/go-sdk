@@ -18,15 +18,15 @@ import (
 
 // Assertion struct for Assertion
 type Assertion struct {
-	TupleKey    TupleKey `json:"tuple_key"`
-	Expectation bool     `json:"expectation"`
+	TupleKey    CheckRequestTupleKey `json:"tuple_key"`
+	Expectation bool                 `json:"expectation"`
 }
 
 // NewAssertion instantiates a new Assertion object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewAssertion(tupleKey TupleKey, expectation bool) *Assertion {
+func NewAssertion(tupleKey CheckRequestTupleKey, expectation bool) *Assertion {
 	this := Assertion{}
 	this.TupleKey = tupleKey
 	this.Expectation = expectation
@@ -42,9 +42,9 @@ func NewAssertionWithDefaults() *Assertion {
 }
 
 // GetTupleKey returns the TupleKey field value
-func (o *Assertion) GetTupleKey() TupleKey {
+func (o *Assertion) GetTupleKey() CheckRequestTupleKey {
 	if o == nil {
-		var ret TupleKey
+		var ret CheckRequestTupleKey
 		return ret
 	}
 
@@ -53,7 +53,7 @@ func (o *Assertion) GetTupleKey() TupleKey {
 
 // GetTupleKeyOk returns a tuple with the TupleKey field value
 // and a boolean to check if the value has been set.
-func (o *Assertion) GetTupleKeyOk() (*TupleKey, bool) {
+func (o *Assertion) GetTupleKeyOk() (*CheckRequestTupleKey, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -61,7 +61,7 @@ func (o *Assertion) GetTupleKeyOk() (*TupleKey, bool) {
 }
 
 // SetTupleKey sets field value
-func (o *Assertion) SetTupleKey(v TupleKey) {
+func (o *Assertion) SetTupleKey(v CheckRequestTupleKey) {
 	o.TupleKey = v
 }
 
