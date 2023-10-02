@@ -866,7 +866,7 @@ func TestOpenFgaApi(t *testing.T) {
 			Relation:             "can_read",
 			Type:                 "document",
 			ContextualTuples: &ContextualTupleKeys{
-				TupleKeys: []WriteRequestTupleKey{{
+				TupleKeys: []TupleKey{{
 					User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 					Relation: "editor",
 					Object:   "folder:product",

@@ -113,27 +113,12 @@ type ClientRequestOptionsWithAuthZModelId struct {
 	AuthorizationModelIdOptions
 }
 
-type ClientTupleKey struct {
-	Object   string `json:"object,omitempty"`
-	Relation string `json:"relation,omitempty"`
-	User     string `json:"user,omitempty"`
-}
-
-func (tupleKey ClientTupleKey) ToTupleKey() openfga.TupleKey {
-	return openfga.TupleKey{
-		User:     tupleKey.User,
-		Relation: tupleKey.Relation,
-		Object:   tupleKey.Object,
-	}
-}
-
-func (tupleKey ClientTupleKey) ToWriteRequestTupleKey() openfga.WriteRequestTupleKey {
-	return openfga.WriteRequestTupleKey{
-		User:     tupleKey.User,
-		Relation: tupleKey.Relation,
-		Object:   tupleKey.Object,
-	}
-}
+type ClientTupleKey = openfga.TupleKey
+type ClientWriteRequestTupleKey = openfga.WriteRequestTupleKey
+type ClientCheckRequestTupleKey = openfga.CheckRequestTupleKey
+type ClientReadRequestTupleKey = openfga.ReadRequestTupleKey
+type ClientExpandRequestTupleKey = openfga.ExpandRequestTupleKey
+type ClientContextualTupleKey = ClientTupleKey
 
 type ClientPaginationOptions struct {
 	PageSize          *int32  `json:"page_size,omitempty"`
@@ -1171,8 +1156,8 @@ type SdkClientWriteRequestInterface interface {
 }
 
 type ClientWriteRequest struct {
-	Writes  *[]ClientTupleKey
-	Deletes *[]ClientTupleKey
+	Writes  []ClientWriteRequestTupleKey
+	Deletes []ClientWriteRequestTupleKey
 }
 
 type TransactionOptions struct {
@@ -1198,10 +1183,10 @@ const (
 )
 
 type ClientWriteSingleResponse struct {
-	TupleKey     ClientTupleKey     `json:"tuple_key,omitempty"`
-	Status       ClientWriteStatus  `json:"status,omitempty"`
-	HttpResponse *_nethttp.Response `json:"http_response,omitempty"`
-	Error        error              `json:"error,omitempty"`
+	TupleKey     ClientWriteRequestTupleKey `json:"tuple_key,omitempty"`
+	Status       ClientWriteStatus          `json:"status,omitempty"`
+	HttpResponse *_nethttp.Response         `json:"http_response,omitempty"`
+	Error        error                      `json:"error,omitempty"`
 }
 
 func (o ClientWriteSingleResponse) MarshalJSON() ([]byte, error) {
@@ -1299,17 +1284,17 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 		writeRequest := openfga.WriteRequest{
 			AuthorizationModelId: authorizationModelId,
 		}
-		if request.GetBody().Writes != nil && len(*request.GetBody().Writes) > 0 {
+		if request.GetBody().Writes != nil && len(request.GetBody().Writes) > 0 {
 			writes := openfga.WriteRequestTupleKeys{}
-			for index := 0; index < len(*request.GetBody().Writes); index++ {
-				writes.TupleKeys = append(writes.TupleKeys, (*request.GetBody().Writes)[index].ToWriteRequestTupleKey())
+			for index := 0; index < len(request.GetBody().Writes); index++ {
+				writes.TupleKeys = append(writes.TupleKeys, (request.GetBody().Writes)[index])
 			}
 			writeRequest.Writes = &writes
 		}
-		if request.GetBody().Deletes != nil && len(*request.GetBody().Deletes) > 0 {
+		if request.GetBody().Deletes != nil && len(request.GetBody().Deletes) > 0 {
 			deletes := openfga.WriteRequestTupleKeys{}
-			for index := 0; index < len(*request.GetBody().Deletes); index++ {
-				deletes.TupleKeys = append(deletes.TupleKeys, (*request.GetBody().Deletes)[index].ToWriteRequestTupleKey())
+			for index := 0; index < len(request.GetBody().Deletes); index++ {
+				deletes.TupleKeys = append(deletes.TupleKeys, (request.GetBody().Deletes)[index])
 			}
 			writeRequest.Deletes = &deletes
 		}
@@ -1321,7 +1306,7 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 		}
 
 		if request.GetBody() != nil && request.GetBody().Writes != nil {
-			writeRequestTupleKeys := *request.GetBody().Writes
+			writeRequestTupleKeys := request.GetBody().Writes
 			for index := 0; index < len(writeRequestTupleKeys); index++ {
 				response.Writes = append(response.Writes, ClientWriteSingleResponse{
 					TupleKey:     writeRequestTupleKeys[index],
@@ -1333,7 +1318,7 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 		}
 
 		if request.GetBody() != nil && request.GetBody().Deletes != nil {
-			deleteRequestTupleKeys := *request.GetBody().Deletes
+			deleteRequestTupleKeys := request.GetBody().Deletes
 			for index := 0; index < len(deleteRequestTupleKeys); index++ {
 				response.Deletes = append(response.Deletes, ClientWriteSingleResponse{
 					TupleKey:     deleteRequestTupleKeys[index],
@@ -1352,12 +1337,12 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 	// - each request is a transaction
 	// - the max items in each request are based on maxPerChunk (default=1)
 	var writeChunkSize = int(maxPerChunk)
-	var writeChunks [][]ClientTupleKey
+	var writeChunks [][]ClientWriteRequestTupleKey
 	if request.GetBody() != nil {
-		for i := 0; i < len(*request.GetBody().Writes); i += writeChunkSize {
-			end := int(math.Min(float64(i+writeChunkSize), float64(len(*request.GetBody().Writes))))
+		for i := 0; i < len(request.GetBody().Writes); i += writeChunkSize {
+			end := int(math.Min(float64(i+writeChunkSize), float64(len(request.GetBody().Writes))))
 
-			writeChunks = append(writeChunks, (*request.GetBody().Writes)[i:end])
+			writeChunks = append(writeChunks, (request.GetBody().Writes)[i:end])
 		}
 	}
 
@@ -1376,7 +1361,7 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 				ctx:    ctx,
 				Client: client,
 				body: &ClientWriteRequest{
-					Writes: &writeBody,
+					Writes: writeBody,
 				},
 				options: &ClientWriteOptions{
 					AuthorizationModelId: authorizationModelId,
@@ -1392,12 +1377,12 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 	_ = writeGroup.Wait()
 
 	var deleteChunkSize = int(maxPerChunk)
-	var deleteChunks [][]ClientTupleKey
+	var deleteChunks [][]ClientWriteRequestTupleKey
 	if request.GetBody() != nil {
-		for i := 0; i < len(*request.GetBody().Deletes); i += deleteChunkSize {
-			end := int(math.Min(float64(i+writeChunkSize), float64(len(*request.GetBody().Deletes))))
+		for i := 0; i < len(request.GetBody().Deletes); i += deleteChunkSize {
+			end := int(math.Min(float64(i+writeChunkSize), float64(len(request.GetBody().Deletes))))
 
-			deleteChunks = append(deleteChunks, (*request.GetBody().Deletes)[i:end])
+			deleteChunks = append(deleteChunks, (request.GetBody().Deletes)[i:end])
 		}
 	}
 
@@ -1411,7 +1396,7 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 				ctx:    ctx,
 				Client: client,
 				body: &ClientWriteRequest{
-					Deletes: &deleteBody,
+					Deletes: deleteBody,
 				},
 				options: &ClientWriteOptions{
 					AuthorizationModelId: authorizationModelId,
@@ -1460,7 +1445,7 @@ type SdkClientWriteTuplesRequestInterface interface {
 	GetOptions() *ClientWriteOptions
 }
 
-type ClientWriteTuplesBody = []ClientTupleKey
+type ClientWriteTuplesBody = []ClientWriteRequestTupleKey
 
 func (client *OpenFgaClient) WriteTuples(ctx _context.Context) SdkClientWriteTuplesRequestInterface {
 	return &SdkClientWriteTuplesRequest{
@@ -1497,7 +1482,7 @@ func (request *SdkClientWriteTuplesRequest) GetOptions() *ClientWriteOptions {
 
 func (client *OpenFgaClient) WriteTuplesExecute(request SdkClientWriteTuplesRequestInterface) (*ClientWriteResponse, error) {
 	baseReq := client.Write(request.GetContext()).Body(ClientWriteRequest{
-		Writes: request.GetBody(),
+		Writes: *request.GetBody(),
 	})
 	if request.GetOptions() != nil {
 		baseReq = baseReq.Options(*request.GetOptions())
@@ -1524,7 +1509,7 @@ type SdkClientDeleteTuplesRequestInterface interface {
 	GetOptions() *ClientWriteOptions
 }
 
-type ClientDeleteTuplesBody = []ClientTupleKey
+type ClientDeleteTuplesBody = []ClientWriteRequestTupleKey
 
 func (client *OpenFgaClient) DeleteTuples(ctx _context.Context) SdkClientDeleteTuplesRequestInterface {
 	return &SdkClientDeleteTuplesRequest{
@@ -1561,7 +1546,7 @@ func (request *SdkClientDeleteTuplesRequest) GetOptions() *ClientWriteOptions {
 
 func (client *OpenFgaClient) DeleteTuplesExecute(request SdkClientDeleteTuplesRequestInterface) (*ClientWriteResponse, error) {
 	baseReq := client.Write(request.GetContext()).Body(ClientWriteRequest{
-		Deletes: request.GetBody(),
+		Deletes: *request.GetBody(),
 	})
 	if request.GetOptions() != nil {
 		baseReq = baseReq.Options(*request.GetOptions())
@@ -1593,10 +1578,11 @@ type SdkClientCheckRequestInterface interface {
 }
 
 type ClientCheckRequest struct {
-	User             string            `json:"user,omitempty"`
-	Relation         string            `json:"relation,omitempty"`
-	Object           string            `json:"object,omitempty"`
-	ContextualTuples *[]ClientTupleKey `json:"contextual_tuples,omitempty"`
+	User             string                     `json:"user,omitempty"`
+	Relation         string                     `json:"relation,omitempty"`
+	Object           string                     `json:"object,omitempty"`
+	Context          map[string]interface{}     `json:"context,omitempty"`
+	ContextualTuples []ClientContextualTupleKey `json:"contextual_tuples,omitempty"`
 }
 
 type ClientCheckOptions struct {
@@ -1649,10 +1635,10 @@ func (request *SdkClientCheckRequest) GetOptions() *ClientCheckOptions {
 }
 
 func (client *OpenFgaClient) CheckExecute(request SdkClientCheckRequestInterface) (*ClientCheckResponse, error) {
-	var contextualTuples []openfga.TupleKey
+	var contextualTuples []ClientContextualTupleKey
 	if request.GetBody().ContextualTuples != nil {
-		for index := 0; index < len(*request.GetBody().ContextualTuples); index++ {
-			contextualTuples = append(contextualTuples, (*request.GetBody().ContextualTuples)[index].ToTupleKey())
+		for index := 0; index < len(request.GetBody().ContextualTuples); index++ {
+			contextualTuples = append(contextualTuples, (request.GetBody().ContextualTuples)[index])
 		}
 	}
 	authorizationModelId, err := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
@@ -1910,10 +1896,11 @@ type SdkClientListObjectsRequestInterface interface {
 }
 
 type ClientListObjectsRequest struct {
-	User             string            `json:"user,omitempty"`
-	Relation         string            `json:"relation,omitempty"`
-	Type             string            `json:"type,omitempty"`
-	ContextualTuples *[]ClientTupleKey `json:"contextual_tuples,omitempty"`
+	User             string                     `json:"user,omitempty"`
+	Relation         string                     `json:"relation,omitempty"`
+	Type             string                     `json:"type,omitempty"`
+	Context          map[string]interface{}     `json:"context,omitempty"`
+	ContextualTuples []ClientContextualTupleKey `json:"contextual_tuples,omitempty"`
 }
 
 type ClientListObjectsOptions struct {
@@ -1963,10 +1950,10 @@ func (request *SdkClientListObjectsRequest) GetOptions() *ClientListObjectsOptio
 }
 
 func (client *OpenFgaClient) ListObjectsExecute(request SdkClientListObjectsRequestInterface) (*ClientListObjectsResponse, error) {
-	var contextualTuples []openfga.TupleKey
+	var contextualTuples []ClientContextualTupleKey
 	if request.GetBody().ContextualTuples != nil {
-		for index := 0; index < len(*request.GetBody().ContextualTuples); index++ {
-			contextualTuples = append(contextualTuples, (*request.GetBody().ContextualTuples)[index].ToTupleKey())
+		for index := 0; index < len(request.GetBody().ContextualTuples); index++ {
+			contextualTuples = append(contextualTuples, (request.GetBody().ContextualTuples)[index])
 		}
 	}
 	authorizationModelId, err := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
@@ -2008,10 +1995,11 @@ type SdkClientListRelationsRequestInterface interface {
 }
 
 type ClientListRelationsRequest struct {
-	User             string            `json:"user,omitempty"`
-	Object           string            `json:"object,omitempty"`
-	Relations        []string          `json:"relations,omitempty"`
-	ContextualTuples *[]ClientTupleKey `json:"contextual_tuples,omitempty"`
+	User             string                     `json:"user,omitempty"`
+	Object           string                     `json:"object,omitempty"`
+	Relations        []string                   `json:"relations,omitempty"`
+	Context          map[string]interface{}     `json:"context,omitempty"`
+	ContextualTuples []ClientContextualTupleKey `json:"contextual_tuples,omitempty"`
 }
 
 type ClientListRelationsOptions struct {
@@ -2079,6 +2067,7 @@ func (client *OpenFgaClient) ListRelationsExecute(request SdkClientListRelations
 			User:             request.GetBody().User,
 			Relation:         request.GetBody().Relations[index],
 			Object:           request.GetBody().Object,
+			Context:          request.GetBody().Context,
 			ContextualTuples: request.GetBody().ContextualTuples,
 		})
 	}

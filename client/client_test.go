@@ -677,7 +677,7 @@ func TestOpenFgaClient(t *testing.T) {
 			RequestPath:    "write",
 		}
 		requestBody := ClientWriteRequest{
-			Writes: &[]ClientTupleKey{{
+			Writes: []ClientWriteRequestTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "viewer",
 				Object:   "document:roadmap",
@@ -761,7 +761,7 @@ func TestOpenFgaClient(t *testing.T) {
 			RequestPath:    "write",
 		}
 		requestBody := ClientWriteRequest{
-			Writes: &[]ClientTupleKey{{
+			Writes: []ClientWriteRequestTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "viewer",
 				Object:   "document:roadmap",
@@ -791,7 +791,7 @@ func TestOpenFgaClient(t *testing.T) {
 			RequestPath:    "write",
 		}
 		requestBody := ClientWriteRequest{
-			Writes: &[]ClientTupleKey{{
+			Writes: []ClientWriteRequestTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "viewer",
 				Object:   "document:roadmap",
@@ -800,7 +800,7 @@ func TestOpenFgaClient(t *testing.T) {
 				Relation: "viewer",
 				Object:   "document:budget",
 			}},
-			Deletes: &[]ClientTupleKey{{
+			Deletes: []ClientWriteRequestTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "viewer",
 				Object:   "document:planning",
@@ -889,7 +889,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Method:         http.MethodPost,
 			RequestPath:    "write",
 		}
-		requestBody := []ClientTupleKey{{
+		requestBody := []ClientWriteRequestTupleKey{{
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "viewer",
 			Object:   "document:roadmap",
@@ -972,7 +972,7 @@ func TestOpenFgaClient(t *testing.T) {
 			RequestPath:    "write",
 		}
 
-		requestBody := []ClientTupleKey{{
+		requestBody := []ClientWriteRequestTupleKey{{
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "viewer",
 			Object:   "document:roadmap",
@@ -1059,7 +1059,7 @@ func TestOpenFgaClient(t *testing.T) {
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "viewer",
 			Object:   "document:roadmap",
-			ContextualTuples: &[]ClientTupleKey{{
+			ContextualTuples: []ClientContextualTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "editor",
 				Object:   "document:roadmap",
@@ -1128,7 +1128,7 @@ func TestOpenFgaClient(t *testing.T) {
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "viewer",
 			Object:   "document:roadmap",
-			ContextualTuples: &[]ClientTupleKey{{
+			ContextualTuples: []ClientContextualTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "editor",
 				Object:   "document:roadmap",
@@ -1137,7 +1137,7 @@ func TestOpenFgaClient(t *testing.T) {
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "admin",
 			Object:   "document:roadmap",
-			ContextualTuples: &[]ClientTupleKey{{
+			ContextualTuples: []ClientContextualTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "editor",
 				Object:   "document:roadmap",
@@ -1245,7 +1245,7 @@ func TestOpenFgaClient(t *testing.T) {
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "viewer",
 			Object:   "document:roadmap",
-			ContextualTuples: &[]ClientTupleKey{{
+			ContextualTuples: []ClientContextualTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "editor",
 				Object:   "document:roadmap",
@@ -1254,7 +1254,7 @@ func TestOpenFgaClient(t *testing.T) {
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "admin",
 			Object:   "document:roadmap",
-			ContextualTuples: &[]ClientTupleKey{{
+			ContextualTuples: []ClientContextualTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "editor",
 				Object:   "document:roadmap",
@@ -1379,7 +1379,7 @@ func TestOpenFgaClient(t *testing.T) {
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "can_read",
 			Type:     "document",
-			ContextualTuples: &[]ClientTupleKey{{
+			ContextualTuples: []ClientContextualTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "editor",
 				Object:   "folder:product",
@@ -1456,7 +1456,7 @@ func TestOpenFgaClient(t *testing.T) {
 			User:      "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Object:    "document:roadmap",
 			Relations: []string{"can_view", "can_edit", "can_delete", "can_rename"},
-			ContextualTuples: &[]ClientTupleKey{{
+			ContextualTuples: []ClientContextualTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "editor",
 				Object:   "document:roadmap",
@@ -1556,7 +1556,7 @@ func TestOpenFgaClient(t *testing.T) {
 			User:      "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Object:    "document:roadmap",
 			Relations: []string{},
-			ContextualTuples: &[]ClientTupleKey{{
+			ContextualTuples: []ClientContextualTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "editor",
 				Object:   "document:roadmap",

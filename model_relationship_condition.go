@@ -19,7 +19,7 @@ import (
 // RelationshipCondition struct for RelationshipCondition
 type RelationshipCondition struct {
 	// A reference (by name) of the relationship condition defined in the authorization model.
-	ConditionName string `json:"conditionName"`
+	ConditionName string `json:"condition_name"`
 	// Additional context/data to persist along with the condition. The keys must match the parameters defined by the condition, and the value types must match the parameter type definitions.
 	Context *map[string]interface{} `json:"context,omitempty"`
 }
@@ -100,7 +100,7 @@ func (o *RelationshipCondition) SetContext(v map[string]interface{}) {
 
 func (o RelationshipCondition) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	toSerialize["conditionName"] = o.ConditionName
+	toSerialize["condition_name"] = o.ConditionName
 	if o.Context != nil {
 		toSerialize["context"] = o.Context
 	}

@@ -18,14 +18,14 @@ import (
 
 // ContextualTupleKeys struct for ContextualTupleKeys
 type ContextualTupleKeys struct {
-	TupleKeys []WriteRequestTupleKey `json:"tuple_keys"`
+	TupleKeys []TupleKey `json:"tuple_keys"`
 }
 
 // NewContextualTupleKeys instantiates a new ContextualTupleKeys object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewContextualTupleKeys(tupleKeys []WriteRequestTupleKey) *ContextualTupleKeys {
+func NewContextualTupleKeys(tupleKeys []TupleKey) *ContextualTupleKeys {
 	this := ContextualTupleKeys{}
 	this.TupleKeys = tupleKeys
 	return &this
@@ -40,9 +40,9 @@ func NewContextualTupleKeysWithDefaults() *ContextualTupleKeys {
 }
 
 // GetTupleKeys returns the TupleKeys field value
-func (o *ContextualTupleKeys) GetTupleKeys() []WriteRequestTupleKey {
+func (o *ContextualTupleKeys) GetTupleKeys() []TupleKey {
 	if o == nil {
-		var ret []WriteRequestTupleKey
+		var ret []TupleKey
 		return ret
 	}
 
@@ -51,7 +51,7 @@ func (o *ContextualTupleKeys) GetTupleKeys() []WriteRequestTupleKey {
 
 // GetTupleKeysOk returns a tuple with the TupleKeys field value
 // and a boolean to check if the value has been set.
-func (o *ContextualTupleKeys) GetTupleKeysOk() (*[]WriteRequestTupleKey, bool) {
+func (o *ContextualTupleKeys) GetTupleKeysOk() (*[]TupleKey, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -59,7 +59,7 @@ func (o *ContextualTupleKeys) GetTupleKeysOk() (*[]WriteRequestTupleKey, bool) {
 }
 
 // SetTupleKeys sets field value
-func (o *ContextualTupleKeys) SetTupleKeys(v []WriteRequestTupleKey) {
+func (o *ContextualTupleKeys) SetTupleKeys(v []TupleKey) {
 	o.TupleKeys = v
 }
 
