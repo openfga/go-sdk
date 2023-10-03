@@ -18,8 +18,8 @@ import (
 
 // ExpandRequest struct for ExpandRequest
 type ExpandRequest struct {
-	TupleKey             ExpandRequestTupleKey `json:"tuple_key"`
-	AuthorizationModelId *string               `json:"authorization_model_id,omitempty"`
+	TupleKey             ExpandRequestTupleKey `json:"tuple_key"yaml:"tuple_key"`
+	AuthorizationModelId *string               `json:"authorization_model_id,omitempty"yaml:"authorization_model_id,omitempty"`
 }
 
 // NewExpandRequest instantiates a new ExpandRequest object

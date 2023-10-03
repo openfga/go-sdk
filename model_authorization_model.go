@@ -18,10 +18,10 @@ import (
 
 // AuthorizationModel struct for AuthorizationModel
 type AuthorizationModel struct {
-	Id              *string               `json:"id,omitempty"`
-	SchemaVersion   string                `json:"schema_version"`
-	TypeDefinitions *[]TypeDefinition     `json:"type_definitions,omitempty"`
-	Conditions      *map[string]Condition `json:"conditions,omitempty"`
+	Id              *string               `json:"id,omitempty"yaml:"id,omitempty"`
+	SchemaVersion   string                `json:"schema_version"yaml:"schema_version"`
+	TypeDefinitions *[]TypeDefinition     `json:"type_definitions,omitempty"yaml:"type_definitions,omitempty"`
+	Conditions      *map[string]Condition `json:"conditions,omitempty"yaml:"conditions,omitempty"`
 }
 
 // NewAuthorizationModel instantiates a new AuthorizationModel object

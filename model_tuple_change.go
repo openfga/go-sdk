@@ -19,9 +19,9 @@ import (
 
 // TupleChange struct for TupleChange
 type TupleChange struct {
-	TupleKey  *TupleKey       `json:"tuple_key,omitempty"`
-	Operation *TupleOperation `json:"operation,omitempty"`
-	Timestamp *time.Time      `json:"timestamp,omitempty"`
+	TupleKey  *TupleKey       `json:"tuple_key,omitempty"yaml:"tuple_key,omitempty"`
+	Operation *TupleOperation `json:"operation,omitempty"yaml:"operation,omitempty"`
+	Timestamp *time.Time      `json:"timestamp,omitempty"yaml:"timestamp,omitempty"`
 }
 
 // NewTupleChange instantiates a new TupleChange object

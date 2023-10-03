@@ -18,11 +18,11 @@ import (
 
 // Condition struct for Condition
 type Condition struct {
-	Name string `json:"name"`
+	Name string `json:"name"yaml:"name"`
 	// A Google CEL expression, expressed as a string.
-	Expression string `json:"expression"`
+	Expression string `json:"expression"yaml:"expression"`
 	// A map of parameter names to the parameter's defined type reference.
-	Parameters *map[string]ConditionParamTypeRef `json:"parameters,omitempty"`
+	Parameters *map[string]ConditionParamTypeRef `json:"parameters,omitempty"yaml:"parameters,omitempty"`
 }
 
 // NewCondition instantiates a new Condition object

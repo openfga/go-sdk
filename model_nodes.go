@@ -18,7 +18,7 @@ import (
 
 // Nodes struct for Nodes
 type Nodes struct {
-	Nodes *[]Node `json:"nodes,omitempty"`
+	Nodes *[]Node `json:"nodes,omitempty"yaml:"nodes,omitempty"`
 }
 
 // NewNodes instantiates a new Nodes object

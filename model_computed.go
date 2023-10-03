@@ -18,7 +18,7 @@ import (
 
 // Computed struct for Computed
 type Computed struct {
-	Userset *string `json:"userset,omitempty"`
+	Userset *string `json:"userset,omitempty"yaml:"userset,omitempty"`
 }
 
 // NewComputed instantiates a new Computed object

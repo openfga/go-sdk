@@ -18,9 +18,9 @@ import (
 
 // ReadRequest struct for ReadRequest
 type ReadRequest struct {
-	TupleKey          *ReadRequestTupleKey `json:"tuple_key,omitempty"`
-	PageSize          *int32               `json:"page_size,omitempty"`
-	ContinuationToken *string              `json:"continuation_token,omitempty"`
+	TupleKey          *ReadRequestTupleKey `json:"tuple_key,omitempty"yaml:"tuple_key,omitempty"`
+	PageSize          *int32               `json:"page_size,omitempty"yaml:"page_size,omitempty"`
+	ContinuationToken *string              `json:"continuation_token,omitempty"yaml:"continuation_token,omitempty"`
 }
 
 // NewReadRequest instantiates a new ReadRequest object

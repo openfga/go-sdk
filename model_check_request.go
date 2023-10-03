@@ -18,13 +18,13 @@ import (
 
 // CheckRequest struct for CheckRequest
 type CheckRequest struct {
-	TupleKey             CheckRequestTupleKey `json:"tuple_key"`
-	ContextualTuples     *ContextualTupleKeys `json:"contextual_tuples,omitempty"`
-	AuthorizationModelId *string              `json:"authorization_model_id,omitempty"`
+	TupleKey             CheckRequestTupleKey `json:"tuple_key"yaml:"tuple_key"`
+	ContextualTuples     *ContextualTupleKeys `json:"contextual_tuples,omitempty"yaml:"contextual_tuples,omitempty"`
+	AuthorizationModelId *string              `json:"authorization_model_id,omitempty"yaml:"authorization_model_id,omitempty"`
 	// Defaults to false. Making it true has performance implications.
-	Trace *bool `json:"trace,omitempty"`
+	Trace *bool `json:"trace,omitempty"yaml:"trace,omitempty"`
 	// Additional request context that will be used to evaluate any ABAC conditions encountered in the query evaluation.
-	Context *map[string]interface{} `json:"context,omitempty"`
+	Context *map[string]interface{} `json:"context,omitempty"yaml:"context,omitempty"`
 }
 
 // NewCheckRequest instantiates a new CheckRequest object

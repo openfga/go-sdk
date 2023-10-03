@@ -18,8 +18,8 @@ import (
 
 // ConditionParamTypeRef struct for ConditionParamTypeRef
 type ConditionParamTypeRef struct {
-	TypeName     TypeName                 `json:"type_name"`
-	GenericTypes *[]ConditionParamTypeRef `json:"generic_types,omitempty"`
+	TypeName     TypeName                 `json:"type_name"yaml:"type_name"`
+	GenericTypes *[]ConditionParamTypeRef `json:"generic_types,omitempty"yaml:"generic_types,omitempty"`
 }
 
 // NewConditionParamTypeRef instantiates a new ConditionParamTypeRef object

@@ -18,7 +18,7 @@ import (
 
 // RelationMetadata struct for RelationMetadata
 type RelationMetadata struct {
-	DirectlyRelatedUserTypes *[]RelationReference `json:"directly_related_user_types,omitempty"`
+	DirectlyRelatedUserTypes *[]RelationReference `json:"directly_related_user_types,omitempty"yaml:"directly_related_user_types,omitempty"`
 }
 
 // NewRelationMetadata instantiates a new RelationMetadata object

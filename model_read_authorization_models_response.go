@@ -18,9 +18,9 @@ import (
 
 // ReadAuthorizationModelsResponse struct for ReadAuthorizationModelsResponse
 type ReadAuthorizationModelsResponse struct {
-	AuthorizationModels *[]AuthorizationModel `json:"authorization_models,omitempty"`
+	AuthorizationModels *[]AuthorizationModel `json:"authorization_models,omitempty"yaml:"authorization_models,omitempty"`
 	// The continuation token will be empty if there are no more models.
-	ContinuationToken *string `json:"continuation_token,omitempty"`
+	ContinuationToken *string `json:"continuation_token,omitempty"yaml:"continuation_token,omitempty"`
 }
 
 // NewReadAuthorizationModelsResponse instantiates a new ReadAuthorizationModelsResponse object

@@ -19,8 +19,8 @@ import (
 
 // Tuple struct for Tuple
 type Tuple struct {
-	Key       *TupleKey  `json:"key,omitempty"`
-	Timestamp *time.Time `json:"timestamp,omitempty"`
+	Key       *TupleKey  `json:"key,omitempty"yaml:"key,omitempty"`
+	Timestamp *time.Time `json:"timestamp,omitempty"yaml:"timestamp,omitempty"`
 }
 
 // NewTuple instantiates a new Tuple object

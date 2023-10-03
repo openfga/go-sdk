@@ -18,7 +18,7 @@ import (
 
 // Usersets struct for Usersets
 type Usersets struct {
-	Child *[]Userset `json:"child,omitempty"`
+	Child *[]Userset `json:"child,omitempty"yaml:"child,omitempty"`
 }
 
 // NewUsersets instantiates a new Usersets object

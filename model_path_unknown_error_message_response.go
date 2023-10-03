@@ -18,8 +18,8 @@ import (
 
 // PathUnknownErrorMessageResponse struct for PathUnknownErrorMessageResponse
 type PathUnknownErrorMessageResponse struct {
-	Code    *NotFoundErrorCode `json:"code,omitempty"`
-	Message *string            `json:"message,omitempty"`
+	Code    *NotFoundErrorCode `json:"code,omitempty"yaml:"code,omitempty"`
+	Message *string            `json:"message,omitempty"yaml:"message,omitempty"`
 }
 
 // NewPathUnknownErrorMessageResponse instantiates a new PathUnknownErrorMessageResponse object

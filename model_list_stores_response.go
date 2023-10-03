@@ -18,9 +18,9 @@ import (
 
 // ListStoresResponse struct for ListStoresResponse
 type ListStoresResponse struct {
-	Stores *[]Store `json:"stores,omitempty"`
+	Stores *[]Store `json:"stores,omitempty"yaml:"stores,omitempty"`
 	// The continuation token will be empty if there are no more stores.
-	ContinuationToken *string `json:"continuation_token,omitempty"`
+	ContinuationToken *string `json:"continuation_token,omitempty"yaml:"continuation_token,omitempty"`
 }
 
 // NewListStoresResponse instantiates a new ListStoresResponse object

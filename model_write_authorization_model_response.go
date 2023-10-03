@@ -18,7 +18,7 @@ import (
 
 // WriteAuthorizationModelResponse struct for WriteAuthorizationModelResponse
 type WriteAuthorizationModelResponse struct {
-	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
+	AuthorizationModelId *string `json:"authorization_model_id,omitempty"yaml:"authorization_model_id,omitempty"`
 }
 
 // NewWriteAuthorizationModelResponse instantiates a new WriteAuthorizationModelResponse object

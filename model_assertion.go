@@ -18,8 +18,8 @@ import (
 
 // Assertion struct for Assertion
 type Assertion struct {
-	TupleKey    CheckRequestTupleKey `json:"tuple_key"`
-	Expectation bool                 `json:"expectation"`
+	TupleKey    CheckRequestTupleKey `json:"tuple_key"yaml:"tuple_key"`
+	Expectation bool                 `json:"expectation"yaml:"expectation"`
 }
 
 // NewAssertion instantiates a new Assertion object

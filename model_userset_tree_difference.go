@@ -18,8 +18,8 @@ import (
 
 // UsersetTreeDifference struct for UsersetTreeDifference
 type UsersetTreeDifference struct {
-	Base     *Node `json:"base,omitempty"`
-	Subtract *Node `json:"subtract,omitempty"`
+	Base     *Node `json:"base,omitempty"yaml:"base,omitempty"`
+	Subtract *Node `json:"subtract,omitempty"yaml:"subtract,omitempty"`
 }
 
 // NewUsersetTreeDifference instantiates a new UsersetTreeDifference object

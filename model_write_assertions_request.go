@@ -18,7 +18,7 @@ import (
 
 // WriteAssertionsRequest struct for WriteAssertionsRequest
 type WriteAssertionsRequest struct {
-	Assertions []Assertion `json:"assertions"`
+	Assertions []Assertion `json:"assertions"yaml:"assertions"`
 }
 
 // NewWriteAssertionsRequest instantiates a new WriteAssertionsRequest object

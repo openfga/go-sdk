@@ -18,7 +18,7 @@ import (
 
 // WriteRequestTupleKeys struct for WriteRequestTupleKeys
 type WriteRequestTupleKeys struct {
-	TupleKeys []WriteRequestTupleKey `json:"tuple_keys"`
+	TupleKeys []WriteRequestTupleKey `json:"tuple_keys"yaml:"tuple_keys"`
 }
 
 // NewWriteRequestTupleKeys instantiates a new WriteRequestTupleKeys object

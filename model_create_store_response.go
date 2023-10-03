@@ -19,10 +19,10 @@ import (
 
 // CreateStoreResponse struct for CreateStoreResponse
 type CreateStoreResponse struct {
-	Id        *string    `json:"id,omitempty"`
-	Name      *string    `json:"name,omitempty"`
-	CreatedAt *time.Time `json:"created_at,omitempty"`
-	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+	Id        *string    `json:"id,omitempty"yaml:"id,omitempty"`
+	Name      *string    `json:"name,omitempty"yaml:"name,omitempty"`
+	CreatedAt *time.Time `json:"created_at,omitempty"yaml:"created_at,omitempty"`
+	UpdatedAt *time.Time `json:"updated_at,omitempty"yaml:"updated_at,omitempty"`
 }
 
 // NewCreateStoreResponse instantiates a new CreateStoreResponse object

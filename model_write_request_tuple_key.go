@@ -18,10 +18,10 @@ import (
 
 // WriteRequestTupleKey struct for WriteRequestTupleKey
 type WriteRequestTupleKey struct {
-	User      string                 `json:"user"`
-	Relation  string                 `json:"relation"`
-	Object    string                 `json:"object"`
-	Condition *RelationshipCondition `json:"condition,omitempty"`
+	User      string                 `json:"user"yaml:"user"`
+	Relation  string                 `json:"relation"yaml:"relation"`
+	Object    string                 `json:"object"yaml:"object"`
+	Condition *RelationshipCondition `json:"condition,omitempty"yaml:"condition,omitempty"`
 }
 
 // NewWriteRequestTupleKey instantiates a new WriteRequestTupleKey object

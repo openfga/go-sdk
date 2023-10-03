@@ -19,11 +19,11 @@ import (
 
 // Store struct for Store
 type Store struct {
-	Id        *string    `json:"id,omitempty"`
-	Name      *string    `json:"name,omitempty"`
-	CreatedAt *time.Time `json:"created_at,omitempty"`
-	UpdatedAt *time.Time `json:"updated_at,omitempty"`
-	DeletedAt *time.Time `json:"deleted_at,omitempty"`
+	Id        *string    `json:"id,omitempty"yaml:"id,omitempty"`
+	Name      *string    `json:"name,omitempty"yaml:"name,omitempty"`
+	CreatedAt *time.Time `json:"created_at,omitempty"yaml:"created_at,omitempty"`
+	UpdatedAt *time.Time `json:"updated_at,omitempty"yaml:"updated_at,omitempty"`
+	DeletedAt *time.Time `json:"deleted_at,omitempty"yaml:"deleted_at,omitempty"`
 }
 
 // NewStore instantiates a new Store object

@@ -18,8 +18,8 @@ import (
 
 // UsersetTreeTupleToUserset struct for UsersetTreeTupleToUserset
 type UsersetTreeTupleToUserset struct {
-	Tupleset *string     `json:"tupleset,omitempty"`
-	Computed *[]Computed `json:"computed,omitempty"`
+	Tupleset *string     `json:"tupleset,omitempty"yaml:"tupleset,omitempty"`
+	Computed *[]Computed `json:"computed,omitempty"yaml:"computed,omitempty"`
 }
 
 // NewUsersetTreeTupleToUserset instantiates a new UsersetTreeTupleToUserset object
