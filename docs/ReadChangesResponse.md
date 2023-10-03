@@ -5,7 +5,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Changes** | Pointer to [**[]TupleChange**](TupleChange.md) |  | [optional] 
-**ContinuationToken** | Pointer to **string** |  | [optional] 
+**ContinuationToken** | Pointer to **string** | The continuation token will be identical if there are no new changes. | [optional] 
 
 ## Methods
 

@@ -419,7 +419,7 @@ type SdkClient interface {
 
 func (client *OpenFgaClient) getAuthorizationModelId(authorizationModelId *string) (*string, error) {
 	modelId := client.config.AuthorizationModelId
-	if authorizationModelId != nil {
+	if authorizationModelId != nil && *authorizationModelId != "" {
 		modelId = authorizationModelId
 	}
 
@@ -431,7 +431,7 @@ func (client *OpenFgaClient) getAuthorizationModelId(authorizationModelId *strin
 
 // helper function to validate the connection (i.e., get token)
 func (client *OpenFgaClient) checkValidApiConnection(ctx _context.Context, authorizationModelId *string) error {
-	if authorizationModelId != nil {
+	if authorizationModelId != nil && *authorizationModelId != "" {
 		_, _, err := client.OpenFgaApi.ReadAuthorizationModel(ctx, *authorizationModelId).Execute()
 		return err
 	} else {

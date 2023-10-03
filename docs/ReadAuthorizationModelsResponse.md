@@ -5,7 +5,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **AuthorizationModels** | Pointer to [**[]AuthorizationModel**](AuthorizationModel.md) |  | [optional] 
-**ContinuationToken** | Pointer to **string** |  | [optional] 
+**ContinuationToken** | Pointer to **string** | The continuation token will be empty if there are no more models. | [optional] 
 
 ## Methods
 

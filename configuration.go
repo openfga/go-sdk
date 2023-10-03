@@ -65,7 +65,7 @@ func NewConfiguration(config Configuration) (*Configuration, error) {
 		Credentials:    config.Credentials,
 		DefaultHeaders: config.DefaultHeaders,
 		UserAgent:      config.UserAgent,
-		Debug:          false,
+		Debug:          config.Debug,
 		RetryParams:    config.RetryParams,
 	}
 
