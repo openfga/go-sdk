@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.2.3
+
+### [0.2.3](https://github.com/openfga/go-sdk/compare/v0.2.2...v0.2.3) (2023-10-13)
+
+- fix: allow setting user agent
+- fix(client): resolve null pointer exceptions when getting auth model id
+- fix(client): allow read to contain empty fields
+- fix(client): require auth model id and store id to be ulids
+- fix(client): resolve cases where req options was not respected
+- fix: add retry logic to oauth
+- chore: target go1.21.3 and upgrade dependencies
+
 ## v0.2.2
 
 ### [0.2.2](https://github.com/openfga/go-sdk/compare/v0.2.1...v0.2.2) (2023-04-21)

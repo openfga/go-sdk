@@ -98,9 +98,7 @@ func (o *ExpandRequest) SetAuthorizationModelId(v string) {
 
 func (o ExpandRequest) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if true {
-		toSerialize["tuple_key"] = o.TupleKey
-	}
+	toSerialize["tuple_key"] = o.TupleKey
 	if o.AuthorizationModelId != nil {
 		toSerialize["authorization_model_id"] = o.AuthorizationModelId
 	}

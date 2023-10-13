@@ -65,9 +65,7 @@ func (o *CreateStoreRequest) SetName(v string) {
 
 func (o CreateStoreRequest) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if true {
-		toSerialize["name"] = o.Name
-	}
+	toSerialize["name"] = o.Name
 	return json.Marshal(toSerialize)
 }
 

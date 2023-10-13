@@ -131,9 +131,7 @@ func (o *TypeDefinition) SetMetadata(v Metadata) {
 
 func (o TypeDefinition) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if true {
-		toSerialize["type"] = o.Type
-	}
+	toSerialize["type"] = o.Type
 	if o.Relations != nil {
 		toSerialize["relations"] = o.Relations
 	}

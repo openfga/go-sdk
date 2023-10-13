@@ -91,12 +91,8 @@ func (o *Difference) SetSubtract(v Userset) {
 
 func (o Difference) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if true {
-		toSerialize["base"] = o.Base
-	}
-	if true {
-		toSerialize["subtract"] = o.Subtract
-	}
+	toSerialize["base"] = o.Base
+	toSerialize["subtract"] = o.Subtract
 	return json.Marshal(toSerialize)
 }
 

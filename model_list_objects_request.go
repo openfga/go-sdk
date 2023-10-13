@@ -186,15 +186,9 @@ func (o ListObjectsRequest) MarshalJSON() ([]byte, error) {
 	if o.AuthorizationModelId != nil {
 		toSerialize["authorization_model_id"] = o.AuthorizationModelId
 	}
-	if true {
-		toSerialize["type"] = o.Type
-	}
-	if true {
-		toSerialize["relation"] = o.Relation
-	}
-	if true {
-		toSerialize["user"] = o.User
-	}
+	toSerialize["type"] = o.Type
+	toSerialize["relation"] = o.Relation
+	toSerialize["user"] = o.User
 	if o.ContextualTuples != nil {
 		toSerialize["contextual_tuples"] = o.ContextualTuples
 	}

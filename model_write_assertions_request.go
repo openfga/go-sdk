@@ -65,9 +65,7 @@ func (o *WriteAssertionsRequest) SetAssertions(v []Assertion) {
 
 func (o WriteAssertionsRequest) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if true {
-		toSerialize["assertions"] = o.Assertions
-	}
+	toSerialize["assertions"] = o.Assertions
 	return json.Marshal(toSerialize)
 }
 

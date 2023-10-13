@@ -98,9 +98,7 @@ func (o *WriteAuthorizationModelRequest) SetSchemaVersion(v string) {
 
 func (o WriteAuthorizationModelRequest) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if true {
-		toSerialize["type_definitions"] = o.TypeDefinitions
-	}
+	toSerialize["type_definitions"] = o.TypeDefinitions
 	if o.SchemaVersion != nil {
 		toSerialize["schema_version"] = o.SchemaVersion
 	}

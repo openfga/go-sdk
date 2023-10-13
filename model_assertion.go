@@ -91,12 +91,8 @@ func (o *Assertion) SetExpectation(v bool) {
 
 func (o Assertion) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if true {
-		toSerialize["tuple_key"] = o.TupleKey
-	}
-	if true {
-		toSerialize["expectation"] = o.Expectation
-	}
+	toSerialize["tuple_key"] = o.TupleKey
+	toSerialize["expectation"] = o.Expectation
 	return json.Marshal(toSerialize)
 }
 
