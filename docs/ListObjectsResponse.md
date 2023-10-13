@@ -4,13 +4,13 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Objects** | Pointer to **[]string** |  | [optional] 
+**Objects** | **[]string** |  | 
 
 ## Methods
 
 ### NewListObjectsResponse
 
-`func NewListObjectsResponse() *ListObjectsResponse`
+`func NewListObjectsResponse(objects []string, ) *ListObjectsResponse`
 
 NewListObjectsResponse instantiates a new ListObjectsResponse object
 This constructor will assign default values to properties that have it defined,
@@ -44,11 +44,6 @@ and a boolean to check if the value has been set.
 
 SetObjects sets Objects field to given value.
 
-### HasObjects
-
-`func (o *ListObjectsResponse) HasObjects() bool`
-
-HasObjects returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

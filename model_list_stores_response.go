@@ -18,17 +18,19 @@ import (
 
 // ListStoresResponse struct for ListStoresResponse
 type ListStoresResponse struct {
-	Stores *[]Store `json:"stores,omitempty"yaml:"stores,omitempty"`
+	Stores []Store `json:"stores"yaml:"stores"`
 	// The continuation token will be empty if there are no more stores.
-	ContinuationToken *string `json:"continuation_token,omitempty"yaml:"continuation_token,omitempty"`
+	ContinuationToken string `json:"continuation_token"yaml:"continuation_token"`
 }
 
 // NewListStoresResponse instantiates a new ListStoresResponse object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewListStoresResponse() *ListStoresResponse {
+func NewListStoresResponse(stores []Store, continuationToken string) *ListStoresResponse {
 	this := ListStoresResponse{}
+	this.Stores = stores
+	this.ContinuationToken = continuationToken
 	return &this
 }
 
@@ -40,78 +42,58 @@ func NewListStoresResponseWithDefaults() *ListStoresResponse {
 	return &this
 }
 
-// GetStores returns the Stores field value if set, zero value otherwise.
+// GetStores returns the Stores field value
 func (o *ListStoresResponse) GetStores() []Store {
-	if o == nil || o.Stores == nil {
+	if o == nil {
 		var ret []Store
 		return ret
 	}
-	return *o.Stores
+
+	return o.Stores
 }
 
-// GetStoresOk returns a tuple with the Stores field value if set, nil otherwise
+// GetStoresOk returns a tuple with the Stores field value
 // and a boolean to check if the value has been set.
 func (o *ListStoresResponse) GetStoresOk() (*[]Store, bool) {
-	if o == nil || o.Stores == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Stores, true
+	return &o.Stores, true
 }
 
-// HasStores returns a boolean if a field has been set.
-func (o *ListStoresResponse) HasStores() bool {
-	if o != nil && o.Stores != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetStores gets a reference to the given []Store and assigns it to the Stores field.
+// SetStores sets field value
 func (o *ListStoresResponse) SetStores(v []Store) {
-	o.Stores = &v
+	o.Stores = v
 }
 
-// GetContinuationToken returns the ContinuationToken field value if set, zero value otherwise.
+// GetContinuationToken returns the ContinuationToken field value
 func (o *ListStoresResponse) GetContinuationToken() string {
-	if o == nil || o.ContinuationToken == nil {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.ContinuationToken
+
+	return o.ContinuationToken
 }
 
-// GetContinuationTokenOk returns a tuple with the ContinuationToken field value if set, nil otherwise
+// GetContinuationTokenOk returns a tuple with the ContinuationToken field value
 // and a boolean to check if the value has been set.
 func (o *ListStoresResponse) GetContinuationTokenOk() (*string, bool) {
-	if o == nil || o.ContinuationToken == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.ContinuationToken, true
+	return &o.ContinuationToken, true
 }
 
-// HasContinuationToken returns a boolean if a field has been set.
-func (o *ListStoresResponse) HasContinuationToken() bool {
-	if o != nil && o.ContinuationToken != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetContinuationToken gets a reference to the given string and assigns it to the ContinuationToken field.
+// SetContinuationToken sets field value
 func (o *ListStoresResponse) SetContinuationToken(v string) {
-	o.ContinuationToken = &v
+	o.ContinuationToken = v
 }
 
 func (o ListStoresResponse) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.Stores != nil {
-		toSerialize["stores"] = o.Stores
-	}
-	if o.ContinuationToken != nil {
-		toSerialize["continuation_token"] = o.ContinuationToken
-	}
+	toSerialize["stores"] = o.Stores
+	toSerialize["continuation_token"] = o.ContinuationToken
 	return json.Marshal(toSerialize)
 }
 

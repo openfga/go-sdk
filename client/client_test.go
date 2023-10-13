@@ -127,12 +127,12 @@ func TestOpenFgaClient(t *testing.T) {
 			t.Fatalf("%v", err)
 		}
 
-		if len(*got.Stores) != 1 {
+		if len(got.Stores) != 1 {
 			t.Fatalf("%v", err)
 		}
 
-		if *((*got.Stores)[0].Id) != *((*expectedResponse.Stores)[0].Id) {
-			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, *((*got.Stores)[0].Id), *((*expectedResponse.Stores)[0].Id))
+		if got.Stores[0].Id != expectedResponse.Stores[0].Id {
+			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, got.Stores[0].Id, expectedResponse.Stores[0].Id)
 		}
 		// ListStores without options should work
 		_, err = fgaClient.ListStores(context.Background()).Execute()
@@ -177,8 +177,8 @@ func TestOpenFgaClient(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
-		if *got.Name != *expectedResponse.Name {
-			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, *got.Name, *expectedResponse.Name)
+		if got.Name != expectedResponse.Name {
+			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, got.Name, expectedResponse.Name)
 		}
 		// CreateStore without options should work
 		_, err = fgaClient.CreateStore(context.Background()).Body(requestBody).Execute()
@@ -217,8 +217,8 @@ func TestOpenFgaClient(t *testing.T) {
 			t.Fatalf("%v", err)
 		}
 
-		if *got.Id != *expectedResponse.Id {
-			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, *got.Id, *expectedResponse.Id)
+		if got.Id != expectedResponse.Id {
+			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, got.Id, expectedResponse.Id)
 		}
 		// GetStore without options should work
 		_, err = fgaClient.GetStore(context.Background()).Execute()
@@ -265,11 +265,11 @@ func TestOpenFgaClient(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
-		if *got1.Name != *expectedResponse.Name {
-			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, *got1.Name, *expectedResponse.Name)
+		if got1.Name != expectedResponse.Name {
+			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, got1.Name, expectedResponse.Name)
 		}
 
-		storeId := *got1.Id
+		storeId := got1.Id
 		fgaClient.SetStoreId(storeId)
 
 		httpmock.Activate()
@@ -289,8 +289,8 @@ func TestOpenFgaClient(t *testing.T) {
 			t.Fatalf("%v", err2)
 		}
 
-		if *got2.Id != storeId {
-			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, *got2.Id, storeId)
+		if got2.Id != storeId {
+			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, got2.Id, storeId)
 		}
 	})
 
@@ -360,12 +360,12 @@ func TestOpenFgaClient(t *testing.T) {
 			t.Fatalf("%v", err)
 		}
 
-		if len(*got.AuthorizationModels) != 1 {
+		if len(got.AuthorizationModels) != 1 {
 			t.Fatalf("%v", err)
 		}
 
-		if *((*got.AuthorizationModels)[0].Id) != *((*expectedResponse.AuthorizationModels)[0].Id) {
-			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, *((*got.AuthorizationModels)[0].Id), *((*expectedResponse.AuthorizationModels)[0].Id))
+		if *(got.AuthorizationModels[0].Id) != *(expectedResponse.AuthorizationModels[0].Id) {
+			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, *(got.AuthorizationModels[0].Id), *(expectedResponse.AuthorizationModels[0].Id))
 		}
 		// ReadAuthorizationModels without options should work
 		_, err = fgaClient.ReadAuthorizationModels(context.Background()).Execute()
@@ -393,7 +393,7 @@ func TestOpenFgaClient(t *testing.T) {
 							This: &map[string]interface{}{},
 						},
 						"viewer": {Union: &openfga.Usersets{
-							Child: &[]openfga.Userset{
+							Child: []openfga.Userset{
 								{This: &map[string]interface{}{}},
 								{ComputedUserset: &openfga.ObjectRelation{
 									Object:   openfga.PtrString(""),
@@ -470,7 +470,7 @@ func TestOpenFgaClient(t *testing.T) {
 		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
 			t.Fatalf("%v", err)
 		}
-		modelId := *(*expectedResponse.AuthorizationModel).Id
+		modelId := *(expectedResponse.AuthorizationModel).Id
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
@@ -496,7 +496,7 @@ func TestOpenFgaClient(t *testing.T) {
 			t.Fatalf("%v", err)
 		}
 
-		if *(*got.AuthorizationModel).Id != modelId {
+		if *(got.AuthorizationModel).Id != modelId {
 			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
 		}
 		// ReadAuthorizationModel without options should not work
@@ -528,7 +528,7 @@ func TestOpenFgaClient(t *testing.T) {
 		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
 			t.Fatalf("%v", err)
 		}
-		modelId := *((*expectedResponse.AuthorizationModels)[0].Id)
+		modelId := *(expectedResponse.AuthorizationModels[0].Id)
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
@@ -552,7 +552,7 @@ func TestOpenFgaClient(t *testing.T) {
 			t.Fatalf("%v", err)
 		}
 
-		if (*got.AuthorizationModel).GetId() != modelId {
+		if got.AuthorizationModel.GetId() != modelId {
 			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
 		}
 		// ReadLatestAuthorizationModel without options should work
@@ -602,7 +602,7 @@ func TestOpenFgaClient(t *testing.T) {
 			t.Fatalf("%v", err)
 		}
 
-		if len(*got.Changes) != len(*expectedResponse.Changes) {
+		if len(got.Changes) != len(expectedResponse.Changes) {
 			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
 		}
 		// ReadChanges without options should work
@@ -658,7 +658,7 @@ func TestOpenFgaClient(t *testing.T) {
 			t.Fatalf("%v", err)
 		}
 
-		if len(*got.Tuples) != len(*expectedResponse.Tuples) {
+		if len(got.Tuples) != len(expectedResponse.Tuples) {
 			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
 		}
 		// Read without options should work
@@ -1422,7 +1422,7 @@ func TestOpenFgaClient(t *testing.T) {
 			t.Fatalf("%v", err)
 		}
 
-		if len(*got.Objects) != len(*expectedResponse.Objects) || (*got.Objects)[0] != (*expectedResponse.Objects)[0] {
+		if len(got.Objects) != len(expectedResponse.Objects) || (got.Objects)[0] != (expectedResponse.Objects)[0] {
 			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
 		}
 		// ListObjects without options should work

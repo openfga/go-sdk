@@ -20,7 +20,7 @@ import (
 type AuthorizationModel struct {
 	Id              *string               `json:"id,omitempty"yaml:"id,omitempty"`
 	SchemaVersion   string                `json:"schema_version"yaml:"schema_version"`
-	TypeDefinitions *[]TypeDefinition     `json:"type_definitions,omitempty"yaml:"type_definitions,omitempty"`
+	TypeDefinitions []TypeDefinition      `json:"type_definitions"yaml:"type_definitions"`
 	Conditions      *map[string]Condition `json:"conditions,omitempty"yaml:"conditions,omitempty"`
 }
 
@@ -28,9 +28,10 @@ type AuthorizationModel struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewAuthorizationModel(schemaVersion string) *AuthorizationModel {
+func NewAuthorizationModel(schemaVersion string, typeDefinitions []TypeDefinition) *AuthorizationModel {
 	this := AuthorizationModel{}
 	this.SchemaVersion = schemaVersion
+	this.TypeDefinitions = typeDefinitions
 	return &this
 }
 
@@ -98,36 +99,28 @@ func (o *AuthorizationModel) SetSchemaVersion(v string) {
 	o.SchemaVersion = v
 }
 
-// GetTypeDefinitions returns the TypeDefinitions field value if set, zero value otherwise.
+// GetTypeDefinitions returns the TypeDefinitions field value
 func (o *AuthorizationModel) GetTypeDefinitions() []TypeDefinition {
-	if o == nil || o.TypeDefinitions == nil {
+	if o == nil {
 		var ret []TypeDefinition
 		return ret
 	}
-	return *o.TypeDefinitions
+
+	return o.TypeDefinitions
 }
 
-// GetTypeDefinitionsOk returns a tuple with the TypeDefinitions field value if set, nil otherwise
+// GetTypeDefinitionsOk returns a tuple with the TypeDefinitions field value
 // and a boolean to check if the value has been set.
 func (o *AuthorizationModel) GetTypeDefinitionsOk() (*[]TypeDefinition, bool) {
-	if o == nil || o.TypeDefinitions == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.TypeDefinitions, true
+	return &o.TypeDefinitions, true
 }
 
-// HasTypeDefinitions returns a boolean if a field has been set.
-func (o *AuthorizationModel) HasTypeDefinitions() bool {
-	if o != nil && o.TypeDefinitions != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetTypeDefinitions gets a reference to the given []TypeDefinition and assigns it to the TypeDefinitions field.
+// SetTypeDefinitions sets field value
 func (o *AuthorizationModel) SetTypeDefinitions(v []TypeDefinition) {
-	o.TypeDefinitions = &v
+	o.TypeDefinitions = v
 }
 
 // GetConditions returns the Conditions field value if set, zero value otherwise.
@@ -168,9 +161,7 @@ func (o AuthorizationModel) MarshalJSON() ([]byte, error) {
 		toSerialize["id"] = o.Id
 	}
 	toSerialize["schema_version"] = o.SchemaVersion
-	if o.TypeDefinitions != nil {
-		toSerialize["type_definitions"] = o.TypeDefinitions
-	}
+	toSerialize["type_definitions"] = o.TypeDefinitions
 	if o.Conditions != nil {
 		toSerialize["conditions"] = o.Conditions
 	}

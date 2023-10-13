@@ -4,14 +4,14 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Tuples** | Pointer to [**[]Tuple**](Tuple.md) |  | [optional] 
-**ContinuationToken** | Pointer to **string** | The continuation token will be empty if there are no more tuples. | [optional] 
+**Tuples** | [**[]Tuple**](Tuple.md) |  | 
+**ContinuationToken** | **string** | The continuation token will be empty if there are no more tuples. | 
 
 ## Methods
 
 ### NewReadResponse
 
-`func NewReadResponse() *ReadResponse`
+`func NewReadResponse(tuples []Tuple, continuationToken string, ) *ReadResponse`
 
 NewReadResponse instantiates a new ReadResponse object
 This constructor will assign default values to properties that have it defined,
@@ -45,11 +45,6 @@ and a boolean to check if the value has been set.
 
 SetTuples sets Tuples field to given value.
 
-### HasTuples
-
-`func (o *ReadResponse) HasTuples() bool`
-
-HasTuples returns a boolean if a field has been set.
 
 ### GetContinuationToken
 
@@ -70,11 +65,6 @@ and a boolean to check if the value has been set.
 
 SetContinuationToken sets ContinuationToken field to given value.
 
-### HasContinuationToken
-
-`func (o *ReadResponse) HasContinuationToken() bool`
-
-HasContinuationToken returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

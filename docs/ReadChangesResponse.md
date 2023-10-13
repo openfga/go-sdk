@@ -4,14 +4,14 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Changes** | Pointer to [**[]TupleChange**](TupleChange.md) |  | [optional] 
+**Changes** | [**[]TupleChange**](TupleChange.md) |  | 
 **ContinuationToken** | Pointer to **string** | The continuation token will be identical if there are no new changes. | [optional] 
 
 ## Methods
 
 ### NewReadChangesResponse
 
-`func NewReadChangesResponse() *ReadChangesResponse`
+`func NewReadChangesResponse(changes []TupleChange, ) *ReadChangesResponse`
 
 NewReadChangesResponse instantiates a new ReadChangesResponse object
 This constructor will assign default values to properties that have it defined,
@@ -45,11 +45,6 @@ and a boolean to check if the value has been set.
 
 SetChanges sets Changes field to given value.
 
-### HasChanges
-
-`func (o *ReadChangesResponse) HasChanges() bool`
-
-HasChanges returns a boolean if a field has been set.
 
 ### GetContinuationToken
 

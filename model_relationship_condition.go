@@ -19,18 +19,19 @@ import (
 // RelationshipCondition struct for RelationshipCondition
 type RelationshipCondition struct {
 	// A reference (by name) of the relationship condition defined in the authorization model.
-	ConditionName string `json:"condition_name"yaml:"condition_name"`
+	Name string `json:"name"yaml:"name"`
 	// Additional context/data to persist along with the condition. The keys must match the parameters defined by the condition, and the value types must match the parameter type definitions.
-	Context *map[string]interface{} `json:"context,omitempty"yaml:"context,omitempty"`
+	Context map[string]interface{} `json:"context"yaml:"context"`
 }
 
 // NewRelationshipCondition instantiates a new RelationshipCondition object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewRelationshipCondition(conditionName string) *RelationshipCondition {
+func NewRelationshipCondition(name string, context map[string]interface{}) *RelationshipCondition {
 	this := RelationshipCondition{}
-	this.ConditionName = conditionName
+	this.Name = name
+	this.Context = context
 	return &this
 }
 
@@ -42,68 +43,58 @@ func NewRelationshipConditionWithDefaults() *RelationshipCondition {
 	return &this
 }
 
-// GetConditionName returns the ConditionName field value
-func (o *RelationshipCondition) GetConditionName() string {
+// GetName returns the Name field value
+func (o *RelationshipCondition) GetName() string {
 	if o == nil {
 		var ret string
 		return ret
 	}
 
-	return o.ConditionName
+	return o.Name
 }
 
-// GetConditionNameOk returns a tuple with the ConditionName field value
+// GetNameOk returns a tuple with the Name field value
 // and a boolean to check if the value has been set.
-func (o *RelationshipCondition) GetConditionNameOk() (*string, bool) {
+func (o *RelationshipCondition) GetNameOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
-	return &o.ConditionName, true
+	return &o.Name, true
 }
 
-// SetConditionName sets field value
-func (o *RelationshipCondition) SetConditionName(v string) {
-	o.ConditionName = v
+// SetName sets field value
+func (o *RelationshipCondition) SetName(v string) {
+	o.Name = v
 }
 
-// GetContext returns the Context field value if set, zero value otherwise.
+// GetContext returns the Context field value
 func (o *RelationshipCondition) GetContext() map[string]interface{} {
-	if o == nil || o.Context == nil {
+	if o == nil {
 		var ret map[string]interface{}
 		return ret
 	}
-	return *o.Context
+
+	return o.Context
 }
 
-// GetContextOk returns a tuple with the Context field value if set, nil otherwise
+// GetContextOk returns a tuple with the Context field value
 // and a boolean to check if the value has been set.
 func (o *RelationshipCondition) GetContextOk() (*map[string]interface{}, bool) {
-	if o == nil || o.Context == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Context, true
+	return &o.Context, true
 }
 
-// HasContext returns a boolean if a field has been set.
-func (o *RelationshipCondition) HasContext() bool {
-	if o != nil && o.Context != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetContext gets a reference to the given map[string]interface{} and assigns it to the Context field.
+// SetContext sets field value
 func (o *RelationshipCondition) SetContext(v map[string]interface{}) {
-	o.Context = &v
+	o.Context = v
 }
 
 func (o RelationshipCondition) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	toSerialize["condition_name"] = o.ConditionName
-	if o.Context != nil {
-		toSerialize["context"] = o.Context
-	}
+	toSerialize["name"] = o.Name
+	toSerialize["context"] = o.Context
 	return json.Marshal(toSerialize)
 }
 

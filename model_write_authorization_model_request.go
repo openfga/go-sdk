@@ -19,7 +19,7 @@ import (
 // WriteAuthorizationModelRequest struct for WriteAuthorizationModelRequest
 type WriteAuthorizationModelRequest struct {
 	TypeDefinitions []TypeDefinition      `json:"type_definitions"yaml:"type_definitions"`
-	SchemaVersion   *string               `json:"schema_version,omitempty"yaml:"schema_version,omitempty"`
+	SchemaVersion   string                `json:"schema_version"yaml:"schema_version"`
 	Conditions      *map[string]Condition `json:"conditions,omitempty"yaml:"conditions,omitempty"`
 }
 
@@ -27,9 +27,10 @@ type WriteAuthorizationModelRequest struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewWriteAuthorizationModelRequest(typeDefinitions []TypeDefinition) *WriteAuthorizationModelRequest {
+func NewWriteAuthorizationModelRequest(typeDefinitions []TypeDefinition, schemaVersion string) *WriteAuthorizationModelRequest {
 	this := WriteAuthorizationModelRequest{}
 	this.TypeDefinitions = typeDefinitions
+	this.SchemaVersion = schemaVersion
 	return &this
 }
 
@@ -65,36 +66,28 @@ func (o *WriteAuthorizationModelRequest) SetTypeDefinitions(v []TypeDefinition) 
 	o.TypeDefinitions = v
 }
 
-// GetSchemaVersion returns the SchemaVersion field value if set, zero value otherwise.
+// GetSchemaVersion returns the SchemaVersion field value
 func (o *WriteAuthorizationModelRequest) GetSchemaVersion() string {
-	if o == nil || o.SchemaVersion == nil {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.SchemaVersion
+
+	return o.SchemaVersion
 }
 
-// GetSchemaVersionOk returns a tuple with the SchemaVersion field value if set, nil otherwise
+// GetSchemaVersionOk returns a tuple with the SchemaVersion field value
 // and a boolean to check if the value has been set.
 func (o *WriteAuthorizationModelRequest) GetSchemaVersionOk() (*string, bool) {
-	if o == nil || o.SchemaVersion == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.SchemaVersion, true
+	return &o.SchemaVersion, true
 }
 
-// HasSchemaVersion returns a boolean if a field has been set.
-func (o *WriteAuthorizationModelRequest) HasSchemaVersion() bool {
-	if o != nil && o.SchemaVersion != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetSchemaVersion gets a reference to the given string and assigns it to the SchemaVersion field.
+// SetSchemaVersion sets field value
 func (o *WriteAuthorizationModelRequest) SetSchemaVersion(v string) {
-	o.SchemaVersion = &v
+	o.SchemaVersion = v
 }
 
 // GetConditions returns the Conditions field value if set, zero value otherwise.
@@ -132,9 +125,7 @@ func (o *WriteAuthorizationModelRequest) SetConditions(v map[string]Condition) {
 func (o WriteAuthorizationModelRequest) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["type_definitions"] = o.TypeDefinitions
-	if o.SchemaVersion != nil {
-		toSerialize["schema_version"] = o.SchemaVersion
-	}
+	toSerialize["schema_version"] = o.SchemaVersion
 	if o.Conditions != nil {
 		toSerialize["conditions"] = o.Conditions
 	}

@@ -1354,7 +1354,7 @@ import (
 
 func main() {
     
-    body := *openapiclient.NewWriteAuthorizationModelRequest([]openapiclient.TypeDefinition{*openapiclient.NewTypeDefinition("document")}) // WriteAuthorizationModelRequest | 
+    body := *openapiclient.NewWriteAuthorizationModelRequest([]openapiclient.TypeDefinition{*openapiclient.NewTypeDefinition("document")}, "SchemaVersion_example") // WriteAuthorizationModelRequest | 
 
     configuration, err := openfga.NewConfiguration(openfga.Configuration{
         ApiScheme:      os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"

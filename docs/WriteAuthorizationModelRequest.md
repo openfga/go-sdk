@@ -5,14 +5,14 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **TypeDefinitions** | [**[]TypeDefinition**](TypeDefinition.md) |  | 
-**SchemaVersion** | Pointer to **string** |  | [optional] 
+**SchemaVersion** | **string** |  | 
 **Conditions** | Pointer to [**map[string]Condition**](Condition.md) |  | [optional] 
 
 ## Methods
 
 ### NewWriteAuthorizationModelRequest
 
-`func NewWriteAuthorizationModelRequest(typeDefinitions []TypeDefinition, ) *WriteAuthorizationModelRequest`
+`func NewWriteAuthorizationModelRequest(typeDefinitions []TypeDefinition, schemaVersion string, ) *WriteAuthorizationModelRequest`
 
 NewWriteAuthorizationModelRequest instantiates a new WriteAuthorizationModelRequest object
 This constructor will assign default values to properties that have it defined,
@@ -66,11 +66,6 @@ and a boolean to check if the value has been set.
 
 SetSchemaVersion sets SchemaVersion field to given value.
 
-### HasSchemaVersion
-
-`func (o *WriteAuthorizationModelRequest) HasSchemaVersion() bool`
-
-HasSchemaVersion returns a boolean if a field has been set.
 
 ### GetConditions
 

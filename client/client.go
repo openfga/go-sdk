@@ -19,9 +19,9 @@ import (
 	"math"
 	_nethttp "net/http"
 
-	"github.com/openfga/go-sdk"
+	fgaSdk "github.com/openfga/go-sdk"
 	"github.com/openfga/go-sdk/credentials"
-	"github.com/openfga/go-sdk/internal/utils"
+	internalutils "github.com/openfga/go-sdk/internal/utils"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -34,7 +34,7 @@ var (
 var DEFAULT_MAX_METHOD_PARALLEL_REQS = int32(10)
 
 type ClientConfiguration struct {
-	openfga.Configuration
+	fgaSdk.Configuration
 	ApiScheme            string                   `json:"api_scheme,omitempty"`
 	ApiHost              string                   `json:"api_host,omitempty"`
 	StoreId              string                   `json:"store_id,omitempty"`
@@ -44,10 +44,10 @@ type ClientConfiguration struct {
 	UserAgent            string                   `json:"user_agent,omitempty"`
 	Debug                bool                     `json:"debug,omitempty"`
 	HTTPClient           *_nethttp.Client
-	RetryParams          *openfga.RetryParams
+	RetryParams          *fgaSdk.RetryParams
 }
 
-func newClientConfiguration(cfg *openfga.Configuration) ClientConfiguration {
+func newClientConfiguration(cfg *fgaSdk.Configuration) ClientConfiguration {
 	return ClientConfiguration{
 		ApiScheme:      cfg.ApiScheme,
 		ApiHost:        cfg.ApiHost,
@@ -63,11 +63,11 @@ func newClientConfiguration(cfg *openfga.Configuration) ClientConfiguration {
 type OpenFgaClient struct {
 	config ClientConfiguration
 	SdkClient
-	openfga.APIClient
+	fgaSdk.APIClient
 }
 
 func NewSdkClient(cfg *ClientConfiguration) (*OpenFgaClient, error) {
-	apiConfiguration, err := openfga.NewConfiguration(openfga.Configuration{
+	apiConfiguration, err := fgaSdk.NewConfiguration(fgaSdk.Configuration{
 		ApiScheme:      cfg.ApiScheme,
 		ApiHost:        cfg.ApiHost,
 		StoreId:        cfg.StoreId,
@@ -91,7 +91,7 @@ func NewSdkClient(cfg *ClientConfiguration) (*OpenFgaClient, error) {
 		return nil, FgaInvalidError{param: "AuthorizationModelId", description: "ULID"}
 	}
 
-	apiClient := openfga.NewAPIClient(apiConfiguration)
+	apiClient := fgaSdk.NewAPIClient(apiConfiguration)
 
 	return &OpenFgaClient{
 		config:    clientConfig,
@@ -113,11 +113,11 @@ type ClientRequestOptionsWithAuthZModelId struct {
 	AuthorizationModelIdOptions
 }
 
-type ClientTupleKey = openfga.TupleKey
-type ClientWriteRequestTupleKey = openfga.WriteRequestTupleKey
-type ClientCheckRequestTupleKey = openfga.CheckRequestTupleKey
-type ClientReadRequestTupleKey = openfga.ReadRequestTupleKey
-type ClientExpandRequestTupleKey = openfga.ExpandRequestTupleKey
+type ClientTupleKey = fgaSdk.TupleKey
+type ClientWriteRequestTupleKey = fgaSdk.WriteRequestTupleKey
+type ClientCheckRequestTupleKey = fgaSdk.CheckRequestTupleKey
+type ClientReadRequestTupleKey = fgaSdk.ReadRequestTupleKey
+type ClientExpandRequestTupleKey = fgaSdk.ExpandRequestTupleKey
 type ClientContextualTupleKey = ClientTupleKey
 
 type ClientPaginationOptions struct {
@@ -429,7 +429,7 @@ func (client *OpenFgaClient) checkValidApiConnection(ctx _context.Context, autho
 		return err
 	} else {
 		_, err := client.ReadAuthorizationModels(ctx).Options(ClientReadAuthorizationModelsOptions{
-			PageSize: openfga.PtrInt32(1),
+			PageSize: fgaSdk.PtrInt32(1),
 		}).Execute()
 		return err
 	}
@@ -457,7 +457,7 @@ type ClientListStoresOptions struct {
 	ContinuationToken *string `json:"continuation_token,omitempty"`
 }
 
-type ClientListStoresResponse = openfga.ListStoresResponse
+type ClientListStoresResponse = fgaSdk.ListStoresResponse
 
 func (request *SdkClientListStoresRequest) Options(options ClientListStoresOptions) SdkClientListStoresRequestInterface {
 	request.options = &options
@@ -526,7 +526,7 @@ type ClientCreateStoreRequest struct {
 type ClientCreateStoreOptions struct {
 }
 
-type ClientCreateStoreResponse = openfga.CreateStoreResponse
+type ClientCreateStoreResponse = fgaSdk.CreateStoreResponse
 
 func (request *SdkClientCreateStoreRequest) Options(options ClientCreateStoreOptions) SdkClientCreateStoreRequestInterface {
 	request.options = &options
@@ -555,7 +555,7 @@ func (request *SdkClientCreateStoreRequest) GetBody() *ClientCreateStoreRequest 
 }
 
 func (client *OpenFgaClient) CreateStoreExecute(request SdkClientCreateStoreRequestInterface) (*ClientCreateStoreResponse, error) {
-	data, _, err := client.OpenFgaApi.CreateStore(request.GetContext()).Body(openfga.CreateStoreRequest{
+	data, _, err := client.OpenFgaApi.CreateStore(request.GetContext()).Body(fgaSdk.CreateStoreRequest{
 		Name: request.GetBody().Name,
 	}).Execute()
 	if err != nil {
@@ -590,7 +590,7 @@ type SdkClientGetStoreRequestInterface interface {
 type ClientGetStoreOptions struct {
 }
 
-type ClientGetStoreResponse = openfga.GetStoreResponse
+type ClientGetStoreResponse = fgaSdk.GetStoreResponse
 
 func (request *SdkClientGetStoreRequest) Options(options ClientGetStoreOptions) SdkClientGetStoreRequestInterface {
 	request.options = &options
@@ -700,7 +700,7 @@ type ClientReadAuthorizationModelsOptions struct {
 	ContinuationToken *string `json:"continuation_token,omitempty"`
 }
 
-type ClientReadAuthorizationModelsResponse = openfga.ReadAuthorizationModelsResponse
+type ClientReadAuthorizationModelsResponse = fgaSdk.ReadAuthorizationModelsResponse
 
 func (request *SdkClientReadAuthorizationModelsRequest) Options(options ClientReadAuthorizationModelsOptions) SdkClientReadAuthorizationModelsRequestInterface {
 	request.options = &options
@@ -763,14 +763,14 @@ type SdkClientWriteAuthorizationModelRequestInterface interface {
 }
 
 type ClientWriteAuthorizationModelRequest struct {
-	TypeDefinitions []openfga.TypeDefinition `json:"type_definitions"`
-	SchemaVersion   string                   `json:"schema_version,omitempty"`
+	TypeDefinitions []fgaSdk.TypeDefinition `json:"type_definitions"`
+	SchemaVersion   string                  `json:"schema_version,omitempty"`
 }
 
 type ClientWriteAuthorizationModelOptions struct {
 }
 
-type ClientWriteAuthorizationModelResponse = openfga.WriteAuthorizationModelResponse
+type ClientWriteAuthorizationModelResponse = fgaSdk.WriteAuthorizationModelResponse
 
 func (request *SdkClientWriteAuthorizationModelRequest) Options(options ClientWriteAuthorizationModelOptions) SdkClientWriteAuthorizationModelRequestInterface {
 	request.options = &options
@@ -799,9 +799,9 @@ func (request *SdkClientWriteAuthorizationModelRequest) GetContext() _context.Co
 }
 
 func (client *OpenFgaClient) WriteAuthorizationModelExecute(request SdkClientWriteAuthorizationModelRequestInterface) (*ClientWriteAuthorizationModelResponse, error) {
-	data, _, err := client.OpenFgaApi.WriteAuthorizationModel(request.GetContext()).Body(openfga.WriteAuthorizationModelRequest{
+	data, _, err := client.OpenFgaApi.WriteAuthorizationModel(request.GetContext()).Body(fgaSdk.WriteAuthorizationModelRequest{
 		TypeDefinitions: request.GetBody().TypeDefinitions,
-		SchemaVersion:   openfga.PtrString(request.GetBody().SchemaVersion),
+		SchemaVersion:   request.GetBody().SchemaVersion,
 	}).Execute()
 	if err != nil {
 		return nil, err
@@ -843,7 +843,7 @@ type ClientReadAuthorizationModelOptions struct {
 	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
 }
 
-type ClientReadAuthorizationModelResponse = openfga.ReadAuthorizationModelResponse
+type ClientReadAuthorizationModelResponse = fgaSdk.ReadAuthorizationModelResponse
 
 func (request *SdkClientReadAuthorizationModelRequest) Options(options ClientReadAuthorizationModelOptions) SdkClientReadAuthorizationModelRequestInterface {
 	request.options = &options
@@ -946,20 +946,20 @@ func (request *SdkClientReadLatestAuthorizationModelRequest) GetOptions() *Clien
 
 func (client *OpenFgaClient) ReadLatestAuthorizationModelExecute(request SdkClientReadLatestAuthorizationModelRequestInterface) (*ClientReadAuthorizationModelResponse, error) {
 	response, err := client.ReadAuthorizationModels(request.GetContext()).Options(ClientReadAuthorizationModelsOptions{
-		PageSize: openfga.PtrInt32(1),
+		PageSize: fgaSdk.PtrInt32(1),
 	}).Execute()
 	if err != nil {
 		return nil, err
 	}
 
-	var authorizationModel *openfga.AuthorizationModel
+	var authorizationModel *fgaSdk.AuthorizationModel
 
-	if len(*response.AuthorizationModels) > 0 {
-		authorizationModels := *response.AuthorizationModels
+	if len(response.AuthorizationModels) > 0 {
+		authorizationModels := response.AuthorizationModels
 		authorizationModel = &(authorizationModels)[0]
 	}
 
-	return &openfga.ReadAuthorizationModelResponse{
+	return &fgaSdk.ReadAuthorizationModelResponse{
 		AuthorizationModel: authorizationModel,
 	}, nil
 }
@@ -994,7 +994,7 @@ type ClientReadChangesOptions struct {
 	ContinuationToken *string `json:"continuation_token,omitempty"`
 }
 
-type ClientReadChangesResponse = openfga.ReadChangesResponse
+type ClientReadChangesResponse = fgaSdk.ReadChangesResponse
 
 func (client *OpenFgaClient) ReadChanges(ctx _context.Context) SdkClientReadChangesRequestInterface {
 	return &SdkClientReadChangesRequest{
@@ -1081,7 +1081,7 @@ type ClientReadOptions struct {
 	ContinuationToken *string `json:"continuation_token,omitempty"`
 }
 
-type ClientReadResponse = openfga.ReadResponse
+type ClientReadResponse = fgaSdk.ReadResponse
 
 func (client *OpenFgaClient) Read(ctx _context.Context) SdkClientReadRequestInterface {
 	return &SdkClientReadRequest{
@@ -1117,12 +1117,12 @@ func (request *SdkClientReadRequest) GetOptions() *ClientReadOptions {
 }
 
 func (client *OpenFgaClient) ReadExecute(request SdkClientReadRequestInterface) (*ClientReadResponse, error) {
-	body := openfga.ReadRequest{
+	body := fgaSdk.ReadRequest{
 		PageSize:          getPageSizeFromRequest((*ClientPaginationOptions)(request.GetOptions())),
 		ContinuationToken: getContinuationTokenFromRequest((*ClientPaginationOptions)(request.GetOptions())),
 	}
 	if request.GetBody() != nil && (request.GetBody().User != nil || request.GetBody().Relation != nil || request.GetBody().Object != nil) {
-		body.TupleKey = &openfga.ReadRequestTupleKey{
+		body.TupleKey = &fgaSdk.ReadRequestTupleKey{
 			User:     request.GetBody().User,
 			Relation: request.GetBody().Relation,
 			Object:   request.GetBody().Object,
@@ -1281,18 +1281,18 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 	// Unless explicitly disabled, transaction mode is enabled
 	// In transaction mode, the client will send the request to the server as is
 	if request.GetOptions() == nil || request.GetOptions().Transaction == nil || !request.GetOptions().Transaction.Disable {
-		writeRequest := openfga.WriteRequest{
+		writeRequest := fgaSdk.WriteRequest{
 			AuthorizationModelId: authorizationModelId,
 		}
 		if request.GetBody().Writes != nil && len(request.GetBody().Writes) > 0 {
-			writes := openfga.WriteRequestTupleKeys{}
+			writes := fgaSdk.WriteRequestTupleKeys{}
 			for index := 0; index < len(request.GetBody().Writes); index++ {
 				writes.TupleKeys = append(writes.TupleKeys, (request.GetBody().Writes)[index])
 			}
 			writeRequest.Writes = &writes
 		}
 		if request.GetBody().Deletes != nil && len(request.GetBody().Deletes) > 0 {
-			deletes := openfga.WriteRequestTupleKeys{}
+			deletes := fgaSdk.WriteRequestTupleKeys{}
 			for index := 0; index < len(request.GetBody().Deletes); index++ {
 				deletes.TupleKeys = append(deletes.TupleKeys, (request.GetBody().Deletes)[index])
 			}
@@ -1581,7 +1581,7 @@ type ClientCheckRequest struct {
 	User             string                     `json:"user,omitempty"`
 	Relation         string                     `json:"relation,omitempty"`
 	Object           string                     `json:"object,omitempty"`
-	Context          map[string]interface{}     `json:"context,omitempty"`
+	Context          *map[string]interface{}    `json:"context,omitempty"`
 	ContextualTuples []ClientContextualTupleKey `json:"contextual_tuples,omitempty"`
 }
 
@@ -1590,7 +1590,7 @@ type ClientCheckOptions struct {
 }
 
 type ClientCheckResponse struct {
-	openfga.CheckResponse
+	fgaSdk.CheckResponse
 	HttpResponse *_nethttp.Response
 }
 
@@ -1645,13 +1645,14 @@ func (client *OpenFgaClient) CheckExecute(request SdkClientCheckRequestInterface
 	if err != nil {
 		return nil, err
 	}
-	requestBody := openfga.CheckRequest{
-		TupleKey: openfga.CheckRequestTupleKey{
+	requestBody := fgaSdk.CheckRequest{
+		TupleKey: fgaSdk.CheckRequestTupleKey{
 			User:     request.GetBody().User,
 			Relation: request.GetBody().Relation,
 			Object:   request.GetBody().Object,
 		},
-		ContextualTuples:     openfga.NewContextualTupleKeys(contextualTuples),
+		Context:              request.GetBody().Context,
+		ContextualTuples:     fgaSdk.NewContextualTupleKeys(contextualTuples),
 		AuthorizationModelId: authorizationModelId,
 	}
 
@@ -1814,7 +1815,7 @@ type ClientExpandOptions struct {
 	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
 }
 
-type ClientExpandResponse = openfga.ExpandResponse
+type ClientExpandResponse = fgaSdk.ExpandResponse
 
 func (client *OpenFgaClient) Expand(ctx _context.Context) SdkClientExpandRequestInterface {
 	return &SdkClientExpandRequest{
@@ -1862,8 +1863,8 @@ func (client *OpenFgaClient) ExpandExecute(request SdkClientExpandRequestInterfa
 		return nil, err
 	}
 
-	data, _, err := client.OpenFgaApi.Expand(request.GetContext()).Body(openfga.ExpandRequest{
-		TupleKey: openfga.ExpandRequestTupleKey{
+	data, _, err := client.OpenFgaApi.Expand(request.GetContext()).Body(fgaSdk.ExpandRequest{
+		TupleKey: fgaSdk.ExpandRequestTupleKey{
 			Relation: request.GetBody().Relation,
 			Object:   request.GetBody().Object,
 		},
@@ -1899,7 +1900,7 @@ type ClientListObjectsRequest struct {
 	User             string                     `json:"user,omitempty"`
 	Relation         string                     `json:"relation,omitempty"`
 	Type             string                     `json:"type,omitempty"`
-	Context          map[string]interface{}     `json:"context,omitempty"`
+	Context          *map[string]interface{}    `json:"context,omitempty"`
 	ContextualTuples []ClientContextualTupleKey `json:"contextual_tuples,omitempty"`
 }
 
@@ -1907,7 +1908,7 @@ type ClientListObjectsOptions struct {
 	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
 }
 
-type ClientListObjectsResponse = openfga.ListObjectsResponse
+type ClientListObjectsResponse = fgaSdk.ListObjectsResponse
 
 func (client *OpenFgaClient) ListObjects(ctx _context.Context) SdkClientListObjectsRequestInterface {
 	return &SdkClientListObjectsRequest{
@@ -1960,11 +1961,11 @@ func (client *OpenFgaClient) ListObjectsExecute(request SdkClientListObjectsRequ
 	if err != nil {
 		return nil, err
 	}
-	data, _, err := client.OpenFgaApi.ListObjects(request.GetContext()).Body(openfga.ListObjectsRequest{
+	data, _, err := client.OpenFgaApi.ListObjects(request.GetContext()).Body(fgaSdk.ListObjectsRequest{
 		User:                 request.GetBody().User,
 		Relation:             request.GetBody().Relation,
 		Type:                 request.GetBody().Type,
-		ContextualTuples:     openfga.NewContextualTupleKeys(contextualTuples),
+		ContextualTuples:     fgaSdk.NewContextualTupleKeys(contextualTuples),
 		AuthorizationModelId: authorizationModelId,
 	}).Execute()
 	if err != nil {
@@ -1998,7 +1999,7 @@ type ClientListRelationsRequest struct {
 	User             string                     `json:"user,omitempty"`
 	Object           string                     `json:"object,omitempty"`
 	Relations        []string                   `json:"relations,omitempty"`
-	Context          map[string]interface{}     `json:"context,omitempty"`
+	Context          *map[string]interface{}    `json:"context,omitempty"`
 	ContextualTuples []ClientContextualTupleKey `json:"contextual_tuples,omitempty"`
 }
 
@@ -2119,7 +2120,7 @@ type ClientReadAssertionsOptions struct {
 	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
 }
 
-type ClientReadAssertionsResponse = openfga.ReadAssertionsResponse
+type ClientReadAssertionsResponse = fgaSdk.ReadAssertionsResponse
 
 func (client *OpenFgaClient) ReadAssertions(ctx _context.Context) SdkClientReadAssertionsRequestInterface {
 	return &SdkClientReadAssertionsRequest{
@@ -2196,9 +2197,9 @@ type ClientAssertion struct {
 
 type ClientWriteAssertionsRequest = []ClientAssertion
 
-func (clientAssertion ClientAssertion) ToAssertion() openfga.Assertion {
-	return openfga.Assertion{
-		TupleKey: openfga.CheckRequestTupleKey{
+func (clientAssertion ClientAssertion) ToAssertion() fgaSdk.Assertion {
+	return fgaSdk.Assertion{
+		TupleKey: fgaSdk.CheckRequestTupleKey{
 			User:     clientAssertion.User,
 			Relation: clientAssertion.Relation,
 			Object:   clientAssertion.Object,
@@ -2255,7 +2256,7 @@ func (request *SdkClientWriteAssertionsRequest) GetOptions() *ClientWriteAsserti
 }
 
 func (client *OpenFgaClient) WriteAssertionsExecute(request SdkClientWriteAssertionsRequestInterface) (*ClientWriteAssertionsResponse, error) {
-	writeAssertionsRequest := openfga.WriteAssertionsRequest{}
+	writeAssertionsRequest := fgaSdk.WriteAssertionsRequest{}
 	authorizationModelId, err := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
 	if err != nil {
 		return nil, err

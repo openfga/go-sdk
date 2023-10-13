@@ -18,15 +18,16 @@ import (
 
 // Users struct for Users
 type Users struct {
-	Users *[]string `json:"users,omitempty"yaml:"users,omitempty"`
+	Users []string `json:"users"yaml:"users"`
 }
 
 // NewUsers instantiates a new Users object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewUsers() *Users {
+func NewUsers(users []string) *Users {
 	this := Users{}
+	this.Users = users
 	return &this
 }
 
@@ -38,43 +39,33 @@ func NewUsersWithDefaults() *Users {
 	return &this
 }
 
-// GetUsers returns the Users field value if set, zero value otherwise.
+// GetUsers returns the Users field value
 func (o *Users) GetUsers() []string {
-	if o == nil || o.Users == nil {
+	if o == nil {
 		var ret []string
 		return ret
 	}
-	return *o.Users
+
+	return o.Users
 }
 
-// GetUsersOk returns a tuple with the Users field value if set, nil otherwise
+// GetUsersOk returns a tuple with the Users field value
 // and a boolean to check if the value has been set.
 func (o *Users) GetUsersOk() (*[]string, bool) {
-	if o == nil || o.Users == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Users, true
+	return &o.Users, true
 }
 
-// HasUsers returns a boolean if a field has been set.
-func (o *Users) HasUsers() bool {
-	if o != nil && o.Users != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetUsers gets a reference to the given []string and assigns it to the Users field.
+// SetUsers sets field value
 func (o *Users) SetUsers(v []string) {
-	o.Users = &v
+	o.Users = v
 }
 
 func (o Users) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.Users != nil {
-		toSerialize["users"] = o.Users
-	}
+	toSerialize["users"] = o.Users
 	return json.Marshal(toSerialize)
 }
 

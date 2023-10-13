@@ -4,14 +4,14 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**AuthorizationModels** | Pointer to [**[]AuthorizationModel**](AuthorizationModel.md) |  | [optional] 
+**AuthorizationModels** | [**[]AuthorizationModel**](AuthorizationModel.md) |  | 
 **ContinuationToken** | Pointer to **string** | The continuation token will be empty if there are no more models. | [optional] 
 
 ## Methods
 
 ### NewReadAuthorizationModelsResponse
 
-`func NewReadAuthorizationModelsResponse() *ReadAuthorizationModelsResponse`
+`func NewReadAuthorizationModelsResponse(authorizationModels []AuthorizationModel, ) *ReadAuthorizationModelsResponse`
 
 NewReadAuthorizationModelsResponse instantiates a new ReadAuthorizationModelsResponse object
 This constructor will assign default values to properties that have it defined,
@@ -45,11 +45,6 @@ and a boolean to check if the value has been set.
 
 SetAuthorizationModels sets AuthorizationModels field to given value.
 
-### HasAuthorizationModels
-
-`func (o *ReadAuthorizationModelsResponse) HasAuthorizationModels() bool`
-
-HasAuthorizationModels returns a boolean if a field has been set.
 
 ### GetContinuationToken
 

@@ -117,14 +117,14 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 		defer httpmock.DeactivateAndReset()
 		httpmock.RegisterResponder("GET", fmt.Sprintf("%s://%s/stores/%s/authorization-models", configuration.ApiScheme, configuration.ApiHost, configuration.StoreId),
 			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(200, ReadAuthorizationModelsResponse{AuthorizationModels: &[]AuthorizationModel{
+				resp, err := httpmock.NewJsonResponse(200, ReadAuthorizationModelsResponse{AuthorizationModels: []AuthorizationModel{
 					{
 						Id:              PtrString("01GXSA8YR785C4FYS3C0RTG7B1"),
-						TypeDefinitions: &[]TypeDefinition{},
+						TypeDefinitions: []TypeDefinition{},
 					},
 					{
 						Id:              PtrString("01GXSBM5PVYHCJNRNKXMB4QZTW"),
-						TypeDefinitions: &[]TypeDefinition{},
+						TypeDefinitions: []TypeDefinition{},
 					},
 				}})
 				if err != nil {
@@ -249,14 +249,14 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 		defer httpmock.DeactivateAndReset()
 		httpmock.RegisterResponder("GET", fmt.Sprintf("%s://%s/stores/%s/authorization-models", configuration.ApiScheme, configuration.ApiHost, configuration.StoreId),
 			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(200, ReadAuthorizationModelsResponse{AuthorizationModels: &[]AuthorizationModel{
+				resp, err := httpmock.NewJsonResponse(200, ReadAuthorizationModelsResponse{AuthorizationModels: []AuthorizationModel{
 					{
 						Id:              PtrString("01GXSA8YR785C4FYS3C0RTG7B1"),
-						TypeDefinitions: &[]TypeDefinition{},
+						TypeDefinitions: []TypeDefinition{},
 					},
 					{
 						Id:              PtrString("01GXSBM5PVYHCJNRNKXMB4QZTW"),
-						TypeDefinitions: &[]TypeDefinition{},
+						TypeDefinitions: []TypeDefinition{},
 					},
 				}})
 				if err != nil {
@@ -313,14 +313,14 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 		defer httpmock.DeactivateAndReset()
 		httpmock.RegisterResponder("GET", fmt.Sprintf("%s://%s/stores/%s/authorization-models", configuration.ApiScheme, configuration.ApiHost, configuration.StoreId),
 			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(200, ReadAuthorizationModelsResponse{AuthorizationModels: &[]AuthorizationModel{
+				resp, err := httpmock.NewJsonResponse(200, ReadAuthorizationModelsResponse{AuthorizationModels: []AuthorizationModel{
 					{
 						Id:              PtrString("01GXSA8YR785C4FYS3C0RTG7B1"),
-						TypeDefinitions: &[]TypeDefinition{},
+						TypeDefinitions: []TypeDefinition{},
 					},
 					{
 						Id:              PtrString("01GXSBM5PVYHCJNRNKXMB4QZTW"),
-						TypeDefinitions: &[]TypeDefinition{},
+						TypeDefinitions: []TypeDefinition{},
 					},
 				}})
 				if err != nil {
@@ -447,12 +447,12 @@ func TestOpenFgaApi(t *testing.T) {
 			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
 		}
 
-		if len(*got.AuthorizationModels) != 1 {
+		if len(got.AuthorizationModels) != 1 {
 			t.Fatalf("%v", err)
 		}
 
-		if *((*got.AuthorizationModels)[0].Id) != *((*expectedResponse.AuthorizationModels)[0].Id) {
-			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, *((*got.AuthorizationModels)[0].Id), *((*expectedResponse.AuthorizationModels)[0].Id))
+		if *(got.AuthorizationModels[0].Id) != *(expectedResponse.AuthorizationModels[0].Id) {
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, *(got.AuthorizationModels[0].Id), *(expectedResponse.AuthorizationModels[0].Id))
 		}
 	})
 
@@ -472,7 +472,7 @@ func TestOpenFgaApi(t *testing.T) {
 						This: &map[string]interface{}{},
 					},
 					"viewer": {Union: &Usersets{
-						Child: &[]Userset{
+						Child: []Userset{
 							{This: &map[string]interface{}{}},
 							{ComputedUserset: &ObjectRelation{
 								Object:   PtrString(""),
@@ -798,7 +798,7 @@ func TestOpenFgaApi(t *testing.T) {
 			t.Fatalf("%v", err)
 		}
 
-		if len(*got.Tuples) != len(*expectedResponse.Tuples) {
+		if len(got.Tuples) != len(expectedResponse.Tuples) {
 			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
 		}
 	})
@@ -846,7 +846,7 @@ func TestOpenFgaApi(t *testing.T) {
 			t.Fatalf("%v", err)
 		}
 
-		if len(*got.Changes) != len(*expectedResponse.Changes) {
+		if len(got.Changes) != len(expectedResponse.Changes) {
 			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
 		}
 	})
@@ -910,7 +910,7 @@ func TestOpenFgaApi(t *testing.T) {
 			t.Fatalf("%v", err)
 		}
 
-		if len(*got.Objects) != len(*expectedResponse.Objects) || (*got.Objects)[0] != (*expectedResponse.Objects)[0] {
+		if len(got.Objects) != len(expectedResponse.Objects) || (got.Objects)[0] != (expectedResponse.Objects)[0] {
 			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
 		}
 	})

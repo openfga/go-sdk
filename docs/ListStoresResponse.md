@@ -4,14 +4,14 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Stores** | Pointer to [**[]Store**](Store.md) |  | [optional] 
-**ContinuationToken** | Pointer to **string** | The continuation token will be empty if there are no more stores. | [optional] 
+**Stores** | [**[]Store**](Store.md) |  | 
+**ContinuationToken** | **string** | The continuation token will be empty if there are no more stores. | 
 
 ## Methods
 
 ### NewListStoresResponse
 
-`func NewListStoresResponse() *ListStoresResponse`
+`func NewListStoresResponse(stores []Store, continuationToken string, ) *ListStoresResponse`
 
 NewListStoresResponse instantiates a new ListStoresResponse object
 This constructor will assign default values to properties that have it defined,
@@ -45,11 +45,6 @@ and a boolean to check if the value has been set.
 
 SetStores sets Stores field to given value.
 
-### HasStores
-
-`func (o *ListStoresResponse) HasStores() bool`
-
-HasStores returns a boolean if a field has been set.
 
 ### GetContinuationToken
 
@@ -70,11 +65,6 @@ and a boolean to check if the value has been set.
 
 SetContinuationToken sets ContinuationToken field to given value.
 
-### HasContinuationToken
-
-`func (o *ListStoresResponse) HasContinuationToken() bool`
-
-HasContinuationToken returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

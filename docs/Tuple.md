@@ -4,14 +4,14 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Key** | Pointer to [**TupleKey**](TupleKey.md) |  | [optional] 
-**Timestamp** | Pointer to **time.Time** |  | [optional] 
+**Key** | [**TupleKey**](TupleKey.md) |  | 
+**Timestamp** | **time.Time** |  | 
 
 ## Methods
 
 ### NewTuple
 
-`func NewTuple() *Tuple`
+`func NewTuple(key TupleKey, timestamp time.Time, ) *Tuple`
 
 NewTuple instantiates a new Tuple object
 This constructor will assign default values to properties that have it defined,
@@ -45,11 +45,6 @@ and a boolean to check if the value has been set.
 
 SetKey sets Key field to given value.
 
-### HasKey
-
-`func (o *Tuple) HasKey() bool`
-
-HasKey returns a boolean if a field has been set.
 
 ### GetTimestamp
 
@@ -70,11 +65,6 @@ and a boolean to check if the value has been set.
 
 SetTimestamp sets Timestamp field to given value.
 
-### HasTimestamp
-
-`func (o *Tuple) HasTimestamp() bool`
-
-HasTimestamp returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

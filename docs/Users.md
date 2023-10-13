@@ -4,13 +4,13 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Users** | Pointer to **[]string** |  | [optional] 
+**Users** | **[]string** |  | 
 
 ## Methods
 
 ### NewUsers
 
-`func NewUsers() *Users`
+`func NewUsers(users []string, ) *Users`
 
 NewUsers instantiates a new Users object
 This constructor will assign default values to properties that have it defined,
@@ -44,11 +44,6 @@ and a boolean to check if the value has been set.
 
 SetUsers sets Users field to given value.
 
-### HasUsers
-
-`func (o *Users) HasUsers() bool`
-
-HasUsers returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

@@ -4,14 +4,14 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**ConditionName** | **string** | A reference (by name) of the relationship condition defined in the authorization model. | 
-**Context** | Pointer to **map[string]interface{}** | Additional context/data to persist along with the condition. The keys must match the parameters defined by the condition, and the value types must match the parameter type definitions. | [optional] 
+**Name** | **string** | A reference (by name) of the relationship condition defined in the authorization model. | 
+**Context** | **map[string]interface{}** | Additional context/data to persist along with the condition. The keys must match the parameters defined by the condition, and the value types must match the parameter type definitions. | 
 
 ## Methods
 
 ### NewRelationshipCondition
 
-`func NewRelationshipCondition(conditionName string, ) *RelationshipCondition`
+`func NewRelationshipCondition(name string, context map[string]interface{}, ) *RelationshipCondition`
 
 NewRelationshipCondition instantiates a new RelationshipCondition object
 This constructor will assign default values to properties that have it defined,
@@ -26,24 +26,24 @@ NewRelationshipConditionWithDefaults instantiates a new RelationshipCondition ob
 This constructor will only assign default values to properties that have it defined,
 but it doesn't guarantee that properties required by API are set
 
-### GetConditionName
+### GetName
 
-`func (o *RelationshipCondition) GetConditionName() string`
+`func (o *RelationshipCondition) GetName() string`
 
-GetConditionName returns the ConditionName field if non-nil, zero value otherwise.
+GetName returns the Name field if non-nil, zero value otherwise.
 
-### GetConditionNameOk
+### GetNameOk
 
-`func (o *RelationshipCondition) GetConditionNameOk() (*string, bool)`
+`func (o *RelationshipCondition) GetNameOk() (*string, bool)`
 
-GetConditionNameOk returns a tuple with the ConditionName field if it's non-nil, zero value otherwise
+GetNameOk returns a tuple with the Name field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
-### SetConditionName
+### SetName
 
-`func (o *RelationshipCondition) SetConditionName(v string)`
+`func (o *RelationshipCondition) SetName(v string)`
 
-SetConditionName sets ConditionName field to given value.
+SetName sets Name field to given value.
 
 
 ### GetContext
@@ -65,11 +65,6 @@ and a boolean to check if the value has been set.
 
 SetContext sets Context field to given value.
 
-### HasContext
-
-`func (o *RelationshipCondition) HasContext() bool`
-
-HasContext returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

@@ -4,14 +4,14 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Tupleset** | Pointer to [**ObjectRelation**](ObjectRelation.md) |  | [optional] 
-**ComputedUserset** | Pointer to [**ObjectRelation**](ObjectRelation.md) |  | [optional] 
+**Tupleset** | [**ObjectRelation**](ObjectRelation.md) |  | 
+**ComputedUserset** | [**ObjectRelation**](ObjectRelation.md) |  | 
 
 ## Methods
 
 ### NewTupleToUserset
 
-`func NewTupleToUserset() *TupleToUserset`
+`func NewTupleToUserset(tupleset ObjectRelation, computedUserset ObjectRelation, ) *TupleToUserset`
 
 NewTupleToUserset instantiates a new TupleToUserset object
 This constructor will assign default values to properties that have it defined,
@@ -45,11 +45,6 @@ and a boolean to check if the value has been set.
 
 SetTupleset sets Tupleset field to given value.
 
-### HasTupleset
-
-`func (o *TupleToUserset) HasTupleset() bool`
-
-HasTupleset returns a boolean if a field has been set.
 
 ### GetComputedUserset
 
@@ -70,11 +65,6 @@ and a boolean to check if the value has been set.
 
 SetComputedUserset sets ComputedUserset field to given value.
 
-### HasComputedUserset
-
-`func (o *TupleToUserset) HasComputedUserset() bool`
-
-HasComputedUserset returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

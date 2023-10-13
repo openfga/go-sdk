@@ -4,13 +4,13 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Child** | Pointer to [**[]Userset**](Userset.md) |  | [optional] 
+**Child** | [**[]Userset**](Userset.md) |  | 
 
 ## Methods
 
 ### NewUsersets
 
-`func NewUsersets() *Usersets`
+`func NewUsersets(child []Userset, ) *Usersets`
 
 NewUsersets instantiates a new Usersets object
 This constructor will assign default values to properties that have it defined,
@@ -44,11 +44,6 @@ and a boolean to check if the value has been set.
 
 SetChild sets Child field to given value.
 
-### HasChild
-
-`func (o *Usersets) HasChild() bool`
-
-HasChild returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

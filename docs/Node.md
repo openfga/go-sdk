@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Name** | Pointer to **string** |  | [optional] 
+**Name** | **string** |  | 
 **Leaf** | Pointer to [**Leaf**](Leaf.md) |  | [optional] 
 **Difference** | Pointer to [**UsersetTreeDifference**](UsersetTreeDifference.md) |  | [optional] 
 **Union** | Pointer to [**Nodes**](Nodes.md) |  | [optional] 
@@ -14,7 +14,7 @@ Name | Type | Description | Notes
 
 ### NewNode
 
-`func NewNode() *Node`
+`func NewNode(name string, ) *Node`
 
 NewNode instantiates a new Node object
 This constructor will assign default values to properties that have it defined,
@@ -48,11 +48,6 @@ and a boolean to check if the value has been set.
 
 SetName sets Name field to given value.
 
-### HasName
-
-`func (o *Node) HasName() bool`
-
-HasName returns a boolean if a field has been set.
 
 ### GetLeaf
 

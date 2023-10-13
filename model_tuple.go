@@ -19,16 +19,18 @@ import (
 
 // Tuple struct for Tuple
 type Tuple struct {
-	Key       *TupleKey  `json:"key,omitempty"yaml:"key,omitempty"`
-	Timestamp *time.Time `json:"timestamp,omitempty"yaml:"timestamp,omitempty"`
+	Key       TupleKey  `json:"key"yaml:"key"`
+	Timestamp time.Time `json:"timestamp"yaml:"timestamp"`
 }
 
 // NewTuple instantiates a new Tuple object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewTuple() *Tuple {
+func NewTuple(key TupleKey, timestamp time.Time) *Tuple {
 	this := Tuple{}
+	this.Key = key
+	this.Timestamp = timestamp
 	return &this
 }
 
@@ -40,78 +42,58 @@ func NewTupleWithDefaults() *Tuple {
 	return &this
 }
 
-// GetKey returns the Key field value if set, zero value otherwise.
+// GetKey returns the Key field value
 func (o *Tuple) GetKey() TupleKey {
-	if o == nil || o.Key == nil {
+	if o == nil {
 		var ret TupleKey
 		return ret
 	}
-	return *o.Key
+
+	return o.Key
 }
 
-// GetKeyOk returns a tuple with the Key field value if set, nil otherwise
+// GetKeyOk returns a tuple with the Key field value
 // and a boolean to check if the value has been set.
 func (o *Tuple) GetKeyOk() (*TupleKey, bool) {
-	if o == nil || o.Key == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Key, true
+	return &o.Key, true
 }
 
-// HasKey returns a boolean if a field has been set.
-func (o *Tuple) HasKey() bool {
-	if o != nil && o.Key != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetKey gets a reference to the given TupleKey and assigns it to the Key field.
+// SetKey sets field value
 func (o *Tuple) SetKey(v TupleKey) {
-	o.Key = &v
+	o.Key = v
 }
 
-// GetTimestamp returns the Timestamp field value if set, zero value otherwise.
+// GetTimestamp returns the Timestamp field value
 func (o *Tuple) GetTimestamp() time.Time {
-	if o == nil || o.Timestamp == nil {
+	if o == nil {
 		var ret time.Time
 		return ret
 	}
-	return *o.Timestamp
+
+	return o.Timestamp
 }
 
-// GetTimestampOk returns a tuple with the Timestamp field value if set, nil otherwise
+// GetTimestampOk returns a tuple with the Timestamp field value
 // and a boolean to check if the value has been set.
 func (o *Tuple) GetTimestampOk() (*time.Time, bool) {
-	if o == nil || o.Timestamp == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Timestamp, true
+	return &o.Timestamp, true
 }
 
-// HasTimestamp returns a boolean if a field has been set.
-func (o *Tuple) HasTimestamp() bool {
-	if o != nil && o.Timestamp != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetTimestamp gets a reference to the given time.Time and assigns it to the Timestamp field.
+// SetTimestamp sets field value
 func (o *Tuple) SetTimestamp(v time.Time) {
-	o.Timestamp = &v
+	o.Timestamp = v
 }
 
 func (o Tuple) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.Key != nil {
-		toSerialize["key"] = o.Key
-	}
-	if o.Timestamp != nil {
-		toSerialize["timestamp"] = o.Timestamp
-	}
+	toSerialize["key"] = o.Key
+	toSerialize["timestamp"] = o.Timestamp
 	return json.Marshal(toSerialize)
 }
 

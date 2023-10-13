@@ -4,13 +4,13 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Userset** | Pointer to **string** |  | [optional] 
+**Userset** | **string** |  | 
 
 ## Methods
 
 ### NewComputed
 
-`func NewComputed() *Computed`
+`func NewComputed(userset string, ) *Computed`
 
 NewComputed instantiates a new Computed object
 This constructor will assign default values to properties that have it defined,
@@ -44,11 +44,6 @@ and a boolean to check if the value has been set.
 
 SetUserset sets Userset field to given value.
 
-### HasUserset
-
-`func (o *Computed) HasUserset() bool`
-
-HasUserset returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
