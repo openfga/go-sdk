@@ -165,9 +165,7 @@ func (o *CheckRequest) SetTrace(v bool) {
 
 func (o CheckRequest) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if true {
-		toSerialize["tuple_key"] = o.TupleKey
-	}
+	toSerialize["tuple_key"] = o.TupleKey
 	if o.ContextualTuples != nil {
 		toSerialize["contextual_tuples"] = o.ContextualTuples
 	}

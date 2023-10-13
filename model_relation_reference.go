@@ -131,9 +131,7 @@ func (o *RelationReference) SetWildcard(v map[string]interface{}) {
 
 func (o RelationReference) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if true {
-		toSerialize["type"] = o.Type
-	}
+	toSerialize["type"] = o.Type
 	if o.Relation != nil {
 		toSerialize["relation"] = o.Relation
 	}

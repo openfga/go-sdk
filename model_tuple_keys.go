@@ -65,9 +65,7 @@ func (o *TupleKeys) SetTupleKeys(v []TupleKey) {
 
 func (o TupleKeys) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if true {
-		toSerialize["tuple_keys"] = o.TupleKeys
-	}
+	toSerialize["tuple_keys"] = o.TupleKeys
 	return json.Marshal(toSerialize)
 }
 

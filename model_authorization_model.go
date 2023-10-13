@@ -134,9 +134,7 @@ func (o AuthorizationModel) MarshalJSON() ([]byte, error) {
 	if o.Id != nil {
 		toSerialize["id"] = o.Id
 	}
-	if true {
-		toSerialize["schema_version"] = o.SchemaVersion
-	}
+	toSerialize["schema_version"] = o.SchemaVersion
 	if o.TypeDefinitions != nil {
 		toSerialize["type_definitions"] = o.TypeDefinitions
 	}
