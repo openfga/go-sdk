@@ -10,12 +10,15 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-
-    - name: Set up Go
-      uses: actions/setup-go@v3
+    - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.5.4
       with:
-        go-version: '>=1.20.5'
+        fetch-depth: 0
+
+    - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+      with:
+        cache-dependency-path: './go.sum'
+        check-latest: true
+        go-version: '>=1.21.1'
 
     - name: Build
       run: go build -v ./...

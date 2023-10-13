@@ -1,8 +1,8 @@
 module github.com/openfga/go-sdk
 
-go 1.20
+go 1.21.1
 
 require (
-	github.com/jarcoal/httpmock v1.3.0
-	golang.org/x/sync v0.1.0
+	github.com/jarcoal/httpmock v1.3.1
+	golang.org/x/sync v0.4.0
 )
