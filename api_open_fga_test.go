@@ -117,14 +117,14 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 		defer httpmock.DeactivateAndReset()
 		httpmock.RegisterResponder("GET", fmt.Sprintf("%s://%s/stores/%s/authorization-models", configuration.ApiScheme, configuration.ApiHost, configuration.StoreId),
 			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(200, ReadAuthorizationModelsResponse{AuthorizationModels: &[]AuthorizationModel{
+				resp, err := httpmock.NewJsonResponse(200, ReadAuthorizationModelsResponse{AuthorizationModels: []AuthorizationModel{
 					{
 						Id:              PtrString("01GXSA8YR785C4FYS3C0RTG7B1"),
-						TypeDefinitions: &[]TypeDefinition{},
+						TypeDefinitions: []TypeDefinition{},
 					},
 					{
 						Id:              PtrString("01GXSBM5PVYHCJNRNKXMB4QZTW"),
-						TypeDefinitions: &[]TypeDefinition{},
+						TypeDefinitions: []TypeDefinition{},
 					},
 				}})
 				if err != nil {
@@ -249,14 +249,14 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 		defer httpmock.DeactivateAndReset()
 		httpmock.RegisterResponder("GET", fmt.Sprintf("%s://%s/stores/%s/authorization-models", configuration.ApiScheme, configuration.ApiHost, configuration.StoreId),
 			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(200, ReadAuthorizationModelsResponse{AuthorizationModels: &[]AuthorizationModel{
+				resp, err := httpmock.NewJsonResponse(200, ReadAuthorizationModelsResponse{AuthorizationModels: []AuthorizationModel{
 					{
 						Id:              PtrString("01GXSA8YR785C4FYS3C0RTG7B1"),
-						TypeDefinitions: &[]TypeDefinition{},
+						TypeDefinitions: []TypeDefinition{},
 					},
 					{
 						Id:              PtrString("01GXSBM5PVYHCJNRNKXMB4QZTW"),
-						TypeDefinitions: &[]TypeDefinition{},
+						TypeDefinitions: []TypeDefinition{},
 					},
 				}})
 				if err != nil {
@@ -313,14 +313,14 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 		defer httpmock.DeactivateAndReset()
 		httpmock.RegisterResponder("GET", fmt.Sprintf("%s://%s/stores/%s/authorization-models", configuration.ApiScheme, configuration.ApiHost, configuration.StoreId),
 			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(200, ReadAuthorizationModelsResponse{AuthorizationModels: &[]AuthorizationModel{
+				resp, err := httpmock.NewJsonResponse(200, ReadAuthorizationModelsResponse{AuthorizationModels: []AuthorizationModel{
 					{
 						Id:              PtrString("01GXSA8YR785C4FYS3C0RTG7B1"),
-						TypeDefinitions: &[]TypeDefinition{},
+						TypeDefinitions: []TypeDefinition{},
 					},
 					{
 						Id:              PtrString("01GXSBM5PVYHCJNRNKXMB4QZTW"),
-						TypeDefinitions: &[]TypeDefinition{},
+						TypeDefinitions: []TypeDefinition{},
 					},
 				}})
 				if err != nil {
@@ -447,12 +447,12 @@ func TestOpenFgaApi(t *testing.T) {
 			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
 		}
 
-		if len(*got.AuthorizationModels) != 1 {
+		if len(got.AuthorizationModels) != 1 {
 			t.Fatalf("%v", err)
 		}
 
-		if *((*got.AuthorizationModels)[0].Id) != *((*expectedResponse.AuthorizationModels)[0].Id) {
-			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, *((*got.AuthorizationModels)[0].Id), *((*expectedResponse.AuthorizationModels)[0].Id))
+		if *(got.AuthorizationModels[0].Id) != *(expectedResponse.AuthorizationModels[0].Id) {
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, *(got.AuthorizationModels[0].Id), *(expectedResponse.AuthorizationModels[0].Id))
 		}
 	})
 
@@ -472,7 +472,7 @@ func TestOpenFgaApi(t *testing.T) {
 						This: &map[string]interface{}{},
 					},
 					"viewer": {Union: &Usersets{
-						Child: &[]Userset{
+						Child: []Userset{
 							{This: &map[string]interface{}{}},
 							{ComputedUserset: &ObjectRelation{
 								Object:   PtrString(""),
@@ -569,10 +569,10 @@ func TestOpenFgaApi(t *testing.T) {
 			RequestPath:    "check",
 		}
 		requestBody := CheckRequest{
-			TupleKey: TupleKey{
-				User:     PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-				Relation: PtrString("viewer"),
-				Object:   PtrString("document:roadmap"),
+			TupleKey: CheckRequestTupleKey{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "viewer",
+				Object:   "document:roadmap",
 			},
 			AuthorizationModelId: PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
 		}
@@ -621,11 +621,11 @@ func TestOpenFgaApi(t *testing.T) {
 			RequestPath:    "write",
 		}
 		requestBody := WriteRequest{
-			Writes: &TupleKeys{
-				TupleKeys: []TupleKey{{
-					User:     PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-					Relation: PtrString("viewer"),
-					Object:   PtrString("document:roadmap"),
+			Writes: &WriteRequestTupleKeys{
+				TupleKeys: []WriteRequestTupleKey{{
+					User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+					Relation: "viewer",
+					Object:   "document:roadmap",
 				}},
 			},
 			AuthorizationModelId: PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
@@ -667,11 +667,11 @@ func TestOpenFgaApi(t *testing.T) {
 		}
 
 		requestBody := WriteRequest{
-			Deletes: &TupleKeys{
-				TupleKeys: []TupleKey{{
-					User:     PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-					Relation: PtrString("viewer"),
-					Object:   PtrString("document:roadmap"),
+			Deletes: &WriteRequestTupleKeys{
+				TupleKeys: []WriteRequestTupleKey{{
+					User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+					Relation: "viewer",
+					Object:   "document:roadmap",
 				}},
 			},
 			AuthorizationModelId: PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
@@ -713,9 +713,9 @@ func TestOpenFgaApi(t *testing.T) {
 		}
 
 		requestBody := ExpandRequest{
-			TupleKey: TupleKey{
-				Relation: PtrString("viewer"),
-				Object:   PtrString("document:roadmap"),
+			TupleKey: ExpandRequestTupleKey{
+				Relation: "viewer",
+				Object:   "document:roadmap",
 			},
 			AuthorizationModelId: PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
 		}
@@ -761,7 +761,7 @@ func TestOpenFgaApi(t *testing.T) {
 		}
 
 		requestBody := ReadRequest{
-			TupleKey: &TupleKey{
+			TupleKey: &ReadRequestTupleKey{
 				User:     PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
 				Relation: PtrString("viewer"),
 				Object:   PtrString("document:roadmap"),
@@ -798,7 +798,7 @@ func TestOpenFgaApi(t *testing.T) {
 			t.Fatalf("%v", err)
 		}
 
-		if len(*got.Tuples) != len(*expectedResponse.Tuples) {
+		if len(got.Tuples) != len(expectedResponse.Tuples) {
 			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
 		}
 	})
@@ -846,7 +846,7 @@ func TestOpenFgaApi(t *testing.T) {
 			t.Fatalf("%v", err)
 		}
 
-		if len(*got.Changes) != len(*expectedResponse.Changes) {
+		if len(got.Changes) != len(expectedResponse.Changes) {
 			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
 		}
 	})
@@ -867,13 +867,13 @@ func TestOpenFgaApi(t *testing.T) {
 			Type:                 "document",
 			ContextualTuples: &ContextualTupleKeys{
 				TupleKeys: []TupleKey{{
-					User:     PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-					Relation: PtrString("editor"),
-					Object:   PtrString("folder:product"),
+					User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+					Relation: "editor",
+					Object:   "folder:product",
 				}, {
-					User:     PtrString("folder:product"),
-					Relation: PtrString("parent"),
-					Object:   PtrString("document:roadmap"),
+					User:     "folder:product",
+					Relation: "parent",
+					Object:   "document:roadmap",
 				}},
 			},
 		}
@@ -910,7 +910,7 @@ func TestOpenFgaApi(t *testing.T) {
 			t.Fatalf("%v", err)
 		}
 
-		if len(*got.Objects) != len(*expectedResponse.Objects) || (*got.Objects)[0] != (*expectedResponse.Objects)[0] {
+		if len(got.Objects) != len(expectedResponse.Objects) || (got.Objects)[0] != (expectedResponse.Objects)[0] {
 			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
 		}
 	})
@@ -924,10 +924,10 @@ func TestOpenFgaApi(t *testing.T) {
 			RequestPath:    "check",
 		}
 		requestBody := CheckRequest{
-			TupleKey: TupleKey{
-				User:     PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-				Relation: PtrString("viewer"),
-				Object:   PtrString("document:roadmap"),
+			TupleKey: CheckRequestTupleKey{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "viewer",
+				Object:   "document:roadmap",
 			},
 		}
 
@@ -987,10 +987,10 @@ func TestOpenFgaApi(t *testing.T) {
 			RequestPath:    "check",
 		}
 		requestBody := CheckRequest{
-			TupleKey: TupleKey{
-				User:     PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-				Relation: PtrString("viewer"),
-				Object:   PtrString("document:roadmap"),
+			TupleKey: CheckRequestTupleKey{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "viewer",
+				Object:   "document:roadmap",
 			},
 		}
 
@@ -1043,10 +1043,10 @@ func TestOpenFgaApi(t *testing.T) {
 			RequestPath:    "check",
 		}
 		requestBody := CheckRequest{
-			TupleKey: TupleKey{
-				User:     PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-				Relation: PtrString("viewer"),
-				Object:   PtrString("document:roadmap"),
+			TupleKey: CheckRequestTupleKey{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "viewer",
+				Object:   "document:roadmap",
 			},
 		}
 
@@ -1106,10 +1106,10 @@ func TestOpenFgaApi(t *testing.T) {
 			RequestPath:    "check",
 		}
 		requestBody := CheckRequest{
-			TupleKey: TupleKey{
-				User:     PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-				Relation: PtrString("viewer"),
-				Object:   PtrString("document:roadmap"),
+			TupleKey: CheckRequestTupleKey{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "viewer",
+				Object:   "document:roadmap",
 			},
 		}
 
@@ -1177,10 +1177,10 @@ func TestOpenFgaApi(t *testing.T) {
 			RequestPath:    "check",
 		}
 		requestBody := CheckRequest{
-			TupleKey: TupleKey{
-				User:     PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-				Relation: PtrString("viewer"),
-				Object:   PtrString("document:roadmap"),
+			TupleKey: CheckRequestTupleKey{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "viewer",
+				Object:   "document:roadmap",
 			},
 		}
 
@@ -1239,10 +1239,10 @@ func TestOpenFgaApi(t *testing.T) {
 			RequestPath:    "check",
 		}
 		requestBody := CheckRequest{
-			TupleKey: TupleKey{
-				User:     PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-				Relation: PtrString("viewer"),
-				Object:   PtrString("document:roadmap"),
+			TupleKey: CheckRequestTupleKey{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "viewer",
+				Object:   "document:roadmap",
 			},
 		}
 

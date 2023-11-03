@@ -18,9 +18,11 @@ import (
 
 // RelationReference RelationReference represents a relation of a particular object type (e.g. 'document#viewer').
 type RelationReference struct {
-	Type     string                  `json:"type"`
-	Relation *string                 `json:"relation,omitempty"`
-	Wildcard *map[string]interface{} `json:"wildcard,omitempty"`
+	Type     string                  `json:"type"yaml:"type"`
+	Relation *string                 `json:"relation,omitempty"yaml:"relation,omitempty"`
+	Wildcard *map[string]interface{} `json:"wildcard,omitempty"yaml:"wildcard,omitempty"`
+	// The name of a condition that is enforced over the allowed relation.
+	Condition *string `json:"condition,omitempty"yaml:"condition,omitempty"`
 }
 
 // NewRelationReference instantiates a new RelationReference object
@@ -129,6 +131,38 @@ func (o *RelationReference) SetWildcard(v map[string]interface{}) {
 	o.Wildcard = &v
 }
 
+// GetCondition returns the Condition field value if set, zero value otherwise.
+func (o *RelationReference) GetCondition() string {
+	if o == nil || o.Condition == nil {
+		var ret string
+		return ret
+	}
+	return *o.Condition
+}
+
+// GetConditionOk returns a tuple with the Condition field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *RelationReference) GetConditionOk() (*string, bool) {
+	if o == nil || o.Condition == nil {
+		return nil, false
+	}
+	return o.Condition, true
+}
+
+// HasCondition returns a boolean if a field has been set.
+func (o *RelationReference) HasCondition() bool {
+	if o != nil && o.Condition != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetCondition gets a reference to the given string and assigns it to the Condition field.
+func (o *RelationReference) SetCondition(v string) {
+	o.Condition = &v
+}
+
 func (o RelationReference) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["type"] = o.Type
@@ -137,6 +171,9 @@ func (o RelationReference) MarshalJSON() ([]byte, error) {
 	}
 	if o.Wildcard != nil {
 		toSerialize["wildcard"] = o.Wildcard
+	}
+	if o.Condition != nil {
+		toSerialize["condition"] = o.Condition
 	}
 	return json.Marshal(toSerialize)
 }

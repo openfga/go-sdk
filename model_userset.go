@@ -19,12 +19,12 @@ import (
 // Userset struct for Userset
 type Userset struct {
 	// A DirectUserset is a sentinel message for referencing the direct members specified by an object/relation mapping.
-	This            *map[string]interface{} `json:"this,omitempty"`
-	ComputedUserset *ObjectRelation         `json:"computedUserset,omitempty"`
-	TupleToUserset  *TupleToUserset         `json:"tupleToUserset,omitempty"`
-	Union           *Usersets               `json:"union,omitempty"`
-	Intersection    *Usersets               `json:"intersection,omitempty"`
-	Difference      *Difference             `json:"difference,omitempty"`
+	This            *map[string]interface{} `json:"this,omitempty"yaml:"this,omitempty"`
+	ComputedUserset *ObjectRelation         `json:"computedUserset,omitempty"yaml:"computedUserset,omitempty"`
+	TupleToUserset  *TupleToUserset         `json:"tupleToUserset,omitempty"yaml:"tupleToUserset,omitempty"`
+	Union           *Usersets               `json:"union,omitempty"yaml:"union,omitempty"`
+	Intersection    *Usersets               `json:"intersection,omitempty"yaml:"intersection,omitempty"`
+	Difference      *Difference             `json:"difference,omitempty"yaml:"difference,omitempty"`
 }
 
 // NewUserset instantiates a new Userset object

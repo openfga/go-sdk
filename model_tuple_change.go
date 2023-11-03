@@ -19,19 +19,20 @@ import (
 
 // TupleChange struct for TupleChange
 type TupleChange struct {
-	TupleKey  *TupleKey       `json:"tuple_key,omitempty"`
-	Operation *TupleOperation `json:"operation,omitempty"`
-	Timestamp *time.Time      `json:"timestamp,omitempty"`
+	TupleKey  TupleKey       `json:"tuple_key"yaml:"tuple_key"`
+	Operation TupleOperation `json:"operation"yaml:"operation"`
+	Timestamp time.Time      `json:"timestamp"yaml:"timestamp"`
 }
 
 // NewTupleChange instantiates a new TupleChange object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewTupleChange() *TupleChange {
+func NewTupleChange(tupleKey TupleKey, operation TupleOperation, timestamp time.Time) *TupleChange {
 	this := TupleChange{}
-	var operation TupleOperation = WRITE
-	this.Operation = &operation
+	this.TupleKey = tupleKey
+	this.Operation = operation
+	this.Timestamp = timestamp
 	return &this
 }
 
@@ -41,117 +42,87 @@ func NewTupleChange() *TupleChange {
 func NewTupleChangeWithDefaults() *TupleChange {
 	this := TupleChange{}
 	var operation TupleOperation = WRITE
-	this.Operation = &operation
+	this.Operation = operation
 	return &this
 }
 
-// GetTupleKey returns the TupleKey field value if set, zero value otherwise.
+// GetTupleKey returns the TupleKey field value
 func (o *TupleChange) GetTupleKey() TupleKey {
-	if o == nil || o.TupleKey == nil {
+	if o == nil {
 		var ret TupleKey
 		return ret
 	}
-	return *o.TupleKey
+
+	return o.TupleKey
 }
 
-// GetTupleKeyOk returns a tuple with the TupleKey field value if set, nil otherwise
+// GetTupleKeyOk returns a tuple with the TupleKey field value
 // and a boolean to check if the value has been set.
 func (o *TupleChange) GetTupleKeyOk() (*TupleKey, bool) {
-	if o == nil || o.TupleKey == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.TupleKey, true
+	return &o.TupleKey, true
 }
 
-// HasTupleKey returns a boolean if a field has been set.
-func (o *TupleChange) HasTupleKey() bool {
-	if o != nil && o.TupleKey != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetTupleKey gets a reference to the given TupleKey and assigns it to the TupleKey field.
+// SetTupleKey sets field value
 func (o *TupleChange) SetTupleKey(v TupleKey) {
-	o.TupleKey = &v
+	o.TupleKey = v
 }
 
-// GetOperation returns the Operation field value if set, zero value otherwise.
+// GetOperation returns the Operation field value
 func (o *TupleChange) GetOperation() TupleOperation {
-	if o == nil || o.Operation == nil {
+	if o == nil {
 		var ret TupleOperation
 		return ret
 	}
-	return *o.Operation
+
+	return o.Operation
 }
 
-// GetOperationOk returns a tuple with the Operation field value if set, nil otherwise
+// GetOperationOk returns a tuple with the Operation field value
 // and a boolean to check if the value has been set.
 func (o *TupleChange) GetOperationOk() (*TupleOperation, bool) {
-	if o == nil || o.Operation == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Operation, true
+	return &o.Operation, true
 }
 
-// HasOperation returns a boolean if a field has been set.
-func (o *TupleChange) HasOperation() bool {
-	if o != nil && o.Operation != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetOperation gets a reference to the given TupleOperation and assigns it to the Operation field.
+// SetOperation sets field value
 func (o *TupleChange) SetOperation(v TupleOperation) {
-	o.Operation = &v
+	o.Operation = v
 }
 
-// GetTimestamp returns the Timestamp field value if set, zero value otherwise.
+// GetTimestamp returns the Timestamp field value
 func (o *TupleChange) GetTimestamp() time.Time {
-	if o == nil || o.Timestamp == nil {
+	if o == nil {
 		var ret time.Time
 		return ret
 	}
-	return *o.Timestamp
+
+	return o.Timestamp
 }
 
-// GetTimestampOk returns a tuple with the Timestamp field value if set, nil otherwise
+// GetTimestampOk returns a tuple with the Timestamp field value
 // and a boolean to check if the value has been set.
 func (o *TupleChange) GetTimestampOk() (*time.Time, bool) {
-	if o == nil || o.Timestamp == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Timestamp, true
+	return &o.Timestamp, true
 }
 
-// HasTimestamp returns a boolean if a field has been set.
-func (o *TupleChange) HasTimestamp() bool {
-	if o != nil && o.Timestamp != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetTimestamp gets a reference to the given time.Time and assigns it to the Timestamp field.
+// SetTimestamp sets field value
 func (o *TupleChange) SetTimestamp(v time.Time) {
-	o.Timestamp = &v
+	o.Timestamp = v
 }
 
 func (o TupleChange) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.TupleKey != nil {
-		toSerialize["tuple_key"] = o.TupleKey
-	}
-	if o.Operation != nil {
-		toSerialize["operation"] = o.Operation
-	}
-	if o.Timestamp != nil {
-		toSerialize["timestamp"] = o.Timestamp
-	}
+	toSerialize["tuple_key"] = o.TupleKey
+	toSerialize["operation"] = o.Operation
+	toSerialize["timestamp"] = o.Timestamp
 	return json.Marshal(toSerialize)
 }
 

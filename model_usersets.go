@@ -18,15 +18,16 @@ import (
 
 // Usersets struct for Usersets
 type Usersets struct {
-	Child *[]Userset `json:"child,omitempty"`
+	Child []Userset `json:"child"yaml:"child"`
 }
 
 // NewUsersets instantiates a new Usersets object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewUsersets() *Usersets {
+func NewUsersets(child []Userset) *Usersets {
 	this := Usersets{}
+	this.Child = child
 	return &this
 }
 
@@ -38,43 +39,33 @@ func NewUsersetsWithDefaults() *Usersets {
 	return &this
 }
 
-// GetChild returns the Child field value if set, zero value otherwise.
+// GetChild returns the Child field value
 func (o *Usersets) GetChild() []Userset {
-	if o == nil || o.Child == nil {
+	if o == nil {
 		var ret []Userset
 		return ret
 	}
-	return *o.Child
+
+	return o.Child
 }
 
-// GetChildOk returns a tuple with the Child field value if set, nil otherwise
+// GetChildOk returns a tuple with the Child field value
 // and a boolean to check if the value has been set.
 func (o *Usersets) GetChildOk() (*[]Userset, bool) {
-	if o == nil || o.Child == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Child, true
+	return &o.Child, true
 }
 
-// HasChild returns a boolean if a field has been set.
-func (o *Usersets) HasChild() bool {
-	if o != nil && o.Child != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetChild gets a reference to the given []Userset and assigns it to the Child field.
+// SetChild sets field value
 func (o *Usersets) SetChild(v []Userset) {
-	o.Child = &v
+	o.Child = v
 }
 
 func (o Usersets) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.Child != nil {
-		toSerialize["child"] = o.Child
-	}
+	toSerialize["child"] = o.Child
 	return json.Marshal(toSerialize)
 }
 

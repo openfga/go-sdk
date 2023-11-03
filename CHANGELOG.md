@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.3.0
+
+### [0.3.0](https://github.com/openfga/go-sdk/compare/v0.2.3...v0.3.0) (2023-11-02)
+
+- feat!: initial support for conditions
+
 ## v0.2.3
 
 ### [0.2.3](https://github.com/openfga/go-sdk/compare/v0.2.2...v0.2.3) (2023-10-13)

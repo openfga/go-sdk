@@ -18,15 +18,16 @@ import (
 
 // Computed struct for Computed
 type Computed struct {
-	Userset *string `json:"userset,omitempty"`
+	Userset string `json:"userset"yaml:"userset"`
 }
 
 // NewComputed instantiates a new Computed object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewComputed() *Computed {
+func NewComputed(userset string) *Computed {
 	this := Computed{}
+	this.Userset = userset
 	return &this
 }
 
@@ -38,43 +39,33 @@ func NewComputedWithDefaults() *Computed {
 	return &this
 }
 
-// GetUserset returns the Userset field value if set, zero value otherwise.
+// GetUserset returns the Userset field value
 func (o *Computed) GetUserset() string {
-	if o == nil || o.Userset == nil {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.Userset
+
+	return o.Userset
 }
 
-// GetUsersetOk returns a tuple with the Userset field value if set, nil otherwise
+// GetUsersetOk returns a tuple with the Userset field value
 // and a boolean to check if the value has been set.
 func (o *Computed) GetUsersetOk() (*string, bool) {
-	if o == nil || o.Userset == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Userset, true
+	return &o.Userset, true
 }
 
-// HasUserset returns a boolean if a field has been set.
-func (o *Computed) HasUserset() bool {
-	if o != nil && o.Userset != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetUserset gets a reference to the given string and assigns it to the Userset field.
+// SetUserset sets field value
 func (o *Computed) SetUserset(v string) {
-	o.Userset = &v
+	o.Userset = v
 }
 
 func (o Computed) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.Userset != nil {
-		toSerialize["userset"] = o.Userset
-	}
+	toSerialize["userset"] = o.Userset
 	return json.Marshal(toSerialize)
 }
 

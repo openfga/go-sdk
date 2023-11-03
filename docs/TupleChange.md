@@ -4,15 +4,15 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**TupleKey** | Pointer to [**TupleKey**](TupleKey.md) |  | [optional] 
-**Operation** | Pointer to [**TupleOperation**](TupleOperation.md) |  | [optional] [default to WRITE]
-**Timestamp** | Pointer to **time.Time** |  | [optional] 
+**TupleKey** | [**TupleKey**](TupleKey.md) |  | 
+**Operation** | [**TupleOperation**](TupleOperation.md) |  | [default to WRITE]
+**Timestamp** | **time.Time** |  | 
 
 ## Methods
 
 ### NewTupleChange
 
-`func NewTupleChange() *TupleChange`
+`func NewTupleChange(tupleKey TupleKey, operation TupleOperation, timestamp time.Time, ) *TupleChange`
 
 NewTupleChange instantiates a new TupleChange object
 This constructor will assign default values to properties that have it defined,
@@ -46,11 +46,6 @@ and a boolean to check if the value has been set.
 
 SetTupleKey sets TupleKey field to given value.
 
-### HasTupleKey
-
-`func (o *TupleChange) HasTupleKey() bool`
-
-HasTupleKey returns a boolean if a field has been set.
 
 ### GetOperation
 
@@ -71,11 +66,6 @@ and a boolean to check if the value has been set.
 
 SetOperation sets Operation field to given value.
 
-### HasOperation
-
-`func (o *TupleChange) HasOperation() bool`
-
-HasOperation returns a boolean if a field has been set.
 
 ### GetTimestamp
 
@@ -96,11 +86,6 @@ and a boolean to check if the value has been set.
 
 SetTimestamp sets Timestamp field to given value.
 
-### HasTimestamp
-
-`func (o *TupleChange) HasTimestamp() bool`
-
-HasTimestamp returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

@@ -9,6 +9,7 @@ Name | Type | Description | Notes
 **Relation** | **string** |  | 
 **User** | **string** |  | 
 **ContextualTuples** | Pointer to [**ContextualTupleKeys**](ContextualTupleKeys.md) |  | [optional] 
+**Context** | Pointer to **map[string]interface{}** | Additional request context that will be used to evaluate any ABAC conditions encountered in the query evaluation. | [optional] 
 
 ## Methods
 
@@ -138,6 +139,31 @@ SetContextualTuples sets ContextualTuples field to given value.
 `func (o *ListObjectsRequest) HasContextualTuples() bool`
 
 HasContextualTuples returns a boolean if a field has been set.
+
+### GetContext
+
+`func (o *ListObjectsRequest) GetContext() map[string]interface{}`
+
+GetContext returns the Context field if non-nil, zero value otherwise.
+
+### GetContextOk
+
+`func (o *ListObjectsRequest) GetContextOk() (*map[string]interface{}, bool)`
+
+GetContextOk returns a tuple with the Context field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetContext
+
+`func (o *ListObjectsRequest) SetContext(v map[string]interface{})`
+
+SetContext sets Context field to given value.
+
+### HasContext
+
+`func (o *ListObjectsRequest) HasContext() bool`
+
+HasContext returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

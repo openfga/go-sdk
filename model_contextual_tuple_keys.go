@@ -18,7 +18,7 @@ import (
 
 // ContextualTupleKeys struct for ContextualTupleKeys
 type ContextualTupleKeys struct {
-	TupleKeys []TupleKey `json:"tuple_keys"`
+	TupleKeys []TupleKey `json:"tuple_keys"yaml:"tuple_keys"`
 }
 
 // NewContextualTupleKeys instantiates a new ContextualTupleKeys object

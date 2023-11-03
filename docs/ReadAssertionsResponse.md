@@ -4,14 +4,14 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**AuthorizationModelId** | Pointer to **string** |  | [optional] 
+**AuthorizationModelId** | **string** |  | 
 **Assertions** | Pointer to [**[]Assertion**](Assertion.md) |  | [optional] 
 
 ## Methods
 
 ### NewReadAssertionsResponse
 
-`func NewReadAssertionsResponse() *ReadAssertionsResponse`
+`func NewReadAssertionsResponse(authorizationModelId string, ) *ReadAssertionsResponse`
 
 NewReadAssertionsResponse instantiates a new ReadAssertionsResponse object
 This constructor will assign default values to properties that have it defined,
@@ -45,11 +45,6 @@ and a boolean to check if the value has been set.
 
 SetAuthorizationModelId sets AuthorizationModelId field to given value.
 
-### HasAuthorizationModelId
-
-`func (o *ReadAssertionsResponse) HasAuthorizationModelId() bool`
-
-HasAuthorizationModelId returns a boolean if a field has been set.
 
 ### GetAssertions
 

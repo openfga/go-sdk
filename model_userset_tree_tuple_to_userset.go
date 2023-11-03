@@ -18,16 +18,18 @@ import (
 
 // UsersetTreeTupleToUserset struct for UsersetTreeTupleToUserset
 type UsersetTreeTupleToUserset struct {
-	Tupleset *string     `json:"tupleset,omitempty"`
-	Computed *[]Computed `json:"computed,omitempty"`
+	Tupleset string     `json:"tupleset"yaml:"tupleset"`
+	Computed []Computed `json:"computed"yaml:"computed"`
 }
 
 // NewUsersetTreeTupleToUserset instantiates a new UsersetTreeTupleToUserset object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewUsersetTreeTupleToUserset() *UsersetTreeTupleToUserset {
+func NewUsersetTreeTupleToUserset(tupleset string, computed []Computed) *UsersetTreeTupleToUserset {
 	this := UsersetTreeTupleToUserset{}
+	this.Tupleset = tupleset
+	this.Computed = computed
 	return &this
 }
 
@@ -39,78 +41,58 @@ func NewUsersetTreeTupleToUsersetWithDefaults() *UsersetTreeTupleToUserset {
 	return &this
 }
 
-// GetTupleset returns the Tupleset field value if set, zero value otherwise.
+// GetTupleset returns the Tupleset field value
 func (o *UsersetTreeTupleToUserset) GetTupleset() string {
-	if o == nil || o.Tupleset == nil {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.Tupleset
+
+	return o.Tupleset
 }
 
-// GetTuplesetOk returns a tuple with the Tupleset field value if set, nil otherwise
+// GetTuplesetOk returns a tuple with the Tupleset field value
 // and a boolean to check if the value has been set.
 func (o *UsersetTreeTupleToUserset) GetTuplesetOk() (*string, bool) {
-	if o == nil || o.Tupleset == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Tupleset, true
+	return &o.Tupleset, true
 }
 
-// HasTupleset returns a boolean if a field has been set.
-func (o *UsersetTreeTupleToUserset) HasTupleset() bool {
-	if o != nil && o.Tupleset != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetTupleset gets a reference to the given string and assigns it to the Tupleset field.
+// SetTupleset sets field value
 func (o *UsersetTreeTupleToUserset) SetTupleset(v string) {
-	o.Tupleset = &v
+	o.Tupleset = v
 }
 
-// GetComputed returns the Computed field value if set, zero value otherwise.
+// GetComputed returns the Computed field value
 func (o *UsersetTreeTupleToUserset) GetComputed() []Computed {
-	if o == nil || o.Computed == nil {
+	if o == nil {
 		var ret []Computed
 		return ret
 	}
-	return *o.Computed
+
+	return o.Computed
 }
 
-// GetComputedOk returns a tuple with the Computed field value if set, nil otherwise
+// GetComputedOk returns a tuple with the Computed field value
 // and a boolean to check if the value has been set.
 func (o *UsersetTreeTupleToUserset) GetComputedOk() (*[]Computed, bool) {
-	if o == nil || o.Computed == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Computed, true
+	return &o.Computed, true
 }
 
-// HasComputed returns a boolean if a field has been set.
-func (o *UsersetTreeTupleToUserset) HasComputed() bool {
-	if o != nil && o.Computed != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetComputed gets a reference to the given []Computed and assigns it to the Computed field.
+// SetComputed sets field value
 func (o *UsersetTreeTupleToUserset) SetComputed(v []Computed) {
-	o.Computed = &v
+	o.Computed = v
 }
 
 func (o UsersetTreeTupleToUserset) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.Tupleset != nil {
-		toSerialize["tupleset"] = o.Tupleset
-	}
-	if o.Computed != nil {
-		toSerialize["computed"] = o.Computed
-	}
+	toSerialize["tupleset"] = o.Tupleset
+	toSerialize["computed"] = o.Computed
 	return json.Marshal(toSerialize)
 }
 

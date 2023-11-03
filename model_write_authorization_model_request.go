@@ -18,17 +18,19 @@ import (
 
 // WriteAuthorizationModelRequest struct for WriteAuthorizationModelRequest
 type WriteAuthorizationModelRequest struct {
-	TypeDefinitions []TypeDefinition `json:"type_definitions"`
-	SchemaVersion   *string          `json:"schema_version,omitempty"`
+	TypeDefinitions []TypeDefinition      `json:"type_definitions"yaml:"type_definitions"`
+	SchemaVersion   string                `json:"schema_version"yaml:"schema_version"`
+	Conditions      *map[string]Condition `json:"conditions,omitempty"yaml:"conditions,omitempty"`
 }
 
 // NewWriteAuthorizationModelRequest instantiates a new WriteAuthorizationModelRequest object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewWriteAuthorizationModelRequest(typeDefinitions []TypeDefinition) *WriteAuthorizationModelRequest {
+func NewWriteAuthorizationModelRequest(typeDefinitions []TypeDefinition, schemaVersion string) *WriteAuthorizationModelRequest {
 	this := WriteAuthorizationModelRequest{}
 	this.TypeDefinitions = typeDefinitions
+	this.SchemaVersion = schemaVersion
 	return &this
 }
 
@@ -64,43 +66,68 @@ func (o *WriteAuthorizationModelRequest) SetTypeDefinitions(v []TypeDefinition) 
 	o.TypeDefinitions = v
 }
 
-// GetSchemaVersion returns the SchemaVersion field value if set, zero value otherwise.
+// GetSchemaVersion returns the SchemaVersion field value
 func (o *WriteAuthorizationModelRequest) GetSchemaVersion() string {
-	if o == nil || o.SchemaVersion == nil {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.SchemaVersion
+
+	return o.SchemaVersion
 }
 
-// GetSchemaVersionOk returns a tuple with the SchemaVersion field value if set, nil otherwise
+// GetSchemaVersionOk returns a tuple with the SchemaVersion field value
 // and a boolean to check if the value has been set.
 func (o *WriteAuthorizationModelRequest) GetSchemaVersionOk() (*string, bool) {
-	if o == nil || o.SchemaVersion == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.SchemaVersion, true
+	return &o.SchemaVersion, true
 }
 
-// HasSchemaVersion returns a boolean if a field has been set.
-func (o *WriteAuthorizationModelRequest) HasSchemaVersion() bool {
-	if o != nil && o.SchemaVersion != nil {
+// SetSchemaVersion sets field value
+func (o *WriteAuthorizationModelRequest) SetSchemaVersion(v string) {
+	o.SchemaVersion = v
+}
+
+// GetConditions returns the Conditions field value if set, zero value otherwise.
+func (o *WriteAuthorizationModelRequest) GetConditions() map[string]Condition {
+	if o == nil || o.Conditions == nil {
+		var ret map[string]Condition
+		return ret
+	}
+	return *o.Conditions
+}
+
+// GetConditionsOk returns a tuple with the Conditions field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *WriteAuthorizationModelRequest) GetConditionsOk() (*map[string]Condition, bool) {
+	if o == nil || o.Conditions == nil {
+		return nil, false
+	}
+	return o.Conditions, true
+}
+
+// HasConditions returns a boolean if a field has been set.
+func (o *WriteAuthorizationModelRequest) HasConditions() bool {
+	if o != nil && o.Conditions != nil {
 		return true
 	}
 
 	return false
 }
 
-// SetSchemaVersion gets a reference to the given string and assigns it to the SchemaVersion field.
-func (o *WriteAuthorizationModelRequest) SetSchemaVersion(v string) {
-	o.SchemaVersion = &v
+// SetConditions gets a reference to the given map[string]Condition and assigns it to the Conditions field.
+func (o *WriteAuthorizationModelRequest) SetConditions(v map[string]Condition) {
+	o.Conditions = &v
 }
 
 func (o WriteAuthorizationModelRequest) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["type_definitions"] = o.TypeDefinitions
-	if o.SchemaVersion != nil {
-		toSerialize["schema_version"] = o.SchemaVersion
+	toSerialize["schema_version"] = o.SchemaVersion
+	if o.Conditions != nil {
+		toSerialize["conditions"] = o.Conditions
 	}
 	return json.Marshal(toSerialize)
 }

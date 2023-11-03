@@ -18,11 +18,13 @@ import (
 
 // ListObjectsRequest struct for ListObjectsRequest
 type ListObjectsRequest struct {
-	AuthorizationModelId *string              `json:"authorization_model_id,omitempty"`
-	Type                 string               `json:"type"`
-	Relation             string               `json:"relation"`
-	User                 string               `json:"user"`
-	ContextualTuples     *ContextualTupleKeys `json:"contextual_tuples,omitempty"`
+	AuthorizationModelId *string              `json:"authorization_model_id,omitempty"yaml:"authorization_model_id,omitempty"`
+	Type                 string               `json:"type"yaml:"type"`
+	Relation             string               `json:"relation"yaml:"relation"`
+	User                 string               `json:"user"yaml:"user"`
+	ContextualTuples     *ContextualTupleKeys `json:"contextual_tuples,omitempty"yaml:"contextual_tuples,omitempty"`
+	// Additional request context that will be used to evaluate any ABAC conditions encountered in the query evaluation.
+	Context *map[string]interface{} `json:"context,omitempty"yaml:"context,omitempty"`
 }
 
 // NewListObjectsRequest instantiates a new ListObjectsRequest object
@@ -181,6 +183,38 @@ func (o *ListObjectsRequest) SetContextualTuples(v ContextualTupleKeys) {
 	o.ContextualTuples = &v
 }
 
+// GetContext returns the Context field value if set, zero value otherwise.
+func (o *ListObjectsRequest) GetContext() map[string]interface{} {
+	if o == nil || o.Context == nil {
+		var ret map[string]interface{}
+		return ret
+	}
+	return *o.Context
+}
+
+// GetContextOk returns a tuple with the Context field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *ListObjectsRequest) GetContextOk() (*map[string]interface{}, bool) {
+	if o == nil || o.Context == nil {
+		return nil, false
+	}
+	return o.Context, true
+}
+
+// HasContext returns a boolean if a field has been set.
+func (o *ListObjectsRequest) HasContext() bool {
+	if o != nil && o.Context != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetContext gets a reference to the given map[string]interface{} and assigns it to the Context field.
+func (o *ListObjectsRequest) SetContext(v map[string]interface{}) {
+	o.Context = &v
+}
+
 func (o ListObjectsRequest) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.AuthorizationModelId != nil {
@@ -191,6 +225,9 @@ func (o ListObjectsRequest) MarshalJSON() ([]byte, error) {
 	toSerialize["user"] = o.User
 	if o.ContextualTuples != nil {
 		toSerialize["contextual_tuples"] = o.ContextualTuples
+	}
+	if o.Context != nil {
+		toSerialize["context"] = o.Context
 	}
 	return json.Marshal(toSerialize)
 }

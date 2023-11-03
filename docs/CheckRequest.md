@@ -4,16 +4,17 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**TupleKey** | [**TupleKey**](TupleKey.md) |  | 
+**TupleKey** | [**CheckRequestTupleKey**](CheckRequestTupleKey.md) |  | 
 **ContextualTuples** | Pointer to [**ContextualTupleKeys**](ContextualTupleKeys.md) |  | [optional] 
 **AuthorizationModelId** | Pointer to **string** |  | [optional] 
 **Trace** | Pointer to **bool** | Defaults to false. Making it true has performance implications. | [optional] [readonly] 
+**Context** | Pointer to **map[string]interface{}** | Additional request context that will be used to evaluate any ABAC conditions encountered in the query evaluation. | [optional] 
 
 ## Methods
 
 ### NewCheckRequest
 
-`func NewCheckRequest(tupleKey TupleKey, ) *CheckRequest`
+`func NewCheckRequest(tupleKey CheckRequestTupleKey, ) *CheckRequest`
 
 NewCheckRequest instantiates a new CheckRequest object
 This constructor will assign default values to properties that have it defined,
@@ -30,20 +31,20 @@ but it doesn't guarantee that properties required by API are set
 
 ### GetTupleKey
 
-`func (o *CheckRequest) GetTupleKey() TupleKey`
+`func (o *CheckRequest) GetTupleKey() CheckRequestTupleKey`
 
 GetTupleKey returns the TupleKey field if non-nil, zero value otherwise.
 
 ### GetTupleKeyOk
 
-`func (o *CheckRequest) GetTupleKeyOk() (*TupleKey, bool)`
+`func (o *CheckRequest) GetTupleKeyOk() (*CheckRequestTupleKey, bool)`
 
 GetTupleKeyOk returns a tuple with the TupleKey field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetTupleKey
 
-`func (o *CheckRequest) SetTupleKey(v TupleKey)`
+`func (o *CheckRequest) SetTupleKey(v CheckRequestTupleKey)`
 
 SetTupleKey sets TupleKey field to given value.
 
@@ -122,6 +123,31 @@ SetTrace sets Trace field to given value.
 `func (o *CheckRequest) HasTrace() bool`
 
 HasTrace returns a boolean if a field has been set.
+
+### GetContext
+
+`func (o *CheckRequest) GetContext() map[string]interface{}`
+
+GetContext returns the Context field if non-nil, zero value otherwise.
+
+### GetContextOk
+
+`func (o *CheckRequest) GetContextOk() (*map[string]interface{}, bool)`
+
+GetContextOk returns a tuple with the Context field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetContext
+
+`func (o *CheckRequest) SetContext(v map[string]interface{})`
+
+SetContext sets Context field to given value.
+
+### HasContext
+
+`func (o *CheckRequest) HasContext() bool`
+
+HasContext returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

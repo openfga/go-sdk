@@ -4,13 +4,13 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Nodes** | Pointer to [**[]Node**](Node.md) |  | [optional] 
+**Nodes** | [**[]Node**](Node.md) |  | 
 
 ## Methods
 
 ### NewNodes
 
-`func NewNodes() *Nodes`
+`func NewNodes(nodes []Node, ) *Nodes`
 
 NewNodes instantiates a new Nodes object
 This constructor will assign default values to properties that have it defined,
@@ -44,11 +44,6 @@ and a boolean to check if the value has been set.
 
 SetNodes sets Nodes field to given value.
 
-### HasNodes
-
-`func (o *Nodes) HasNodes() bool`
-
-HasNodes returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

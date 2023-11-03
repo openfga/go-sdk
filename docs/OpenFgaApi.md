@@ -44,7 +44,7 @@ import (
 
 func main() {
     
-    body := *openapiclient.NewCheckRequest(*openapiclient.NewTupleKey()) // CheckRequest | 
+    body := *openapiclient.NewCheckRequest(*openapiclient.NewCheckRequestTupleKey("user:anne", "reader", "document:2021-budget")) // CheckRequest | 
 
     configuration, err := openfga.NewConfiguration(openfga.Configuration{
         ApiScheme:      os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"
@@ -318,7 +318,7 @@ import (
 
 func main() {
     
-    body := *openapiclient.NewExpandRequest(*openapiclient.NewTupleKey()) // ExpandRequest | 
+    body := *openapiclient.NewExpandRequest(*openapiclient.NewExpandRequestTupleKey("reader", "document:2021-budget")) // ExpandRequest | 
 
     configuration, err := openfga.NewConfiguration(openfga.Configuration{
         ApiScheme:      os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"
@@ -1261,7 +1261,7 @@ import (
 func main() {
     
     authorizationModelId := "authorizationModelId_example" // string | 
-    body := *openapiclient.NewWriteAssertionsRequest([]openapiclient.Assertion{*openapiclient.NewAssertion(*openapiclient.NewTupleKey(), false)}) // WriteAssertionsRequest | 
+    body := *openapiclient.NewWriteAssertionsRequest([]openapiclient.Assertion{*openapiclient.NewAssertion(*openapiclient.NewCheckRequestTupleKey("user:anne", "reader", "document:2021-budget"), false)}) // WriteAssertionsRequest | 
 
     configuration, err := openfga.NewConfiguration(openfga.Configuration{
         ApiScheme:      os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"
@@ -1354,7 +1354,7 @@ import (
 
 func main() {
     
-    body := *openapiclient.NewWriteAuthorizationModelRequest([]openapiclient.TypeDefinition{*openapiclient.NewTypeDefinition("document")}) // WriteAuthorizationModelRequest | 
+    body := *openapiclient.NewWriteAuthorizationModelRequest([]openapiclient.TypeDefinition{*openapiclient.NewTypeDefinition("document")}, "SchemaVersion_example") // WriteAuthorizationModelRequest | 
 
     configuration, err := openfga.NewConfiguration(openfga.Configuration{
         ApiScheme:      os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"

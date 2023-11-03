@@ -18,17 +18,18 @@ import (
 
 // ReadChangesResponse struct for ReadChangesResponse
 type ReadChangesResponse struct {
-	Changes *[]TupleChange `json:"changes,omitempty"`
+	Changes []TupleChange `json:"changes"yaml:"changes"`
 	// The continuation token will be identical if there are no new changes.
-	ContinuationToken *string `json:"continuation_token,omitempty"`
+	ContinuationToken *string `json:"continuation_token,omitempty"yaml:"continuation_token,omitempty"`
 }
 
 // NewReadChangesResponse instantiates a new ReadChangesResponse object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewReadChangesResponse() *ReadChangesResponse {
+func NewReadChangesResponse(changes []TupleChange) *ReadChangesResponse {
 	this := ReadChangesResponse{}
+	this.Changes = changes
 	return &this
 }
 
@@ -40,36 +41,28 @@ func NewReadChangesResponseWithDefaults() *ReadChangesResponse {
 	return &this
 }
 
-// GetChanges returns the Changes field value if set, zero value otherwise.
+// GetChanges returns the Changes field value
 func (o *ReadChangesResponse) GetChanges() []TupleChange {
-	if o == nil || o.Changes == nil {
+	if o == nil {
 		var ret []TupleChange
 		return ret
 	}
-	return *o.Changes
+
+	return o.Changes
 }
 
-// GetChangesOk returns a tuple with the Changes field value if set, nil otherwise
+// GetChangesOk returns a tuple with the Changes field value
 // and a boolean to check if the value has been set.
 func (o *ReadChangesResponse) GetChangesOk() (*[]TupleChange, bool) {
-	if o == nil || o.Changes == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Changes, true
+	return &o.Changes, true
 }
 
-// HasChanges returns a boolean if a field has been set.
-func (o *ReadChangesResponse) HasChanges() bool {
-	if o != nil && o.Changes != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetChanges gets a reference to the given []TupleChange and assigns it to the Changes field.
+// SetChanges sets field value
 func (o *ReadChangesResponse) SetChanges(v []TupleChange) {
-	o.Changes = &v
+	o.Changes = v
 }
 
 // GetContinuationToken returns the ContinuationToken field value if set, zero value otherwise.
@@ -106,9 +99,7 @@ func (o *ReadChangesResponse) SetContinuationToken(v string) {
 
 func (o ReadChangesResponse) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.Changes != nil {
-		toSerialize["changes"] = o.Changes
-	}
+	toSerialize["changes"] = o.Changes
 	if o.ContinuationToken != nil {
 		toSerialize["continuation_token"] = o.ContinuationToken
 	}

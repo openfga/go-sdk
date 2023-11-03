@@ -18,15 +18,16 @@ import (
 
 // ListObjectsResponse struct for ListObjectsResponse
 type ListObjectsResponse struct {
-	Objects *[]string `json:"objects,omitempty"`
+	Objects []string `json:"objects"yaml:"objects"`
 }
 
 // NewListObjectsResponse instantiates a new ListObjectsResponse object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewListObjectsResponse() *ListObjectsResponse {
+func NewListObjectsResponse(objects []string) *ListObjectsResponse {
 	this := ListObjectsResponse{}
+	this.Objects = objects
 	return &this
 }
 
@@ -38,43 +39,33 @@ func NewListObjectsResponseWithDefaults() *ListObjectsResponse {
 	return &this
 }
 
-// GetObjects returns the Objects field value if set, zero value otherwise.
+// GetObjects returns the Objects field value
 func (o *ListObjectsResponse) GetObjects() []string {
-	if o == nil || o.Objects == nil {
+	if o == nil {
 		var ret []string
 		return ret
 	}
-	return *o.Objects
+
+	return o.Objects
 }
 
-// GetObjectsOk returns a tuple with the Objects field value if set, nil otherwise
+// GetObjectsOk returns a tuple with the Objects field value
 // and a boolean to check if the value has been set.
 func (o *ListObjectsResponse) GetObjectsOk() (*[]string, bool) {
-	if o == nil || o.Objects == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Objects, true
+	return &o.Objects, true
 }
 
-// HasObjects returns a boolean if a field has been set.
-func (o *ListObjectsResponse) HasObjects() bool {
-	if o != nil && o.Objects != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetObjects gets a reference to the given []string and assigns it to the Objects field.
+// SetObjects sets field value
 func (o *ListObjectsResponse) SetObjects(v []string) {
-	o.Objects = &v
+	o.Objects = v
 }
 
 func (o ListObjectsResponse) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.Objects != nil {
-		toSerialize["objects"] = o.Objects
-	}
+	toSerialize["objects"] = o.Objects
 	return json.Marshal(toSerialize)
 }
 

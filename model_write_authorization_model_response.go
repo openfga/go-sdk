@@ -18,15 +18,16 @@ import (
 
 // WriteAuthorizationModelResponse struct for WriteAuthorizationModelResponse
 type WriteAuthorizationModelResponse struct {
-	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
+	AuthorizationModelId string `json:"authorization_model_id"yaml:"authorization_model_id"`
 }
 
 // NewWriteAuthorizationModelResponse instantiates a new WriteAuthorizationModelResponse object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewWriteAuthorizationModelResponse() *WriteAuthorizationModelResponse {
+func NewWriteAuthorizationModelResponse(authorizationModelId string) *WriteAuthorizationModelResponse {
 	this := WriteAuthorizationModelResponse{}
+	this.AuthorizationModelId = authorizationModelId
 	return &this
 }
 
@@ -38,43 +39,33 @@ func NewWriteAuthorizationModelResponseWithDefaults() *WriteAuthorizationModelRe
 	return &this
 }
 
-// GetAuthorizationModelId returns the AuthorizationModelId field value if set, zero value otherwise.
+// GetAuthorizationModelId returns the AuthorizationModelId field value
 func (o *WriteAuthorizationModelResponse) GetAuthorizationModelId() string {
-	if o == nil || o.AuthorizationModelId == nil {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.AuthorizationModelId
+
+	return o.AuthorizationModelId
 }
 
-// GetAuthorizationModelIdOk returns a tuple with the AuthorizationModelId field value if set, nil otherwise
+// GetAuthorizationModelIdOk returns a tuple with the AuthorizationModelId field value
 // and a boolean to check if the value has been set.
 func (o *WriteAuthorizationModelResponse) GetAuthorizationModelIdOk() (*string, bool) {
-	if o == nil || o.AuthorizationModelId == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.AuthorizationModelId, true
+	return &o.AuthorizationModelId, true
 }
 
-// HasAuthorizationModelId returns a boolean if a field has been set.
-func (o *WriteAuthorizationModelResponse) HasAuthorizationModelId() bool {
-	if o != nil && o.AuthorizationModelId != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetAuthorizationModelId gets a reference to the given string and assigns it to the AuthorizationModelId field.
+// SetAuthorizationModelId sets field value
 func (o *WriteAuthorizationModelResponse) SetAuthorizationModelId(v string) {
-	o.AuthorizationModelId = &v
+	o.AuthorizationModelId = v
 }
 
 func (o WriteAuthorizationModelResponse) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.AuthorizationModelId != nil {
-		toSerialize["authorization_model_id"] = o.AuthorizationModelId
-	}
+	toSerialize["authorization_model_id"] = o.AuthorizationModelId
 	return json.Marshal(toSerialize)
 }
 

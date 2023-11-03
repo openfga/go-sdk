@@ -4,14 +4,14 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Base** | Pointer to [**Node**](Node.md) |  | [optional] 
-**Subtract** | Pointer to [**Node**](Node.md) |  | [optional] 
+**Base** | [**Node**](Node.md) |  | 
+**Subtract** | [**Node**](Node.md) |  | 
 
 ## Methods
 
 ### NewUsersetTreeDifference
 
-`func NewUsersetTreeDifference() *UsersetTreeDifference`
+`func NewUsersetTreeDifference(base Node, subtract Node, ) *UsersetTreeDifference`
 
 NewUsersetTreeDifference instantiates a new UsersetTreeDifference object
 This constructor will assign default values to properties that have it defined,
@@ -45,11 +45,6 @@ and a boolean to check if the value has been set.
 
 SetBase sets Base field to given value.
 
-### HasBase
-
-`func (o *UsersetTreeDifference) HasBase() bool`
-
-HasBase returns a boolean if a field has been set.
 
 ### GetSubtract
 
@@ -70,11 +65,6 @@ and a boolean to check if the value has been set.
 
 SetSubtract sets Subtract field to given value.
 
-### HasSubtract
-
-`func (o *UsersetTreeDifference) HasSubtract() bool`
-
-HasSubtract returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

@@ -18,19 +18,20 @@ import (
 
 // Node struct for Node
 type Node struct {
-	Name         *string                `json:"name,omitempty"`
-	Leaf         *Leaf                  `json:"leaf,omitempty"`
-	Difference   *UsersetTreeDifference `json:"difference,omitempty"`
-	Union        *Nodes                 `json:"union,omitempty"`
-	Intersection *Nodes                 `json:"intersection,omitempty"`
+	Name         string                 `json:"name"yaml:"name"`
+	Leaf         *Leaf                  `json:"leaf,omitempty"yaml:"leaf,omitempty"`
+	Difference   *UsersetTreeDifference `json:"difference,omitempty"yaml:"difference,omitempty"`
+	Union        *Nodes                 `json:"union,omitempty"yaml:"union,omitempty"`
+	Intersection *Nodes                 `json:"intersection,omitempty"yaml:"intersection,omitempty"`
 }
 
 // NewNode instantiates a new Node object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewNode() *Node {
+func NewNode(name string) *Node {
 	this := Node{}
+	this.Name = name
 	return &this
 }
 
@@ -42,36 +43,28 @@ func NewNodeWithDefaults() *Node {
 	return &this
 }
 
-// GetName returns the Name field value if set, zero value otherwise.
+// GetName returns the Name field value
 func (o *Node) GetName() string {
-	if o == nil || o.Name == nil {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.Name
+
+	return o.Name
 }
 
-// GetNameOk returns a tuple with the Name field value if set, nil otherwise
+// GetNameOk returns a tuple with the Name field value
 // and a boolean to check if the value has been set.
 func (o *Node) GetNameOk() (*string, bool) {
-	if o == nil || o.Name == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Name, true
+	return &o.Name, true
 }
 
-// HasName returns a boolean if a field has been set.
-func (o *Node) HasName() bool {
-	if o != nil && o.Name != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetName gets a reference to the given string and assigns it to the Name field.
+// SetName sets field value
 func (o *Node) SetName(v string) {
-	o.Name = &v
+	o.Name = v
 }
 
 // GetLeaf returns the Leaf field value if set, zero value otherwise.
@@ -204,9 +197,7 @@ func (o *Node) SetIntersection(v Nodes) {
 
 func (o Node) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.Name != nil {
-		toSerialize["name"] = o.Name
-	}
+	toSerialize["name"] = o.Name
 	if o.Leaf != nil {
 		toSerialize["leaf"] = o.Leaf
 	}

@@ -4,8 +4,8 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Writes** | Pointer to [**TupleKeys**](TupleKeys.md) |  | [optional] 
-**Deletes** | Pointer to [**TupleKeys**](TupleKeys.md) |  | [optional] 
+**Writes** | Pointer to [**WriteRequestTupleKeys**](WriteRequestTupleKeys.md) |  | [optional] 
+**Deletes** | Pointer to [**WriteRequestTupleKeys**](WriteRequestTupleKeys.md) |  | [optional] 
 **AuthorizationModelId** | Pointer to **string** |  | [optional] 
 
 ## Methods
@@ -29,20 +29,20 @@ but it doesn't guarantee that properties required by API are set
 
 ### GetWrites
 
-`func (o *WriteRequest) GetWrites() TupleKeys`
+`func (o *WriteRequest) GetWrites() WriteRequestTupleKeys`
 
 GetWrites returns the Writes field if non-nil, zero value otherwise.
 
 ### GetWritesOk
 
-`func (o *WriteRequest) GetWritesOk() (*TupleKeys, bool)`
+`func (o *WriteRequest) GetWritesOk() (*WriteRequestTupleKeys, bool)`
 
 GetWritesOk returns a tuple with the Writes field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetWrites
 
-`func (o *WriteRequest) SetWrites(v TupleKeys)`
+`func (o *WriteRequest) SetWrites(v WriteRequestTupleKeys)`
 
 SetWrites sets Writes field to given value.
 
@@ -54,20 +54,20 @@ HasWrites returns a boolean if a field has been set.
 
 ### GetDeletes
 
-`func (o *WriteRequest) GetDeletes() TupleKeys`
+`func (o *WriteRequest) GetDeletes() WriteRequestTupleKeys`
 
 GetDeletes returns the Deletes field if non-nil, zero value otherwise.
 
 ### GetDeletesOk
 
-`func (o *WriteRequest) GetDeletesOk() (*TupleKeys, bool)`
+`func (o *WriteRequest) GetDeletesOk() (*WriteRequestTupleKeys, bool)`
 
 GetDeletesOk returns a tuple with the Deletes field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetDeletes
 
-`func (o *WriteRequest) SetDeletes(v TupleKeys)`
+`func (o *WriteRequest) SetDeletes(v WriteRequestTupleKeys)`
 
 SetDeletes sets Deletes field to given value.
 

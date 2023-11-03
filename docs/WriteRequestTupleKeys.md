@@ -1,46 +1,46 @@
-# TupleKeys
+# WriteRequestTupleKeys
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**TupleKeys** | [**[]TupleKey**](TupleKey.md) |  | 
+**TupleKeys** | [**[]WriteRequestTupleKey**](WriteRequestTupleKey.md) |  | 
 
 ## Methods
 
-### NewTupleKeys
+### NewWriteRequestTupleKeys
 
-`func NewTupleKeys(tupleKeys []TupleKey, ) *TupleKeys`
+`func NewWriteRequestTupleKeys(tupleKeys []WriteRequestTupleKey, ) *WriteRequestTupleKeys`
 
-NewTupleKeys instantiates a new TupleKeys object
+NewWriteRequestTupleKeys instantiates a new WriteRequestTupleKeys object
 This constructor will assign default values to properties that have it defined,
 and makes sure properties required by API are set, but the set of arguments
 will change when the set of required properties is changed
 
-### NewTupleKeysWithDefaults
+### NewWriteRequestTupleKeysWithDefaults
 
-`func NewTupleKeysWithDefaults() *TupleKeys`
+`func NewWriteRequestTupleKeysWithDefaults() *WriteRequestTupleKeys`
 
-NewTupleKeysWithDefaults instantiates a new TupleKeys object
+NewWriteRequestTupleKeysWithDefaults instantiates a new WriteRequestTupleKeys object
 This constructor will only assign default values to properties that have it defined,
 but it doesn't guarantee that properties required by API are set
 
 ### GetTupleKeys
 
-`func (o *TupleKeys) GetTupleKeys() []TupleKey`
+`func (o *WriteRequestTupleKeys) GetTupleKeys() []WriteRequestTupleKey`
 
 GetTupleKeys returns the TupleKeys field if non-nil, zero value otherwise.
 
 ### GetTupleKeysOk
 
-`func (o *TupleKeys) GetTupleKeysOk() (*[]TupleKey, bool)`
+`func (o *WriteRequestTupleKeys) GetTupleKeysOk() (*[]WriteRequestTupleKey, bool)`
 
 GetTupleKeysOk returns a tuple with the TupleKeys field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetTupleKeys
 
-`func (o *TupleKeys) SetTupleKeys(v []TupleKey)`
+`func (o *WriteRequestTupleKeys) SetTupleKeys(v []WriteRequestTupleKey)`
 
 SetTupleKeys sets TupleKeys field to given value.
 

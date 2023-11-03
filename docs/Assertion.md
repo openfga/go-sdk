@@ -4,14 +4,14 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**TupleKey** | [**TupleKey**](TupleKey.md) |  | 
+**TupleKey** | [**CheckRequestTupleKey**](CheckRequestTupleKey.md) |  | 
 **Expectation** | **bool** |  | 
 
 ## Methods
 
 ### NewAssertion
 
-`func NewAssertion(tupleKey TupleKey, expectation bool, ) *Assertion`
+`func NewAssertion(tupleKey CheckRequestTupleKey, expectation bool, ) *Assertion`
 
 NewAssertion instantiates a new Assertion object
 This constructor will assign default values to properties that have it defined,
@@ -28,20 +28,20 @@ but it doesn't guarantee that properties required by API are set
 
 ### GetTupleKey
 
-`func (o *Assertion) GetTupleKey() TupleKey`
+`func (o *Assertion) GetTupleKey() CheckRequestTupleKey`
 
 GetTupleKey returns the TupleKey field if non-nil, zero value otherwise.
 
 ### GetTupleKeyOk
 
-`func (o *Assertion) GetTupleKeyOk() (*TupleKey, bool)`
+`func (o *Assertion) GetTupleKeyOk() (*CheckRequestTupleKey, bool)`
 
 GetTupleKeyOk returns a tuple with the TupleKey field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetTupleKey
 
-`func (o *Assertion) SetTupleKey(v TupleKey)`
+`func (o *Assertion) SetTupleKey(v CheckRequestTupleKey)`
 
 SetTupleKey sets TupleKey field to given value.
 

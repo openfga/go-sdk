@@ -18,7 +18,7 @@ import (
 
 // UsersetTree A UsersetTree contains the result of an Expansion.
 type UsersetTree struct {
-	Root *Node `json:"root,omitempty"`
+	Root *Node `json:"root,omitempty"yaml:"root,omitempty"`
 }
 
 // NewUsersetTree instantiates a new UsersetTree object

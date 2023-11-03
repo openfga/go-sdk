@@ -18,15 +18,16 @@ import (
 
 // Nodes struct for Nodes
 type Nodes struct {
-	Nodes *[]Node `json:"nodes,omitempty"`
+	Nodes []Node `json:"nodes"yaml:"nodes"`
 }
 
 // NewNodes instantiates a new Nodes object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewNodes() *Nodes {
+func NewNodes(nodes []Node) *Nodes {
 	this := Nodes{}
+	this.Nodes = nodes
 	return &this
 }
 
@@ -38,43 +39,33 @@ func NewNodesWithDefaults() *Nodes {
 	return &this
 }
 
-// GetNodes returns the Nodes field value if set, zero value otherwise.
+// GetNodes returns the Nodes field value
 func (o *Nodes) GetNodes() []Node {
-	if o == nil || o.Nodes == nil {
+	if o == nil {
 		var ret []Node
 		return ret
 	}
-	return *o.Nodes
+
+	return o.Nodes
 }
 
-// GetNodesOk returns a tuple with the Nodes field value if set, nil otherwise
+// GetNodesOk returns a tuple with the Nodes field value
 // and a boolean to check if the value has been set.
 func (o *Nodes) GetNodesOk() (*[]Node, bool) {
-	if o == nil || o.Nodes == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Nodes, true
+	return &o.Nodes, true
 }
 
-// HasNodes returns a boolean if a field has been set.
-func (o *Nodes) HasNodes() bool {
-	if o != nil && o.Nodes != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetNodes gets a reference to the given []Node and assigns it to the Nodes field.
+// SetNodes sets field value
 func (o *Nodes) SetNodes(v []Node) {
-	o.Nodes = &v
+	o.Nodes = v
 }
 
 func (o Nodes) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.Nodes != nil {
-		toSerialize["nodes"] = o.Nodes
-	}
+	toSerialize["nodes"] = o.Nodes
 	return json.Marshal(toSerialize)
 }
 

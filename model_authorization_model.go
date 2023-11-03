@@ -18,18 +18,20 @@ import (
 
 // AuthorizationModel struct for AuthorizationModel
 type AuthorizationModel struct {
-	Id              *string           `json:"id,omitempty"`
-	SchemaVersion   string            `json:"schema_version"`
-	TypeDefinitions *[]TypeDefinition `json:"type_definitions,omitempty"`
+	Id              *string               `json:"id,omitempty"yaml:"id,omitempty"`
+	SchemaVersion   string                `json:"schema_version"yaml:"schema_version"`
+	TypeDefinitions []TypeDefinition      `json:"type_definitions"yaml:"type_definitions"`
+	Conditions      *map[string]Condition `json:"conditions,omitempty"yaml:"conditions,omitempty"`
 }
 
 // NewAuthorizationModel instantiates a new AuthorizationModel object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewAuthorizationModel(schemaVersion string) *AuthorizationModel {
+func NewAuthorizationModel(schemaVersion string, typeDefinitions []TypeDefinition) *AuthorizationModel {
 	this := AuthorizationModel{}
 	this.SchemaVersion = schemaVersion
+	this.TypeDefinitions = typeDefinitions
 	return &this
 }
 
@@ -97,36 +99,60 @@ func (o *AuthorizationModel) SetSchemaVersion(v string) {
 	o.SchemaVersion = v
 }
 
-// GetTypeDefinitions returns the TypeDefinitions field value if set, zero value otherwise.
+// GetTypeDefinitions returns the TypeDefinitions field value
 func (o *AuthorizationModel) GetTypeDefinitions() []TypeDefinition {
-	if o == nil || o.TypeDefinitions == nil {
+	if o == nil {
 		var ret []TypeDefinition
 		return ret
 	}
-	return *o.TypeDefinitions
+
+	return o.TypeDefinitions
 }
 
-// GetTypeDefinitionsOk returns a tuple with the TypeDefinitions field value if set, nil otherwise
+// GetTypeDefinitionsOk returns a tuple with the TypeDefinitions field value
 // and a boolean to check if the value has been set.
 func (o *AuthorizationModel) GetTypeDefinitionsOk() (*[]TypeDefinition, bool) {
-	if o == nil || o.TypeDefinitions == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.TypeDefinitions, true
+	return &o.TypeDefinitions, true
 }
 
-// HasTypeDefinitions returns a boolean if a field has been set.
-func (o *AuthorizationModel) HasTypeDefinitions() bool {
-	if o != nil && o.TypeDefinitions != nil {
+// SetTypeDefinitions sets field value
+func (o *AuthorizationModel) SetTypeDefinitions(v []TypeDefinition) {
+	o.TypeDefinitions = v
+}
+
+// GetConditions returns the Conditions field value if set, zero value otherwise.
+func (o *AuthorizationModel) GetConditions() map[string]Condition {
+	if o == nil || o.Conditions == nil {
+		var ret map[string]Condition
+		return ret
+	}
+	return *o.Conditions
+}
+
+// GetConditionsOk returns a tuple with the Conditions field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *AuthorizationModel) GetConditionsOk() (*map[string]Condition, bool) {
+	if o == nil || o.Conditions == nil {
+		return nil, false
+	}
+	return o.Conditions, true
+}
+
+// HasConditions returns a boolean if a field has been set.
+func (o *AuthorizationModel) HasConditions() bool {
+	if o != nil && o.Conditions != nil {
 		return true
 	}
 
 	return false
 }
 
-// SetTypeDefinitions gets a reference to the given []TypeDefinition and assigns it to the TypeDefinitions field.
-func (o *AuthorizationModel) SetTypeDefinitions(v []TypeDefinition) {
-	o.TypeDefinitions = &v
+// SetConditions gets a reference to the given map[string]Condition and assigns it to the Conditions field.
+func (o *AuthorizationModel) SetConditions(v map[string]Condition) {
+	o.Conditions = &v
 }
 
 func (o AuthorizationModel) MarshalJSON() ([]byte, error) {
@@ -135,8 +161,9 @@ func (o AuthorizationModel) MarshalJSON() ([]byte, error) {
 		toSerialize["id"] = o.Id
 	}
 	toSerialize["schema_version"] = o.SchemaVersion
-	if o.TypeDefinitions != nil {
-		toSerialize["type_definitions"] = o.TypeDefinitions
+	toSerialize["type_definitions"] = o.TypeDefinitions
+	if o.Conditions != nil {
+		toSerialize["conditions"] = o.Conditions
 	}
 	return json.Marshal(toSerialize)
 }

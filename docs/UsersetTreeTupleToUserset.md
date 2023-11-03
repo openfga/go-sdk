@@ -4,14 +4,14 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Tupleset** | Pointer to **string** |  | [optional] 
-**Computed** | Pointer to [**[]Computed**](Computed.md) |  | [optional] 
+**Tupleset** | **string** |  | 
+**Computed** | [**[]Computed**](Computed.md) |  | 
 
 ## Methods
 
 ### NewUsersetTreeTupleToUserset
 
-`func NewUsersetTreeTupleToUserset() *UsersetTreeTupleToUserset`
+`func NewUsersetTreeTupleToUserset(tupleset string, computed []Computed, ) *UsersetTreeTupleToUserset`
 
 NewUsersetTreeTupleToUserset instantiates a new UsersetTreeTupleToUserset object
 This constructor will assign default values to properties that have it defined,
@@ -45,11 +45,6 @@ and a boolean to check if the value has been set.
 
 SetTupleset sets Tupleset field to given value.
 
-### HasTupleset
-
-`func (o *UsersetTreeTupleToUserset) HasTupleset() bool`
-
-HasTupleset returns a boolean if a field has been set.
 
 ### GetComputed
 
@@ -70,11 +65,6 @@ and a boolean to check if the value has been set.
 
 SetComputed sets Computed field to given value.
 
-### HasComputed
-
-`func (o *UsersetTreeTupleToUserset) HasComputed() bool`
-
-HasComputed returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

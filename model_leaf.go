@@ -18,9 +18,9 @@ import (
 
 // Leaf A leaf node contains either - a set of users (which may be individual users, or usersets   referencing other relations) - a computed node, which is the result of a computed userset   value in the authorization model - a tupleToUserset nodes, containing the result of expanding   a tupleToUserset value in a authorization model.
 type Leaf struct {
-	Users          *Users                     `json:"users,omitempty"`
-	Computed       *Computed                  `json:"computed,omitempty"`
-	TupleToUserset *UsersetTreeTupleToUserset `json:"tupleToUserset,omitempty"`
+	Users          *Users                     `json:"users,omitempty"yaml:"users,omitempty"`
+	Computed       *Computed                  `json:"computed,omitempty"yaml:"computed,omitempty"`
+	TupleToUserset *UsersetTreeTupleToUserset `json:"tupleToUserset,omitempty"yaml:"tupleToUserset,omitempty"`
 }
 
 // NewLeaf instantiates a new Leaf object

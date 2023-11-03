@@ -4,16 +4,16 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Id** | Pointer to **string** |  | [optional] 
-**Name** | Pointer to **string** |  | [optional] 
-**CreatedAt** | Pointer to **time.Time** |  | [optional] 
-**UpdatedAt** | Pointer to **time.Time** |  | [optional] 
+**Id** | **string** |  | 
+**Name** | **string** |  | 
+**CreatedAt** | **time.Time** |  | 
+**UpdatedAt** | **time.Time** |  | 
 
 ## Methods
 
 ### NewGetStoreResponse
 
-`func NewGetStoreResponse() *GetStoreResponse`
+`func NewGetStoreResponse(id string, name string, createdAt time.Time, updatedAt time.Time, ) *GetStoreResponse`
 
 NewGetStoreResponse instantiates a new GetStoreResponse object
 This constructor will assign default values to properties that have it defined,
@@ -47,11 +47,6 @@ and a boolean to check if the value has been set.
 
 SetId sets Id field to given value.
 
-### HasId
-
-`func (o *GetStoreResponse) HasId() bool`
-
-HasId returns a boolean if a field has been set.
 
 ### GetName
 
@@ -72,11 +67,6 @@ and a boolean to check if the value has been set.
 
 SetName sets Name field to given value.
 
-### HasName
-
-`func (o *GetStoreResponse) HasName() bool`
-
-HasName returns a boolean if a field has been set.
 
 ### GetCreatedAt
 
@@ -97,11 +87,6 @@ and a boolean to check if the value has been set.
 
 SetCreatedAt sets CreatedAt field to given value.
 
-### HasCreatedAt
-
-`func (o *GetStoreResponse) HasCreatedAt() bool`
-
-HasCreatedAt returns a boolean if a field has been set.
 
 ### GetUpdatedAt
 
@@ -122,11 +107,6 @@ and a boolean to check if the value has been set.
 
 SetUpdatedAt sets UpdatedAt field to given value.
 
-### HasUpdatedAt
-
-`func (o *GetStoreResponse) HasUpdatedAt() bool`
-
-HasUpdatedAt returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

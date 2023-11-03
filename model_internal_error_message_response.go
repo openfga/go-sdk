@@ -18,8 +18,8 @@ import (
 
 // InternalErrorMessageResponse struct for InternalErrorMessageResponse
 type InternalErrorMessageResponse struct {
-	Code    *InternalErrorCode `json:"code,omitempty"`
-	Message *string            `json:"message,omitempty"`
+	Code    *InternalErrorCode `json:"code,omitempty"yaml:"code,omitempty"`
+	Message *string            `json:"message,omitempty"yaml:"message,omitempty"`
 }
 
 // NewInternalErrorMessageResponse instantiates a new InternalErrorMessageResponse object

@@ -4,13 +4,13 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**AuthorizationModelId** | Pointer to **string** |  | [optional] 
+**AuthorizationModelId** | **string** |  | 
 
 ## Methods
 
 ### NewWriteAuthorizationModelResponse
 
-`func NewWriteAuthorizationModelResponse() *WriteAuthorizationModelResponse`
+`func NewWriteAuthorizationModelResponse(authorizationModelId string, ) *WriteAuthorizationModelResponse`
 
 NewWriteAuthorizationModelResponse instantiates a new WriteAuthorizationModelResponse object
 This constructor will assign default values to properties that have it defined,
@@ -44,11 +44,6 @@ and a boolean to check if the value has been set.
 
 SetAuthorizationModelId sets AuthorizationModelId field to given value.
 
-### HasAuthorizationModelId
-
-`func (o *WriteAuthorizationModelResponse) HasAuthorizationModelId() bool`
-
-HasAuthorizationModelId returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

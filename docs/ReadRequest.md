@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**TupleKey** | Pointer to [**TupleKey**](TupleKey.md) |  | [optional] 
+**TupleKey** | Pointer to [**ReadRequestTupleKey**](ReadRequestTupleKey.md) |  | [optional] 
 **PageSize** | Pointer to **int32** |  | [optional] 
 **ContinuationToken** | Pointer to **string** |  | [optional] 
 
@@ -29,20 +29,20 @@ but it doesn't guarantee that properties required by API are set
 
 ### GetTupleKey
 
-`func (o *ReadRequest) GetTupleKey() TupleKey`
+`func (o *ReadRequest) GetTupleKey() ReadRequestTupleKey`
 
 GetTupleKey returns the TupleKey field if non-nil, zero value otherwise.
 
 ### GetTupleKeyOk
 
-`func (o *ReadRequest) GetTupleKeyOk() (*TupleKey, bool)`
+`func (o *ReadRequest) GetTupleKeyOk() (*ReadRequestTupleKey, bool)`
 
 GetTupleKeyOk returns a tuple with the TupleKey field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetTupleKey
 
-`func (o *ReadRequest) SetTupleKey(v TupleKey)`
+`func (o *ReadRequest) SetTupleKey(v ReadRequestTupleKey)`
 
 SetTupleKey sets TupleKey field to given value.
 

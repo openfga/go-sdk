@@ -6,13 +6,14 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Id** | Pointer to **string** |  | [optional] 
 **SchemaVersion** | **string** |  | 
-**TypeDefinitions** | Pointer to [**[]TypeDefinition**](TypeDefinition.md) |  | [optional] 
+**TypeDefinitions** | [**[]TypeDefinition**](TypeDefinition.md) |  | 
+**Conditions** | Pointer to [**map[string]Condition**](Condition.md) |  | [optional] 
 
 ## Methods
 
 ### NewAuthorizationModel
 
-`func NewAuthorizationModel(schemaVersion string, ) *AuthorizationModel`
+`func NewAuthorizationModel(schemaVersion string, typeDefinitions []TypeDefinition, ) *AuthorizationModel`
 
 NewAuthorizationModel instantiates a new AuthorizationModel object
 This constructor will assign default values to properties that have it defined,
@@ -91,11 +92,31 @@ and a boolean to check if the value has been set.
 
 SetTypeDefinitions sets TypeDefinitions field to given value.
 
-### HasTypeDefinitions
 
-`func (o *AuthorizationModel) HasTypeDefinitions() bool`
+### GetConditions
 
-HasTypeDefinitions returns a boolean if a field has been set.
+`func (o *AuthorizationModel) GetConditions() map[string]Condition`
+
+GetConditions returns the Conditions field if non-nil, zero value otherwise.
+
+### GetConditionsOk
+
+`func (o *AuthorizationModel) GetConditionsOk() (*map[string]Condition, bool)`
+
+GetConditionsOk returns a tuple with the Conditions field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetConditions
+
+`func (o *AuthorizationModel) SetConditions(v map[string]Condition)`
+
+SetConditions sets Conditions field to given value.
+
+### HasConditions
+
+`func (o *AuthorizationModel) HasConditions() bool`
+
+HasConditions returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

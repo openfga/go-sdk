@@ -18,7 +18,7 @@ import (
 
 // CreateStoreRequest struct for CreateStoreRequest
 type CreateStoreRequest struct {
-	Name string `json:"name"`
+	Name string `json:"name"yaml:"name"`
 }
 
 // NewCreateStoreRequest instantiates a new CreateStoreRequest object

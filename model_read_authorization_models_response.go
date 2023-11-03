@@ -18,17 +18,18 @@ import (
 
 // ReadAuthorizationModelsResponse struct for ReadAuthorizationModelsResponse
 type ReadAuthorizationModelsResponse struct {
-	AuthorizationModels *[]AuthorizationModel `json:"authorization_models,omitempty"`
+	AuthorizationModels []AuthorizationModel `json:"authorization_models"yaml:"authorization_models"`
 	// The continuation token will be empty if there are no more models.
-	ContinuationToken *string `json:"continuation_token,omitempty"`
+	ContinuationToken *string `json:"continuation_token,omitempty"yaml:"continuation_token,omitempty"`
 }
 
 // NewReadAuthorizationModelsResponse instantiates a new ReadAuthorizationModelsResponse object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewReadAuthorizationModelsResponse() *ReadAuthorizationModelsResponse {
+func NewReadAuthorizationModelsResponse(authorizationModels []AuthorizationModel) *ReadAuthorizationModelsResponse {
 	this := ReadAuthorizationModelsResponse{}
+	this.AuthorizationModels = authorizationModels
 	return &this
 }
 
@@ -40,36 +41,28 @@ func NewReadAuthorizationModelsResponseWithDefaults() *ReadAuthorizationModelsRe
 	return &this
 }
 
-// GetAuthorizationModels returns the AuthorizationModels field value if set, zero value otherwise.
+// GetAuthorizationModels returns the AuthorizationModels field value
 func (o *ReadAuthorizationModelsResponse) GetAuthorizationModels() []AuthorizationModel {
-	if o == nil || o.AuthorizationModels == nil {
+	if o == nil {
 		var ret []AuthorizationModel
 		return ret
 	}
-	return *o.AuthorizationModels
+
+	return o.AuthorizationModels
 }
 
-// GetAuthorizationModelsOk returns a tuple with the AuthorizationModels field value if set, nil otherwise
+// GetAuthorizationModelsOk returns a tuple with the AuthorizationModels field value
 // and a boolean to check if the value has been set.
 func (o *ReadAuthorizationModelsResponse) GetAuthorizationModelsOk() (*[]AuthorizationModel, bool) {
-	if o == nil || o.AuthorizationModels == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.AuthorizationModels, true
+	return &o.AuthorizationModels, true
 }
 
-// HasAuthorizationModels returns a boolean if a field has been set.
-func (o *ReadAuthorizationModelsResponse) HasAuthorizationModels() bool {
-	if o != nil && o.AuthorizationModels != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetAuthorizationModels gets a reference to the given []AuthorizationModel and assigns it to the AuthorizationModels field.
+// SetAuthorizationModels sets field value
 func (o *ReadAuthorizationModelsResponse) SetAuthorizationModels(v []AuthorizationModel) {
-	o.AuthorizationModels = &v
+	o.AuthorizationModels = v
 }
 
 // GetContinuationToken returns the ContinuationToken field value if set, zero value otherwise.
@@ -106,9 +99,7 @@ func (o *ReadAuthorizationModelsResponse) SetContinuationToken(v string) {
 
 func (o ReadAuthorizationModelsResponse) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.AuthorizationModels != nil {
-		toSerialize["authorization_models"] = o.AuthorizationModels
-	}
+	toSerialize["authorization_models"] = o.AuthorizationModels
 	if o.ContinuationToken != nil {
 		toSerialize["continuation_token"] = o.ContinuationToken
 	}

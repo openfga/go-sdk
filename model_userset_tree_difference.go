@@ -18,16 +18,18 @@ import (
 
 // UsersetTreeDifference struct for UsersetTreeDifference
 type UsersetTreeDifference struct {
-	Base     *Node `json:"base,omitempty"`
-	Subtract *Node `json:"subtract,omitempty"`
+	Base     Node `json:"base"yaml:"base"`
+	Subtract Node `json:"subtract"yaml:"subtract"`
 }
 
 // NewUsersetTreeDifference instantiates a new UsersetTreeDifference object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewUsersetTreeDifference() *UsersetTreeDifference {
+func NewUsersetTreeDifference(base Node, subtract Node) *UsersetTreeDifference {
 	this := UsersetTreeDifference{}
+	this.Base = base
+	this.Subtract = subtract
 	return &this
 }
 
@@ -39,78 +41,58 @@ func NewUsersetTreeDifferenceWithDefaults() *UsersetTreeDifference {
 	return &this
 }
 
-// GetBase returns the Base field value if set, zero value otherwise.
+// GetBase returns the Base field value
 func (o *UsersetTreeDifference) GetBase() Node {
-	if o == nil || o.Base == nil {
+	if o == nil {
 		var ret Node
 		return ret
 	}
-	return *o.Base
+
+	return o.Base
 }
 
-// GetBaseOk returns a tuple with the Base field value if set, nil otherwise
+// GetBaseOk returns a tuple with the Base field value
 // and a boolean to check if the value has been set.
 func (o *UsersetTreeDifference) GetBaseOk() (*Node, bool) {
-	if o == nil || o.Base == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Base, true
+	return &o.Base, true
 }
 
-// HasBase returns a boolean if a field has been set.
-func (o *UsersetTreeDifference) HasBase() bool {
-	if o != nil && o.Base != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetBase gets a reference to the given Node and assigns it to the Base field.
+// SetBase sets field value
 func (o *UsersetTreeDifference) SetBase(v Node) {
-	o.Base = &v
+	o.Base = v
 }
 
-// GetSubtract returns the Subtract field value if set, zero value otherwise.
+// GetSubtract returns the Subtract field value
 func (o *UsersetTreeDifference) GetSubtract() Node {
-	if o == nil || o.Subtract == nil {
+	if o == nil {
 		var ret Node
 		return ret
 	}
-	return *o.Subtract
+
+	return o.Subtract
 }
 
-// GetSubtractOk returns a tuple with the Subtract field value if set, nil otherwise
+// GetSubtractOk returns a tuple with the Subtract field value
 // and a boolean to check if the value has been set.
 func (o *UsersetTreeDifference) GetSubtractOk() (*Node, bool) {
-	if o == nil || o.Subtract == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Subtract, true
+	return &o.Subtract, true
 }
 
-// HasSubtract returns a boolean if a field has been set.
-func (o *UsersetTreeDifference) HasSubtract() bool {
-	if o != nil && o.Subtract != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetSubtract gets a reference to the given Node and assigns it to the Subtract field.
+// SetSubtract sets field value
 func (o *UsersetTreeDifference) SetSubtract(v Node) {
-	o.Subtract = &v
+	o.Subtract = v
 }
 
 func (o UsersetTreeDifference) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.Base != nil {
-		toSerialize["base"] = o.Base
-	}
-	if o.Subtract != nil {
-		toSerialize["subtract"] = o.Subtract
-	}
+	toSerialize["base"] = o.Base
+	toSerialize["subtract"] = o.Subtract
 	return json.Marshal(toSerialize)
 }
 

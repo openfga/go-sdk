@@ -18,9 +18,9 @@ import (
 
 // ReadRequest struct for ReadRequest
 type ReadRequest struct {
-	TupleKey          *TupleKey `json:"tuple_key,omitempty"`
-	PageSize          *int32    `json:"page_size,omitempty"`
-	ContinuationToken *string   `json:"continuation_token,omitempty"`
+	TupleKey          *ReadRequestTupleKey `json:"tuple_key,omitempty"yaml:"tuple_key,omitempty"`
+	PageSize          *int32               `json:"page_size,omitempty"yaml:"page_size,omitempty"`
+	ContinuationToken *string              `json:"continuation_token,omitempty"yaml:"continuation_token,omitempty"`
 }
 
 // NewReadRequest instantiates a new ReadRequest object
@@ -41,9 +41,9 @@ func NewReadRequestWithDefaults() *ReadRequest {
 }
 
 // GetTupleKey returns the TupleKey field value if set, zero value otherwise.
-func (o *ReadRequest) GetTupleKey() TupleKey {
+func (o *ReadRequest) GetTupleKey() ReadRequestTupleKey {
 	if o == nil || o.TupleKey == nil {
-		var ret TupleKey
+		var ret ReadRequestTupleKey
 		return ret
 	}
 	return *o.TupleKey
@@ -51,7 +51,7 @@ func (o *ReadRequest) GetTupleKey() TupleKey {
 
 // GetTupleKeyOk returns a tuple with the TupleKey field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *ReadRequest) GetTupleKeyOk() (*TupleKey, bool) {
+func (o *ReadRequest) GetTupleKeyOk() (*ReadRequestTupleKey, bool) {
 	if o == nil || o.TupleKey == nil {
 		return nil, false
 	}
@@ -67,8 +67,8 @@ func (o *ReadRequest) HasTupleKey() bool {
 	return false
 }
 
-// SetTupleKey gets a reference to the given TupleKey and assigns it to the TupleKey field.
-func (o *ReadRequest) SetTupleKey(v TupleKey) {
+// SetTupleKey gets a reference to the given ReadRequestTupleKey and assigns it to the TupleKey field.
+func (o *ReadRequest) SetTupleKey(v ReadRequestTupleKey) {
 	o.TupleKey = &v
 }
 

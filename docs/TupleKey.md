@@ -4,15 +4,16 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Object** | Pointer to **string** |  | [optional] 
-**Relation** | Pointer to **string** |  | [optional] 
-**User** | Pointer to **string** |  | [optional] 
+**User** | **string** |  | 
+**Relation** | **string** |  | 
+**Object** | **string** |  | 
+**Condition** | Pointer to [**RelationshipCondition**](RelationshipCondition.md) |  | [optional] 
 
 ## Methods
 
 ### NewTupleKey
 
-`func NewTupleKey() *TupleKey`
+`func NewTupleKey(user string, relation string, object string, ) *TupleKey`
 
 NewTupleKey instantiates a new TupleKey object
 This constructor will assign default values to properties that have it defined,
@@ -26,56 +27,6 @@ will change when the set of required properties is changed
 NewTupleKeyWithDefaults instantiates a new TupleKey object
 This constructor will only assign default values to properties that have it defined,
 but it doesn't guarantee that properties required by API are set
-
-### GetObject
-
-`func (o *TupleKey) GetObject() string`
-
-GetObject returns the Object field if non-nil, zero value otherwise.
-
-### GetObjectOk
-
-`func (o *TupleKey) GetObjectOk() (*string, bool)`
-
-GetObjectOk returns a tuple with the Object field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetObject
-
-`func (o *TupleKey) SetObject(v string)`
-
-SetObject sets Object field to given value.
-
-### HasObject
-
-`func (o *TupleKey) HasObject() bool`
-
-HasObject returns a boolean if a field has been set.
-
-### GetRelation
-
-`func (o *TupleKey) GetRelation() string`
-
-GetRelation returns the Relation field if non-nil, zero value otherwise.
-
-### GetRelationOk
-
-`func (o *TupleKey) GetRelationOk() (*string, bool)`
-
-GetRelationOk returns a tuple with the Relation field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetRelation
-
-`func (o *TupleKey) SetRelation(v string)`
-
-SetRelation sets Relation field to given value.
-
-### HasRelation
-
-`func (o *TupleKey) HasRelation() bool`
-
-HasRelation returns a boolean if a field has been set.
 
 ### GetUser
 
@@ -96,11 +47,71 @@ and a boolean to check if the value has been set.
 
 SetUser sets User field to given value.
 
-### HasUser
 
-`func (o *TupleKey) HasUser() bool`
+### GetRelation
 
-HasUser returns a boolean if a field has been set.
+`func (o *TupleKey) GetRelation() string`
+
+GetRelation returns the Relation field if non-nil, zero value otherwise.
+
+### GetRelationOk
+
+`func (o *TupleKey) GetRelationOk() (*string, bool)`
+
+GetRelationOk returns a tuple with the Relation field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetRelation
+
+`func (o *TupleKey) SetRelation(v string)`
+
+SetRelation sets Relation field to given value.
+
+
+### GetObject
+
+`func (o *TupleKey) GetObject() string`
+
+GetObject returns the Object field if non-nil, zero value otherwise.
+
+### GetObjectOk
+
+`func (o *TupleKey) GetObjectOk() (*string, bool)`
+
+GetObjectOk returns a tuple with the Object field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetObject
+
+`func (o *TupleKey) SetObject(v string)`
+
+SetObject sets Object field to given value.
+
+
+### GetCondition
+
+`func (o *TupleKey) GetCondition() RelationshipCondition`
+
+GetCondition returns the Condition field if non-nil, zero value otherwise.
+
+### GetConditionOk
+
+`func (o *TupleKey) GetConditionOk() (*RelationshipCondition, bool)`
+
+GetConditionOk returns a tuple with the Condition field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetCondition
+
+`func (o *TupleKey) SetCondition(v RelationshipCondition)`
+
+SetCondition sets Condition field to given value.
+
+### HasCondition
+
+`func (o *TupleKey) HasCondition() bool`
+
+HasCondition returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

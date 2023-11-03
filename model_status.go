@@ -18,9 +18,9 @@ import (
 
 // Status struct for Status
 type Status struct {
-	Code    *int32  `json:"code,omitempty"`
-	Message *string `json:"message,omitempty"`
-	Details *[]Any  `json:"details,omitempty"`
+	Code    *int32  `json:"code,omitempty"yaml:"code,omitempty"`
+	Message *string `json:"message,omitempty"yaml:"message,omitempty"`
+	Details *[]Any  `json:"details,omitempty"yaml:"details,omitempty"`
 }
 
 // NewStatus instantiates a new Status object

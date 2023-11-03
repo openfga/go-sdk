@@ -7,6 +7,7 @@ Name | Type | Description | Notes
 **Type** | **string** |  | 
 **Relation** | Pointer to **string** |  | [optional] 
 **Wildcard** | Pointer to **map[string]interface{}** |  | [optional] 
+**Condition** | Pointer to **string** | The name of a condition that is enforced over the allowed relation. | [optional] 
 
 ## Methods
 
@@ -96,6 +97,31 @@ SetWildcard sets Wildcard field to given value.
 `func (o *RelationReference) HasWildcard() bool`
 
 HasWildcard returns a boolean if a field has been set.
+
+### GetCondition
+
+`func (o *RelationReference) GetCondition() string`
+
+GetCondition returns the Condition field if non-nil, zero value otherwise.
+
+### GetConditionOk
+
+`func (o *RelationReference) GetConditionOk() (*string, bool)`
+
+GetConditionOk returns a tuple with the Condition field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetCondition
+
+`func (o *RelationReference) SetCondition(v string)`
+
+SetCondition sets Condition field to given value.
+
+### HasCondition
+
+`func (o *RelationReference) HasCondition() bool`
+
+HasCondition returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
