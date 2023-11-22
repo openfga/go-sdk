@@ -621,8 +621,8 @@ func TestOpenFgaApi(t *testing.T) {
 			RequestPath:    "write",
 		}
 		requestBody := WriteRequest{
-			Writes: &WriteRequestTupleKeys{
-				TupleKeys: []WriteRequestTupleKey{{
+			Writes: &WriteRequestWrites{
+				TupleKeys: []TupleKey{{
 					User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 					Relation: "viewer",
 					Object:   "document:roadmap",
@@ -667,8 +667,8 @@ func TestOpenFgaApi(t *testing.T) {
 		}
 
 		requestBody := WriteRequest{
-			Deletes: &WriteRequestTupleKeys{
-				TupleKeys: []WriteRequestTupleKey{{
+			Deletes: &WriteRequestDeletes{
+				TupleKeys: []TupleKeyWithoutCondition{{
 					User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 					Relation: "viewer",
 					Object:   "document:roadmap",

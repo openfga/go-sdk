@@ -189,6 +189,7 @@ type OpenFgaApi interface {
 	You may also specify `contextual_tuples` that will be treated as regular tuples.
 	The response will contain the related objects in an array in the "objects" field of the response and they will be strings in the object format `<type>:<id>` (e.g. "document:roadmap").
 	The number of objects in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_OBJECTS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_OBJECTS_MAX_RESULTS, whichever is hit first.
+	The objects given will not be sorted, and therefore two identical calls can give a given different set of objects.
 		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 		 * @return ApiListObjectsRequest
 	*/
@@ -1998,6 +1999,7 @@ An `authorization_model_id` may be specified in the body. If it is not specified
 You may also specify `contextual_tuples` that will be treated as regular tuples.
 The response will contain the related objects in an array in the "objects" field of the response and they will be strings in the object format `<type>:<id>` (e.g. "document:roadmap").
 The number of objects in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_OBJECTS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_OBJECTS_MAX_RESULTS, whichever is hit first.
+The objects given will not be sorted, and therefore two identical calls can give a given different set of objects.
   - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @return ApiListObjectsRequest
 */

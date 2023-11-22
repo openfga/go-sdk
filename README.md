@@ -461,7 +461,7 @@ body := ClientWriteRequest{
         Relation: "viewer",
         Object:   "document:budget",
     } },
-    Deletes: &[]ClientTupleKey{ {
+    Deletes: &[]ClientTupleKeyWithoutCondition{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "writer",
         Object:   "document:roadmap",
@@ -492,7 +492,7 @@ body := ClientWriteRequest{
         Relation: "viewer",
         Object:   "document:budget",
     } },
-	  Deletes: &[]ClientTupleKey{ {
+	  Deletes: &[]ClientTupleKeyWithoutCondition{ {
       User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
       Relation: "writer",
       Object:   "document:roadmap",
@@ -843,6 +843,7 @@ Class | Method | HTTP request | Description
  - [Tuple](docs/Tuple.md)
  - [TupleChange](docs/TupleChange.md)
  - [TupleKey](docs/TupleKey.md)
+ - [TupleKeyWithoutCondition](docs/TupleKeyWithoutCondition.md)
  - [TupleOperation](docs/TupleOperation.md)
  - [TupleToUserset](docs/TupleToUserset.md)
  - [TypeDefinition](docs/TypeDefinition.md)
@@ -858,8 +859,8 @@ Class | Method | HTTP request | Description
  - [WriteAuthorizationModelRequest](docs/WriteAuthorizationModelRequest.md)
  - [WriteAuthorizationModelResponse](docs/WriteAuthorizationModelResponse.md)
  - [WriteRequest](docs/WriteRequest.md)
- - [WriteRequestTupleKey](docs/WriteRequestTupleKey.md)
- - [WriteRequestTupleKeys](docs/WriteRequestTupleKeys.md)
+ - [WriteRequestDeletes](docs/WriteRequestDeletes.md)
+ - [WriteRequestWrites](docs/WriteRequestWrites.md)
 
 
 ## Contributing

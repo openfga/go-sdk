@@ -1,46 +1,46 @@
-# WriteRequestTupleKeys
+# WriteRequestWrites
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**TupleKeys** | [**[]WriteRequestTupleKey**](WriteRequestTupleKey.md) |  | 
+**TupleKeys** | [**[]TupleKey**](TupleKey.md) |  | 
 
 ## Methods
 
-### NewWriteRequestTupleKeys
+### NewWriteRequestWrites
 
-`func NewWriteRequestTupleKeys(tupleKeys []WriteRequestTupleKey, ) *WriteRequestTupleKeys`
+`func NewWriteRequestWrites(tupleKeys []TupleKey, ) *WriteRequestWrites`
 
-NewWriteRequestTupleKeys instantiates a new WriteRequestTupleKeys object
+NewWriteRequestWrites instantiates a new WriteRequestWrites object
 This constructor will assign default values to properties that have it defined,
 and makes sure properties required by API are set, but the set of arguments
 will change when the set of required properties is changed
 
-### NewWriteRequestTupleKeysWithDefaults
+### NewWriteRequestWritesWithDefaults
 
-`func NewWriteRequestTupleKeysWithDefaults() *WriteRequestTupleKeys`
+`func NewWriteRequestWritesWithDefaults() *WriteRequestWrites`
 
-NewWriteRequestTupleKeysWithDefaults instantiates a new WriteRequestTupleKeys object
+NewWriteRequestWritesWithDefaults instantiates a new WriteRequestWrites object
 This constructor will only assign default values to properties that have it defined,
 but it doesn't guarantee that properties required by API are set
 
 ### GetTupleKeys
 
-`func (o *WriteRequestTupleKeys) GetTupleKeys() []WriteRequestTupleKey`
+`func (o *WriteRequestWrites) GetTupleKeys() []TupleKey`
 
 GetTupleKeys returns the TupleKeys field if non-nil, zero value otherwise.
 
 ### GetTupleKeysOk
 
-`func (o *WriteRequestTupleKeys) GetTupleKeysOk() (*[]WriteRequestTupleKey, bool)`
+`func (o *WriteRequestWrites) GetTupleKeysOk() (*[]TupleKey, bool)`
 
 GetTupleKeysOk returns a tuple with the TupleKeys field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetTupleKeys
 
-`func (o *WriteRequestTupleKeys) SetTupleKeys(v []WriteRequestTupleKey)`
+`func (o *WriteRequestWrites) SetTupleKeys(v []TupleKey)`
 
 SetTupleKeys sets TupleKeys field to given value.
 

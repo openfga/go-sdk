@@ -16,33 +16,33 @@ import (
 	"encoding/json"
 )
 
-// WriteRequestTupleKeys struct for WriteRequestTupleKeys
-type WriteRequestTupleKeys struct {
-	TupleKeys []WriteRequestTupleKey `json:"tuple_keys"yaml:"tuple_keys"`
+// WriteRequestWrites struct for WriteRequestWrites
+type WriteRequestWrites struct {
+	TupleKeys []TupleKey `json:"tuple_keys"yaml:"tuple_keys"`
 }
 
-// NewWriteRequestTupleKeys instantiates a new WriteRequestTupleKeys object
+// NewWriteRequestWrites instantiates a new WriteRequestWrites object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewWriteRequestTupleKeys(tupleKeys []WriteRequestTupleKey) *WriteRequestTupleKeys {
-	this := WriteRequestTupleKeys{}
+func NewWriteRequestWrites(tupleKeys []TupleKey) *WriteRequestWrites {
+	this := WriteRequestWrites{}
 	this.TupleKeys = tupleKeys
 	return &this
 }
 
-// NewWriteRequestTupleKeysWithDefaults instantiates a new WriteRequestTupleKeys object
+// NewWriteRequestWritesWithDefaults instantiates a new WriteRequestWrites object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewWriteRequestTupleKeysWithDefaults() *WriteRequestTupleKeys {
-	this := WriteRequestTupleKeys{}
+func NewWriteRequestWritesWithDefaults() *WriteRequestWrites {
+	this := WriteRequestWrites{}
 	return &this
 }
 
 // GetTupleKeys returns the TupleKeys field value
-func (o *WriteRequestTupleKeys) GetTupleKeys() []WriteRequestTupleKey {
+func (o *WriteRequestWrites) GetTupleKeys() []TupleKey {
 	if o == nil {
-		var ret []WriteRequestTupleKey
+		var ret []TupleKey
 		return ret
 	}
 
@@ -51,7 +51,7 @@ func (o *WriteRequestTupleKeys) GetTupleKeys() []WriteRequestTupleKey {
 
 // GetTupleKeysOk returns a tuple with the TupleKeys field value
 // and a boolean to check if the value has been set.
-func (o *WriteRequestTupleKeys) GetTupleKeysOk() (*[]WriteRequestTupleKey, bool) {
+func (o *WriteRequestWrites) GetTupleKeysOk() (*[]TupleKey, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -59,48 +59,48 @@ func (o *WriteRequestTupleKeys) GetTupleKeysOk() (*[]WriteRequestTupleKey, bool)
 }
 
 // SetTupleKeys sets field value
-func (o *WriteRequestTupleKeys) SetTupleKeys(v []WriteRequestTupleKey) {
+func (o *WriteRequestWrites) SetTupleKeys(v []TupleKey) {
 	o.TupleKeys = v
 }
 
-func (o WriteRequestTupleKeys) MarshalJSON() ([]byte, error) {
+func (o WriteRequestWrites) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["tuple_keys"] = o.TupleKeys
 	return json.Marshal(toSerialize)
 }
 
-type NullableWriteRequestTupleKeys struct {
-	value *WriteRequestTupleKeys
+type NullableWriteRequestWrites struct {
+	value *WriteRequestWrites
 	isSet bool
 }
 
-func (v NullableWriteRequestTupleKeys) Get() *WriteRequestTupleKeys {
+func (v NullableWriteRequestWrites) Get() *WriteRequestWrites {
 	return v.value
 }
 
-func (v *NullableWriteRequestTupleKeys) Set(val *WriteRequestTupleKeys) {
+func (v *NullableWriteRequestWrites) Set(val *WriteRequestWrites) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableWriteRequestTupleKeys) IsSet() bool {
+func (v NullableWriteRequestWrites) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableWriteRequestTupleKeys) Unset() {
+func (v *NullableWriteRequestWrites) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableWriteRequestTupleKeys(val *WriteRequestTupleKeys) *NullableWriteRequestTupleKeys {
-	return &NullableWriteRequestTupleKeys{value: val, isSet: true}
+func NewNullableWriteRequestWrites(val *WriteRequestWrites) *NullableWriteRequestWrites {
+	return &NullableWriteRequestWrites{value: val, isSet: true}
 }
 
-func (v NullableWriteRequestTupleKeys) MarshalJSON() ([]byte, error) {
+func (v NullableWriteRequestWrites) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableWriteRequestTupleKeys) UnmarshalJSON(src []byte) error {
+func (v *NullableWriteRequestWrites) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
