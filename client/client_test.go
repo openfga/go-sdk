@@ -677,7 +677,7 @@ func TestOpenFgaClient(t *testing.T) {
 			RequestPath:    "write",
 		}
 		requestBody := ClientWriteRequest{
-			Writes: []ClientWriteRequestTupleKey{{
+			Writes: []ClientTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "viewer",
 				Object:   "document:roadmap",
@@ -761,7 +761,7 @@ func TestOpenFgaClient(t *testing.T) {
 			RequestPath:    "write",
 		}
 		requestBody := ClientWriteRequest{
-			Writes: []ClientWriteRequestTupleKey{{
+			Writes: []ClientTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "viewer",
 				Object:   "document:roadmap",
@@ -791,7 +791,7 @@ func TestOpenFgaClient(t *testing.T) {
 			RequestPath:    "write",
 		}
 		requestBody := ClientWriteRequest{
-			Writes: []ClientWriteRequestTupleKey{{
+			Writes: []ClientTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "viewer",
 				Object:   "document:roadmap",
@@ -800,7 +800,7 @@ func TestOpenFgaClient(t *testing.T) {
 				Relation: "viewer",
 				Object:   "document:budget",
 			}},
-			Deletes: []ClientWriteRequestTupleKey{{
+			Deletes: []ClientTupleKeyWithoutCondition{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "viewer",
 				Object:   "document:planning",
@@ -889,7 +889,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Method:         http.MethodPost,
 			RequestPath:    "write",
 		}
-		requestBody := []ClientWriteRequestTupleKey{{
+		requestBody := []ClientTupleKey{{
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "viewer",
 			Object:   "document:roadmap",
@@ -972,7 +972,7 @@ func TestOpenFgaClient(t *testing.T) {
 			RequestPath:    "write",
 		}
 
-		requestBody := []ClientWriteRequestTupleKey{{
+		requestBody := []ClientTupleKeyWithoutCondition{{
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "viewer",
 			Object:   "document:roadmap",

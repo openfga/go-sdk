@@ -114,7 +114,7 @@ type ClientRequestOptionsWithAuthZModelId struct {
 }
 
 type ClientTupleKey = fgaSdk.TupleKey
-type ClientWriteRequestTupleKey = fgaSdk.WriteRequestTupleKey
+type ClientTupleKeyWithoutCondition = fgaSdk.TupleKeyWithoutCondition
 type ClientCheckRequestTupleKey = fgaSdk.CheckRequestTupleKey
 type ClientReadRequestTupleKey = fgaSdk.ReadRequestTupleKey
 type ClientExpandRequestTupleKey = fgaSdk.ExpandRequestTupleKey
@@ -1156,8 +1156,8 @@ type SdkClientWriteRequestInterface interface {
 }
 
 type ClientWriteRequest struct {
-	Writes  []ClientWriteRequestTupleKey
-	Deletes []ClientWriteRequestTupleKey
+	Writes  []ClientTupleKey
+	Deletes []ClientTupleKeyWithoutCondition
 }
 
 type TransactionOptions struct {
@@ -1182,14 +1182,34 @@ const (
 	FAILURE ClientWriteStatus = "CLIENT_WRITE_STATUS_FAILURE"
 )
 
-type ClientWriteSingleResponse struct {
-	TupleKey     ClientWriteRequestTupleKey `json:"tuple_key,omitempty"`
-	Status       ClientWriteStatus          `json:"status,omitempty"`
-	HttpResponse *_nethttp.Response         `json:"http_response,omitempty"`
-	Error        error                      `json:"error,omitempty"`
+type ClientWriteRequestWriteResponse struct {
+	TupleKey     ClientTupleKey     `json:"tuple_key,omitempty"`
+	Status       ClientWriteStatus  `json:"status,omitempty"`
+	HttpResponse *_nethttp.Response `json:"http_response,omitempty"`
+	Error        error              `json:"error,omitempty"`
 }
 
-func (o ClientWriteSingleResponse) MarshalJSON() ([]byte, error) {
+func (o ClientWriteRequestWriteResponse) MarshalJSON() ([]byte, error) {
+	toSerialize := map[string]interface{}{}
+	toSerialize["tuple_key"] = o.TupleKey
+	toSerialize["status"] = o.Status
+	if o.HttpResponse != nil {
+		toSerialize["http_response"] = o.HttpResponse
+	}
+	if o.Error != nil {
+		toSerialize["error"] = o.Error
+	}
+	return json.Marshal(toSerialize)
+}
+
+type ClientWriteRequestDeleteResponse struct {
+	TupleKey     ClientTupleKeyWithoutCondition `json:"tuple_key,omitempty"`
+	Status       ClientWriteStatus              `json:"status,omitempty"`
+	HttpResponse *_nethttp.Response             `json:"http_response,omitempty"`
+	Error        error                          `json:"error,omitempty"`
+}
+
+func (o ClientWriteRequestDeleteResponse) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["tuple_key"] = o.TupleKey
 	toSerialize["status"] = o.Status
@@ -1203,8 +1223,8 @@ func (o ClientWriteSingleResponse) MarshalJSON() ([]byte, error) {
 }
 
 type ClientWriteResponse struct {
-	Writes  []ClientWriteSingleResponse `json:"writes,omitempty"`
-	Deletes []ClientWriteSingleResponse `json:"deletes,omitempty"`
+	Writes  []ClientWriteRequestWriteResponse  `json:"writes,omitempty"`
+	Deletes []ClientWriteRequestDeleteResponse `json:"deletes,omitempty"`
 }
 
 func (o ClientWriteResponse) MarshalJSON() ([]byte, error) {
@@ -1269,8 +1289,8 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 	}
 
 	response := ClientWriteResponse{
-		Writes:  []ClientWriteSingleResponse{},
-		Deletes: []ClientWriteSingleResponse{},
+		Writes:  []ClientWriteRequestWriteResponse{},
+		Deletes: []ClientWriteRequestDeleteResponse{},
 	}
 
 	authorizationModelId, err := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
@@ -1285,14 +1305,14 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 			AuthorizationModelId: authorizationModelId,
 		}
 		if request.GetBody().Writes != nil && len(request.GetBody().Writes) > 0 {
-			writes := fgaSdk.WriteRequestTupleKeys{}
+			writes := fgaSdk.WriteRequestWrites{}
 			for index := 0; index < len(request.GetBody().Writes); index++ {
 				writes.TupleKeys = append(writes.TupleKeys, (request.GetBody().Writes)[index])
 			}
 			writeRequest.Writes = &writes
 		}
 		if request.GetBody().Deletes != nil && len(request.GetBody().Deletes) > 0 {
-			deletes := fgaSdk.WriteRequestTupleKeys{}
+			deletes := fgaSdk.WriteRequestDeletes{}
 			for index := 0; index < len(request.GetBody().Deletes); index++ {
 				deletes.TupleKeys = append(deletes.TupleKeys, (request.GetBody().Deletes)[index])
 			}
@@ -1308,7 +1328,7 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 		if request.GetBody() != nil && request.GetBody().Writes != nil {
 			writeRequestTupleKeys := request.GetBody().Writes
 			for index := 0; index < len(writeRequestTupleKeys); index++ {
-				response.Writes = append(response.Writes, ClientWriteSingleResponse{
+				response.Writes = append(response.Writes, ClientWriteRequestWriteResponse{
 					TupleKey:     writeRequestTupleKeys[index],
 					HttpResponse: httpResponse,
 					Status:       clientWriteStatus,
@@ -1320,7 +1340,7 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 		if request.GetBody() != nil && request.GetBody().Deletes != nil {
 			deleteRequestTupleKeys := request.GetBody().Deletes
 			for index := 0; index < len(deleteRequestTupleKeys); index++ {
-				response.Deletes = append(response.Deletes, ClientWriteSingleResponse{
+				response.Deletes = append(response.Deletes, ClientWriteRequestDeleteResponse{
 					TupleKey:     deleteRequestTupleKeys[index],
 					HttpResponse: httpResponse,
 					Status:       clientWriteStatus,
@@ -1337,7 +1357,7 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 	// - each request is a transaction
 	// - the max items in each request are based on maxPerChunk (default=1)
 	var writeChunkSize = int(maxPerChunk)
-	var writeChunks [][]ClientWriteRequestTupleKey
+	var writeChunks [][]ClientTupleKey
 	if request.GetBody() != nil {
 		for i := 0; i < len(request.GetBody().Writes); i += writeChunkSize {
 			end := int(math.Min(float64(i+writeChunkSize), float64(len(request.GetBody().Writes))))
@@ -1377,7 +1397,7 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 	_ = writeGroup.Wait()
 
 	var deleteChunkSize = int(maxPerChunk)
-	var deleteChunks [][]ClientWriteRequestTupleKey
+	var deleteChunks [][]ClientTupleKeyWithoutCondition
 	if request.GetBody() != nil {
 		for i := 0; i < len(request.GetBody().Deletes); i += deleteChunkSize {
 			end := int(math.Min(float64(i+writeChunkSize), float64(len(request.GetBody().Deletes))))
@@ -1445,7 +1465,7 @@ type SdkClientWriteTuplesRequestInterface interface {
 	GetOptions() *ClientWriteOptions
 }
 
-type ClientWriteTuplesBody = []ClientWriteRequestTupleKey
+type ClientWriteTuplesBody = []ClientTupleKey
 
 func (client *OpenFgaClient) WriteTuples(ctx _context.Context) SdkClientWriteTuplesRequestInterface {
 	return &SdkClientWriteTuplesRequest{
@@ -1509,7 +1529,7 @@ type SdkClientDeleteTuplesRequestInterface interface {
 	GetOptions() *ClientWriteOptions
 }
 
-type ClientDeleteTuplesBody = []ClientWriteRequestTupleKey
+type ClientDeleteTuplesBody = []ClientTupleKeyWithoutCondition
 
 func (client *OpenFgaClient) DeleteTuples(ctx _context.Context) SdkClientDeleteTuplesRequestInterface {
 	return &SdkClientDeleteTuplesRequest{
