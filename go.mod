@@ -4,5 +4,5 @@ go 1.21.1
 
 require (
 	github.com/jarcoal/httpmock v1.3.1
-	golang.org/x/sync v0.4.0
+	golang.org/x/sync v0.5.0
 )
