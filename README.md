@@ -111,9 +111,8 @@ import (
 
 func main() {
     fgaClient, err := NewSdkClient(&ClientConfiguration{
-        ApiScheme:      os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"
-        ApiHost:        os.Getenv("OPENFGA_API_HOST"), // required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
-        StoreId:        os.Getenv("OPENFGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
+        ApiUrl:  os.Getenv("FGA_API_URL"), // required, e.g. https://api.fga.example
+        StoreId: os.Getenv("FGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
     })
 
 	if err != nil {
@@ -133,13 +132,12 @@ import (
 
 func main() {
     fgaClient, err := NewSdkClient(&ClientConfiguration{
-        ApiScheme:      os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"
-        ApiHost:        os.Getenv("OPENFGA_API_HOST"), // required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
-        StoreId:        os.Getenv("OPENFGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
+        ApiUrl:      os.Getenv("FGA_API_URL"), // required, e.g. https://api.fga.example
+        StoreId:     os.Getenv("FGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
         Credentials: &credentials.Credentials{
             Method: credentials.CredentialsMethodApiToken,
             Config: &credentials.Config{
-                ApiToken: os.Getenv("OPENFGA_API_TOKEN"), // will be passed as the "Authorization: Bearer ${ApiToken}" request header
+                ApiToken: os.Getenv("FGA_API_TOKEN"), // will be passed as the "Authorization: Bearer ${ApiToken}" request header
             },
         },
     })
@@ -162,17 +160,16 @@ import (
 
 func main() {
     fgaClient, err := NewSdkClient(&ClientConfiguration{
-        ApiScheme:              os.Getenv("OPENFGA_API_SCHEME"), // optional, defaults to "https"
-        ApiHost:                os.Getenv("OPENFGA_API_HOST"), // required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
-        StoreId:                os.Getenv("OPENFGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
-        AuthorizationModelId:   openfga.PtrString("OPENFGA_AUTHORIZATION_MODEL_ID"),
+        ApiUrl:               os.Getenv("FGA_API_URL"), // required, e.g. https://api.fga.example
+        StoreId:              os.Getenv("FGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
+        AuthorizationModelId: openfga.PtrString("OPENFGA_AUTHORIZATION_MODEL_ID"),
         Credentials: &credentials.Credentials{
             Method: credentials.CredentialsMethodClientCredentials,
             Config: &credentials.Config{
-                ClientCredentialsClientId:       os.Getenv("OPENFGA_CLIENT_ID"),
-                ClientCredentialsClientSecret:   os.Getenv("OPENFGA_CLIENT_SECRET"),
-                ClientCredentialsApiAudience:    os.Getenv("OPENFGA_API_AUDIENCE"),
-                ClientCredentialsApiTokenIssuer: os.Getenv("OPENFGA_API_TOKEN_ISSUER"),
+                ClientCredentialsClientId:       os.Getenv("FGA_CLIENT_ID"),
+                ClientCredentialsClientSecret:   os.Getenv("FGA_CLIENT_SECRET"),
+                ClientCredentialsApiAudience:    os.Getenv("FGA_API_AUDIENCE"),
+                ClientCredentialsApiTokenIssuer: os.Getenv("FGA_API_TOKEN_ISSUER"),
             },
         },
     })

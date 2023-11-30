@@ -333,7 +333,9 @@ func (v *NullableTime) UnmarshalJSON(src []byte) error {
 func IsWellFormedUri(uriString string) bool {
 	uri, err := url.Parse(uriString)
 
-	if (err != nil) || (uri.Scheme != "http" && uri.Scheme != "https") || ((uri.Scheme + "://" + uri.Host) != uriString) {
+	if err != nil || uri.String() != uriString ||
+		uri.Host == "" || uri.Host == "http:" || uri.Host == "https:" || // an indicator of a misconfiguration
+		(uri.Scheme != "http" && uri.Scheme != "https") {
 		return false
 	}
 

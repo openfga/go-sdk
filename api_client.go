@@ -236,23 +236,13 @@ func (c *APIClient) prepareRequest(
 	}
 
 	// Setup path and query parameters
-	url, err := url.Parse(path)
+	uri, err := url.Parse(c.cfg.ApiUrl + path)
 	if err != nil {
 		return nil, err
 	}
 
-	// Override request host, if applicable
-	if c.cfg.ApiHost != "" {
-		url.Host = c.cfg.ApiHost
-	}
-
-	// Override request scheme, if applicable
-	if c.cfg.ApiScheme != "" {
-		url.Scheme = c.cfg.ApiScheme
-	}
-
 	// Adding Query Param
-	query := url.Query()
+	query := uri.Query()
 	for k, v := range queryParams {
 		for _, iv := range v {
 			query.Add(k, iv)
@@ -260,13 +250,13 @@ func (c *APIClient) prepareRequest(
 	}
 
 	// Encode the parameters.
-	url.RawQuery = query.Encode()
+	uri.RawQuery = query.Encode()
 
 	// Generate a new request
 	if body != nil {
-		localVarRequest, err = http.NewRequest(method, url.String(), body)
+		localVarRequest, err = http.NewRequest(method, uri.String(), body)
 	} else {
-		localVarRequest, err = http.NewRequest(method, url.String(), nil)
+		localVarRequest, err = http.NewRequest(method, uri.String(), nil)
 	}
 	if err != nil {
 		return nil, err

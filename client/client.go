@@ -35,8 +35,13 @@ var DEFAULT_MAX_METHOD_PARALLEL_REQS = int32(10)
 
 type ClientConfiguration struct {
 	fgaSdk.Configuration
-	ApiScheme            string                   `json:"api_scheme,omitempty"`
+	// ApiScheme - defines the scheme for the API: http or https
+	// Deprecated: use ApiUrl instead of ApiScheme and ApiHost
+	ApiScheme string `json:"api_scheme,omitempty"`
+	// ApiHost - defines the host for the API without the scheme e.g. (api.fga.example)
+	// Deprecated: use ApiUrl instead of ApiScheme and ApiHost
 	ApiHost              string                   `json:"api_host,omitempty"`
+	ApiUrl               string                   `json:"api_url,omitempty"`
 	StoreId              string                   `json:"store_id,omitempty"`
 	AuthorizationModelId *string                  `json:"authorization_model_id,omitempty"`
 	Credentials          *credentials.Credentials `json:"credentials,omitempty"`
@@ -51,6 +56,7 @@ func newClientConfiguration(cfg *fgaSdk.Configuration) ClientConfiguration {
 	return ClientConfiguration{
 		ApiScheme:      cfg.ApiScheme,
 		ApiHost:        cfg.ApiHost,
+		ApiUrl:         cfg.ApiUrl,
 		StoreId:        cfg.StoreId,
 		Credentials:    cfg.Credentials,
 		DefaultHeaders: cfg.DefaultHeaders,
@@ -70,6 +76,7 @@ func NewSdkClient(cfg *ClientConfiguration) (*OpenFgaClient, error) {
 	apiConfiguration, err := fgaSdk.NewConfiguration(fgaSdk.Configuration{
 		ApiScheme:      cfg.ApiScheme,
 		ApiHost:        cfg.ApiHost,
+		ApiUrl:         cfg.ApiUrl,
 		StoreId:        cfg.StoreId,
 		Credentials:    cfg.Credentials,
 		DefaultHeaders: cfg.DefaultHeaders,
