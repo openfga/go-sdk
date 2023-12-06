@@ -12,7 +12,7 @@ import (
 const ApiTokenHeaderKey = "Authorization"
 const ApiTokenHeaderValuePrefix = "Bearer"
 
-// Avaialable credential methods
+// Available credential methods
 type CredentialsMethod string
 
 const (
@@ -60,10 +60,10 @@ func NewCredentials(config Credentials) (*Credentials, error) {
 	err := creds.ValidateCredentialsConfig()
 
 	if err != nil {
-		return creds, nil
+		return nil, err
 	}
 
-	return nil, err
+	return creds, nil
 }
 
 func (c *Credentials) ValidateCredentialsConfig() error {
