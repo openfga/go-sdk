@@ -225,6 +225,44 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 		}
 	})
 
+	t.Run("NewCredentials should validate properly", func(t *testing.T) {
+		// Passing valid credentials to NewCredentials should not error
+		creds, err := credentials.NewCredentials(credentials.Credentials{
+			Method: credentials.CredentialsMethodApiToken,
+			Config: &credentials.Config{
+				ApiToken: "some-token",
+			},
+		})
+
+		if err != nil {
+			t.Fatalf("Unexpected error: %v", err)
+		}
+
+		if creds == nil {
+			t.Fatalf("Expected creds to be non-nil")
+		}
+
+		if creds.Method != credentials.CredentialsMethodApiToken {
+			t.Fatalf("Expected method to be %v, got %v", credentials.CredentialsMethodApiToken, creds.Method)
+		}
+
+		if creds.Config.ApiToken != "some-token" {
+			t.Fatalf("Expected ApiToken to be %v, got %v", "some-token", creds.Config.ApiToken)
+		}
+
+		// Passing invalid credentials to NewCredentials should error
+		_, err = credentials.NewCredentials(credentials.Credentials{
+			Method: credentials.CredentialsMethodApiToken,
+			Config: &credentials.Config{
+				ClientCredentialsClientSecret: "some-secret",
+			},
+		})
+
+		if err == nil {
+			t.Fatalf("Expected validation error")
+		}
+	})
+
 	t.Run("should issue a network call to get the token at the first request if client id is provided", func(t *testing.T) {
 		configuration, err := NewConfiguration(Configuration{
 			ApiHost: "api.fga.example",
