@@ -5,13 +5,13 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Name** | **string** | A reference (by name) of the relationship condition defined in the authorization model. | 
-**Context** | **map[string]interface{}** | Additional context/data to persist along with the condition. The keys must match the parameters defined by the condition, and the value types must match the parameter type definitions. | 
+**Context** | Pointer to **map[string]interface{}** | Additional context/data to persist along with the condition. The keys must match the parameters defined by the condition, and the value types must match the parameter type definitions. | [optional] 
 
 ## Methods
 
 ### NewRelationshipCondition
 
-`func NewRelationshipCondition(name string, context map[string]interface{}, ) *RelationshipCondition`
+`func NewRelationshipCondition(name string, ) *RelationshipCondition`
 
 NewRelationshipCondition instantiates a new RelationshipCondition object
 This constructor will assign default values to properties that have it defined,
@@ -65,6 +65,11 @@ and a boolean to check if the value has been set.
 
 SetContext sets Context field to given value.
 
+### HasContext
+
+`func (o *RelationshipCondition) HasContext() bool`
+
+HasContext returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

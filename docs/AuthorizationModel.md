@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Id** | Pointer to **string** |  | [optional] 
+**Id** | **string** |  | 
 **SchemaVersion** | **string** |  | 
 **TypeDefinitions** | [**[]TypeDefinition**](TypeDefinition.md) |  | 
 **Conditions** | Pointer to [**map[string]Condition**](Condition.md) |  | [optional] 
@@ -13,7 +13,7 @@ Name | Type | Description | Notes
 
 ### NewAuthorizationModel
 
-`func NewAuthorizationModel(schemaVersion string, typeDefinitions []TypeDefinition, ) *AuthorizationModel`
+`func NewAuthorizationModel(id string, schemaVersion string, typeDefinitions []TypeDefinition, ) *AuthorizationModel`
 
 NewAuthorizationModel instantiates a new AuthorizationModel object
 This constructor will assign default values to properties that have it defined,
@@ -47,11 +47,6 @@ and a boolean to check if the value has been set.
 
 SetId sets Id field to given value.
 
-### HasId
-
-`func (o *AuthorizationModel) HasId() bool`
-
-HasId returns a boolean if a field has been set.
 
 ### GetSchemaVersion
 
