@@ -21,17 +21,16 @@ type RelationshipCondition struct {
 	// A reference (by name) of the relationship condition defined in the authorization model.
 	Name string `json:"name"yaml:"name"`
 	// Additional context/data to persist along with the condition. The keys must match the parameters defined by the condition, and the value types must match the parameter type definitions.
-	Context map[string]interface{} `json:"context"yaml:"context"`
+	Context *map[string]interface{} `json:"context,omitempty"yaml:"context,omitempty"`
 }
 
 // NewRelationshipCondition instantiates a new RelationshipCondition object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewRelationshipCondition(name string, context map[string]interface{}) *RelationshipCondition {
+func NewRelationshipCondition(name string) *RelationshipCondition {
 	this := RelationshipCondition{}
 	this.Name = name
-	this.Context = context
 	return &this
 }
 
@@ -67,34 +66,44 @@ func (o *RelationshipCondition) SetName(v string) {
 	o.Name = v
 }
 
-// GetContext returns the Context field value
+// GetContext returns the Context field value if set, zero value otherwise.
 func (o *RelationshipCondition) GetContext() map[string]interface{} {
-	if o == nil {
+	if o == nil || o.Context == nil {
 		var ret map[string]interface{}
 		return ret
 	}
-
-	return o.Context
+	return *o.Context
 }
 
-// GetContextOk returns a tuple with the Context field value
+// GetContextOk returns a tuple with the Context field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 func (o *RelationshipCondition) GetContextOk() (*map[string]interface{}, bool) {
-	if o == nil {
+	if o == nil || o.Context == nil {
 		return nil, false
 	}
-	return &o.Context, true
+	return o.Context, true
 }
 
-// SetContext sets field value
+// HasContext returns a boolean if a field has been set.
+func (o *RelationshipCondition) HasContext() bool {
+	if o != nil && o.Context != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetContext gets a reference to the given map[string]interface{} and assigns it to the Context field.
 func (o *RelationshipCondition) SetContext(v map[string]interface{}) {
-	o.Context = v
+	o.Context = &v
 }
 
 func (o RelationshipCondition) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["name"] = o.Name
-	toSerialize["context"] = o.Context
+	if o.Context != nil {
+		toSerialize["context"] = o.Context
+	}
 	return json.Marshal(toSerialize)
 }
 

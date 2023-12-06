@@ -2,6 +2,7 @@
 .github/CODEOWNERS
 .github/ISSUE_TEMPLATE/bug_report.md
 .github/ISSUE_TEMPLATE/feature_request.md
+.github/dependabot.yaml
 .github/workflows/main.yaml
 .github/workflows/semgrep.yaml
 .gitignore
@@ -66,6 +67,7 @@ docs/Store.md
 docs/Tuple.md
 docs/TupleChange.md
 docs/TupleKey.md
+docs/TupleKeyWithoutCondition.md
 docs/TupleOperation.md
 docs/TupleToUserset.md
 docs/TypeDefinition.md
@@ -81,8 +83,8 @@ docs/WriteAssertionsRequest.md
 docs/WriteAuthorizationModelRequest.md
 docs/WriteAuthorizationModelResponse.md
 docs/WriteRequest.md
-docs/WriteRequestTupleKey.md
-docs/WriteRequestTupleKeys.md
+docs/WriteRequestDeletes.md
+docs/WriteRequestWrites.md
 git_push.sh
 go.mod
 go.sum
@@ -135,6 +137,7 @@ model_store.go
 model_tuple.go
 model_tuple_change.go
 model_tuple_key.go
+model_tuple_key_without_condition.go
 model_tuple_operation.go
 model_tuple_to_userset.go
 model_type_definition.go
@@ -150,8 +153,8 @@ model_write_assertions_request.go
 model_write_authorization_model_request.go
 model_write_authorization_model_response.go
 model_write_request.go
-model_write_request_tuple_key.go
-model_write_request_tuple_keys.go
+model_write_request_deletes.go
+model_write_request_writes.go
 oauth2/LICENSE
 oauth2/ORIGINAL_AUTHORS
 oauth2/ORIGINAL_CONTRIBUTORS

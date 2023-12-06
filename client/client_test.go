@@ -364,8 +364,8 @@ func TestOpenFgaClient(t *testing.T) {
 			t.Fatalf("%v", err)
 		}
 
-		if *(got.AuthorizationModels[0].Id) != *(expectedResponse.AuthorizationModels[0].Id) {
-			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, *(got.AuthorizationModels[0].Id), *(expectedResponse.AuthorizationModels[0].Id))
+		if got.AuthorizationModels[0].Id != expectedResponse.AuthorizationModels[0].Id {
+			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, got.AuthorizationModels[0].Id, expectedResponse.AuthorizationModels[0].Id)
 		}
 		// ReadAuthorizationModels without options should work
 		_, err = fgaClient.ReadAuthorizationModels(context.Background()).Execute()
@@ -470,7 +470,7 @@ func TestOpenFgaClient(t *testing.T) {
 		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
 			t.Fatalf("%v", err)
 		}
-		modelId := *(expectedResponse.AuthorizationModel).Id
+		modelId := expectedResponse.AuthorizationModel.Id
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
@@ -496,7 +496,7 @@ func TestOpenFgaClient(t *testing.T) {
 			t.Fatalf("%v", err)
 		}
 
-		if *(got.AuthorizationModel).Id != modelId {
+		if got.AuthorizationModel.Id != modelId {
 			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
 		}
 		// ReadAuthorizationModel without options should not work
@@ -528,7 +528,7 @@ func TestOpenFgaClient(t *testing.T) {
 		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
 			t.Fatalf("%v", err)
 		}
-		modelId := *(expectedResponse.AuthorizationModels[0].Id)
+		modelId := expectedResponse.AuthorizationModels[0].Id
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()

@@ -18,7 +18,7 @@ import (
 
 // AuthorizationModel struct for AuthorizationModel
 type AuthorizationModel struct {
-	Id              *string               `json:"id,omitempty"yaml:"id,omitempty"`
+	Id              string                `json:"id"yaml:"id"`
 	SchemaVersion   string                `json:"schema_version"yaml:"schema_version"`
 	TypeDefinitions []TypeDefinition      `json:"type_definitions"yaml:"type_definitions"`
 	Conditions      *map[string]Condition `json:"conditions,omitempty"yaml:"conditions,omitempty"`
@@ -28,8 +28,9 @@ type AuthorizationModel struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewAuthorizationModel(schemaVersion string, typeDefinitions []TypeDefinition) *AuthorizationModel {
+func NewAuthorizationModel(id string, schemaVersion string, typeDefinitions []TypeDefinition) *AuthorizationModel {
 	this := AuthorizationModel{}
+	this.Id = id
 	this.SchemaVersion = schemaVersion
 	this.TypeDefinitions = typeDefinitions
 	return &this
@@ -43,36 +44,28 @@ func NewAuthorizationModelWithDefaults() *AuthorizationModel {
 	return &this
 }
 
-// GetId returns the Id field value if set, zero value otherwise.
+// GetId returns the Id field value
 func (o *AuthorizationModel) GetId() string {
-	if o == nil || o.Id == nil {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.Id
+
+	return o.Id
 }
 
-// GetIdOk returns a tuple with the Id field value if set, nil otherwise
+// GetIdOk returns a tuple with the Id field value
 // and a boolean to check if the value has been set.
 func (o *AuthorizationModel) GetIdOk() (*string, bool) {
-	if o == nil || o.Id == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Id, true
+	return &o.Id, true
 }
 
-// HasId returns a boolean if a field has been set.
-func (o *AuthorizationModel) HasId() bool {
-	if o != nil && o.Id != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetId gets a reference to the given string and assigns it to the Id field.
+// SetId sets field value
 func (o *AuthorizationModel) SetId(v string) {
-	o.Id = &v
+	o.Id = v
 }
 
 // GetSchemaVersion returns the SchemaVersion field value
@@ -157,9 +150,7 @@ func (o *AuthorizationModel) SetConditions(v map[string]Condition) {
 
 func (o AuthorizationModel) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.Id != nil {
-		toSerialize["id"] = o.Id
-	}
+	toSerialize["id"] = o.Id
 	toSerialize["schema_version"] = o.SchemaVersion
 	toSerialize["type_definitions"] = o.TypeDefinitions
 	if o.Conditions != nil {
