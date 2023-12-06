@@ -115,7 +115,7 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder("GET", fmt.Sprintf("%s://%s/stores/%s/authorization-models", configuration.ApiScheme, configuration.ApiHost, configuration.StoreId),
+		httpmock.RegisterResponder("GET", fmt.Sprintf("%s/stores/%s/authorization-models", configuration.ApiUrl, configuration.StoreId),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(200, ReadAuthorizationModelsResponse{AuthorizationModels: []AuthorizationModel{
 					{
@@ -247,7 +247,7 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder("GET", fmt.Sprintf("%s://%s/stores/%s/authorization-models", configuration.ApiScheme, configuration.ApiHost, configuration.StoreId),
+		httpmock.RegisterResponder("GET", fmt.Sprintf("%s/stores/%s/authorization-models", configuration.ApiUrl, configuration.StoreId),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(200, ReadAuthorizationModelsResponse{AuthorizationModels: []AuthorizationModel{
 					{
@@ -287,7 +287,7 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 		if numCalls != 1 {
 			t.Fatalf("Expected call to get access token to be made exactly once, saw: %d", numCalls)
 		}
-		numCalls = info[fmt.Sprintf("GET %s://%s/stores/%s/authorization-models", configuration.ApiScheme, configuration.ApiHost, configuration.StoreId)]
+		numCalls = info[fmt.Sprintf("GET %s/stores/%s/authorization-models", configuration.ApiUrl, configuration.StoreId)]
 		if numCalls != 1 {
 			t.Fatalf("Expected call to get authorization models to be made exactly once, saw: %d", numCalls)
 		}
@@ -311,7 +311,7 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder("GET", fmt.Sprintf("%s://%s/stores/%s/authorization-models", configuration.ApiScheme, configuration.ApiHost, configuration.StoreId),
+		httpmock.RegisterResponder("GET", fmt.Sprintf("%s/stores/%s/authorization-models", configuration.ApiUrl, configuration.StoreId),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(200, ReadAuthorizationModelsResponse{AuthorizationModels: []AuthorizationModel{
 					{
@@ -338,7 +338,7 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 		if numCalls != 0 {
 			t.Fatalf("Unexpected call to get access token made. Expected 0, saw: %d", numCalls)
 		}
-		numCalls = info[fmt.Sprintf("GET %s://%s/stores/%s/authorization-models", configuration.ApiScheme, configuration.ApiHost, configuration.StoreId)]
+		numCalls = info[fmt.Sprintf("GET %s/stores/%s/authorization-models", configuration.ApiUrl, configuration.StoreId)]
 		if numCalls != 1 {
 			t.Fatalf("Expected call to get authorization models to be made exactly once, saw: %d", numCalls)
 		}
@@ -428,7 +428,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", configuration.ApiScheme, configuration.ApiHost, configuration.StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", configuration.ApiUrl, configuration.StoreId, test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
@@ -491,7 +491,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", configuration.ApiScheme, configuration.ApiHost, configuration.StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", configuration.ApiUrl, configuration.StoreId, test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
@@ -532,7 +532,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s/%s", configuration.ApiScheme, configuration.ApiHost, configuration.StoreId, test.RequestPath, modelId),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s/%s", configuration.ApiUrl, configuration.StoreId, test.RequestPath, modelId),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
@@ -584,7 +584,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", configuration.ApiScheme, configuration.ApiHost, configuration.StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", configuration.ApiUrl, configuration.StoreId, test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
@@ -638,7 +638,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", configuration.ApiScheme, configuration.ApiHost, configuration.StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", configuration.ApiUrl, configuration.StoreId, test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
@@ -684,7 +684,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", configuration.ApiScheme, configuration.ApiHost, configuration.StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", configuration.ApiUrl, configuration.StoreId, test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
@@ -727,7 +727,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", configuration.ApiScheme, configuration.ApiHost, configuration.StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", configuration.ApiUrl, configuration.StoreId, test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
@@ -775,7 +775,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", configuration.ApiScheme, configuration.ApiHost, configuration.StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", configuration.ApiUrl, configuration.StoreId, test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
@@ -819,7 +819,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", configuration.ApiScheme, configuration.ApiHost, configuration.StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", configuration.ApiUrl, configuration.StoreId, test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
@@ -885,7 +885,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", configuration.ApiScheme, configuration.ApiHost, configuration.StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", configuration.ApiUrl, configuration.StoreId, test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
@@ -938,7 +938,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", configuration.ApiScheme, configuration.ApiHost, configuration.StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", configuration.ApiUrl, configuration.StoreId, test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				errObj := ErrorResponse{
 					Code:    "validation_error",
@@ -1001,7 +1001,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", configuration.ApiScheme, configuration.ApiHost, configuration.StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", configuration.ApiUrl, configuration.StoreId, test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				errObj := ErrorResponse{
 					Code:    "auth_failure",
@@ -1057,7 +1057,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", configuration.ApiScheme, configuration.ApiHost, configuration.StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", configuration.ApiUrl, configuration.StoreId, test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				errObj := ErrorResponse{
 					Code:    "undefined_endpoint",
@@ -1120,7 +1120,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", configuration.ApiScheme, configuration.ApiHost, configuration.StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", configuration.ApiUrl, configuration.StoreId, test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				errObj := ErrorResponse{
 					Code:    "rate_limit_exceeded",
@@ -1193,7 +1193,7 @@ func TestOpenFgaApi(t *testing.T) {
 		defer httpmock.DeactivateAndReset()
 		firstMock := httpmock.NewStringResponder(429, "")
 		secondMock, _ := httpmock.NewJsonResponder(200, expectedResponse)
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", configuration.ApiScheme, configuration.ApiHost, configuration.StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", configuration.ApiUrl, configuration.StoreId, test.RequestPath),
 			firstMock.Then(firstMock).Then(firstMock).Then(secondMock),
 		)
 		updatedConfiguration, err := NewConfiguration(Configuration{
@@ -1253,7 +1253,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s://%s/stores/%s/%s", configuration.ApiScheme, configuration.ApiHost, configuration.StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", configuration.ApiUrl, configuration.StoreId, test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				errObj := ErrorResponse{
 					Code:    "internal_error",

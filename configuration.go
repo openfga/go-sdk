@@ -33,8 +33,13 @@ type RetryParams struct {
 
 // Configuration stores the configuration of the API client
 type Configuration struct {
-	ApiScheme      string                   `json:"api_scheme,omitempty"`
+	// ApiScheme - defines the scheme for the API: http or https
+	// Deprecated: use ApiUrl instead of ApiScheme and ApiHost
+	ApiScheme string `json:"api_scheme,omitempty"`
+	// ApiHost - defines the host for the API without the scheme e.g. (api.fga.example)
+	// Deprecated: use ApiUrl instead of ApiScheme and ApiHost
 	ApiHost        string                   `json:"api_host,omitempty"`
+	ApiUrl         string                   `json:"api_url,omitempty"`
 	StoreId        string                   `json:"store_id,omitempty"`
 	Credentials    *credentials.Credentials `json:"credentials,omitempty"`
 	DefaultHeaders map[string]string        `json:"default_headers,omitempty"`
@@ -58,19 +63,26 @@ func GetSdkUserAgent() string {
 
 // NewConfiguration returns a new Configuration object
 func NewConfiguration(config Configuration) (*Configuration, error) {
+	apiUrl := config.ApiUrl
+
+	apiScheme := config.ApiScheme
+	if apiScheme == "" {
+		apiScheme = "https"
+	}
+
+	if apiUrl == "" {
+		// If api url is not provided, fall back to deprecated config fields
+		apiUrl = apiScheme + "://" + config.ApiHost
+	}
+
 	cfg := &Configuration{
-		ApiScheme:      config.ApiScheme,
-		ApiHost:        config.ApiHost,
+		ApiUrl:         apiUrl,
 		StoreId:        config.StoreId,
 		Credentials:    config.Credentials,
 		DefaultHeaders: config.DefaultHeaders,
 		UserAgent:      config.UserAgent,
 		Debug:          config.Debug,
 		RetryParams:    config.RetryParams,
-	}
-
-	if cfg.ApiScheme == "" {
-		cfg.ApiScheme = "https"
 	}
 
 	if cfg.UserAgent == "" {
@@ -97,16 +109,12 @@ func (c *Configuration) AddDefaultHeader(key string, value string) {
 
 // ValidateConfig ensures that the given configuration is valid
 func (c *Configuration) ValidateConfig() error {
-	if c.ApiHost == "" {
-		return reportError("Configuration.ApiHost is required")
+	if c.ApiUrl == "" {
+		return reportError("Configuration.ApiUrl is required")
 	}
 
-	if c.ApiScheme == "" {
-		return reportError("Configuration.ApiScheme is required")
-	}
-
-	if !IsWellFormedUri(c.ApiScheme + "://" + c.ApiHost) {
-		return reportError("Configuration.ApiScheme and Configuration.ApiHost (%s) do not generate a valid uri", c.ApiScheme+"://"+c.ApiHost)
+	if !IsWellFormedUri(c.ApiUrl) {
+		return reportError("Configuration.ApiUrl (%s) does not form a valid uri", c.ApiUrl)
 	}
 
 	if c.Credentials != nil {
