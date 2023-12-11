@@ -22,6 +22,7 @@ configuration.go
 credentials/credentials.go
 docs/Any.md
 docs/Assertion.md
+docs/AssertionTupleKey.md
 docs/AuthorizationModel.md
 docs/CheckRequest.md
 docs/CheckRequestTupleKey.md
@@ -93,6 +94,7 @@ internal/utils/ulid.go
 internal/utils/ulid_test.go
 model_any.go
 model_assertion.go
+model_assertion_tuple_key.go
 model_authorization_model.go
 model_check_request.go
 model_check_request_tuple_key.go

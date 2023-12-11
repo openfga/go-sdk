@@ -106,7 +106,7 @@ func TestOpenFgaClient(t *testing.T) {
 		_, err := NewSdkClient(&ClientConfiguration{
 			ApiHost:              "api.fga.example",
 			StoreId:              "01GXSB9YR785C4FYS3C0RTG7B2",
-			AuthorizationModelId: openfga.PtrString("BadAuthID"),
+			AuthorizationModelId: "BadAuthID",
 		})
 		if err == nil {
 			t.Fatalf("Expect invalid auth mode ID to result in error but there is none")
@@ -117,7 +117,7 @@ func TestOpenFgaClient(t *testing.T) {
 		_, err := NewSdkClient(&ClientConfiguration{
 			ApiHost:              "api.fga.example",
 			StoreId:              "01GXSB9YR785C4FYS3C0RTG7B2",
-			AuthorizationModelId: openfga.PtrString(""),
+			AuthorizationModelId: "",
 		})
 		if err != nil {
 			t.Fatalf("Expect no error when auth model id is empty but has %v", err)
@@ -126,9 +126,8 @@ func TestOpenFgaClient(t *testing.T) {
 
 	t.Run("Allow specifying an ApiUrl with a port and a base path", func(t *testing.T) {
 		_, err := NewSdkClient(&ClientConfiguration{
-			ApiUrl:               "https://api.fga.example:8080/fga",
-			StoreId:              "01GXSB9YR785C4FYS3C0RTG7B2",
-			AuthorizationModelId: openfga.PtrString(""),
+			ApiUrl:  "https://api.fga.example:8080/fga",
+			StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
 		})
 		if err != nil {
 			t.Fatalf("Expect no error when auth model id is empty but has %v", err)

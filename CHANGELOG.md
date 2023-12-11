@@ -2,9 +2,51 @@
 
 ## v0.3.0
 
-### [0.3.0](https://github.com/openfga/go-sdk/compare/v0.2.3...v0.3.0) (2023-11-02)
+### [0.3.0](https://github.com/openfga/go-sdk/compare/v0.2.3...v0.3.0) (2023-12-11)
 
 - feat!: initial support for conditions
+- feat: support specifying a port and path for the API (You can now set the `ApiUrl` to something like: `https://api.fga.exampleL8080/some_path`)
+- fix: resolve a bug in `NewCredentials` (#60) - thanks @harper
+- chore!: use latest API interfaces
+- chore: dependency updates
+
+
+BREAKING CHANGES:
+Note: This release comes with substantial breaking changes, especially to the interfaces due to the protobuf changes in the last release.
+
+While the http interfaces did not break (you can still use `v0.2.3` SDK with a `v1.3.8+` server),
+the grpc interface did and this caused a few changes in the interfaces of the SDK.
+
+You will have to modify some parts of your code, but we hope this will be to the better as a lot of the parameters are now correctly marked as required,
+and so the Pointer-to-String conversion is no longer needed.
+
+Some of the changes to expect:
+
+* When initializing a client, please use `ApiUrl`. The separate `ApiScheme` and `ApiHost` fields have been deprecated
+```go
+fgaClient, err := NewSdkClient(&ClientConfiguration{
+    ApiUrl:  os.Getenv("FGA_API_URL"), // required, e.g. https://api.fga.example
+    StoreId: os.Getenv("FGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
+    AuthorizationModelId: os.Getenv("FGA_AUTHORIZATION_MODEL_ID"), // optional, recommended to be set for production
+})
+```
+- When initializing a client, `AuthorizationModelId` is no longer a pointer, and you can just pass the string directly
+- The `OpenFgaClient` now has methods to get and set the model ID `GetAuthorizationModelId` and `SetAuthorizationModelId`
+- The following request interfaces changed:
+    - `CheckRequest`: the `TupleKey` field is now of interface `CheckRequestTupleKey`, you can also now pass in `Context`
+    - `ExpandRequest`: the `TupleKey` field is now of interface `ExpandRequestTupleKey`
+    - `ReadRequest`: the `TupleKey` field is now of interface `ReadRequestTupleKey`
+    - `WriteRequest`: now takes `WriteRequestWrites` and `WriteRequestDeletes`
+    - And more
+- The following interfaces had fields that were pointers are are now the direct value:
+    - `CreateStoreResponse`
+    - `GetStoreResponse`
+    - `ListStoresResponse`
+    - `ListObjectsResponse`
+    - `ReadChangesResponse`
+    - `ReadResponse`
+    - `AuthorizationModel` and several interfaces under it
+    - And more
 
 ## v0.2.3
 
