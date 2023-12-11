@@ -37,17 +37,17 @@ type ClientConfiguration struct {
 	fgaSdk.Configuration
 	// ApiScheme - defines the scheme for the API: http or https
 	// Deprecated: use ApiUrl instead of ApiScheme and ApiHost
-	ApiScheme string `json:"api_scheme,omitempty"`
+	ApiScheme string `json:"api_scheme"`
 	// ApiHost - defines the host for the API without the scheme e.g. (api.fga.example)
 	// Deprecated: use ApiUrl instead of ApiScheme and ApiHost
-	ApiHost              string                   `json:"api_host,omitempty"`
-	ApiUrl               string                   `json:"api_url,omitempty"`
-	StoreId              string                   `json:"store_id,omitempty"`
-	AuthorizationModelId *string                  `json:"authorization_model_id,omitempty"`
-	Credentials          *credentials.Credentials `json:"credentials,omitempty"`
-	DefaultHeaders       map[string]string        `json:"default_headers,omitempty"`
-	UserAgent            string                   `json:"user_agent,omitempty"`
-	Debug                bool                     `json:"debug,omitempty"`
+	ApiHost              string                   `json:"api_host"`
+	ApiUrl               string                   `json:"api_url"`
+	StoreId              string                   `json:"store_id"`
+	AuthorizationModelId string                   `json:"authorization_model_id"`
+	Credentials          *credentials.Credentials `json:"credentials"`
+	DefaultHeaders       map[string]string        `json:"default_headers"`
+	UserAgent            string                   `json:"user_agent"`
+	Debug                bool                     `json:"debug"`
 	HTTPClient           *_nethttp.Client
 	RetryParams          *fgaSdk.RetryParams
 }
@@ -94,7 +94,7 @@ func NewSdkClient(cfg *ClientConfiguration) (*OpenFgaClient, error) {
 
 	// store id is already validate as part of configuration validation
 
-	if cfg.AuthorizationModelId != nil && *cfg.AuthorizationModelId != "" && !internalutils.IsWellFormedUlidString(*cfg.AuthorizationModelId) {
+	if cfg.AuthorizationModelId != "" && !internalutils.IsWellFormedUlidString(cfg.AuthorizationModelId) {
 		return nil, FgaInvalidError{param: "AuthorizationModelId", description: "ULID"}
 	}
 
@@ -417,16 +417,35 @@ type SdkClient interface {
 	WriteAssertionsExecute(request SdkClientWriteAssertionsRequestInterface) (*ClientWriteAssertionsResponse, error)
 }
 
+func (client *OpenFgaClient) SetAuthorizationModelId(authorizationModelId string) error {
+	if authorizationModelId != "" && !internalutils.IsWellFormedUlidString(authorizationModelId) {
+		return FgaInvalidError{param: "AuthorizationModelId", description: "ULID"}
+	}
+
+	client.config.AuthorizationModelId = authorizationModelId
+
+	return nil
+}
+
+func (client *OpenFgaClient) GetAuthorizationModelId() (string, error) {
+	modelId := client.config.AuthorizationModelId
+	if modelId != "" && !internalutils.IsWellFormedUlidString(modelId) {
+		return "", FgaInvalidError{param: "AuthorizationModelId", description: "ULID"}
+	}
+
+	return modelId, nil
+}
+
 func (client *OpenFgaClient) getAuthorizationModelId(authorizationModelId *string) (*string, error) {
 	modelId := client.config.AuthorizationModelId
 	if authorizationModelId != nil && *authorizationModelId != "" {
-		modelId = authorizationModelId
+		modelId = *authorizationModelId
 	}
 
-	if modelId != nil && *modelId != "" && !internalutils.IsWellFormedUlidString(*modelId) {
+	if modelId != "" && !internalutils.IsWellFormedUlidString(modelId) {
 		return nil, FgaInvalidError{param: "AuthorizationModelId", description: "ULID"}
 	}
-	return modelId, nil
+	return &modelId, nil
 }
 
 // helper function to validate the connection (i.e., get token)
@@ -2226,7 +2245,7 @@ type ClientWriteAssertionsRequest = []ClientAssertion
 
 func (clientAssertion ClientAssertion) ToAssertion() fgaSdk.Assertion {
 	return fgaSdk.Assertion{
-		TupleKey: fgaSdk.CheckRequestTupleKey{
+		TupleKey: fgaSdk.AssertionTupleKey{
 			User:     clientAssertion.User,
 			Relation: clientAssertion.Relation,
 			Object:   clientAssertion.Object,

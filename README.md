@@ -113,6 +113,7 @@ func main() {
     fgaClient, err := NewSdkClient(&ClientConfiguration{
         ApiUrl:  os.Getenv("FGA_API_URL"), // required, e.g. https://api.fga.example
         StoreId: os.Getenv("FGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
+        AuthorizationModelId: os.Getenv("FGA_AUTHORIZATION_MODEL_ID"), // optional, recommended to be set for production
     })
 
 	if err != nil {
@@ -134,6 +135,7 @@ func main() {
     fgaClient, err := NewSdkClient(&ClientConfiguration{
         ApiUrl:      os.Getenv("FGA_API_URL"), // required, e.g. https://api.fga.example
         StoreId:     os.Getenv("FGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
+        AuthorizationModelId: os.Getenv("FGA_AUTHORIZATION_MODEL_ID"), // optional, recommended to be set for production
         Credentials: &credentials.Credentials{
             Method: credentials.CredentialsMethodApiToken,
             Config: &credentials.Config{
@@ -162,7 +164,7 @@ func main() {
     fgaClient, err := NewSdkClient(&ClientConfiguration{
         ApiUrl:               os.Getenv("FGA_API_URL"), // required, e.g. https://api.fga.example
         StoreId:              os.Getenv("FGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
-        AuthorizationModelId: openfga.PtrString("OPENFGA_AUTHORIZATION_MODEL_ID"),
+        AuthorizationModelId: os.Getenv("FGA_AUTHORIZATION_MODEL_ID"), // optional, recommended to be set for production
         Credentials: &credentials.Credentials{
             Method: credentials.CredentialsMethodClientCredentials,
             Config: &credentials.Config{
@@ -224,7 +226,7 @@ if err != nil {
 
 // store store.Id in database
 // update the storeId of the current instance
-fgaClient.SetStoreId(*store.Id)
+fgaClient.SetStoreId(store.Id)
 // continue calling the API normally, scoped to this store
 ```
 
@@ -796,6 +798,7 @@ Class | Method | HTTP request | Description
 
  - [Any](docs/Any.md)
  - [Assertion](docs/Assertion.md)
+ - [AssertionTupleKey](docs/AssertionTupleKey.md)
  - [AuthorizationModel](docs/AuthorizationModel.md)
  - [CheckRequest](docs/CheckRequest.md)
  - [CheckRequestTupleKey](docs/CheckRequestTupleKey.md)

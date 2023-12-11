@@ -1248,7 +1248,7 @@ import (
 func main() {
     
     authorizationModelId := "authorizationModelId_example" // string | 
-    body := *openapiclient.NewWriteAssertionsRequest([]openapiclient.Assertion{*openapiclient.NewAssertion(*openapiclient.NewCheckRequestTupleKey("user:anne", "reader", "document:2021-budget"), false)}) // WriteAssertionsRequest | 
+    body := *openapiclient.NewWriteAssertionsRequest([]openapiclient.Assertion{*openapiclient.NewAssertion(*openapiclient.NewAssertionTupleKey("document:2021-budget", "reader", "user:anne"), false)}) // WriteAssertionsRequest | 
 
     configuration, err := openfga.NewConfiguration(openfga.Configuration{
         ApiUrl:         os.Getenv("FGA_API_URL"), // required, e.g. https://api.fga.example
