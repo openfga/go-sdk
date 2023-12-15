@@ -139,7 +139,7 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 		}
 	})
 
-	t.Run("In ClientCredentials method, providing no client id, secret, audience or issuer should error", func(t *testing.T) {
+	t.Run("In ClientCredentials method, providing no client id, secret or issuer should error", func(t *testing.T) {
 		_, err := NewConfiguration(Configuration{
 			ApiHost: "https://api.fga.example",
 			StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
@@ -170,23 +170,6 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 
 		if err == nil {
 			t.Fatalf("Expected an error: client secret is required")
-		}
-
-		_, err = NewConfiguration(Configuration{
-			ApiHost: "https://api.fga.example",
-			StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
-			Credentials: &credentials.Credentials{
-				Method: credentials.CredentialsMethodApiToken,
-				Config: &credentials.Config{
-					ClientCredentialsClientId:       "some-id",
-					ClientCredentialsClientSecret:   "some-secret",
-					ClientCredentialsApiTokenIssuer: "some-issuer",
-				},
-			},
-		})
-
-		if err == nil {
-			t.Fatalf("Expected an error: api audience is required")
 		}
 
 		_, err = NewConfiguration(Configuration{
@@ -263,20 +246,8 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 		}
 	})
 
-	t.Run("should issue a network call to get the token at the first request if client id is provided", func(t *testing.T) {
-		configuration, err := NewConfiguration(Configuration{
-			ApiHost: "api.fga.example",
-			StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
-			Credentials: &credentials.Credentials{
-				Method: credentials.CredentialsMethodClientCredentials,
-				Config: &credentials.Config{
-					ClientCredentialsClientId:       "some-id",
-					ClientCredentialsClientSecret:   "some-secret",
-					ClientCredentialsApiAudience:    "some-audience",
-					ClientCredentialsApiTokenIssuer: "tokenissuer.fga.example",
-				},
-			},
-		})
+	clientCredentialsFirstRequestTest := func(t *testing.T, config Configuration) {
+		configuration, err := NewConfiguration(config)
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
@@ -329,6 +300,39 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 		if numCalls != 1 {
 			t.Fatalf("Expected call to get authorization models to be made exactly once, saw: %d", numCalls)
 		}
+	}
+
+	t.Run("should issue a network call to get the token at the first request if client id is provided", func(t *testing.T) {
+		t.Run("with Auth0 configuration", func(t *testing.T) {
+			clientCredentialsFirstRequestTest(t, Configuration{
+				ApiHost: "api.fga.example",
+				StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
+				Credentials: &credentials.Credentials{
+					Method: credentials.CredentialsMethodClientCredentials,
+					Config: &credentials.Config{
+						ClientCredentialsClientId:       "some-id",
+						ClientCredentialsClientSecret:   "some-secret",
+						ClientCredentialsApiAudience:    "some-audience",
+						ClientCredentialsApiTokenIssuer: "tokenissuer.fga.example",
+					},
+				},
+			})
+		})
+		t.Run("with OAuth2 configuration", func(t *testing.T) {
+			clientCredentialsFirstRequestTest(t, Configuration{
+				ApiHost: "api.fga.example",
+				StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
+				Credentials: &credentials.Credentials{
+					Method: credentials.CredentialsMethodClientCredentials,
+					Config: &credentials.Config{
+						ClientCredentialsClientId:       "some-id",
+						ClientCredentialsClientSecret:   "some-secret",
+						ClientCredentialsScopes:         "scope1 scope2",
+						ClientCredentialsApiTokenIssuer: "tokenissuer.fga.example",
+					},
+				},
+			})
+		})
 	})
 
 	t.Run("should not issue a network call to get the token at the first request if the clientId is not provided", func(t *testing.T) {

@@ -150,7 +150,7 @@ func main() {
 }
 ```
 
-#### Client Credentials
+#### Auth0 Client Credentials
 
 ```golang
 import (
@@ -171,6 +171,38 @@ func main() {
                 ClientCredentialsClientId:       os.Getenv("FGA_CLIENT_ID"),
                 ClientCredentialsClientSecret:   os.Getenv("FGA_CLIENT_SECRET"),
                 ClientCredentialsApiAudience:    os.Getenv("FGA_API_AUDIENCE"),
+                ClientCredentialsApiTokenIssuer: os.Getenv("FGA_API_TOKEN_ISSUER"),
+            },
+        },
+    })
+
+    if err != nil {
+        // .. Handle error
+    }
+}
+```
+
+#### OAuth2 Client Credentials
+
+```golang
+import (
+    openfga "github.com/openfga/go-sdk"
+    . "github.com/openfga/go-sdk/client"
+    "github.com/openfga/go-sdk/credentials"
+    "os"
+)
+
+func main() {
+    fgaClient, err := NewSdkClient(&ClientConfiguration{
+        ApiUrl:               os.Getenv("FGA_API_URL"), // required, e.g. https://api.fga.example
+        StoreId:              os.Getenv("FGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
+        AuthorizationModelId: os.Getenv("FGA_AUTHORIZATION_MODEL_ID"), // optional, recommended to be set for production
+        Credentials: &credentials.Credentials{
+            Method: credentials.CredentialsMethodClientCredentials,
+            Config: &credentials.Config{
+                ClientCredentialsClientId:       os.Getenv("FGA_CLIENT_ID"),
+                ClientCredentialsClientSecret:   os.Getenv("FGA_CLIENT_SECRET"),
+                ClientCredentialsScopes:         os.Getenv("FGA_API_SCOPES"), // optional space separated scopes
                 ClientCredentialsApiTokenIssuer: os.Getenv("FGA_API_TOKEN_ISSUER"),
             },
         },
