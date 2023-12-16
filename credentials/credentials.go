@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/openfga/go-sdk/oauth2/clientcredentials"
 )
@@ -30,6 +31,7 @@ type Config struct {
 	ClientCredentialsApiAudience    string `json:"apiAudience,omitempty"`
 	ClientCredentialsClientId       string `json:"clientId,omitempty"`
 	ClientCredentialsClientSecret   string `json:"clientSecret,omitempty"`
+	ClientCredentialsScopes         string `json:"scopes,omitempty"`
 }
 
 type Credentials struct {
@@ -74,9 +76,8 @@ func (c *Credentials) ValidateCredentialsConfig() error {
 		if conf == nil ||
 			conf.ClientCredentialsClientId == "" ||
 			conf.ClientCredentialsClientSecret == "" ||
-			conf.ClientCredentialsApiTokenIssuer == "" ||
-			conf.ClientCredentialsApiAudience == "" {
-			return fmt.Errorf("all of CredentialsConfig.ClientId, CredentialsConfig.ClientSecret, CredentialsConfig.ApiAudience and CredentialsConfig.ApiTokenIssuer are required when CredentialsMethod is CredentialsMethodClientCredentials (%s)", c.Method)
+			conf.ClientCredentialsApiTokenIssuer == "" {
+			return fmt.Errorf("all of CredentialsConfig.ClientId, CredentialsConfig.ClientSecret and CredentialsConfig.ApiTokenIssuer are required when CredentialsMethod is CredentialsMethodClientCredentials (%s)", c.Method)
 		}
 		if !isWellFormedUri("https://" + conf.ClientCredentialsApiTokenIssuer) {
 			return fmt.Errorf("CredentialsConfig.ApiTokenIssuer (%s) is in an invalid format", "https://"+conf.ClientCredentialsApiTokenIssuer)
@@ -114,9 +115,15 @@ func (c *Credentials) GetHttpClientAndHeaderOverrides() (*http.Client, []*Header
 			ClientID:     c.Config.ClientCredentialsClientId,
 			ClientSecret: c.Config.ClientCredentialsClientSecret,
 			TokenURL:     fmt.Sprintf("https://%s/oauth/token", c.Config.ClientCredentialsApiTokenIssuer),
-			EndpointParams: map[string][]string{
+		}
+		if c.Config.ClientCredentialsApiAudience != "" {
+			ccConfig.EndpointParams = map[string][]string{
 				"audience": {c.Config.ClientCredentialsApiAudience},
-			},
+			}
+		}
+		if c.Config.ClientCredentialsScopes != "" {
+			scopes := strings.Split(strings.TrimSpace(c.Config.ClientCredentialsScopes), " ")
+			ccConfig.Scopes = append(ccConfig.Scopes, scopes...)
 		}
 		client = ccConfig.Client(context.Background())
 	case CredentialsMethodApiToken:
