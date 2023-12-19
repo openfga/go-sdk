@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.3.1-go1.20
+
+### [0.3.1-go1.20](https://github.com/openfga/go-sdk/compare/v0.3.1...v0.3.1-go1.20) (2023-12-19)
+
+Same as v0.3.1, but with the target go version set to `1.20` (see https://github.com/lxc/incus/issues/315#issuecomment-1863382429)
+
 ## v0.3.1
 
 ### [0.3.1](https://github.com/openfga/go-sdk/compare/v0.3.0...v0.3.1) (2023-12-19)
