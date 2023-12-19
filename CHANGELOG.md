@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.3.1
+
+### [0.3.1](https://github.com/openfga/go-sdk/compare/v0.3.0...v0.3.1) (2023-12-19)
+
+- feat: oauth2 client credentials support (#62), thanks @le-yams
+- fix: remove canonical import path from oauth2 packages (#64), thanks @bketelsen
+
 ## v0.3.0
 
 ### [0.3.0](https://github.com/openfga/go-sdk/compare/v0.2.3...v0.3.0) (2023-12-11)
