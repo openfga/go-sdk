@@ -20,6 +20,7 @@ client/client_test.go
 client/errors.go
 configuration.go
 credentials/credentials.go
+docs/AbortedMessageResponse.md
 docs/Any.md
 docs/Assertion.md
 docs/AssertionTupleKey.md
@@ -92,6 +93,7 @@ go.sum
 internal/utils/randomtime.go
 internal/utils/ulid.go
 internal/utils/ulid_test.go
+model_aborted_message_response.go
 model_any.go
 model_assertion.go
 model_assertion_tuple_key.go

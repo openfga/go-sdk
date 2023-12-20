@@ -19,24 +19,23 @@ import (
 
 // Store struct for Store
 type Store struct {
-	Id        string    `json:"id"yaml:"id"`
-	Name      string    `json:"name"yaml:"name"`
-	CreatedAt time.Time `json:"created_at"yaml:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"yaml:"updated_at"`
-	DeletedAt time.Time `json:"deleted_at"yaml:"deleted_at"`
+	Id        string     `json:"id"yaml:"id"`
+	Name      string     `json:"name"yaml:"name"`
+	CreatedAt time.Time  `json:"created_at"yaml:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"yaml:"updated_at"`
+	DeletedAt *time.Time `json:"deleted_at,omitempty"yaml:"deleted_at,omitempty"`
 }
 
 // NewStore instantiates a new Store object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewStore(id string, name string, createdAt time.Time, updatedAt time.Time, deletedAt time.Time) *Store {
+func NewStore(id string, name string, createdAt time.Time, updatedAt time.Time) *Store {
 	this := Store{}
 	this.Id = id
 	this.Name = name
 	this.CreatedAt = createdAt
 	this.UpdatedAt = updatedAt
-	this.DeletedAt = deletedAt
 	return &this
 }
 
@@ -144,28 +143,36 @@ func (o *Store) SetUpdatedAt(v time.Time) {
 	o.UpdatedAt = v
 }
 
-// GetDeletedAt returns the DeletedAt field value
+// GetDeletedAt returns the DeletedAt field value if set, zero value otherwise.
 func (o *Store) GetDeletedAt() time.Time {
-	if o == nil {
+	if o == nil || o.DeletedAt == nil {
 		var ret time.Time
 		return ret
 	}
-
-	return o.DeletedAt
+	return *o.DeletedAt
 }
 
-// GetDeletedAtOk returns a tuple with the DeletedAt field value
+// GetDeletedAtOk returns a tuple with the DeletedAt field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 func (o *Store) GetDeletedAtOk() (*time.Time, bool) {
-	if o == nil {
+	if o == nil || o.DeletedAt == nil {
 		return nil, false
 	}
-	return &o.DeletedAt, true
+	return o.DeletedAt, true
 }
 
-// SetDeletedAt sets field value
+// HasDeletedAt returns a boolean if a field has been set.
+func (o *Store) HasDeletedAt() bool {
+	if o != nil && o.DeletedAt != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetDeletedAt gets a reference to the given time.Time and assigns it to the DeletedAt field.
 func (o *Store) SetDeletedAt(v time.Time) {
-	o.DeletedAt = v
+	o.DeletedAt = &v
 }
 
 func (o Store) MarshalJSON() ([]byte, error) {
@@ -174,7 +181,9 @@ func (o Store) MarshalJSON() ([]byte, error) {
 	toSerialize["name"] = o.Name
 	toSerialize["created_at"] = o.CreatedAt
 	toSerialize["updated_at"] = o.UpdatedAt
-	toSerialize["deleted_at"] = o.DeletedAt
+	if o.DeletedAt != nil {
+		toSerialize["deleted_at"] = o.DeletedAt
+	}
 	return json.Marshal(toSerialize)
 }
 

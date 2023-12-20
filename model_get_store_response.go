@@ -19,10 +19,11 @@ import (
 
 // GetStoreResponse struct for GetStoreResponse
 type GetStoreResponse struct {
-	Id        string    `json:"id"yaml:"id"`
-	Name      string    `json:"name"yaml:"name"`
-	CreatedAt time.Time `json:"created_at"yaml:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"yaml:"updated_at"`
+	Id        string     `json:"id"yaml:"id"`
+	Name      string     `json:"name"yaml:"name"`
+	CreatedAt time.Time  `json:"created_at"yaml:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"yaml:"updated_at"`
+	DeletedAt *time.Time `json:"deleted_at,omitempty"yaml:"deleted_at,omitempty"`
 }
 
 // NewGetStoreResponse instantiates a new GetStoreResponse object
@@ -142,12 +143,47 @@ func (o *GetStoreResponse) SetUpdatedAt(v time.Time) {
 	o.UpdatedAt = v
 }
 
+// GetDeletedAt returns the DeletedAt field value if set, zero value otherwise.
+func (o *GetStoreResponse) GetDeletedAt() time.Time {
+	if o == nil || o.DeletedAt == nil {
+		var ret time.Time
+		return ret
+	}
+	return *o.DeletedAt
+}
+
+// GetDeletedAtOk returns a tuple with the DeletedAt field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *GetStoreResponse) GetDeletedAtOk() (*time.Time, bool) {
+	if o == nil || o.DeletedAt == nil {
+		return nil, false
+	}
+	return o.DeletedAt, true
+}
+
+// HasDeletedAt returns a boolean if a field has been set.
+func (o *GetStoreResponse) HasDeletedAt() bool {
+	if o != nil && o.DeletedAt != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetDeletedAt gets a reference to the given time.Time and assigns it to the DeletedAt field.
+func (o *GetStoreResponse) SetDeletedAt(v time.Time) {
+	o.DeletedAt = &v
+}
+
 func (o GetStoreResponse) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["id"] = o.Id
 	toSerialize["name"] = o.Name
 	toSerialize["created_at"] = o.CreatedAt
 	toSerialize["updated_at"] = o.UpdatedAt
+	if o.DeletedAt != nil {
+		toSerialize["deleted_at"] = o.DeletedAt
+	}
 	return json.Marshal(toSerialize)
 }
 

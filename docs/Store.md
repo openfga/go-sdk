@@ -8,13 +8,13 @@ Name | Type | Description | Notes
 **Name** | **string** |  | 
 **CreatedAt** | **time.Time** |  | 
 **UpdatedAt** | **time.Time** |  | 
-**DeletedAt** | **time.Time** |  | 
+**DeletedAt** | Pointer to **time.Time** |  | [optional] 
 
 ## Methods
 
 ### NewStore
 
-`func NewStore(id string, name string, createdAt time.Time, updatedAt time.Time, deletedAt time.Time, ) *Store`
+`func NewStore(id string, name string, createdAt time.Time, updatedAt time.Time, ) *Store`
 
 NewStore instantiates a new Store object
 This constructor will assign default values to properties that have it defined,
@@ -128,6 +128,11 @@ and a boolean to check if the value has been set.
 
 SetDeletedAt sets DeletedAt field to given value.
 
+### HasDeletedAt
+
+`func (o *Store) HasDeletedAt() bool`
+
+HasDeletedAt returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
