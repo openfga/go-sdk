@@ -828,6 +828,7 @@ Class | Method | HTTP request | Description
 
 ### Models
 
+ - [AbortedMessageResponse](docs/AbortedMessageResponse.md)
  - [Any](docs/Any.md)
  - [Assertion](docs/Assertion.md)
  - [AssertionTupleKey](docs/AssertionTupleKey.md)

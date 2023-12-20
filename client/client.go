@@ -2012,6 +2012,7 @@ func (client *OpenFgaClient) ListObjectsExecute(request SdkClientListObjectsRequ
 		Relation:             request.GetBody().Relation,
 		Type:                 request.GetBody().Type,
 		ContextualTuples:     fgaSdk.NewContextualTupleKeys(contextualTuples),
+		Context:              request.GetBody().Context,
 		AuthorizationModelId: authorizationModelId,
 	}).Execute()
 	if err != nil {
