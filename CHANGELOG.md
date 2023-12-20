@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.3.2
+
+### [0.3.2](https://github.com/openfga/go-sdk/compare/v0.3.1...v0.3.2) (2023-12-20)
+
+- fix: ListObjects was not passing context to API
+- chore: downgrade target go version to 1.20
+
 ## v0.3.1
 
 ### [0.3.1](https://github.com/openfga/go-sdk/compare/v0.3.0...v0.3.1) (2023-12-19)
