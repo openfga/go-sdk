@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.3.3
+
+### [0.3.3](https://github.com/openfga/go-sdk/compare/v0.3.2...v0.3.3) (2023-12-21)
+
+- fix: WriteAuthorizationModel was not passing conditions to API
+- chore: add example project
+
 ## v0.3.2
 
 ### [0.3.2](https://github.com/openfga/go-sdk/compare/v0.3.1...v0.3.2) (2023-12-20)

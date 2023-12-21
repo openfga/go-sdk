@@ -1,0 +1,5 @@
+github.com/jarcoal/httpmock v1.3.1 h1:iUx3whfZWVf3jT01hQTO/Eo5sAYtB2/rqaUuOtpInww=
+github.com/openfga/go-sdk v0.3.2 h1:sed3zQLZTLLGzdqZYQZmiBoSxKWqJD+sk4KtUb+yVpU=
+github.com/openfga/go-sdk v0.3.2/go.mod h1:W4SNYMSxptGOtA9aGYxsYUmSC7LaZYP7y9qbT36ouCc=
+golang.org/x/sync v0.5.0 h1:60k92dhOjHxJkrqnwsfl8KuaHbn/5dl0lUPUklKo3qE=
+golang.org/x/sync v0.5.0/go.mod h1:Czt+wKu1gCyEFDUtn0jG5QVvpJ6rzVqr5aXyt9drQfk=

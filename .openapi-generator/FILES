@@ -87,6 +87,11 @@ docs/WriteAuthorizationModelResponse.md
 docs/WriteRequest.md
 docs/WriteRequestDeletes.md
 docs/WriteRequestWrites.md
+example/Makefile
+example/README.md
+example/example1/example1.go
+example/example1/go.mod
+example/example1/go.sum
 git_push.sh
 go.mod
 go.sum
