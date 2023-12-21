@@ -788,10 +788,7 @@ type SdkClientWriteAuthorizationModelRequestInterface interface {
 	GetContext() _context.Context
 }
 
-type ClientWriteAuthorizationModelRequest struct {
-	TypeDefinitions []fgaSdk.TypeDefinition `json:"type_definitions"`
-	SchemaVersion   string                  `json:"schema_version,omitempty"`
-}
+type ClientWriteAuthorizationModelRequest = fgaSdk.WriteAuthorizationModelRequest
 
 type ClientWriteAuthorizationModelOptions struct {
 }
