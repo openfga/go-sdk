@@ -531,6 +531,222 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 	})
 
+	t.Run("WriteAuthorizationModelWithCondition", func(t *testing.T) {
+		test := TestDefinition{
+			Name:           "WriteAuthorizationModelWithCondition",
+			JsonResponse:   `{"authorization_model_id":"01GXSA8YR785C4FYS3C0RTG7B1"}`,
+			ResponseStatus: http.StatusOK,
+			Method:         http.MethodPost,
+			RequestPath:    "authorization-models",
+		}
+		requestBody := ClientWriteAuthorizationModelRequest{
+			SchemaVersion: "1.1",
+			TypeDefinitions: []openfga.TypeDefinition{
+				{
+					Type:      "user",
+					Relations: &map[string]openfga.Userset{},
+				},
+				{
+					Type: "document",
+					Relations: &map[string]openfga.Userset{
+						"writer": {This: &map[string]interface{}{}},
+						"viewer": {Union: &openfga.Usersets{
+							Child: []openfga.Userset{
+								{This: &map[string]interface{}{}},
+								{ComputedUserset: &openfga.ObjectRelation{
+									Object:   openfga.PtrString(""),
+									Relation: openfga.PtrString("writer"),
+								}},
+							},
+						}},
+					},
+					Metadata: &openfga.Metadata{
+						Relations: &map[string]openfga.RelationMetadata{
+							"writer": {
+								DirectlyRelatedUserTypes: &[]openfga.RelationReference{
+									{Type: "user"},
+									{Type: "user", Condition: openfga.PtrString("ViewCountLessThan200")},
+								},
+							},
+							"viewer": {
+								DirectlyRelatedUserTypes: &[]openfga.RelationReference{
+									{Type: "user"},
+								},
+							},
+						},
+					},
+				},
+			},
+			Conditions: &map[string]openfga.Condition{
+				"ViewCountLessThan200": {
+					Name:       "ViewCountLessThan200",
+					Expression: "ViewCount < 200",
+					Parameters: &map[string]openfga.ConditionParamTypeRef{
+						"ViewCount": {
+							TypeName: openfga.INT,
+						},
+						"Type": {
+							TypeName: openfga.STRING,
+						},
+						"Name": {
+							TypeName: openfga.STRING,
+						},
+					},
+				},
+			},
+		}
+
+		var expectedResponse openfga.WriteAuthorizationModelResponse
+		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterMatcherResponder(
+			test.Method,
+			fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId, test.RequestPath),
+			httpmock.BodyContainsString(`"ViewCountLessThan200"`),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		options := ClientWriteAuthorizationModelOptions{}
+		got, err := fgaClient.WriteAuthorizationModel(context.Background()).Body(requestBody).Options(options).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		_, err = got.MarshalJSON()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		if got.GetAuthorizationModelId() != expectedResponse.GetAuthorizationModelId() {
+			t.Fatalf("OpenFgaClient.%v() / AuthorizationModelId = %v, want %v", test.Name, got.GetAuthorizationModelId(), expectedResponse.GetAuthorizationModelId())
+		}
+
+		// WriteAuthorizationModel without options should work
+		_, err = fgaClient.WriteAuthorizationModel(context.Background()).Body(requestBody).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+	})
+
+	t.Run("WriteAuthorizationModelWithCondition2", func(t *testing.T) {
+		test := TestDefinition{
+			Name:           "WriteAuthorizationModelWithCondition2",
+			JsonResponse:   `{"authorization_model_id":"01GXSA8YR785C4FYS3C0RTG7B1"}`,
+			ResponseStatus: http.StatusOK,
+			Method:         http.MethodPost,
+			RequestPath:    "authorization-models",
+		}
+
+		schemaVersion := "1.1"
+		typeDefs := []openfga.TypeDefinition{
+			{
+				Type:      "user",
+				Relations: &map[string]openfga.Userset{},
+			},
+			{
+				Type: "document",
+				Relations: &map[string]openfga.Userset{
+					"writer": {This: &map[string]interface{}{}},
+					"viewer": {Union: &openfga.Usersets{
+						Child: []openfga.Userset{
+							{This: &map[string]interface{}{}},
+							{ComputedUserset: &openfga.ObjectRelation{
+								Object:   openfga.PtrString(""),
+								Relation: openfga.PtrString("writer"),
+							}},
+						},
+					}},
+				},
+				Metadata: &openfga.Metadata{
+					Relations: &map[string]openfga.RelationMetadata{
+						"writer": {
+							DirectlyRelatedUserTypes: &[]openfga.RelationReference{
+								{Type: "user"},
+								{Type: "user", Condition: openfga.PtrString("ViewCountLessThan200")},
+							},
+						},
+						"viewer": {
+							DirectlyRelatedUserTypes: &[]openfga.RelationReference{
+								{Type: "user"},
+							},
+						},
+					},
+				},
+			},
+		}
+		conditions := map[string]openfga.Condition{
+			"ViewCountLessThan200": {
+				Name:       "ViewCountLessThan200",
+				Expression: "ViewCount < 200",
+				Parameters: &map[string]openfga.ConditionParamTypeRef{
+					"ViewCount": {
+						TypeName: openfga.INT,
+					},
+					"Type": {
+						TypeName: openfga.STRING,
+					},
+					"Name": {
+						TypeName: openfga.STRING,
+					},
+				},
+			},
+		}
+		requestBody := ClientWriteAuthorizationModelRequest{
+			SchemaVersion:   schemaVersion,
+			TypeDefinitions: typeDefs,
+			Conditions:      &conditions,
+		}
+
+		var expectedResponse openfga.WriteAuthorizationModelResponse
+		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterMatcherResponder(
+			test.Method,
+			fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId, test.RequestPath),
+			httpmock.BodyContainsString(`"ViewCountLessThan200"`),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		options := ClientWriteAuthorizationModelOptions{}
+		got, err := fgaClient.WriteAuthorizationModel(context.Background()).Body(requestBody).Options(options).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		_, err = got.MarshalJSON()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		if got.GetAuthorizationModelId() != expectedResponse.GetAuthorizationModelId() {
+			t.Fatalf("OpenFgaClient.%v() / AuthorizationModelId = %v, want %v", test.Name, got.GetAuthorizationModelId(), expectedResponse.GetAuthorizationModelId())
+		}
+
+		// WriteAuthorizationModel without options should work
+		_, err = fgaClient.WriteAuthorizationModel(context.Background()).Body(requestBody).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+	})
+
 	t.Run("ReadAuthorizationModel", func(t *testing.T) {
 		test := TestDefinition{
 			Name:           "ReadAuthorizationModel",
