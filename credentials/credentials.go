@@ -39,16 +39,6 @@ type Credentials struct {
 	Config *Config           `json:"config,omitempty"`
 }
 
-func isWellFormedUri(uriString string) bool {
-	uri, err := url.Parse(uriString)
-
-	if (err != nil) || (uri.Scheme != "http" && uri.Scheme != "https") || ((uri.Scheme + "://" + uri.Host) != uriString) {
-		return false
-	}
-
-	return true
-}
-
 func NewCredentials(config Credentials) (*Credentials, error) {
 	creds := &Credentials{
 		Method: config.Method,
@@ -79,9 +69,11 @@ func (c *Credentials) ValidateCredentialsConfig() error {
 			conf.ClientCredentialsApiTokenIssuer == "" {
 			return fmt.Errorf("all of CredentialsConfig.ClientId, CredentialsConfig.ClientSecret and CredentialsConfig.ApiTokenIssuer are required when CredentialsMethod is CredentialsMethodClientCredentials (%s)", c.Method)
 		}
-		if !isWellFormedUri("https://" + conf.ClientCredentialsApiTokenIssuer) {
-			return fmt.Errorf("CredentialsConfig.ApiTokenIssuer (%s) is in an invalid format", "https://"+conf.ClientCredentialsApiTokenIssuer)
+		tokenURL, err := buildApiTokenURL(conf.ClientCredentialsApiTokenIssuer)
+		if err != nil {
+			return err
 		}
+		conf.ClientCredentialsApiTokenIssuer = tokenURL
 	}
 
 	return nil
@@ -114,7 +106,7 @@ func (c *Credentials) GetHttpClientAndHeaderOverrides() (*http.Client, []*Header
 		ccConfig := clientcredentials.Config{
 			ClientID:     c.Config.ClientCredentialsClientId,
 			ClientSecret: c.Config.ClientCredentialsClientSecret,
-			TokenURL:     fmt.Sprintf("https://%s/oauth/token", c.Config.ClientCredentialsApiTokenIssuer),
+			TokenURL:     c.Config.ClientCredentialsApiTokenIssuer,
 		}
 		if c.Config.ClientCredentialsApiAudience != "" {
 			ccConfig.EndpointParams = map[string][]string{
@@ -136,4 +128,22 @@ func (c *Credentials) GetHttpClientAndHeaderOverrides() (*http.Client, []*Header
 	}
 
 	return client, headers
+}
+
+var defaultTokenEndpointPath = "oauth/token"
+
+func buildApiTokenURL(issuer string) (string, error) {
+	u, err := url.Parse(issuer)
+	if err != nil {
+		return "", err
+	}
+	if u.Scheme == "" {
+		u, _ = url.Parse(fmt.Sprintf("https://%s", issuer))
+	} else if u.Scheme != "http" && u.Scheme != "https" {
+		return "", fmt.Errorf("invalid issuer scheme '%s' (must be http or https)", u.Scheme)
+	}
+	if u.Path == "" || u.Path == "/" {
+		u.Path = defaultTokenEndpointPath
+	}
+	return u.String(), nil
 }

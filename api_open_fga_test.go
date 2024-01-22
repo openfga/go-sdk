@@ -246,7 +246,7 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 		}
 	})
 
-	clientCredentialsFirstRequestTest := func(t *testing.T, config Configuration) {
+	clientCredentialsFirstRequestTest := func(t *testing.T, config Configuration, expectedTokenEndpoint string) {
 		configuration, err := NewConfiguration(config)
 		if err != nil {
 			t.Fatalf("%v", err)
@@ -275,7 +275,7 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 			},
 		)
 
-		httpmock.RegisterResponder("POST", fmt.Sprintf("https://%s/oauth/token", configuration.Credentials.Config.ClientCredentialsApiTokenIssuer),
+		httpmock.RegisterResponder("POST", expectedTokenEndpoint,
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(200, struct {
 					AccessToken string `json:"access_token"`
@@ -292,7 +292,7 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 		}
 
 		info := httpmock.GetCallCountInfo()
-		numCalls := info[fmt.Sprintf("POST https://%s/oauth/token", configuration.Credentials.Config.ClientCredentialsApiTokenIssuer)]
+		numCalls := info[fmt.Sprintf("POST %s", expectedTokenEndpoint)]
 		if numCalls != 1 {
 			t.Fatalf("Expected call to get access token to be made exactly once, saw: %d", numCalls)
 		}
@@ -302,39 +302,51 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 		}
 	}
 
-	t.Run("should issue a network call to get the token at the first request if client id is provided", func(t *testing.T) {
-		t.Run("with Auth0 configuration", func(t *testing.T) {
-			clientCredentialsFirstRequestTest(t, Configuration{
-				ApiHost: "api.fga.example",
-				StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
-				Credentials: &credentials.Credentials{
-					Method: credentials.CredentialsMethodClientCredentials,
-					Config: &credentials.Config{
-						ClientCredentialsClientId:       "some-id",
-						ClientCredentialsClientSecret:   "some-secret",
-						ClientCredentialsApiAudience:    "some-audience",
-						ClientCredentialsApiTokenIssuer: "tokenissuer.fga.example",
-					},
-				},
-			})
-		})
-		t.Run("with OAuth2 configuration", func(t *testing.T) {
-			clientCredentialsFirstRequestTest(t, Configuration{
-				ApiHost: "api.fga.example",
-				StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
-				Credentials: &credentials.Credentials{
-					Method: credentials.CredentialsMethodClientCredentials,
-					Config: &credentials.Config{
-						ClientCredentialsClientId:       "some-id",
-						ClientCredentialsClientSecret:   "some-secret",
-						ClientCredentialsScopes:         "scope1 scope2",
-						ClientCredentialsApiTokenIssuer: "tokenissuer.fga.example",
-					},
-				},
-			})
-		})
-	})
+	tokenIssuers := map[string]string{
+		"issuer.fga.example":                            "https://issuer.fga.example/oauth/token",
+		"https://issuer.fga.example":                    "https://issuer.fga.example/oauth/token",
+		"https://issuer.fga.example/":                   "https://issuer.fga.example/oauth/token",
+		"https://issuer.fga.example:8080":               "https://issuer.fga.example:8080/oauth/token",
+		"https://issuer.fga.example:8080/":              "https://issuer.fga.example:8080/oauth/token",
+		"issuer.fga.example/some_endpoint":              "https://issuer.fga.example/some_endpoint",
+		"https://issuer.fga.example/some_endpoint":      "https://issuer.fga.example/some_endpoint",
+		"https://issuer.fga.example:8080/some_endpoint": "https://issuer.fga.example:8080/some_endpoint",
+	}
 
+	for tokenIssuer, expectedTokenURL := range tokenIssuers {
+		t.Run("should issue a network call to get the token at the first request if client id is provided", func(t *testing.T) {
+			t.Run("with Auth0 configuration", func(t *testing.T) {
+				clientCredentialsFirstRequestTest(t, Configuration{
+					ApiUrl:  "http://api.fga.example",
+					StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
+					Credentials: &credentials.Credentials{
+						Method: credentials.CredentialsMethodClientCredentials,
+						Config: &credentials.Config{
+							ClientCredentialsClientId:       "some-id",
+							ClientCredentialsClientSecret:   "some-secret",
+							ClientCredentialsApiAudience:    "some-audience",
+							ClientCredentialsApiTokenIssuer: tokenIssuer,
+						},
+					},
+				}, expectedTokenURL)
+			})
+			t.Run("with OAuth2 configuration", func(t *testing.T) {
+				clientCredentialsFirstRequestTest(t, Configuration{
+					ApiUrl:  "http://api.fga.example",
+					StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
+					Credentials: &credentials.Credentials{
+						Method: credentials.CredentialsMethodClientCredentials,
+						Config: &credentials.Config{
+							ClientCredentialsClientId:       "some-id",
+							ClientCredentialsClientSecret:   "some-secret",
+							ClientCredentialsScopes:         "scope1 scope2",
+							ClientCredentialsApiTokenIssuer: tokenIssuer,
+						},
+					},
+				}, expectedTokenURL)
+			})
+		})
+	}
 	t.Run("should not issue a network call to get the token at the first request if the clientId is not provided", func(t *testing.T) {
 		configuration, err := NewConfiguration(Configuration{
 			ApiHost: "api.fga.example",
