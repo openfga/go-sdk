@@ -822,10 +822,7 @@ func (request *SdkClientWriteAuthorizationModelRequest) GetContext() _context.Co
 }
 
 func (client *OpenFgaClient) WriteAuthorizationModelExecute(request SdkClientWriteAuthorizationModelRequestInterface) (*ClientWriteAuthorizationModelResponse, error) {
-	data, _, err := client.OpenFgaApi.WriteAuthorizationModel(request.GetContext()).Body(fgaSdk.WriteAuthorizationModelRequest{
-		TypeDefinitions: request.GetBody().TypeDefinitions,
-		SchemaVersion:   request.GetBody().SchemaVersion,
-	}).Execute()
+	data, _, err := client.OpenFgaApi.WriteAuthorizationModel(request.GetContext()).Body(*request.GetBody()).Execute()
 	if err != nil {
 		return nil, err
 	}
