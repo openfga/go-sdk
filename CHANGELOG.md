@@ -1,11 +1,18 @@
 # Changelog
 
+## v0.3.4
+
+### [0.3.4](https://github.com/openfga/go-sdk/compare/v0.3.3...v0.3.4) (2024-01-22)
+
+- feat: configurable client credentials token url - thanks @le-yams
+- fix: WriteAuthorizationModel was not passing conditions to API
+
 ## v0.3.3
 
 ### [0.3.3](https://github.com/openfga/go-sdk/compare/v0.3.2...v0.3.3) (2023-12-21)
 
 - fix: WriteAuthorizationModel was not passing conditions to API
-- chore: add example project
+- chore: add [example project](./example)
 
 ## v0.3.2
 
@@ -25,7 +32,7 @@
 
 ### [0.3.0](https://github.com/openfga/go-sdk/compare/v0.2.3...v0.3.0) (2023-12-11)
 
-- feat!: initial support for conditions
+- feat!: initial support for [conditions](https://openfga.dev/blog/conditional-tuples-announcement)
 - feat: support specifying a port and path for the API (You can now set the `ApiUrl` to something like: `https://api.fga.exampleL8080/some_path`)
 - fix: resolve a bug in `NewCredentials` (#60) - thanks @harper
 - chore!: use latest API interfaces
