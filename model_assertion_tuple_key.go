@@ -13,6 +13,8 @@
 package openfga
 
 import (
+	"bytes"
+
 	"encoding/json"
 )
 
@@ -120,7 +122,14 @@ func (o AssertionTupleKey) MarshalJSON() ([]byte, error) {
 	toSerialize["object"] = o.Object
 	toSerialize["relation"] = o.Relation
 	toSerialize["user"] = o.User
-	return json.Marshal(toSerialize)
+	var b bytes.Buffer
+	enc := json.NewEncoder(&b)
+	enc.SetEscapeHTML(false)
+	err := enc.Encode(toSerialize)
+	if err != nil {
+		return nil, err
+	}
+	return b.Bytes(), nil
 }
 
 type NullableAssertionTupleKey struct {

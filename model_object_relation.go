@@ -13,6 +13,8 @@
 package openfga
 
 import (
+	"bytes"
+
 	"encoding/json"
 )
 
@@ -111,7 +113,14 @@ func (o ObjectRelation) MarshalJSON() ([]byte, error) {
 	if o.Relation != nil {
 		toSerialize["relation"] = o.Relation
 	}
-	return json.Marshal(toSerialize)
+	var b bytes.Buffer
+	enc := json.NewEncoder(&b)
+	enc.SetEscapeHTML(false)
+	err := enc.Encode(toSerialize)
+	if err != nil {
+		return nil, err
+	}
+	return b.Bytes(), nil
 }
 
 type NullableObjectRelation struct {

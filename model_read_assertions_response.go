@@ -13,6 +13,8 @@
 package openfga
 
 import (
+	"bytes"
+
 	"encoding/json"
 )
 
@@ -102,7 +104,14 @@ func (o ReadAssertionsResponse) MarshalJSON() ([]byte, error) {
 	if o.Assertions != nil {
 		toSerialize["assertions"] = o.Assertions
 	}
-	return json.Marshal(toSerialize)
+	var b bytes.Buffer
+	enc := json.NewEncoder(&b)
+	enc.SetEscapeHTML(false)
+	err := enc.Encode(toSerialize)
+	if err != nil {
+		return nil, err
+	}
+	return b.Bytes(), nil
 }
 
 type NullableReadAssertionsResponse struct {
