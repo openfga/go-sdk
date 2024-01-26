@@ -13,6 +13,8 @@
 package openfga
 
 import (
+	"bytes"
+
 	"encoding/json"
 )
 
@@ -210,7 +212,14 @@ func (o Node) MarshalJSON() ([]byte, error) {
 	if o.Intersection != nil {
 		toSerialize["intersection"] = o.Intersection
 	}
-	return json.Marshal(toSerialize)
+	var b bytes.Buffer
+	enc := json.NewEncoder(&b)
+	enc.SetEscapeHTML(false)
+	err := enc.Encode(toSerialize)
+	if err != nil {
+		return nil, err
+	}
+	return b.Bytes(), nil
 }
 
 type NullableNode struct {

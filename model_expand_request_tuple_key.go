@@ -13,6 +13,8 @@
 package openfga
 
 import (
+	"bytes"
+
 	"encoding/json"
 )
 
@@ -93,7 +95,14 @@ func (o ExpandRequestTupleKey) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["relation"] = o.Relation
 	toSerialize["object"] = o.Object
-	return json.Marshal(toSerialize)
+	var b bytes.Buffer
+	enc := json.NewEncoder(&b)
+	enc.SetEscapeHTML(false)
+	err := enc.Encode(toSerialize)
+	if err != nil {
+		return nil, err
+	}
+	return b.Bytes(), nil
 }
 
 type NullableExpandRequestTupleKey struct {

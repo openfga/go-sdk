@@ -13,6 +13,8 @@
 package openfga
 
 import (
+	"bytes"
+
 	"encoding/json"
 )
 
@@ -75,7 +77,14 @@ func (o UsersetTree) MarshalJSON() ([]byte, error) {
 	if o.Root != nil {
 		toSerialize["root"] = o.Root
 	}
-	return json.Marshal(toSerialize)
+	var b bytes.Buffer
+	enc := json.NewEncoder(&b)
+	enc.SetEscapeHTML(false)
+	err := enc.Encode(toSerialize)
+	if err != nil {
+		return nil, err
+	}
+	return b.Bytes(), nil
 }
 
 type NullableUsersetTree struct {

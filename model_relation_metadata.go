@@ -13,6 +13,8 @@
 package openfga
 
 import (
+	"bytes"
+
 	"encoding/json"
 )
 
@@ -75,7 +77,14 @@ func (o RelationMetadata) MarshalJSON() ([]byte, error) {
 	if o.DirectlyRelatedUserTypes != nil {
 		toSerialize["directly_related_user_types"] = o.DirectlyRelatedUserTypes
 	}
-	return json.Marshal(toSerialize)
+	var b bytes.Buffer
+	enc := json.NewEncoder(&b)
+	enc.SetEscapeHTML(false)
+	err := enc.Encode(toSerialize)
+	if err != nil {
+		return nil, err
+	}
+	return b.Bytes(), nil
 }
 
 type NullableRelationMetadata struct {
