@@ -972,6 +972,7 @@ func TestOpenFgaClient(t *testing.T) {
 				Relation: "viewer",
 				Object:   "document:roadmap",
 			}},
+			Deletes: []ClientTupleKeyWithoutCondition{},
 		}
 		options := ClientWriteOptions{
 			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
