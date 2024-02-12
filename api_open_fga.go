@@ -221,7 +221,9 @@ type OpenFgaApi interface {
 
 	/*
 		 * Read Get tuples from the store that matches a query, without following userset rewrite rules
-		 * The Read API will return the tuples for a certain store that match a query filter specified in the body of the request. It is different from the `/stores/{store_id}/expand` API in that it only returns relationship tuples that are stored in the system and satisfy the query.
+		 * The Read API will return the tuples for a certain store that match a query filter specified in the body of the request.
+	The API doesn't guarantee order by any field.
+	It is different from the `/stores/{store_id}/expand` API in that it only returns relationship tuples that are stored in the system and satisfy the query.
 	In the body:
 	1. `tuple_key` is optional. If not specified, it will return all tuples in the store.
 	2. `tuple_key.object` is mandatory if `tuple_key` is specified. It can be a full object (e.g., `type:object_id`) or type only (e.g., `type:`).
@@ -2544,8 +2546,10 @@ func (r ApiReadRequest) Execute() (ReadResponse, *_nethttp.Response, error) {
 
 /*
   - Read Get tuples from the store that matches a query, without following userset rewrite rules
-  - The Read API will return the tuples for a certain store that match a query filter specified in the body of the request. It is different from the `/stores/{store_id}/expand` API in that it only returns relationship tuples that are stored in the system and satisfy the query.
+  - The Read API will return the tuples for a certain store that match a query filter specified in the body of the request.
 
+The API doesn't guarantee order by any field.
+It is different from the `/stores/{store_id}/expand` API in that it only returns relationship tuples that are stored in the system and satisfy the query.
 In the body:
 1. `tuple_key` is optional. If not specified, it will return all tuples in the store.
 2. `tuple_key.object` is mandatory if `tuple_key` is specified. It can be a full object (e.g., `type:object_id`) or type only (e.g., `type:`).
