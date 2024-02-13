@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.3.5
+
+### [0.3.5](https://github.com/openfga/go-sdk/compare/v0.3.4...v0.3.5) (2024-02-13)
+
+- fix: don't escape HTML characters in conditions when marshalling a model
+
 ## v0.3.4
 
 ### [0.3.4](https://github.com/openfga/go-sdk/compare/v0.3.3...v0.3.4) (2024-01-22)
