@@ -12,7 +12,7 @@ A bare bones example. It creates a store, and runs a set of calls against it inc
 Prerequisites:
 - `docker`
 - `make`
-- `go` 1.20+
+- `go` 1.21+
 
 #### Run using a published SDK
 

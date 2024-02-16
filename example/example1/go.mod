@@ -1,6 +1,6 @@
 module example1
 
-go 1.20
+go 1.21
 
 require github.com/openfga/go-sdk v0.3.5
 
