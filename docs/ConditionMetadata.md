@@ -1,104 +1,78 @@
-# Metadata
+# ConditionMetadata
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Relations** | Pointer to [**map[string]RelationMetadata**](RelationMetadata.md) |  | [optional] 
 **File** | Pointer to **string** |  | [optional] 
 **Module** | Pointer to **string** |  | [optional] 
 
 ## Methods
 
-### NewMetadata
+### NewConditionMetadata
 
-`func NewMetadata() *Metadata`
+`func NewConditionMetadata() *ConditionMetadata`
 
-NewMetadata instantiates a new Metadata object
+NewConditionMetadata instantiates a new ConditionMetadata object
 This constructor will assign default values to properties that have it defined,
 and makes sure properties required by API are set, but the set of arguments
 will change when the set of required properties is changed
 
-### NewMetadataWithDefaults
+### NewConditionMetadataWithDefaults
 
-`func NewMetadataWithDefaults() *Metadata`
+`func NewConditionMetadataWithDefaults() *ConditionMetadata`
 
-NewMetadataWithDefaults instantiates a new Metadata object
+NewConditionMetadataWithDefaults instantiates a new ConditionMetadata object
 This constructor will only assign default values to properties that have it defined,
 but it doesn't guarantee that properties required by API are set
 
-### GetRelations
-
-`func (o *Metadata) GetRelations() map[string]RelationMetadata`
-
-GetRelations returns the Relations field if non-nil, zero value otherwise.
-
-### GetRelationsOk
-
-`func (o *Metadata) GetRelationsOk() (*map[string]RelationMetadata, bool)`
-
-GetRelationsOk returns a tuple with the Relations field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetRelations
-
-`func (o *Metadata) SetRelations(v map[string]RelationMetadata)`
-
-SetRelations sets Relations field to given value.
-
-### HasRelations
-
-`func (o *Metadata) HasRelations() bool`
-
-HasRelations returns a boolean if a field has been set.
-
 ### GetFile
 
-`func (o *Metadata) GetFile() string`
+`func (o *ConditionMetadata) GetFile() string`
 
 GetFile returns the File field if non-nil, zero value otherwise.
 
 ### GetFileOk
 
-`func (o *Metadata) GetFileOk() (*string, bool)`
+`func (o *ConditionMetadata) GetFileOk() (*string, bool)`
 
 GetFileOk returns a tuple with the File field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetFile
 
-`func (o *Metadata) SetFile(v string)`
+`func (o *ConditionMetadata) SetFile(v string)`
 
 SetFile sets File field to given value.
 
 ### HasFile
 
-`func (o *Metadata) HasFile() bool`
+`func (o *ConditionMetadata) HasFile() bool`
 
 HasFile returns a boolean if a field has been set.
 
 ### GetModule
 
-`func (o *Metadata) GetModule() string`
+`func (o *ConditionMetadata) GetModule() string`
 
 GetModule returns the Module field if non-nil, zero value otherwise.
 
 ### GetModuleOk
 
-`func (o *Metadata) GetModuleOk() (*string, bool)`
+`func (o *ConditionMetadata) GetModuleOk() (*string, bool)`
 
 GetModuleOk returns a tuple with the Module field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetModule
 
-`func (o *Metadata) SetModule(v string)`
+`func (o *ConditionMetadata) SetModule(v string)`
 
 SetModule sets Module field to given value.
 
 ### HasModule
 
-`func (o *Metadata) HasModule() bool`
+`func (o *ConditionMetadata) HasModule() bool`
 
 HasModule returns a boolean if a field has been set.
 

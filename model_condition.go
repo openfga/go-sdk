@@ -25,6 +25,7 @@ type Condition struct {
 	Expression string `json:"expression"yaml:"expression"`
 	// A map of parameter names to the parameter's defined type reference.
 	Parameters *map[string]ConditionParamTypeRef `json:"parameters,omitempty"yaml:"parameters,omitempty"`
+	Metadata   *ConditionMetadata                `json:"metadata,omitempty"yaml:"metadata,omitempty"`
 }
 
 // NewCondition instantiates a new Condition object
@@ -126,12 +127,47 @@ func (o *Condition) SetParameters(v map[string]ConditionParamTypeRef) {
 	o.Parameters = &v
 }
 
+// GetMetadata returns the Metadata field value if set, zero value otherwise.
+func (o *Condition) GetMetadata() ConditionMetadata {
+	if o == nil || o.Metadata == nil {
+		var ret ConditionMetadata
+		return ret
+	}
+	return *o.Metadata
+}
+
+// GetMetadataOk returns a tuple with the Metadata field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *Condition) GetMetadataOk() (*ConditionMetadata, bool) {
+	if o == nil || o.Metadata == nil {
+		return nil, false
+	}
+	return o.Metadata, true
+}
+
+// HasMetadata returns a boolean if a field has been set.
+func (o *Condition) HasMetadata() bool {
+	if o != nil && o.Metadata != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetMetadata gets a reference to the given ConditionMetadata and assigns it to the Metadata field.
+func (o *Condition) SetMetadata(v ConditionMetadata) {
+	o.Metadata = &v
+}
+
 func (o Condition) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["name"] = o.Name
 	toSerialize["expression"] = o.Expression
 	if o.Parameters != nil {
 		toSerialize["parameters"] = o.Parameters
+	}
+	if o.Metadata != nil {
+		toSerialize["metadata"] = o.Metadata
 	}
 	var b bytes.Buffer
 	enc := json.NewEncoder(&b)

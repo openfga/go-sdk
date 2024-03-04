@@ -8,6 +8,8 @@ Name | Type | Description | Notes
 **Relation** | Pointer to **string** |  | [optional] 
 **Wildcard** | Pointer to **map[string]interface{}** |  | [optional] 
 **Condition** | Pointer to **string** | The name of a condition that is enforced over the allowed relation. | [optional] 
+**File** | Pointer to **string** |  | [optional] 
+**Module** | Pointer to **string** |  | [optional] 
 
 ## Methods
 
@@ -122,6 +124,56 @@ SetCondition sets Condition field to given value.
 `func (o *RelationReference) HasCondition() bool`
 
 HasCondition returns a boolean if a field has been set.
+
+### GetFile
+
+`func (o *RelationReference) GetFile() string`
+
+GetFile returns the File field if non-nil, zero value otherwise.
+
+### GetFileOk
+
+`func (o *RelationReference) GetFileOk() (*string, bool)`
+
+GetFileOk returns a tuple with the File field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetFile
+
+`func (o *RelationReference) SetFile(v string)`
+
+SetFile sets File field to given value.
+
+### HasFile
+
+`func (o *RelationReference) HasFile() bool`
+
+HasFile returns a boolean if a field has been set.
+
+### GetModule
+
+`func (o *RelationReference) GetModule() string`
+
+GetModule returns the Module field if non-nil, zero value otherwise.
+
+### GetModuleOk
+
+`func (o *RelationReference) GetModuleOk() (*string, bool)`
+
+GetModuleOk returns a tuple with the Module field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetModule
+
+`func (o *RelationReference) SetModule(v string)`
+
+SetModule sets Module field to given value.
+
+### HasModule
+
+`func (o *RelationReference) HasModule() bool`
+
+HasModule returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

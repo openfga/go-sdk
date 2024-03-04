@@ -25,6 +25,8 @@ type RelationReference struct {
 	Wildcard *map[string]interface{} `json:"wildcard,omitempty"yaml:"wildcard,omitempty"`
 	// The name of a condition that is enforced over the allowed relation.
 	Condition *string `json:"condition,omitempty"yaml:"condition,omitempty"`
+	File      *string `json:"file,omitempty"yaml:"file,omitempty"`
+	Module    *string `json:"module,omitempty"yaml:"module,omitempty"`
 }
 
 // NewRelationReference instantiates a new RelationReference object
@@ -165,6 +167,70 @@ func (o *RelationReference) SetCondition(v string) {
 	o.Condition = &v
 }
 
+// GetFile returns the File field value if set, zero value otherwise.
+func (o *RelationReference) GetFile() string {
+	if o == nil || o.File == nil {
+		var ret string
+		return ret
+	}
+	return *o.File
+}
+
+// GetFileOk returns a tuple with the File field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *RelationReference) GetFileOk() (*string, bool) {
+	if o == nil || o.File == nil {
+		return nil, false
+	}
+	return o.File, true
+}
+
+// HasFile returns a boolean if a field has been set.
+func (o *RelationReference) HasFile() bool {
+	if o != nil && o.File != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetFile gets a reference to the given string and assigns it to the File field.
+func (o *RelationReference) SetFile(v string) {
+	o.File = &v
+}
+
+// GetModule returns the Module field value if set, zero value otherwise.
+func (o *RelationReference) GetModule() string {
+	if o == nil || o.Module == nil {
+		var ret string
+		return ret
+	}
+	return *o.Module
+}
+
+// GetModuleOk returns a tuple with the Module field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *RelationReference) GetModuleOk() (*string, bool) {
+	if o == nil || o.Module == nil {
+		return nil, false
+	}
+	return o.Module, true
+}
+
+// HasModule returns a boolean if a field has been set.
+func (o *RelationReference) HasModule() bool {
+	if o != nil && o.Module != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetModule gets a reference to the given string and assigns it to the Module field.
+func (o *RelationReference) SetModule(v string) {
+	o.Module = &v
+}
+
 func (o RelationReference) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["type"] = o.Type
@@ -176,6 +242,12 @@ func (o RelationReference) MarshalJSON() ([]byte, error) {
 	}
 	if o.Condition != nil {
 		toSerialize["condition"] = o.Condition
+	}
+	if o.File != nil {
+		toSerialize["file"] = o.File
+	}
+	if o.Module != nil {
+		toSerialize["module"] = o.Module
 	}
 	var b bytes.Buffer
 	enc := json.NewEncoder(&b)

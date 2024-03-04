@@ -7,6 +7,7 @@ Name | Type | Description | Notes
 **Name** | **string** |  | 
 **Expression** | **string** | A Google CEL expression, expressed as a string. | 
 **Parameters** | Pointer to [**map[string]ConditionParamTypeRef**](ConditionParamTypeRef.md) | A map of parameter names to the parameter&#39;s defined type reference. | [optional] 
+**Metadata** | Pointer to [**ConditionMetadata**](ConditionMetadata.md) |  | [optional] 
 
 ## Methods
 
@@ -91,6 +92,31 @@ SetParameters sets Parameters field to given value.
 `func (o *Condition) HasParameters() bool`
 
 HasParameters returns a boolean if a field has been set.
+
+### GetMetadata
+
+`func (o *Condition) GetMetadata() ConditionMetadata`
+
+GetMetadata returns the Metadata field if non-nil, zero value otherwise.
+
+### GetMetadataOk
+
+`func (o *Condition) GetMetadataOk() (*ConditionMetadata, bool)`
+
+GetMetadataOk returns a tuple with the Metadata field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetMetadata
+
+`func (o *Condition) SetMetadata(v ConditionMetadata)`
+
+SetMetadata sets Metadata field to given value.
+
+### HasMetadata
+
+`func (o *Condition) HasMetadata() bool`
+
+HasMetadata returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

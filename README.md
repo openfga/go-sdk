@@ -838,6 +838,7 @@ Class | Method | HTTP request | Description
  - [CheckResponse](docs/CheckResponse.md)
  - [Computed](docs/Computed.md)
  - [Condition](docs/Condition.md)
+ - [ConditionMetadata](docs/ConditionMetadata.md)
  - [ConditionParamTypeRef](docs/ConditionParamTypeRef.md)
  - [ContextualTupleKeys](docs/ContextualTupleKeys.md)
  - [CreateStoreRequest](docs/CreateStoreRequest.md)
