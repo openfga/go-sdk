@@ -5,8 +5,8 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Relations** | Pointer to [**map[string]RelationMetadata**](RelationMetadata.md) |  | [optional] 
-**File** | Pointer to **string** |  | [optional] 
 **Module** | Pointer to **string** |  | [optional] 
+**SourceInfo** | Pointer to [**SourceInfo**](SourceInfo.md) |  | [optional] 
 
 ## Methods
 
@@ -52,31 +52,6 @@ SetRelations sets Relations field to given value.
 
 HasRelations returns a boolean if a field has been set.
 
-### GetFile
-
-`func (o *Metadata) GetFile() string`
-
-GetFile returns the File field if non-nil, zero value otherwise.
-
-### GetFileOk
-
-`func (o *Metadata) GetFileOk() (*string, bool)`
-
-GetFileOk returns a tuple with the File field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetFile
-
-`func (o *Metadata) SetFile(v string)`
-
-SetFile sets File field to given value.
-
-### HasFile
-
-`func (o *Metadata) HasFile() bool`
-
-HasFile returns a boolean if a field has been set.
-
 ### GetModule
 
 `func (o *Metadata) GetModule() string`
@@ -101,6 +76,31 @@ SetModule sets Module field to given value.
 `func (o *Metadata) HasModule() bool`
 
 HasModule returns a boolean if a field has been set.
+
+### GetSourceInfo
+
+`func (o *Metadata) GetSourceInfo() SourceInfo`
+
+GetSourceInfo returns the SourceInfo field if non-nil, zero value otherwise.
+
+### GetSourceInfoOk
+
+`func (o *Metadata) GetSourceInfoOk() (*SourceInfo, bool)`
+
+GetSourceInfoOk returns a tuple with the SourceInfo field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetSourceInfo
+
+`func (o *Metadata) SetSourceInfo(v SourceInfo)`
+
+SetSourceInfo sets SourceInfo field to given value.
+
+### HasSourceInfo
+
+`func (o *Metadata) HasSourceInfo() bool`
+
+HasSourceInfo returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

@@ -21,6 +21,8 @@ import (
 // RelationMetadata struct for RelationMetadata
 type RelationMetadata struct {
 	DirectlyRelatedUserTypes *[]RelationReference `json:"directly_related_user_types,omitempty"yaml:"directly_related_user_types,omitempty"`
+	Module                   *string              `json:"module,omitempty"yaml:"module,omitempty"`
+	SourceInfo               *SourceInfo          `json:"source_info,omitempty"yaml:"source_info,omitempty"`
 }
 
 // NewRelationMetadata instantiates a new RelationMetadata object
@@ -72,10 +74,80 @@ func (o *RelationMetadata) SetDirectlyRelatedUserTypes(v []RelationReference) {
 	o.DirectlyRelatedUserTypes = &v
 }
 
+// GetModule returns the Module field value if set, zero value otherwise.
+func (o *RelationMetadata) GetModule() string {
+	if o == nil || o.Module == nil {
+		var ret string
+		return ret
+	}
+	return *o.Module
+}
+
+// GetModuleOk returns a tuple with the Module field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *RelationMetadata) GetModuleOk() (*string, bool) {
+	if o == nil || o.Module == nil {
+		return nil, false
+	}
+	return o.Module, true
+}
+
+// HasModule returns a boolean if a field has been set.
+func (o *RelationMetadata) HasModule() bool {
+	if o != nil && o.Module != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetModule gets a reference to the given string and assigns it to the Module field.
+func (o *RelationMetadata) SetModule(v string) {
+	o.Module = &v
+}
+
+// GetSourceInfo returns the SourceInfo field value if set, zero value otherwise.
+func (o *RelationMetadata) GetSourceInfo() SourceInfo {
+	if o == nil || o.SourceInfo == nil {
+		var ret SourceInfo
+		return ret
+	}
+	return *o.SourceInfo
+}
+
+// GetSourceInfoOk returns a tuple with the SourceInfo field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *RelationMetadata) GetSourceInfoOk() (*SourceInfo, bool) {
+	if o == nil || o.SourceInfo == nil {
+		return nil, false
+	}
+	return o.SourceInfo, true
+}
+
+// HasSourceInfo returns a boolean if a field has been set.
+func (o *RelationMetadata) HasSourceInfo() bool {
+	if o != nil && o.SourceInfo != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetSourceInfo gets a reference to the given SourceInfo and assigns it to the SourceInfo field.
+func (o *RelationMetadata) SetSourceInfo(v SourceInfo) {
+	o.SourceInfo = &v
+}
+
 func (o RelationMetadata) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.DirectlyRelatedUserTypes != nil {
 		toSerialize["directly_related_user_types"] = o.DirectlyRelatedUserTypes
+	}
+	if o.Module != nil {
+		toSerialize["module"] = o.Module
+	}
+	if o.SourceInfo != nil {
+		toSerialize["source_info"] = o.SourceInfo
 	}
 	var b bytes.Buffer
 	enc := json.NewEncoder(&b)

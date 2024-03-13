@@ -872,6 +872,7 @@ Class | Method | HTTP request | Description
  - [RelationMetadata](docs/RelationMetadata.md)
  - [RelationReference](docs/RelationReference.md)
  - [RelationshipCondition](docs/RelationshipCondition.md)
+ - [SourceInfo](docs/SourceInfo.md)
  - [Status](docs/Status.md)
  - [Store](docs/Store.md)
  - [Tuple](docs/Tuple.md)

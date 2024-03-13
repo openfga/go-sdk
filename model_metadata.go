@@ -20,9 +20,9 @@ import (
 
 // Metadata struct for Metadata
 type Metadata struct {
-	Relations *map[string]RelationMetadata `json:"relations,omitempty"yaml:"relations,omitempty"`
-	File      *string                      `json:"file,omitempty"yaml:"file,omitempty"`
-	Module    *string                      `json:"module,omitempty"yaml:"module,omitempty"`
+	Relations  *map[string]RelationMetadata `json:"relations,omitempty"yaml:"relations,omitempty"`
+	Module     *string                      `json:"module,omitempty"yaml:"module,omitempty"`
+	SourceInfo *SourceInfo                  `json:"source_info,omitempty"yaml:"source_info,omitempty"`
 }
 
 // NewMetadata instantiates a new Metadata object
@@ -74,38 +74,6 @@ func (o *Metadata) SetRelations(v map[string]RelationMetadata) {
 	o.Relations = &v
 }
 
-// GetFile returns the File field value if set, zero value otherwise.
-func (o *Metadata) GetFile() string {
-	if o == nil || o.File == nil {
-		var ret string
-		return ret
-	}
-	return *o.File
-}
-
-// GetFileOk returns a tuple with the File field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *Metadata) GetFileOk() (*string, bool) {
-	if o == nil || o.File == nil {
-		return nil, false
-	}
-	return o.File, true
-}
-
-// HasFile returns a boolean if a field has been set.
-func (o *Metadata) HasFile() bool {
-	if o != nil && o.File != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetFile gets a reference to the given string and assigns it to the File field.
-func (o *Metadata) SetFile(v string) {
-	o.File = &v
-}
-
 // GetModule returns the Module field value if set, zero value otherwise.
 func (o *Metadata) GetModule() string {
 	if o == nil || o.Module == nil {
@@ -138,16 +106,48 @@ func (o *Metadata) SetModule(v string) {
 	o.Module = &v
 }
 
+// GetSourceInfo returns the SourceInfo field value if set, zero value otherwise.
+func (o *Metadata) GetSourceInfo() SourceInfo {
+	if o == nil || o.SourceInfo == nil {
+		var ret SourceInfo
+		return ret
+	}
+	return *o.SourceInfo
+}
+
+// GetSourceInfoOk returns a tuple with the SourceInfo field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *Metadata) GetSourceInfoOk() (*SourceInfo, bool) {
+	if o == nil || o.SourceInfo == nil {
+		return nil, false
+	}
+	return o.SourceInfo, true
+}
+
+// HasSourceInfo returns a boolean if a field has been set.
+func (o *Metadata) HasSourceInfo() bool {
+	if o != nil && o.SourceInfo != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetSourceInfo gets a reference to the given SourceInfo and assigns it to the SourceInfo field.
+func (o *Metadata) SetSourceInfo(v SourceInfo) {
+	o.SourceInfo = &v
+}
+
 func (o Metadata) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.Relations != nil {
 		toSerialize["relations"] = o.Relations
 	}
-	if o.File != nil {
-		toSerialize["file"] = o.File
-	}
 	if o.Module != nil {
 		toSerialize["module"] = o.Module
+	}
+	if o.SourceInfo != nil {
+		toSerialize["source_info"] = o.SourceInfo
 	}
 	var b bytes.Buffer
 	enc := json.NewEncoder(&b)

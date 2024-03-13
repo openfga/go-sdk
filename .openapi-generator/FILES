@@ -66,6 +66,7 @@ docs/ReadResponse.md
 docs/RelationMetadata.md
 docs/RelationReference.md
 docs/RelationshipCondition.md
+docs/SourceInfo.md
 docs/Status.md
 docs/Store.md
 docs/Tuple.md
@@ -144,6 +145,7 @@ model_read_response.go
 model_relation_metadata.go
 model_relation_reference.go
 model_relationship_condition.go
+model_source_info.go
 model_status.go
 model_store.go
 model_tuple.go
