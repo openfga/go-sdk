@@ -631,7 +631,7 @@ body := ClientBatchCheckBody{ {
     Object:   "document:roadmap",
 } }
 
-data, err := fgaClient.BatchCheck(context.Background()).Body(requestBody).Options(options).Execute()
+data, err := fgaClient.BatchCheck(context.Background()).Body(body).Options(options).Execute()
 
 /*
 data = [{
@@ -696,7 +696,7 @@ body := ClientExpandRequest{
     Relation: "viewer",
     Object:   "document:roadmap",
 }
-data, err := fgaClient.Expand(context.Background()).Body(requestBody).Options(options).Execute()
+data, err := fgaClient.Expand(context.Background()).Body(body).Options(options).Execute()
 
 // data.Tree.Root = {"name":"document:roadmap#viewer","leaf":{"users":{"users":["user:81684243-9356-4421-8fbf-a4f8d36aa31b","user:f52a4f7a-054d-47ff-bb6e-3ac81269988f"]}}}
 ```
@@ -727,7 +727,7 @@ body := ClientListObjectsRequest{
     } },
 }
 data, err := fgaClient.ListObjects(context.Background()).
-  Body(requestBody).
+  Body(body).
   Options(options).
   Execute()
 
@@ -754,11 +754,49 @@ body := ClientListRelationsRequest{
     } },
 }
 data, err := fgaClient.ListRelations(context.Background()).
-  Body(requestBody).
+  Body(body).
   Options(options).
   Execute()
 
 // data.Relations = ["can_view", "can_edit"]
+```
+
+#### List Objects
+
+List all users of the given type that the object has a relation with.
+
+[API Documentation](https://openfga.dev/api/service#/Relationship%20Queries/ListUsers)
+
+```golang
+options := ClientListObjectsOptions{
+    // You can rely on the model id set in the configuration or override it for this specific request
+    AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+}
+body := ClientListUsersRequest{
+    Object: openfga.Object{
+        Type: "document",
+        Id:   "roadmap",
+    },
+    Relation: "can_read",
+    UserFilters: []openfga.ListUsersFilter{{
+        Type: "user",
+    }},
+    ContextualTuples: []ClientContextualTupleKey{{
+        User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+        Relation: "editor",
+        Object:   "folder:product",
+    }, {
+        User:     "folder:product",
+        Relation: "parent",
+        Object:   "document:roadmap",
+    }},
+}
+data, err := fgaClient.ListUsers(context.Background()).
+  Body(body).
+  Options(options).
+  Execute()
+
+// data.Users = [{"type":"user", "id":"81684243-9356-4421-8fbf-a4f8d36aa31b"}]
 ```
 
 ### Assertions
@@ -816,6 +854,7 @@ Class | Method | HTTP request | Description
 *OpenFgaApi* | [**GetStore**](docs/OpenFgaApi.md#getstore) | **Get** /stores/{store_id} | Get a store
 *OpenFgaApi* | [**ListObjects**](docs/OpenFgaApi.md#listobjects) | **Post** /stores/{store_id}/list-objects | List all objects of the given type that the user has a relation with
 *OpenFgaApi* | [**ListStores**](docs/OpenFgaApi.md#liststores) | **Get** /stores | List all stores
+*OpenFgaApi* | [**ListUsers**](docs/OpenFgaApi.md#listusers) | **Post** /stores/{store_id}/list-users | List all users of the given type that the object has a relation with
 *OpenFgaApi* | [**Read**](docs/OpenFgaApi.md#read) | **Post** /stores/{store_id}/read | Get tuples from the store that matches a query, without following userset rewrite rules
 *OpenFgaApi* | [**ReadAssertions**](docs/OpenFgaApi.md#readassertions) | **Get** /stores/{store_id}/assertions/{authorization_model_id} | Read assertions for an authorization model ID
 *OpenFgaApi* | [**ReadAuthorizationModel**](docs/OpenFgaApi.md#readauthorizationmodel) | **Get** /stores/{store_id}/authorization-models/{id} | Return a particular version of an authorization model
@@ -854,11 +893,15 @@ Class | Method | HTTP request | Description
  - [ListObjectsRequest](docs/ListObjectsRequest.md)
  - [ListObjectsResponse](docs/ListObjectsResponse.md)
  - [ListStoresResponse](docs/ListStoresResponse.md)
+ - [ListUsersFilter](docs/ListUsersFilter.md)
+ - [ListUsersRequest](docs/ListUsersRequest.md)
+ - [ListUsersResponse](docs/ListUsersResponse.md)
  - [Metadata](docs/Metadata.md)
  - [Node](docs/Node.md)
  - [Nodes](docs/Nodes.md)
  - [NotFoundErrorCode](docs/NotFoundErrorCode.md)
  - [NullValue](docs/NullValue.md)
+ - [Object](docs/Object.md)
  - [ObjectRelation](docs/ObjectRelation.md)
  - [PathUnknownErrorMessageResponse](docs/PathUnknownErrorMessageResponse.md)
  - [ReadAssertionsResponse](docs/ReadAssertionsResponse.md)
@@ -881,11 +924,14 @@ Class | Method | HTTP request | Description
  - [TupleToUserset](docs/TupleToUserset.md)
  - [TypeDefinition](docs/TypeDefinition.md)
  - [TypeName](docs/TypeName.md)
+ - [TypedWildcard](docs/TypedWildcard.md)
+ - [User](docs/User.md)
  - [Users](docs/Users.md)
  - [Userset](docs/Userset.md)
  - [UsersetTree](docs/UsersetTree.md)
  - [UsersetTreeDifference](docs/UsersetTreeDifference.md)
  - [UsersetTreeTupleToUserset](docs/UsersetTreeTupleToUserset.md)
+ - [UsersetUser](docs/UsersetUser.md)
  - [Usersets](docs/Usersets.md)
  - [ValidationErrorMessageResponse](docs/ValidationErrorMessageResponse.md)
  - [WriteAssertionsRequest](docs/WriteAssertionsRequest.md)
