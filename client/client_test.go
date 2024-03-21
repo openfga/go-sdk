@@ -1869,6 +1869,96 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 	})
 
+	t.Run("ListUsers", func(t *testing.T) {
+		test := TestDefinition{
+			Name: "ListUsers",
+			// A real API would not return all these for the filter provided, these are just for test purposes
+			//JsonResponse: `{"users":[{"type": "user", "id":"81684243-9356-4421-8fbf-a4f8d36aa31b"}, {"type": "team", "relation": "member"}, {"type": "user", "wildcard": {}}]}`,
+			JsonResponse:   `{"users":[{"object":{"id":"81684243-9356-4421-8fbf-a4f8d36aa31b","type":"user"}},{"userset":{"id":"","relation":"member","type":"team"}},{"wildcard":{"type":"user","wildcard":{}}}]}`,
+			ResponseStatus: http.StatusOK,
+			Method:         http.MethodPost,
+			RequestPath:    "list-users",
+		}
+
+		requestBody := ClientListUsersRequest{
+			Object: openfga.Object{
+				Type: "document",
+				Id:   "roadmap",
+			},
+			Relation: "can_read",
+			UserFilters: []openfga.ListUsersFilter{{
+				Type: "user",
+			}},
+			ContextualTuples: []ClientContextualTupleKey{{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "editor",
+				Object:   "folder:product",
+			}, {
+				User:     "folder:product",
+				Relation: "parent",
+				Object:   "document:roadmap",
+			}},
+		}
+		options := ClientListUsersOptions{
+			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+		}
+
+		var expectedResponse openfga.ListUsersResponse
+		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId, test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		got, err := fgaClient.ListUsers(context.Background()).
+			Body(requestBody).
+			Options(options).
+			Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		responseJson, err := got.MarshalJSON()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		if len(got.Users) != len(expectedResponse.Users) || (got.Users)[0] != (expectedResponse.Users)[0] {
+			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
+		}
+
+		//if string(responseJson) != test.JsonResponse {
+		//	t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
+		//}
+
+		// ListUsers without options should work
+		_, err = fgaClient.ListUsers(context.Background()).Body(requestBody).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		// Invalid auth model id should result in error
+		badOptions := ClientListUsersOptions{
+			AuthorizationModelId: openfga.PtrString("INVALID"),
+		}
+		_, err = fgaClient.ListUsers(context.Background()).
+			Body(requestBody).
+			Options(badOptions).
+			Execute()
+		if err == nil {
+			t.Fatalf("Expect error with invalid auth model id but there is none")
+		}
+	})
+
 	/* Assertions */
 	t.Run("ReadAssertions", func(t *testing.T) {
 		modelId := "01GAHCE4YVKPQEKZQHT2R89MQV"
