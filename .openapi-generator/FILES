@@ -32,6 +32,7 @@ docs/CheckRequestTupleKey.md
 docs/CheckResponse.md
 docs/Computed.md
 docs/Condition.md
+docs/ConditionMetadata.md
 docs/ConditionParamTypeRef.md
 docs/ContextualTupleKeys.md
 docs/CreateStoreRequest.md
@@ -66,6 +67,7 @@ docs/ReadResponse.md
 docs/RelationMetadata.md
 docs/RelationReference.md
 docs/RelationshipCondition.md
+docs/SourceInfo.md
 docs/Status.md
 docs/Store.md
 docs/Tuple.md
@@ -110,6 +112,7 @@ model_check_request_tuple_key.go
 model_check_response.go
 model_computed.go
 model_condition.go
+model_condition_metadata.go
 model_condition_param_type_ref.go
 model_contextual_tuple_keys.go
 model_create_store_request.go
@@ -143,6 +146,7 @@ model_read_response.go
 model_relation_metadata.go
 model_relation_reference.go
 model_relationship_condition.go
+model_source_info.go
 model_status.go
 model_store.go
 model_tuple.go

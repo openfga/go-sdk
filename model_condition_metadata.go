@@ -18,64 +18,31 @@ import (
 	"encoding/json"
 )
 
-// Metadata struct for Metadata
-type Metadata struct {
-	Relations  *map[string]RelationMetadata `json:"relations,omitempty"yaml:"relations,omitempty"`
-	Module     *string                      `json:"module,omitempty"yaml:"module,omitempty"`
-	SourceInfo *SourceInfo                  `json:"source_info,omitempty"yaml:"source_info,omitempty"`
+// ConditionMetadata struct for ConditionMetadata
+type ConditionMetadata struct {
+	Module     *string     `json:"module,omitempty"yaml:"module,omitempty"`
+	SourceInfo *SourceInfo `json:"source_info,omitempty"yaml:"source_info,omitempty"`
 }
 
-// NewMetadata instantiates a new Metadata object
+// NewConditionMetadata instantiates a new ConditionMetadata object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewMetadata() *Metadata {
-	this := Metadata{}
+func NewConditionMetadata() *ConditionMetadata {
+	this := ConditionMetadata{}
 	return &this
 }
 
-// NewMetadataWithDefaults instantiates a new Metadata object
+// NewConditionMetadataWithDefaults instantiates a new ConditionMetadata object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewMetadataWithDefaults() *Metadata {
-	this := Metadata{}
+func NewConditionMetadataWithDefaults() *ConditionMetadata {
+	this := ConditionMetadata{}
 	return &this
-}
-
-// GetRelations returns the Relations field value if set, zero value otherwise.
-func (o *Metadata) GetRelations() map[string]RelationMetadata {
-	if o == nil || o.Relations == nil {
-		var ret map[string]RelationMetadata
-		return ret
-	}
-	return *o.Relations
-}
-
-// GetRelationsOk returns a tuple with the Relations field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *Metadata) GetRelationsOk() (*map[string]RelationMetadata, bool) {
-	if o == nil || o.Relations == nil {
-		return nil, false
-	}
-	return o.Relations, true
-}
-
-// HasRelations returns a boolean if a field has been set.
-func (o *Metadata) HasRelations() bool {
-	if o != nil && o.Relations != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetRelations gets a reference to the given map[string]RelationMetadata and assigns it to the Relations field.
-func (o *Metadata) SetRelations(v map[string]RelationMetadata) {
-	o.Relations = &v
 }
 
 // GetModule returns the Module field value if set, zero value otherwise.
-func (o *Metadata) GetModule() string {
+func (o *ConditionMetadata) GetModule() string {
 	if o == nil || o.Module == nil {
 		var ret string
 		return ret
@@ -85,7 +52,7 @@ func (o *Metadata) GetModule() string {
 
 // GetModuleOk returns a tuple with the Module field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *Metadata) GetModuleOk() (*string, bool) {
+func (o *ConditionMetadata) GetModuleOk() (*string, bool) {
 	if o == nil || o.Module == nil {
 		return nil, false
 	}
@@ -93,7 +60,7 @@ func (o *Metadata) GetModuleOk() (*string, bool) {
 }
 
 // HasModule returns a boolean if a field has been set.
-func (o *Metadata) HasModule() bool {
+func (o *ConditionMetadata) HasModule() bool {
 	if o != nil && o.Module != nil {
 		return true
 	}
@@ -102,12 +69,12 @@ func (o *Metadata) HasModule() bool {
 }
 
 // SetModule gets a reference to the given string and assigns it to the Module field.
-func (o *Metadata) SetModule(v string) {
+func (o *ConditionMetadata) SetModule(v string) {
 	o.Module = &v
 }
 
 // GetSourceInfo returns the SourceInfo field value if set, zero value otherwise.
-func (o *Metadata) GetSourceInfo() SourceInfo {
+func (o *ConditionMetadata) GetSourceInfo() SourceInfo {
 	if o == nil || o.SourceInfo == nil {
 		var ret SourceInfo
 		return ret
@@ -117,7 +84,7 @@ func (o *Metadata) GetSourceInfo() SourceInfo {
 
 // GetSourceInfoOk returns a tuple with the SourceInfo field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *Metadata) GetSourceInfoOk() (*SourceInfo, bool) {
+func (o *ConditionMetadata) GetSourceInfoOk() (*SourceInfo, bool) {
 	if o == nil || o.SourceInfo == nil {
 		return nil, false
 	}
@@ -125,7 +92,7 @@ func (o *Metadata) GetSourceInfoOk() (*SourceInfo, bool) {
 }
 
 // HasSourceInfo returns a boolean if a field has been set.
-func (o *Metadata) HasSourceInfo() bool {
+func (o *ConditionMetadata) HasSourceInfo() bool {
 	if o != nil && o.SourceInfo != nil {
 		return true
 	}
@@ -134,15 +101,12 @@ func (o *Metadata) HasSourceInfo() bool {
 }
 
 // SetSourceInfo gets a reference to the given SourceInfo and assigns it to the SourceInfo field.
-func (o *Metadata) SetSourceInfo(v SourceInfo) {
+func (o *ConditionMetadata) SetSourceInfo(v SourceInfo) {
 	o.SourceInfo = &v
 }
 
-func (o Metadata) MarshalJSON() ([]byte, error) {
+func (o ConditionMetadata) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.Relations != nil {
-		toSerialize["relations"] = o.Relations
-	}
 	if o.Module != nil {
 		toSerialize["module"] = o.Module
 	}
@@ -159,38 +123,38 @@ func (o Metadata) MarshalJSON() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-type NullableMetadata struct {
-	value *Metadata
+type NullableConditionMetadata struct {
+	value *ConditionMetadata
 	isSet bool
 }
 
-func (v NullableMetadata) Get() *Metadata {
+func (v NullableConditionMetadata) Get() *ConditionMetadata {
 	return v.value
 }
 
-func (v *NullableMetadata) Set(val *Metadata) {
+func (v *NullableConditionMetadata) Set(val *ConditionMetadata) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableMetadata) IsSet() bool {
+func (v NullableConditionMetadata) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableMetadata) Unset() {
+func (v *NullableConditionMetadata) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableMetadata(val *Metadata) *NullableMetadata {
-	return &NullableMetadata{value: val, isSet: true}
+func NewNullableConditionMetadata(val *ConditionMetadata) *NullableConditionMetadata {
+	return &NullableConditionMetadata{value: val, isSet: true}
 }
 
-func (v NullableMetadata) MarshalJSON() ([]byte, error) {
+func (v NullableConditionMetadata) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableMetadata) UnmarshalJSON(src []byte) error {
+func (v *NullableConditionMetadata) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
