@@ -6,6 +6,8 @@
 
 - feat: support the [ListUsers](https://github.com/openfga/rfcs/blob/main/20231214-listUsers-api.md) endpoint (#81)
 - feat: add retries to client credential requests (#51)
+- fix: do not call ReadAuthorizationModel on BatchCheck or non-Transactional Write (#78)
+- chore: fix typos in the readme (#91) - thanks @balaji-dongare
 
 ## v0.3.5
 
