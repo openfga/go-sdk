@@ -1123,11 +1123,7 @@ func TestOpenFgaClient(t *testing.T) {
 				return resp, nil
 			},
 		)
-		httpmock.RegisterResponder("GET", fmt.Sprintf("%s/stores/%s/authorization-models/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId, authModelId),
-			func(req *http.Request) (*http.Response, error) {
-				return httpmock.NewStringResponse(http.StatusOK, ""), nil
-			},
-		)
+
 		data, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
 		if err != nil {
 			t.Fatalf("%v", err)
@@ -1266,6 +1262,66 @@ func TestOpenFgaClient(t *testing.T) {
 
 		if _, ok := err.(openfga.FgaApiAuthenticationError); !ok {
 			t.Fatalf("Expected an api auth error")
+		}
+	})
+
+	t.Run("Write with 400 error - transaction mode disabled", func(t *testing.T) {
+		test := TestDefinition{
+			Name:           "Write",
+			JsonResponse:   `{}`,
+			ResponseStatus: http.StatusOK,
+			Method:         http.MethodPost,
+			RequestPath:    "write",
+		}
+		requestBody := ClientWriteRequest{
+			Writes: []ClientTupleKey{{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "viewer",
+				Object:   "document:roadmap",
+			}},
+		}
+		options := ClientWriteOptions{
+			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			Transaction: &TransactionOptions{
+				Disable:             true,
+				MaxPerChunk:         1,
+				MaxParallelRequests: 1,
+			},
+		}
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId, test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				return httpmock.NewStringResponse(http.StatusBadRequest, ""), nil
+			},
+		)
+		// BatchCheck with invalid auth should fail
+		data, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
+		if err != nil {
+			t.Fatalf("Expected no error")
+		}
+
+		if data.Writes[0].Error == nil {
+			t.Fatalf("Expected error to be in deletes")
+		}
+
+		requestBody = ClientWriteRequest{
+			Deletes: []openfga.TupleKeyWithoutCondition{{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "viewer",
+				Object:   "document:roadmap",
+			}},
+		}
+
+		// Now tests that deletes returns the error
+		data, err = fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
+		if err != nil {
+			t.Fatalf("Expected no error")
+		}
+
+		if data.Deletes[0].Error == nil {
+			t.Fatalf("Expected error to be in deletes")
 		}
 	})
 
