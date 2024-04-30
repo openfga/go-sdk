@@ -1313,9 +1313,9 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 		Deletes: []ClientWriteRequestDeleteResponse{},
 	}
 
-	authorizationModelId := request.GetAuthorizationModelIdOverride()
-	if authorizationModelId != nil && *authorizationModelId != "" && !internalutils.IsWellFormedUlidString(*authorizationModelId) {
-		return nil, FgaInvalidError{param: "AuthorizationModelId", description: "ULID"}
+	authorizationModelId, err := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
+	if err != nil {
+		return nil, err
 	}
 
 	// Unless explicitly disabled, transaction mode is enabled
@@ -1414,7 +1414,11 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 		})
 	}
 
-	_ = writeGroup.Wait()
+	err = writeGroup.Wait()
+	// If an error was returned then it will be an authentication error so we want to return
+	if err != nil {
+		return &response, err
+	}
 
 	var deleteChunkSize = int(maxPerChunk)
 	var deleteChunks [][]ClientTupleKeyWithoutCondition
@@ -1453,7 +1457,11 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 		})
 	}
 
-	_ = deleteGroup.Wait()
+	err = deleteGroup.Wait()
+	if err != nil {
+		// If an error was returned then it will be an authentication error so we want to return
+		return &response, err
+	}
 
 	for _, writeResponse := range writeResponses {
 		for _, writeSingleResponse := range writeResponse.Writes {
@@ -1685,10 +1693,10 @@ func (client *OpenFgaClient) CheckExecute(request SdkClientCheckRequestInterface
 			contextualTuples = append(contextualTuples, (request.GetBody().ContextualTuples)[index])
 		}
 	}
-	authorizationModelId := request.GetAuthorizationModelIdOverride()
+	authorizationModelId, err := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
 
-	if authorizationModelId != nil && *authorizationModelId != "" && !internalutils.IsWellFormedUlidString(*authorizationModelId) {
-		return nil, FgaInvalidError{param: "AuthorizationModelId", description: "ULID"}
+	if err != nil {
+		return nil, err
 	}
 
 	requestBody := fgaSdk.CheckRequest{
@@ -1793,10 +1801,10 @@ func (client *OpenFgaClient) BatchCheckExecute(request SdkClientBatchCheckReques
 	group.SetLimit(maxParallelReqs)
 	var numOfChecks = len(*request.GetBody())
 	response := make(ClientBatchCheckResponse, numOfChecks)
-	authorizationModelId := request.GetAuthorizationModelIdOverride()
+	authorizationModelId, err := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
 
-	if authorizationModelId != nil && *authorizationModelId != "" && !internalutils.IsWellFormedUlidString(*authorizationModelId) {
-		return nil, FgaInvalidError{param: "AuthorizationModelId", description: "ULID"}
+	if err != nil {
+		return nil, err
 	}
 
 	for index, checkBody := range *request.GetBody() {
