@@ -505,7 +505,7 @@ options := ClientWriteOptions{
     // You can rely on the model id set in the configuration or override it for this specific request
     AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
 }
-data, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
+data, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
 ```
 
 Convenience `WriteTuples` and `DeleteTuples` methods are also available.
@@ -541,7 +541,7 @@ options := ClientWriteOptions{
         MaxPerChunk: 1, // Maximum number of requests to be sent in a transaction in a particular chunk
     },
 }
-data, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
+data, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
 
 // data.Writes = [{
 //   TupleKey: { User, Relation, Object },
