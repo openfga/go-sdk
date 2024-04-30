@@ -33,13 +33,18 @@ type OpenFgaApi interface {
 
 	/*
 		 * Check Check whether a user is authorized to access an object
-		 * The Check API queries to check if the user has a certain relationship with an object in a certain store.
+		 * The Check API returns whether a given user has a relationship with a given object in a given store.
+	The `user` field of the request can be a specific target, such as `user:anne`, or a userset (set of users) such as `group:marketing#member` or a type-bound public access `user:*`.
+	To arrive at a result, the API uses: an authorization model, explicit tuples written through the Write API, contextual tuples present in the request, and implicit tuples that exist by virtue of applying set theory (such as `document:2021-budget#viewer@document:2021-budget#viewer`; the set of users who are viewers of `document:2021-budget` are the set of users who are the viewers of `document:2021-budget`).
 	A `contextual_tuples` object may also be included in the body of the request. This object contains one field `tuple_keys`, which is an array of tuple keys. Each of these tuples may have an associated `condition`.
 	You may also provide an `authorization_model_id` in the body. This will be used to assert that the input `tuple_key` is valid for the model specified. If not specified, the assertion will be made against the latest authorization model ID. It is strongly recommended to specify authorization model id for better performance.
 	You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly.
 	The response will return whether the relationship exists in the field `allowed`.
 
-	## Example
+	Some exceptions apply, but in general, if a Check API responds with `{allowed: true}`, then you can expect the equivalent ListObjects query to return the object, and viceversa.
+	For example, if `Check(user:anne, reader, document:2021-budget)` responds with `{allowed: true}`, then `ListObjects(user:anne, reader, document)` may include `document:2021-budget` in the response.
+	## Examples
+	### Querying with contextual tuples
 	In order to check if user `user:anne` of type `user` has a `reader` relationship with object `document:2021-budget` given the following contextual tuple
 	```json
 	{
@@ -68,7 +73,72 @@ type OpenFgaApi interface {
 	  "authorization_model_id": "01G50QVV17PECNVAHX1GG4Y5NC"
 	}
 	```
-	OpenFGA's response will include `{ "allowed": true }` if there is a relationship and `{ "allowed": false }` if there isn't.
+	### Querying usersets
+	Some Checks will always return `true`, even without any tuples. For example, for the following authorization model
+	```python
+	model
+	  schema 1.1
+	type user
+	type document
+	  relations
+	    define reader: [user]
+	```
+	the following query
+	```json
+	{
+	  "tuple_key": {
+	     "user": "document:2021-budget#reader",
+	     "relation": "reader",
+	     "object": "document:2021-budget"
+	  }
+	}
+	```
+	will always return `{ "allowed": true }`. This is because usersets are self-defining: the userset `document:2021-budget#reader` will always have the `reader` relation with `document:2021-budget`.
+	### Querying usersets with exclusion in the model
+	A Check for a userset can yield results that must be treated carefully if the model involves exclusion. For example, for the following authorization model
+	```python
+	model
+	  schema 1.1
+	type user
+	type group
+	  relations
+	    define member: [user]
+	type document
+	  relations
+	    define blocked: [user]
+	    define reader: [group#member] but not blocked
+	```
+	the following query
+	```json
+	{
+	  "tuple_key": {
+	     "user": "group:finance#member",
+	     "relation": "reader",
+	     "object": "document:2021-budget"
+	  },
+	  "contextual_tuples": {
+	    "tuple_keys": [
+	      {
+	        "user": "user:anne",
+	        "relation": "member",
+	        "object": "group:finance"
+	      },
+	      {
+	        "user": "group:finance#member",
+	        "relation": "reader",
+	        "object": "document:2021-budget"
+	      },
+	      {
+	        "user": "user:anne",
+	        "relation": "blocked",
+	        "object": "document:2021-budget"
+	      }
+	    ]
+	  },
+	}
+	```
+	will return `{ "allowed": true }`, even though a specific user of the userset `group:finance#member` does not have the `reader` relationship with the given object.
+
 		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 		 * @return ApiCheckRequest
 	*/
@@ -185,7 +255,8 @@ type OpenFgaApi interface {
 
 	/*
 		 * ListObjects List all objects of the given type that the user has a relation with
-		 * The ListObjects API returns a list of all the objects of the given type that the user has a relation with. To achieve this, both the store tuples and the authorization model are used.
+		 * The ListObjects API returns a list of all the objects of the given type that the user has a relation with.
+	 To arrive at a result, the API uses: an authorization model, explicit tuples written through the Write API, contextual tuples present in the request, and implicit tuples that exist by virtue of applying set theory (such as `document:2021-budget#viewer@document:2021-budget#viewer`; the set of users who are viewers of `document:2021-budget` are the set of users who are the viewers of `document:2021-budget`).
 	An `authorization_model_id` may be specified in the body. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance.
 	You may also specify `contextual_tuples` that will be treated as regular tuples. Each of these tuples may have an associated `condition`.
 	You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly.
@@ -218,6 +289,19 @@ type OpenFgaApi interface {
 	 * @return ListStoresResponse
 	 */
 	ListStoresExecute(r ApiListStoresRequest) (ListStoresResponse, *_nethttp.Response, error)
+
+	/*
+	 * ListUsers List all users of the given type that the object has a relation with
+	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return ApiListUsersRequest
+	 */
+	ListUsers(ctx _context.Context) ApiListUsersRequest
+
+	/*
+	 * ListUsersExecute executes the request
+	 * @return ListUsersResponse
+	 */
+	ListUsersExecute(r ApiListUsersRequest) (ListUsersResponse, *_nethttp.Response, error)
 
 	/*
 		 * Read Get tuples from the store that matches a query, without following userset rewrite rules
@@ -471,9 +555,10 @@ type OpenFgaApi interface {
 
 	/*
 		 * Write Add or delete tuples from the store
-		 * The Write API will update the tuples for a certain store. Tuples and type definitions allow OpenFGA to determine whether a relationship exists between an object and an user.
+		 * The Write API will transactionally update the tuples for a certain store. Tuples and type definitions allow OpenFGA to determine whether a relationship exists between an object and an user.
 	In the body, `writes` adds new tuples and `deletes` removes existing tuples. When deleting a tuple, any `condition` specified with it is ignored.
 	The API is not idempotent: if, later on, you try to add the same tuple key (even if the `condition` is different), or if you try to delete a non-existing tuple, it will throw an error.
+	The API will not allow you to write tuples such as `document:2021-budget#viewer@document:2021-budget#viewer`, because they are implicit.
 	An `authorization_model_id` may be specified in the body. If it is, it will be used to assert that each written tuple (not deleted) is valid for the model specified. If it is not specified, the latest authorization model ID will be used.
 	## Example
 	### Adding relationships
@@ -611,14 +696,19 @@ func (r ApiCheckRequest) Execute() (CheckResponse, *_nethttp.Response, error) {
 
 /*
   - Check Check whether a user is authorized to access an object
-  - The Check API queries to check if the user has a certain relationship with an object in a certain store.
+  - The Check API returns whether a given user has a relationship with a given object in a given store.
 
+The `user` field of the request can be a specific target, such as `user:anne`, or a userset (set of users) such as `group:marketing#member` or a type-bound public access `user:*`.
+To arrive at a result, the API uses: an authorization model, explicit tuples written through the Write API, contextual tuples present in the request, and implicit tuples that exist by virtue of applying set theory (such as `document:2021-budget#viewer@document:2021-budget#viewer`; the set of users who are viewers of `document:2021-budget` are the set of users who are the viewers of `document:2021-budget`).
 A `contextual_tuples` object may also be included in the body of the request. This object contains one field `tuple_keys`, which is an array of tuple keys. Each of these tuples may have an associated `condition`.
 You may also provide an `authorization_model_id` in the body. This will be used to assert that the input `tuple_key` is valid for the model specified. If not specified, the assertion will be made against the latest authorization model ID. It is strongly recommended to specify authorization model id for better performance.
 You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly.
 The response will return whether the relationship exists in the field `allowed`.
 
-## Example
+Some exceptions apply, but in general, if a Check API responds with `{allowed: true}`, then you can expect the equivalent ListObjects query to return the object, and viceversa.
+For example, if `Check(user:anne, reader, document:2021-budget)` responds with `{allowed: true}`, then `ListObjects(user:anne, reader, document)` may include `document:2021-budget` in the response.
+## Examples
+### Querying with contextual tuples
 In order to check if user `user:anne` of type `user` has a `reader` relationship with object `document:2021-budget` given the following contextual tuple
 ```json
 
@@ -651,7 +741,86 @@ the Check API can be used with the following request body:
 	}
 
 ```
-OpenFGA's response will include `{ "allowed": true }` if there is a relationship and `{ "allowed": false }` if there isn't.
+### Querying usersets
+Some Checks will always return `true`, even without any tuples. For example, for the following authorization model
+```python
+model
+
+	schema 1.1
+
+type user
+type document
+
+	relations
+	  define reader: [user]
+
+```
+the following query
+```json
+
+	{
+	  "tuple_key": {
+	     "user": "document:2021-budget#reader",
+	     "relation": "reader",
+	     "object": "document:2021-budget"
+	  }
+	}
+
+```
+will always return `{ "allowed": true }`. This is because usersets are self-defining: the userset `document:2021-budget#reader` will always have the `reader` relation with `document:2021-budget`.
+### Querying usersets with exclusion in the model
+A Check for a userset can yield results that must be treated carefully if the model involves exclusion. For example, for the following authorization model
+```python
+model
+
+	schema 1.1
+
+type user
+type group
+
+	relations
+	  define member: [user]
+
+type document
+
+	relations
+	  define blocked: [user]
+	  define reader: [group#member] but not blocked
+
+```
+the following query
+```json
+
+	{
+	  "tuple_key": {
+	     "user": "group:finance#member",
+	     "relation": "reader",
+	     "object": "document:2021-budget"
+	  },
+	  "contextual_tuples": {
+	    "tuple_keys": [
+	      {
+	        "user": "user:anne",
+	        "relation": "member",
+	        "object": "group:finance"
+	      },
+	      {
+	        "user": "group:finance#member",
+	        "relation": "reader",
+	        "object": "document:2021-budget"
+	      },
+	      {
+	        "user": "user:anne",
+	        "relation": "blocked",
+	        "object": "document:2021-budget"
+	      }
+	    ]
+	  },
+	}
+
+```
+will return `{ "allowed": true }`, even though a specific user of the userset `group:finance#member` does not have the `reader` relationship with the given object.
+
   - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @return ApiCheckRequest
 */
@@ -2001,7 +2170,8 @@ func (r ApiListObjectsRequest) Execute() (ListObjectsResponse, *_nethttp.Respons
 
 /*
   - ListObjects List all objects of the given type that the user has a relation with
-  - The ListObjects API returns a list of all the objects of the given type that the user has a relation with. To achieve this, both the store tuples and the authorization model are used.
+  - The ListObjects API returns a list of all the objects of the given type that the user has a relation with.
+    To arrive at a result, the API uses: an authorization model, explicit tuples written through the Write API, contextual tuples present in the request, and implicit tuples that exist by virtue of applying set theory (such as `document:2021-budget#viewer@document:2021-budget#viewer`; the set of users who are viewers of `document:2021-budget` are the set of users who are the viewers of `document:2021-budget`).
 
 An `authorization_model_id` may be specified in the body. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance.
 You may also specify `contextual_tuples` that will be treated as regular tuples. Each of these tuples may have an associated `condition`.
@@ -2525,6 +2695,273 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 	}
 	// should never have reached this
 	var localVarReturnValue ListStoresResponse
+	return localVarReturnValue, nil, reportError("Error not handled properly")
+}
+
+type ApiListUsersRequest struct {
+	ctx        _context.Context
+	ApiService OpenFgaApi
+
+	body *ListUsersRequest
+}
+
+func (r ApiListUsersRequest) Body(body ListUsersRequest) ApiListUsersRequest {
+	r.body = &body
+	return r
+}
+
+func (r ApiListUsersRequest) Execute() (ListUsersResponse, *_nethttp.Response, error) {
+	return r.ApiService.ListUsersExecute(r)
+}
+
+/*
+ * ListUsers List all users of the given type that the object has a relation with
+ * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @return ApiListUsersRequest
+ */
+func (a *OpenFgaApiService) ListUsers(ctx _context.Context) ApiListUsersRequest {
+	return ApiListUsersRequest{
+		ApiService: a,
+		ctx:        ctx,
+	}
+}
+
+/*
+ * Execute executes the request
+ * @return ListUsersResponse
+ */
+func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersResponse, *_nethttp.Response, error) {
+	var maxRetry int
+	var minWaitInMs int
+
+	if a.RetryParams != nil {
+		maxRetry = a.RetryParams.MinWaitInMs
+		minWaitInMs = a.RetryParams.MinWaitInMs
+	} else {
+		maxRetry = 0
+		minWaitInMs = 0
+	}
+
+	for i := 0; i < maxRetry+1; i++ {
+		var (
+			localVarHTTPMethod  = _nethttp.MethodPost
+			localVarPostBody    interface{}
+			localVarReturnValue ListUsersResponse
+		)
+
+		if a.client.cfg.StoreId == "" {
+			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
+		}
+		if a.client.cfg.StoreId != "" && !internalutils.IsWellFormedUlidString(a.client.cfg.StoreId) {
+			return localVarReturnValue, nil, reportError("Configuration.StoreId is invalid")
+		}
+		localVarPath := "/stores/{store_id}/list-users"
+		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(a.client.cfg.StoreId), -1)
+
+		localVarHeaderParams := make(map[string]string)
+		localVarQueryParams := _neturl.Values{}
+		if r.body == nil {
+			return localVarReturnValue, nil, reportError("body is required and must be specified")
+		}
+
+		// to determine the Content-Type header
+		localVarHTTPContentTypes := []string{"application/json"}
+
+		// set Content-Type header
+		localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+		if localVarHTTPContentType != "" {
+			localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+		}
+
+		// to determine the Accept header
+		localVarHTTPHeaderAccepts := []string{"application/json"}
+
+		// set Accept header
+		localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+		if localVarHTTPHeaderAccept != "" {
+			localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+		}
+		// body params
+		localVarPostBody = r.body
+		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams)
+		if err != nil {
+			return localVarReturnValue, nil, err
+		}
+
+		localVarHTTPResponse, err := a.client.callAPI(req)
+		if err != nil || localVarHTTPResponse == nil {
+			return localVarReturnValue, localVarHTTPResponse, err
+		}
+
+		localVarBody, err := _ioutil.ReadAll(localVarHTTPResponse.Body)
+		localVarHTTPResponse.Body.Close()
+		localVarHTTPResponse.Body = _ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+		if err != nil {
+			return localVarReturnValue, localVarHTTPResponse, err
+		}
+
+		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
+
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
+				newErr := FgaApiValidationError{
+					body:               localVarBody,
+					storeId:            a.client.cfg.StoreId,
+					endpointCategory:   "ListUsers",
+					requestBody:        localVarPostBody,
+					requestMethod:      localVarHTTPMethod,
+					responseStatusCode: localVarHTTPResponse.StatusCode,
+					responseHeader:     localVarHTTPResponse.Header,
+				}
+				// Due to CanonicalHeaderKey, header name is case-insensitive.
+				newErr.requestId = localVarHTTPResponse.Header.Get("Fga-Request-Id")
+				newErr.error = "ListUsers validation error for " + localVarHTTPMethod + " ListUsers with body " + string(localVarBody)
+				var v ValidationErrorMessageResponse
+				err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+				if err != nil {
+					newErr.modelDecodeError = err
+					return localVarReturnValue, localVarHTTPResponse, newErr
+				}
+				newErr.model = v
+				newErr.responseCode = v.GetCode()
+				newErr.error += " with error code " + string(v.GetCode()) + " error message: " + v.GetMessage()
+
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
+				newErr := FgaApiAuthenticationError{
+					body: localVarBody,
+
+					storeId:            a.client.cfg.StoreId,
+					endpointCategory:   "ListUsers",
+					responseStatusCode: localVarHTTPResponse.StatusCode,
+					responseHeader:     localVarHTTPResponse.Header,
+				}
+				// Due to CanonicalHeaderKey, header name is case-insensitive.
+				newErr.requestId = localVarHTTPResponse.Header.Get("Fga-Request-Id")
+				newErr.error = "ListUsers auth error for " + localVarHTTPMethod + " ListUsers with body " + string(localVarBody)
+
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
+				newErr := FgaApiNotFoundError{
+					body:               localVarBody,
+					storeId:            a.client.cfg.StoreId,
+					endpointCategory:   "ListUsers",
+					requestBody:        localVarPostBody,
+					requestMethod:      localVarHTTPMethod,
+					responseStatusCode: localVarHTTPResponse.StatusCode,
+					responseHeader:     localVarHTTPResponse.Header,
+				}
+				// Due to CanonicalHeaderKey, header name is case-insensitive.
+				newErr.requestId = localVarHTTPResponse.Header.Get("Fga-Request-Id")
+				newErr.error = "ListUsers validation error for " + localVarHTTPMethod + " ListUsers with body " + string(localVarBody)
+				var v PathUnknownErrorMessageResponse
+				err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+				if err != nil {
+					newErr.modelDecodeError = err
+					return localVarReturnValue, localVarHTTPResponse, newErr
+				}
+				newErr.model = v
+				newErr.responseCode = v.GetCode()
+				newErr.error += " with error code " + string(v.GetCode()) + " error message: " + v.GetMessage()
+
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+
+			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
+				if i < maxRetry {
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
+				// maximum number of retry reached
+				newErr := FgaApiRateLimitExceededError{
+					body: localVarBody,
+
+					storeId:            a.client.cfg.StoreId,
+					endpointCategory:   "ListUsers",
+					requestBody:        localVarPostBody,
+					requestMethod:      localVarHTTPMethod,
+					responseStatusCode: localVarHTTPResponse.StatusCode,
+					responseHeader:     localVarHTTPResponse.Header,
+				}
+				newErr.error = "ListUsers rate limit error for " + localVarHTTPMethod + " ListUsers with body " + string(localVarBody)
+
+				// Due to CanonicalHeaderKey, header name is case-insensitive.
+				newErr.requestId = localVarHTTPResponse.Header.Get("Fga-Request-Id")
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+
+			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
+					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
+					continue
+				}
+				newErr := FgaApiInternalError{
+					body: localVarBody,
+
+					storeId:            a.client.cfg.StoreId,
+					endpointCategory:   "ListUsers",
+					requestBody:        localVarPostBody,
+					requestMethod:      localVarHTTPMethod,
+					responseStatusCode: localVarHTTPResponse.StatusCode,
+					responseHeader:     localVarHTTPResponse.Header,
+				}
+				newErr.error = "ListUsers internal error for " + localVarHTTPMethod + " ListUsers with body " + string(localVarBody)
+				newErr.requestId = localVarHTTPResponse.Header.Get("Fga-Request-Id")
+
+				var v InternalErrorMessageResponse
+				err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+				if err != nil {
+					newErr.modelDecodeError = err
+					return localVarReturnValue, localVarHTTPResponse, newErr
+				}
+				newErr.model = v
+				newErr.responseCode = v.GetCode()
+				newErr.error += " with error code " + string(v.GetCode()) + " error message: " + v.GetMessage()
+
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr := FgaApiError{
+				body: localVarBody,
+
+				storeId:            a.client.cfg.StoreId,
+				endpointCategory:   "ListUsers",
+				requestBody:        localVarPostBody,
+				requestMethod:      localVarHTTPMethod,
+				responseStatusCode: localVarHTTPResponse.StatusCode,
+				responseHeader:     localVarHTTPResponse.Header,
+			}
+			newErr.error = "ListUsers error for " + localVarHTTPMethod + " ListUsers with body " + string(localVarBody)
+			newErr.requestId = localVarHTTPResponse.Header.Get("Fga-Request-Id")
+
+			var v ErrorResponse
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.modelDecodeError = err
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			newErr.responseCode = v.Code
+			newErr.error += " with error code " + v.Code + " error message: " + v.Message
+
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+
+		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+		if err != nil {
+			newErr := GenericOpenAPIError{
+				body:  localVarBody,
+				error: err.Error(),
+			}
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+
+		return localVarReturnValue, localVarHTTPResponse, nil
+	}
+	// should never have reached this
+	var localVarReturnValue ListUsersResponse
 	return localVarReturnValue, nil, reportError("Error not handled properly")
 }
 
@@ -4092,10 +4529,11 @@ func (r ApiWriteRequest) Execute() (map[string]interface{}, *_nethttp.Response, 
 
 /*
   - Write Add or delete tuples from the store
-  - The Write API will update the tuples for a certain store. Tuples and type definitions allow OpenFGA to determine whether a relationship exists between an object and an user.
+  - The Write API will transactionally update the tuples for a certain store. Tuples and type definitions allow OpenFGA to determine whether a relationship exists between an object and an user.
 
 In the body, `writes` adds new tuples and `deletes` removes existing tuples. When deleting a tuple, any `condition` specified with it is ignored.
 The API is not idempotent: if, later on, you try to add the same tuple key (even if the `condition` is different), or if you try to delete a non-existing tuple, it will throw an error.
+The API will not allow you to write tuples such as `document:2021-budget#viewer@document:2021-budget#viewer`, because they are implicit.
 An `authorization_model_id` may be specified in the body. If it is, it will be used to assert that each written tuple (not deleted) is valid for the model specified. If it is not specified, the latest authorization model ID will be used.
 ## Example
 ### Adding relationships

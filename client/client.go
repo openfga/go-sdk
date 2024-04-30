@@ -388,6 +388,19 @@ type SdkClient interface {
 	 */
 	ListRelationsExecute(request SdkClientListRelationsRequestInterface) (*ClientListRelationsResponse, error)
 
+	/*
+	 * ListUsers List all users of the given type that the object has a relation with
+	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return ApiListUsersRequest
+	 */
+	ListUsers(ctx _context.Context) SdkClientListUsersRequestInterface
+
+	/*
+	 * ListUsersExecute executes the request
+	 * @return ListUsersResponse
+	 */
+	ListUsersExecute(r SdkClientListUsersRequestInterface) (*ClientListUsersResponse, error)
+
 	/* Assertions */
 
 	/*
@@ -2138,6 +2151,106 @@ func (client *OpenFgaClient) ListRelationsExecute(request SdkClientListRelations
 	}
 
 	return &ClientListRelationsResponse{Relations: relations}, nil
+}
+
+// / ListUsers
+type SdkClientListUsersRequest struct {
+	ctx    _context.Context
+	Client *OpenFgaClient
+
+	body    *ClientListUsersRequest
+	options *ClientListUsersOptions
+}
+
+type SdkClientListUsersRequestInterface interface {
+	Options(options ClientListUsersOptions) SdkClientListUsersRequestInterface
+	Body(body ClientListUsersRequest) SdkClientListUsersRequestInterface
+	Execute() (*ClientListUsersResponse, error)
+	GetAuthorizationModelIdOverride() *string
+
+	GetContext() _context.Context
+	GetBody() *ClientListUsersRequest
+	GetOptions() *ClientListUsersOptions
+}
+
+type ClientListUsersRequest struct {
+	Object           fgaSdk.FgaObject           `json:"object"yaml:"object"`
+	Relation         string                     `json:"relation"yaml:"relation"`
+	UserFilters      []fgaSdk.UserTypeFilter    `json:"user_filters"yaml:"user_filters"`
+	ContextualTuples []ClientContextualTupleKey `json:"contextual_tuples,omitempty"`
+	// Additional request context that will be used to evaluate any ABAC conditions encountered in the query evaluation.
+	Context *map[string]interface{} `json:"context,omitempty"yaml:"context,omitempty"`
+}
+
+type ClientListUsersOptions struct {
+	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
+}
+
+type ClientListUsersResponse = fgaSdk.ListUsersResponse
+
+func (client *OpenFgaClient) ListUsers(ctx _context.Context) SdkClientListUsersRequestInterface {
+	return &SdkClientListUsersRequest{
+		Client: client,
+		ctx:    ctx,
+	}
+}
+
+func (request *SdkClientListUsersRequest) Options(options ClientListUsersOptions) SdkClientListUsersRequestInterface {
+	request.options = &options
+	return request
+}
+
+func (request *SdkClientListUsersRequest) GetAuthorizationModelIdOverride() *string {
+	if request.options == nil {
+		return nil
+	}
+	return request.options.AuthorizationModelId
+}
+
+func (request *SdkClientListUsersRequest) Body(body ClientListUsersRequest) SdkClientListUsersRequestInterface {
+	request.body = &body
+	return request
+}
+
+func (request *SdkClientListUsersRequest) Execute() (*ClientListUsersResponse, error) {
+	return request.Client.ListUsersExecute(request)
+}
+
+func (request *SdkClientListUsersRequest) GetContext() _context.Context {
+	return request.ctx
+}
+
+func (request *SdkClientListUsersRequest) GetBody() *ClientListUsersRequest {
+	return request.body
+}
+
+func (request *SdkClientListUsersRequest) GetOptions() *ClientListUsersOptions {
+	return request.options
+}
+
+func (client *OpenFgaClient) ListUsersExecute(request SdkClientListUsersRequestInterface) (*ClientListUsersResponse, error) {
+	var contextualTuples []ClientContextualTupleKey
+	if request.GetBody().ContextualTuples != nil {
+		for index := 0; index < len(request.GetBody().ContextualTuples); index++ {
+			contextualTuples = append(contextualTuples, (request.GetBody().ContextualTuples)[index])
+		}
+	}
+	authorizationModelId, err := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
+	if err != nil {
+		return nil, err
+	}
+	data, _, err := client.OpenFgaApi.ListUsers(request.GetContext()).Body(fgaSdk.ListUsersRequest{
+		Object:               request.GetBody().Object,
+		Relation:             request.GetBody().Relation,
+		UserFilters:          request.GetBody().UserFilters,
+		ContextualTuples:     &fgaSdk.NewContextualTupleKeys(contextualTuples).TupleKeys,
+		Context:              request.GetBody().Context,
+		AuthorizationModelId: authorizationModelId,
+	}).Execute()
+	if err != nil {
+		return nil, err
+	}
+	return &data, nil
 }
 
 // / ReadAssertions

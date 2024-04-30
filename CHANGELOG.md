@@ -61,7 +61,7 @@ Some of the changes to expect:
 fgaClient, err := NewSdkClient(&ClientConfiguration{
     ApiUrl:  os.Getenv("FGA_API_URL"), // required, e.g. https://api.fga.example
     StoreId: os.Getenv("FGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
-    AuthorizationModelId: os.Getenv("FGA_AUTHORIZATION_MODEL_ID"), // optional, recommended to be set for production
+    AuthorizationModelId: os.Getenv("FGA_MODEL_ID"), // optional, recommended to be set for production
 })
 ```
 - When initializing a client, `AuthorizationModelId` is no longer a pointer, and you can just pass the string directly

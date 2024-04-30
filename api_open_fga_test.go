@@ -969,6 +969,95 @@ func TestOpenFgaApi(t *testing.T) {
 		}
 	})
 
+	t.Run("ListUsers", func(t *testing.T) {
+		test := TestDefinition{
+			Name: "ListUsers",
+			// A real API would not return all these for the filter provided, these are just for test purposes
+			JsonResponse:   `{"excluded_users":null,"users":[{"object":{"id":"81684243-9356-4421-8fbf-a4f8d36aa31b","type":"user"}},{"userset":{"id":"fga","relation":"member","type":"team"}},{"wildcard":{"type":"user"}}]}`,
+			ResponseStatus: http.StatusOK,
+			Method:         http.MethodPost,
+			RequestPath:    "list-users",
+		}
+
+		requestBody := ListUsersRequest{
+			AuthorizationModelId: PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			Object: FgaObject{
+				Type: "document",
+				Id:   "roadmap",
+			},
+			Relation: "can_read",
+			// API does not allow sending multiple filters, done here for testing purposes
+			UserFilters: []UserTypeFilter{{
+				Type: "user",
+			}, {
+				Type:     "team",
+				Relation: PtrString("member"),
+			}},
+			ContextualTuples: &[]TupleKey{{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "editor",
+				Object:   "folder:product",
+			}, {
+				User:     "folder:product",
+				Relation: "parent",
+				Object:   "document:roadmap",
+			}},
+			Context: &map[string]interface{}{"ViewCount": 100},
+		}
+
+		var expectedResponse ListUsersResponse
+		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", configuration.ApiUrl, configuration.StoreId, test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(500, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		got, response, err := apiClient.OpenFgaApi.ListUsers(context.Background()).
+			Body(requestBody).
+			Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		if response.StatusCode != test.ResponseStatus {
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
+		}
+
+		_, err = got.MarshalJSON()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		if len(got.Users) != len(expectedResponse.Users) {
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, got.GetUsers(), expectedResponse.GetUsers())
+		}
+
+		if got.Users[0].GetObject().Type != expectedResponse.Users[0].GetObject().Type || got.Users[0].GetObject().Id != expectedResponse.Users[0].GetObject().Id {
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v (%v)", test.Name, got.Users[0], expectedResponse.Users[0], "object: { type: \"user\", id: \"81684243-9356-4421-8fbf-a4f8d36aa31b\" }")
+		}
+
+		if got.Users[1].GetUserset().Type != expectedResponse.Users[1].GetUserset().Type || got.Users[1].GetUserset().Id != expectedResponse.Users[1].GetUserset().Id || got.Users[1].GetUserset().Relation != expectedResponse.Users[1].GetUserset().Relation {
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v (%v)", test.Name, got.Users[1], expectedResponse.Users[1], "wildcard: { type: \"team\", id: \"fga\", relation: \"member\" }")
+		}
+
+		if got.Users[2].GetWildcard().Type != expectedResponse.Users[2].GetWildcard().Type {
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v (%v)", test.Name, got.Users[2], expectedResponse.Users[2], "wildcard: { type: \"user\" }")
+		}
+
+		if len(got.ExcludedUsers) != len(expectedResponse.ExcludedUsers) {
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, got.GetExcludedUsers(), expectedResponse.GetExcludedUsers())
+		}
+	})
+
 	t.Run("Check with 400 error", func(t *testing.T) {
 		test := TestDefinition{
 			Name:           "Check",
