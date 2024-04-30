@@ -1194,7 +1194,6 @@ func TestOpenFgaClient(t *testing.T) {
 				return httpmock.NewStringResponse(http.StatusUnauthorized, ""), nil
 			},
 		)
-		// BatchCheck with invalid auth should fail
 		_, err = fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
 		if err == nil {
 			t.Fatalf("Expect error with invalid auth but there is none")
@@ -1236,7 +1235,6 @@ func TestOpenFgaClient(t *testing.T) {
 				return httpmock.NewStringResponse(http.StatusUnauthorized, ""), nil
 			},
 		)
-		// BatchCheck with invalid auth should fail
 		_, err = fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
 		if err == nil {
 			t.Fatalf("Expect error with invalid auth but there is none")
@@ -1296,14 +1294,13 @@ func TestOpenFgaClient(t *testing.T) {
 				return httpmock.NewStringResponse(http.StatusBadRequest, ""), nil
 			},
 		)
-		// BatchCheck with invalid auth should fail
 		data, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
 		if err != nil {
 			t.Fatalf("Expected no error")
 		}
 
 		if data.Writes[0].Error == nil {
-			t.Fatalf("Expected error to be in deletes")
+			t.Fatalf("Expected error to be in writes")
 		}
 
 		requestBody = ClientWriteRequest{
