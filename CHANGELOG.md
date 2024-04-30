@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.3.6
+
+### [0.3.6](https://github.com/openfga/go-sdk/compare/v0.3.5...v0.3.6) (2024-04-30)
+
+- feat: support the [ListUsers](https://github.com/openfga/rfcs/blob/main/20231214-listUsers-api.md) endpoint (#81)
+- feat: add retries to client credential requests (#51)
+
 ## v0.3.5
 
 ### [0.3.5](https://github.com/openfga/go-sdk/compare/v0.3.4...v0.3.5) (2024-02-13)
@@ -61,7 +68,7 @@ Some of the changes to expect:
 fgaClient, err := NewSdkClient(&ClientConfiguration{
     ApiUrl:  os.Getenv("FGA_API_URL"), // required, e.g. https://api.fga.example
     StoreId: os.Getenv("FGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
-    AuthorizationModelId: os.Getenv("FGA_AUTHORIZATION_MODEL_ID"), // optional, recommended to be set for production
+    AuthorizationModelId: os.Getenv("FGA_MODEL_ID"), // optional, recommended to be set for production
 })
 ```
 - When initializing a client, `AuthorizationModelId` is no longer a pointer, and you can just pass the string directly

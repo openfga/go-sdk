@@ -31,8 +31,8 @@ func mainInner() error {
 	}
 	fgaClient, err := client.NewSdkClient(&client.ClientConfiguration{
 		ApiUrl:               apiUrl,
-		StoreId:              os.Getenv("FGA_STORE_ID"),               // not needed when calling `CreateStore` or `ListStores`
-		AuthorizationModelId: os.Getenv("FGA_AUTHORIZATION_MODEL_ID"), // optional, recommended to be set for production
+		StoreId:              os.Getenv("FGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
+		AuthorizationModelId: os.Getenv("FGA_MODEL_ID"), // optional, recommended to be set for production
 		Credentials:          &creds,
 	})
 
@@ -242,6 +242,38 @@ func mainInner() error {
 		return err
 	}
 	fmt.Printf("Allowed: %v\n", checkResponse.Allowed)
+
+	// ListObjects
+	fmt.Println("Listing objects user has access to")
+	listObjectsResponse, err := fgaClient.ListObjects(ctx).Body(client.ClientListObjectsRequest{
+		User:     "user:anne",
+		Relation: "viewer",
+		Type:     "document",
+	}).Execute()
+	fmt.Printf("Response: Objects = %v\n", listObjectsResponse.Objects)
+
+	// ListRelations
+	fmt.Println("Listing relations user has with object")
+	listRelationsResponse, err := fgaClient.ListRelations(ctx).Body(client.ClientListRelationsRequest{
+		User:      "user:anne",
+		Object:    "document:roadmap",
+		Relations: []string{"viewer"},
+	}).Execute()
+	fmt.Printf("Response: Relations = %v\n", listRelationsResponse.Relations)
+
+	// ListUsers
+	fmt.Println("Listing user who have access to object")
+	listUsersResponse, err := fgaClient.ListUsers(ctx).Body(client.ClientListUsersRequest{
+		Relation: "viewer",
+		Object: openfga.Object{
+			Type: "document",
+			Id:   "roadmap",
+		},
+		UserFilters: []openfga.ListUsersFilter{{
+			Type: "user",
+		}},
+	}).Execute()
+	fmt.Printf("Response: Users = %v\n", listUsersResponse.Users)
 
 	// WriteAssertions
 	_, err = fgaClient.WriteAssertions(ctx).Body([]client.ClientAssertion{
