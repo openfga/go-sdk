@@ -1963,7 +1963,10 @@ type ClientListObjectsOptions struct {
 	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
 }
 
-type ClientListObjectsResponse = fgaSdk.ListObjectsResponse
+type ClientListObjectsResponse struct {
+	fgaSdk.ListObjectsResponse
+	HttpResponse *_nethttp.Response
+}
 
 func (client *OpenFgaClient) ListObjects(ctx _context.Context) SdkClientListObjectsRequestInterface {
 	return &SdkClientListObjectsRequest{
@@ -2016,7 +2019,7 @@ func (client *OpenFgaClient) ListObjectsExecute(request SdkClientListObjectsRequ
 	if err != nil {
 		return nil, err
 	}
-	data, _, err := client.OpenFgaApi.ListObjects(request.GetContext()).Body(fgaSdk.ListObjectsRequest{
+	data, httpResponse, err := client.OpenFgaApi.ListObjects(request.GetContext()).Body(fgaSdk.ListObjectsRequest{
 		User:                 request.GetBody().User,
 		Relation:             request.GetBody().Relation,
 		Type:                 request.GetBody().Type,
@@ -2027,7 +2030,8 @@ func (client *OpenFgaClient) ListObjectsExecute(request SdkClientListObjectsRequ
 	if err != nil {
 		return nil, err
 	}
-	return &data, nil
+
+	return &ClientListObjectsResponse{ListObjectsResponse: data, HttpResponse: httpResponse}, nil
 }
 
 /// ListRelations
