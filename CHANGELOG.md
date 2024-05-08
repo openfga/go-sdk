@@ -1,13 +1,19 @@
 # Changelog
 
+## v0.3.7
+
+### [0.3.7](https://github.com/openfga/go-sdk/compare/v0.3.6...v0.3.7) (2024-05-08)
+- feat: Add MaxParallelRequests option in ListRelations (#93) - thanks @gurleensethi
+- chore: lower required go version to 1.21 (fixes #94)
+
 ## v0.3.6
 
 ### [0.3.6](https://github.com/openfga/go-sdk/compare/v0.3.5...v0.3.6) (2024-04-30)
 
 - feat: support the [ListUsers](https://github.com/openfga/rfcs/blob/main/20231214-listUsers-api.md) endpoint (#81)
-- feat: add retries to client credential requests (#51)
 - fix: do not call ReadAuthorizationModel on BatchCheck or non-Transactional Write (#78)
 - chore: fix typos in the readme (#91) - thanks @balaji-dongare
+- chore!: raise required go version to 1.21.9
 
 ## v0.3.5
 
