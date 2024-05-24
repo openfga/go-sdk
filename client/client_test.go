@@ -1,7 +1,7 @@
 /**
  * Go SDK for OpenFGA
  *
- * API version: 0.1
+ * API version: 1.x
  * Website: https://openfga.dev
  * Documentation: https://openfga.dev/docs
  * Support: https://openfga.dev/community
@@ -20,7 +20,7 @@ import (
 	"testing"
 
 	"github.com/jarcoal/httpmock"
-	openfga "github.com/openfga/go-sdk"
+	"github.com/openfga/go-sdk"
 	. "github.com/openfga/go-sdk/client"
 )
 
@@ -276,7 +276,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient)),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
@@ -299,6 +299,36 @@ func TestOpenFgaClient(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
+
+		// invalid store id should result in error
+		badStoreOptions := ClientGetStoreOptions{
+			StoreId: openfga.PtrString("INVALID"),
+		}
+		_, err = fgaClient.GetStore(context.Background()).Options(badStoreOptions).Execute()
+		if err == nil {
+			t.Fatalf("Expect error with bad store id but there is none")
+		}
+
+		// store can be overridden
+		storeOverrideOptions := ClientGetStoreOptions{
+			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+		}
+		httpmock.Reset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+
+		_, err = fgaClient.GetStore(context.Background()).Options(storeOverrideOptions).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
 	})
 
 	t.Run("GetStoreAfterSettingStoreId", func(t *testing.T) {
@@ -378,7 +408,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient)),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, "{}")
 				if err != nil {
@@ -393,6 +423,34 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 		// DeleteStore without options should work
 		_, err = fgaClient.DeleteStore(context.Background()).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		// invalid store id should result in error
+		badStoreOptions := ClientDeleteStoreOptions{
+			StoreId: openfga.PtrString("INVALID"),
+		}
+		_, err = fgaClient.DeleteStore(context.Background()).Options(badStoreOptions).Execute()
+		if err == nil {
+			t.Fatalf("Expect error with bad store id but there is none")
+		}
+
+		// store can be overridden
+		storeOverrideOptions := ClientDeleteStoreOptions{
+			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+		}
+		httpmock.Reset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, "{}")
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		_, err = fgaClient.DeleteStore(context.Background()).Options(storeOverrideOptions).Execute()
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
@@ -415,7 +473,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
@@ -443,6 +501,34 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 		// ReadAuthorizationModels without options should work
 		_, err = fgaClient.ReadAuthorizationModels(context.Background()).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		// invalid store id should result in error
+		badStoreOptions := ClientReadAuthorizationModelsOptions{
+			StoreId: openfga.PtrString("INVALID"),
+		}
+		_, err = fgaClient.ReadAuthorizationModels(context.Background()).Options(badStoreOptions).Execute()
+		if err == nil {
+			t.Fatalf("Expect error with bad store id but there is none")
+		}
+
+		// store can be overridden
+		storeOverrideOptions := ClientReadAuthorizationModelsOptions{
+			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+		}
+		httpmock.Reset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		_, err = fgaClient.ReadAuthorizationModels(context.Background()).Options(storeOverrideOptions).Execute()
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
@@ -500,7 +586,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
@@ -526,6 +612,34 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// WriteAuthorizationModel without options should work
 		_, err = fgaClient.WriteAuthorizationModel(context.Background()).Body(requestBody).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		// invalid store id should result in error
+		badStoreOptions := ClientWriteAuthorizationModelOptions{
+			StoreId: openfga.PtrString("INVALID"),
+		}
+		_, err = fgaClient.WriteAuthorizationModel(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
+		if err == nil {
+			t.Fatalf("%v", err)
+		}
+
+		// store can be overridden
+		storeOverrideOptions := ClientWriteAuthorizationModelOptions{
+			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+		}
+		httpmock.Reset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		_, err = fgaClient.WriteAuthorizationModel(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
@@ -605,7 +719,7 @@ func TestOpenFgaClient(t *testing.T) {
 		defer httpmock.DeactivateAndReset()
 		httpmock.RegisterMatcherResponder(
 			test.Method,
-			fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId, test.RequestPath),
+			fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
 			httpmock.BodyContainsString(`"ViewCountLessThan200"`),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
@@ -715,7 +829,7 @@ func TestOpenFgaClient(t *testing.T) {
 		defer httpmock.DeactivateAndReset()
 		httpmock.RegisterMatcherResponder(
 			test.Method,
-			fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId, test.RequestPath),
+			fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
 			httpmock.BodyContainsString(`"ViewCountLessThan200"`),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
@@ -764,7 +878,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId, test.RequestPath, modelId),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath, modelId),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
@@ -803,6 +917,35 @@ func TestOpenFgaClient(t *testing.T) {
 		if err == nil || err.Error() != expectedError {
 			t.Fatalf("Expected error:%v, got: %v", expectedError, err)
 		}
+
+		// invalid store id should result in error
+		badStoreOptions := ClientReadAuthorizationModelOptions{
+			StoreId: openfga.PtrString("INVALID"),
+		}
+		_, err = fgaClient.ReadAuthorizationModel(context.Background()).Options(badStoreOptions).Execute()
+		if err == nil {
+			t.Fatalf("Expect error with bad store id but there is none")
+		}
+
+		// store can be overridden
+		storeOverrideOptions := ClientReadAuthorizationModelOptions{
+			AuthorizationModelId: openfga.PtrString(modelId),
+			StoreId:              openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+		}
+		httpmock.Reset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath, modelId),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		_, err = fgaClient.ReadAuthorizationModel(context.Background()).Options(storeOverrideOptions).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
 	})
 
 	t.Run("ReadLatestAuthorizationModel", func(t *testing.T) {
@@ -822,7 +965,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
@@ -850,6 +993,34 @@ func TestOpenFgaClient(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
+
+		// invalid store id should result in error
+		badStoreOptions := ClientReadLatestAuthorizationModelOptions{
+			StoreId: openfga.PtrString("INVALID"),
+		}
+		_, err = fgaClient.ReadLatestAuthorizationModel(context.Background()).Options(badStoreOptions).Execute()
+		if err == nil {
+			t.Fatalf("Expect error with bad store id but there is none")
+		}
+
+		// store can be overridden
+		storeOverrideOptions := ClientReadLatestAuthorizationModelOptions{
+			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+		}
+		httpmock.Reset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		_, err = fgaClient.ReadLatestAuthorizationModel(context.Background()).Options(storeOverrideOptions).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
 	})
 
 	/* Relationship Tuples */
@@ -869,7 +1040,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
@@ -900,6 +1071,34 @@ func TestOpenFgaClient(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
+
+		// invalid store id should result in error
+		badStoreOptions := ClientReadChangesOptions{
+			StoreId: openfga.PtrString("INVALID"),
+		}
+		_, err = fgaClient.ReadChanges(context.Background()).Body(body).Options(badStoreOptions).Execute()
+		if err == nil {
+			t.Fatalf("Expect error with bad store id but there is none")
+		}
+
+		// store can be overridden
+		storeOverrideOptions := ClientReadChangesOptions{
+			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+		}
+		httpmock.Reset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		_, err = fgaClient.ReadChanges(context.Background()).Body(body).Options(storeOverrideOptions).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
 	})
 
 	t.Run("Read", func(t *testing.T) {
@@ -924,7 +1123,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
@@ -953,6 +1152,34 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 		// Read without options should work
 		_, err = fgaClient.Read(context.Background()).Body(requestBody).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		// invalid store id should result in error
+		badStoreOptions := ClientReadOptions{
+			StoreId: openfga.PtrString("INVALID"),
+		}
+		_, err = fgaClient.Read(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
+		if err == nil {
+			t.Fatalf("Expect error with bad store id but there is none")
+		}
+
+		// store can be overridden
+		storeOverrideOptions := ClientReadOptions{
+			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+		}
+		httpmock.Reset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		_, err = fgaClient.Read(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
@@ -985,7 +1212,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
@@ -1041,6 +1268,25 @@ func TestOpenFgaClient(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
+
+		// store ID can be overridden
+		storeOverrideOptions := ClientWriteOptions{
+			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+		}
+		httpmock.Reset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		_, err = fgaClient.Write(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
 	})
 
 	t.Run("Write with invalid auth model id", func(t *testing.T) {
@@ -1070,6 +1316,36 @@ func TestOpenFgaClient(t *testing.T) {
 		_, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
 		if err == nil {
 			t.Fatalf("Expect error due to invalid auth model ID but there is none")
+		}
+	})
+
+	t.Run("Write with invalid store id", func(t *testing.T) {
+		test := TestDefinition{
+			Name:           "Write",
+			JsonResponse:   `{}`,
+			ResponseStatus: http.StatusOK,
+			Method:         http.MethodPost,
+			RequestPath:    "write",
+		}
+		requestBody := ClientWriteRequest{
+			Writes: []ClientTupleKey{{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "viewer",
+				Object:   "document:roadmap",
+			}},
+		}
+		options := ClientWriteOptions{
+			StoreId: openfga.PtrString("INVALID"),
+		}
+
+		var expectedResponse map[string]interface{}
+		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		_, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
+		if err == nil {
+			t.Fatalf("Expect error due to invalid store ID but there is none")
 		}
 	})
 
@@ -1114,7 +1390,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
@@ -1189,7 +1465,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				return httpmock.NewStringResponse(http.StatusUnauthorized, ""), nil
 			},
@@ -1230,7 +1506,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				return httpmock.NewStringResponse(http.StatusUnauthorized, ""), nil
 			},
@@ -1289,7 +1565,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				return httpmock.NewStringResponse(http.StatusBadRequest, ""), nil
 			},
@@ -1346,7 +1622,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
@@ -1402,6 +1678,34 @@ func TestOpenFgaClient(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
+
+		// invalid store id should result in error
+		badStoreOptions := ClientWriteOptions{
+			StoreId: openfga.PtrString("INVALID"),
+		}
+		_, err = fgaClient.WriteTuples(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
+		if err == nil {
+			t.Fatalf("Expect error with bad store id but there is none")
+		}
+
+		// store can be overridden
+		storeOverrideOptions := ClientWriteOptions{
+			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+		}
+		httpmock.Reset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		_, err = fgaClient.WriteTuples(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
 	})
 
 	t.Run("DeleteTuples", func(t *testing.T) {
@@ -1429,7 +1733,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
@@ -1485,6 +1789,34 @@ func TestOpenFgaClient(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
+
+		// invalid store id should result in error
+		badStoreOptions := ClientWriteOptions{
+			StoreId: openfga.PtrString("INVALID"),
+		}
+		_, err = fgaClient.DeleteTuples(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
+		if err == nil {
+			t.Fatalf("Expect error with bad store id but there is none")
+		}
+
+		// store can be overridden
+		storeOverrideOptions := ClientWriteOptions{
+			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+		}
+		httpmock.Reset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		_, err = fgaClient.DeleteTuples(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
 	})
 
 	/* Relationship Queries */
@@ -1518,7 +1850,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
@@ -1553,6 +1885,33 @@ func TestOpenFgaClient(t *testing.T) {
 		_, err = fgaClient.Check(context.Background()).Body(requestBody).Options(badOptions).Execute()
 		if err == nil {
 			t.Fatalf("Expect error with bad auth model id but there is none")
+		}
+		// invalid store id should result in error
+		badStoreOptions := ClientCheckOptions{
+			StoreId: openfga.PtrString("INVALID"),
+		}
+		_, err = fgaClient.Check(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
+		if err == nil {
+			t.Fatalf("Expect error with bad store id but there is none")
+		}
+
+		// store can be overridden
+		storeOverrideOptions := ClientCheckOptions{
+			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+		}
+		httpmock.Reset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		_, err = fgaClient.Check(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
 		}
 
 	})
@@ -1607,7 +1966,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
@@ -1623,7 +1982,7 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 
 		if httpmock.GetTotalCallCount() != 4 {
-			t.Fatalf("OpenFgaClient.%v() - wanted %v calls to /check got %v", test.Name, 4, httpmock.GetTotalCallCount())
+			t.Fatalf("OpenFgaClient.%v() - wanted %v calls to /check, got %v", test.Name, 4, httpmock.GetTotalCallCount())
 		}
 
 		if len(*got) != len(requestBody) {
@@ -1664,13 +2023,22 @@ func TestOpenFgaClient(t *testing.T) {
 		if err == nil {
 			t.Fatalf("Expect error with invalid auth model id but there is none")
 		}
+		// invalid store ID should fail
+		badStoreOptions := ClientBatchCheckOptions{
+			StoreId:             openfga.PtrString("INVALID"),
+			MaxParallelRequests: openfga.PtrInt32(5),
+		}
+		_, err = fgaClient.BatchCheck(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
+		if err == nil {
+			t.Fatalf("Expect error with invalid auth model id but there is none")
+		}
 
 		if httpmock.GetTotalCallCount() != 0 {
 			t.Fatalf("Expected no calls to be made")
 		}
 
 		httpmock.ZeroCallCounters()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				return httpmock.NewStringResponse(http.StatusUnauthorized, ""), nil
 			},
@@ -1679,6 +2047,26 @@ func TestOpenFgaClient(t *testing.T) {
 		_, err = fgaClient.BatchCheck(context.Background()).Body(requestBody).Options(options).Execute()
 		if err == nil {
 			t.Fatalf("Expect error with invalid auth but there is none")
+		}
+
+		// store should be overridden
+		storeOverrideOptions := ClientBatchCheckOptions{
+			StoreId:             openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+			MaxParallelRequests: openfga.PtrInt32(5),
+		}
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+
+		_, err = fgaClient.BatchCheck(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
 		}
 	})
 
@@ -1706,7 +2094,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
@@ -1736,6 +2124,34 @@ func TestOpenFgaClient(t *testing.T) {
 		_, err = fgaClient.Expand(context.Background()).Body(requestBody).Options(badOptions).Execute()
 		if err == nil {
 			t.Fatalf("Expect error for invalid auth model id but there is none")
+		}
+
+		// Invalid auth model ID should result in error
+		badStoreOptions := ClientExpandOptions{
+			StoreId: openfga.PtrString("INVALID"),
+		}
+		_, err = fgaClient.Expand(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
+		if err == nil {
+			t.Fatalf("Expect error for invalid auth model id but there is none")
+		}
+
+		// store can be overridden
+		storeOverrideOptions := ClientExpandOptions{
+			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+		}
+		httpmock.Reset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		_, err = fgaClient.Expand(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
 		}
 	})
 
@@ -1773,7 +2189,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
@@ -1803,6 +2219,7 @@ func TestOpenFgaClient(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
+
 		// Invalid auth model id should result in error
 		badOptions := ClientListObjectsOptions{
 			AuthorizationModelId: openfga.PtrString("INVALID"),
@@ -1813,6 +2230,39 @@ func TestOpenFgaClient(t *testing.T) {
 			Execute()
 		if err == nil {
 			t.Fatalf("Expect error with invalid auth model id but there is none")
+		}
+		// Invalid store id should result in error
+		badStoreOptions := ClientListObjectsOptions{
+			StoreId: openfga.PtrString("INVALID"),
+		}
+		_, err = fgaClient.ListObjects(context.Background()).
+			Body(requestBody).
+			Options(badStoreOptions).
+			Execute()
+		if err == nil {
+			t.Fatalf("Expect error with invalid auth model id but there is none")
+		}
+
+		// store can be overridden
+		storeOverrideOptions := ClientListObjectsOptions{
+			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+		}
+		httpmock.Reset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		_, err = fgaClient.ListObjects(context.Background()).
+			Body(requestBody).
+			Options(storeOverrideOptions).
+			Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
 		}
 	})
 
@@ -1847,7 +2297,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId, test.RequestPath),
+		httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
 			httpmock.BodyContainsString(`"relation":"can_delete"`),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, openfga.CheckResponse{Allowed: openfga.PtrBool(false)})
@@ -1857,7 +2307,7 @@ func TestOpenFgaClient(t *testing.T) {
 				return resp, nil
 			},
 		)
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
@@ -1876,7 +2326,7 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 
 		if httpmock.GetTotalCallCount() != 4 {
-			t.Fatalf("OpenFgaClient.%v() - wanted %v calls to /check got %v", test.Name, 4, httpmock.GetTotalCallCount())
+			t.Fatalf("OpenFgaClient.%v() - wanted %v calls to /check, got %v", test.Name, 4, httpmock.GetTotalCallCount())
 		}
 
 		_, err = got.MarshalJSON()
@@ -1902,6 +2352,52 @@ func TestOpenFgaClient(t *testing.T) {
 			Execute()
 		if err == nil {
 			t.Fatalf("Expect error with invalid auth model id but there is none")
+		}
+
+		// invalid store ID should result in error
+		badStoreOptions := ClientListRelationsOptions{
+			AuthorizationModelId: openfga.PtrString(authModelId),
+			StoreId:              openfga.PtrString("INVALID"),
+		}
+		_, err = fgaClient.ListRelations(context.Background()).
+			Body(requestBody).
+			Options(badStoreOptions).
+			Execute()
+		if err == nil {
+			t.Fatalf("Expect error with invalid store id but there is none")
+		}
+
+		// store can be overridden
+		storeOverrideOptions := ClientListRelationsOptions{
+			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+		}
+		httpmock.Reset()
+		httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+			httpmock.BodyContainsString(`"relation":"can_delete"`),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, openfga.CheckResponse{Allowed: openfga.PtrBool(false)})
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+
+		_, err = fgaClient.ListRelations(context.Background()).
+			Body(requestBody).
+			Options(storeOverrideOptions).
+			Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
 		}
 
 	})
@@ -1986,7 +2482,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId, test.RequestPath),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
@@ -2043,6 +2539,41 @@ func TestOpenFgaClient(t *testing.T) {
 		if err == nil {
 			t.Fatalf("Expect error with invalid auth model id but there is none")
 		}
+		// Invalid store id should result in error
+		badStoreOptions := ClientListUsersOptions{
+			StoreId: openfga.PtrString("INVALID"),
+		}
+		_, err = fgaClient.ListUsers(context.Background()).
+			Body(requestBody).
+			Options(badStoreOptions).
+			Execute()
+		if err == nil {
+			t.Fatalf("Expect error with invalid store model id but there is none")
+		}
+
+		// StoreId can be overridden
+		storeOverrideOptions := ClientListUsersOptions{
+			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+		}
+		httpmock.Reset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+
+		_, err = fgaClient.ListUsers(context.Background()).
+			Body(requestBody).
+			Options(storeOverrideOptions).
+			Execute()
+
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
 	})
 
 	/* Assertions */
@@ -2067,7 +2598,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId, test.RequestPath, modelId),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath, modelId),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
@@ -2108,6 +2639,39 @@ func TestOpenFgaClient(t *testing.T) {
 		if err == nil {
 			t.Fatalf("Invalid auth model ID should result in error")
 		}
+
+		// Invalid store id should result in error
+		badStoreOptions := ClientReadAssertionsOptions{
+			StoreId: openfga.PtrString("INVALID"),
+		}
+		_, err = fgaClient.ReadAssertions(context.Background()).
+			Options(badStoreOptions).
+			Execute()
+		if err == nil {
+			t.Fatalf("Invalid store ID should result in error")
+		}
+
+		// store can be overriden
+		storeOverrideOptions := ClientReadAssertionsOptions{
+			AuthorizationModelId: openfga.PtrString(modelId),
+			StoreId:              openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+		}
+		httpmock.Reset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath, modelId),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		_, err = fgaClient.ReadAssertions(context.Background()).
+			Options(storeOverrideOptions).
+			Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
 	})
 
 	t.Run("WriteAssertions", func(t *testing.T) {
@@ -2134,7 +2698,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s/%s", fgaClient.GetConfig().ApiUrl, fgaClient.GetConfig().StoreId, test.RequestPath, modelId),
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath, modelId),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, "")
 				if err != nil {
@@ -2166,5 +2730,47 @@ func TestOpenFgaClient(t *testing.T) {
 		if err == nil {
 			t.Fatalf("Invalid auth model id should result in error but there is none")
 		}
+
+		badStoreOptions := ClientWriteAssertionsOptions{
+			StoreId: openfga.PtrString("INVALID"),
+		}
+		_, err = fgaClient.WriteAssertions(context.Background()).
+			Body(requestBody).
+			Options(badStoreOptions).
+			Execute()
+		if err == nil {
+			t.Fatalf("Invalid store id should result in error but there is none")
+		}
+
+		// store can be overriden
+		storeOverrideOptions := ClientWriteAssertionsOptions{
+			AuthorizationModelId: openfga.PtrString(modelId),
+			StoreId:              openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+		}
+		httpmock.Reset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath, modelId),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, "")
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		_, err = fgaClient.WriteAssertions(context.Background()).
+			Body(requestBody).
+			Options(storeOverrideOptions).
+			Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
 	})
+}
+
+func getStoreId(t *testing.T, fgaClient *OpenFgaClient) string {
+	storeId, err := fgaClient.GetStoreId()
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	return storeId
 }

@@ -83,6 +83,7 @@ docs/TupleToUserset.md
 docs/TypeDefinition.md
 docs/TypeName.md
 docs/TypedWildcard.md
+docs/UnauthenticatedResponse.md
 docs/UnprocessableContentErrorCode.md
 docs/UnprocessableContentMessageResponse.md
 docs/User.md
@@ -171,6 +172,7 @@ model_tuple_to_userset.go
 model_type_definition.go
 model_type_name.go
 model_typed_wildcard.go
+model_unauthenticated_response.go
 model_unprocessable_content_error_code.go
 model_unprocessable_content_message_response.go
 model_user.go

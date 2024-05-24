@@ -7,7 +7,7 @@ Name | Type | Description | Notes
 **AuthorizationModelId** | Pointer to **string** |  | [optional] 
 **Object** | [**FgaObject**](FgaObject.md) |  | 
 **Relation** | **string** |  | 
-**UserFilters** | [**[]UserTypeFilter**](UserTypeFilter.md) |  | 
+**UserFilters** | [**[]UserTypeFilter**](UserTypeFilter.md) | The type of results returned. Only accepts exactly one value. | 
 **ContextualTuples** | Pointer to [**[]TupleKey**](TupleKey.md) |  | [optional] 
 **Context** | Pointer to **map[string]interface{}** | Additional request context that will be used to evaluate any ABAC conditions encountered in the query evaluation. | [optional] 
 

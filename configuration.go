@@ -1,7 +1,7 @@
 /**
  * Go SDK for OpenFGA
  *
- * API version: 0.1
+ * API version: 1.x
  * Website: https://openfga.dev
  * Documentation: https://openfga.dev/docs
  * Support: https://openfga.dev/community
@@ -16,7 +16,6 @@ import (
 	"net/http"
 
 	"github.com/openfga/go-sdk/credentials"
-	"github.com/openfga/go-sdk/internal/utils"
 )
 
 const (
@@ -40,7 +39,6 @@ type Configuration struct {
 	// Deprecated: use ApiUrl instead of ApiScheme and ApiHost
 	ApiHost        string                   `json:"api_host,omitempty"`
 	ApiUrl         string                   `json:"api_url,omitempty"`
-	StoreId        string                   `json:"store_id,omitempty"`
 	Credentials    *credentials.Credentials `json:"credentials,omitempty"`
 	DefaultHeaders map[string]string        `json:"default_headers,omitempty"`
 	UserAgent      string                   `json:"user_agent,omitempty"`
@@ -77,7 +75,6 @@ func NewConfiguration(config Configuration) (*Configuration, error) {
 
 	cfg := &Configuration{
 		ApiUrl:         apiUrl,
-		StoreId:        config.StoreId,
 		Credentials:    config.Credentials,
 		DefaultHeaders: config.DefaultHeaders,
 		UserAgent:      config.UserAgent,
@@ -125,10 +122,6 @@ func (c *Configuration) ValidateConfig() error {
 
 	if c.RetryParams != nil && c.RetryParams.MaxRetry > 15 {
 		return reportError("Configuration.RetryParams.MaxRetry exceeds maximum allowed limit of 15")
-	}
-
-	if c.StoreId != "" && !internalutils.IsWellFormedUlidString(c.StoreId) {
-		return reportError("Configuration.StoreId is not a valid ulid")
 	}
 
 	return nil

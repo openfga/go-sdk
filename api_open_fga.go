@@ -1,7 +1,7 @@
 /**
  * Go SDK for OpenFGA
  *
- * API version: 0.1
+ * API version: 1.x
  * Website: https://openfga.dev
  * Documentation: https://openfga.dev/docs
  * Support: https://openfga.dev/community
@@ -94,8 +94,8 @@ type OpenFgaApi interface {
 	}
 	```
 	will always return `{ "allowed": true }`. This is because usersets are self-defining: the userset `document:2021-budget#reader` will always have the `reader` relation with `document:2021-budget`.
-	### Querying usersets with exclusion in the model
-	A Check for a userset can yield results that must be treated carefully if the model involves exclusion. For example, for the following authorization model
+	### Querying usersets with difference in the model
+	A Check for a userset can yield results that must be treated carefully if the model involves difference. For example, for the following authorization model
 	```python
 	model
 	  schema 1.1
@@ -140,9 +140,10 @@ type OpenFgaApi interface {
 	will return `{ "allowed": true }`, even though a specific user of the userset `group:finance#member` does not have the `reader` relationship with the given object.
 
 		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @param storeId
 		 * @return ApiCheckRequest
 	*/
-	Check(ctx _context.Context) ApiCheckRequest
+	Check(ctx _context.Context, storeId string) ApiCheckRequest
 
 	/*
 	 * CheckExecute executes the request
@@ -168,9 +169,10 @@ type OpenFgaApi interface {
 	 * DeleteStore Delete a store
 	 * Delete an OpenFGA store. This does not delete the data associated with the store, like tuples or authorization models.
 	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @param storeId
 	 * @return ApiDeleteStoreRequest
 	 */
-	DeleteStore(ctx _context.Context) ApiDeleteStoreRequest
+	DeleteStore(ctx _context.Context, storeId string) ApiDeleteStoreRequest
 
 	/*
 	 * DeleteStoreExecute executes the request
@@ -229,9 +231,10 @@ type OpenFgaApi interface {
 	```
 	The caller can then call expand API for the `writer` relationship for the `document:2021-budget`.
 		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @param storeId
 		 * @return ApiExpandRequest
 	*/
-	Expand(ctx _context.Context) ApiExpandRequest
+	Expand(ctx _context.Context, storeId string) ApiExpandRequest
 
 	/*
 	 * ExpandExecute executes the request
@@ -243,9 +246,10 @@ type OpenFgaApi interface {
 	 * GetStore Get a store
 	 * Returns an OpenFGA store by its identifier
 	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @param storeId
 	 * @return ApiGetStoreRequest
 	 */
-	GetStore(ctx _context.Context) ApiGetStoreRequest
+	GetStore(ctx _context.Context, storeId string) ApiGetStoreRequest
 
 	/*
 	 * GetStoreExecute executes the request
@@ -264,9 +268,10 @@ type OpenFgaApi interface {
 	The number of objects in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_OBJECTS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_OBJECTS_MAX_RESULTS, whichever is hit first.
 	The objects given will not be sorted, and therefore two identical calls can give a given different set of objects.
 		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @param storeId
 		 * @return ApiListObjectsRequest
 	*/
-	ListObjects(ctx _context.Context) ApiListObjectsRequest
+	ListObjects(ctx _context.Context, storeId string) ApiListObjectsRequest
 
 	/*
 	 * ListObjectsExecute executes the request
@@ -291,11 +296,22 @@ type OpenFgaApi interface {
 	ListStoresExecute(r ApiListStoresRequest) (ListStoresResponse, *_nethttp.Response, error)
 
 	/*
-	 * ListUsers List all users of the given type that the object has a relation with
-	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	 * @return ApiListUsersRequest
-	 */
-	ListUsers(ctx _context.Context) ApiListUsersRequest
+		 * ListUsers [EXPERIMENTAL] List the users matching the provided filter who have a certain relation to a particular type.
+		 * The ListUsers API returns a list of all the users of a specific type that have a relation to a given object.
+	 This API is available in an experimental capacity and can be enabled with the `--experimentals enable-list-users` flag.
+	To arrive at a result, the API uses: an authorization model, explicit tuples written through the Write API, contextual tuples present in the request, and implicit tuples that exist by virtue of applying set theory (such as `document:2021-budget#viewer@document:2021-budget#viewer`; the set of users who are viewers of `document:2021-budget` are the set of users who are the viewers of `document:2021-budget`).
+	An `authorization_model_id` may be specified in the body. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance.
+	You may also specify `contextual_tuples` that will be treated as regular tuples. Each of these tuples may have an associated `condition`.
+	You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly.
+	The response will contain the related users in an array in the "users" field of the response. These results may include specific objects, usersets
+	or type-bound public access. Each of these types of results is encoded in its own type and not represented as a string.In certain cases of negation via the `but not` operator, some results are marked as excluded from the main set of results. These exclusions
+	are returned in the `excluded_users` property and should be handled appropriately at the point of implementation.The number of users in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_USERS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_USERS_MAX_RESULTS, whichever is hit first.
+	The returned users will not be sorted, and therefore two identical calls may yield different sets of users.
+		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @param storeId
+		 * @return ApiListUsersRequest
+	*/
+	ListUsers(ctx _context.Context, storeId string) ApiListUsersRequest
 
 	/*
 	 * ListUsersExecute executes the request
@@ -405,9 +421,10 @@ type OpenFgaApi interface {
 	This means that `document:2021-budget` has 1 `reader` (`user:bob`) and 1 `writer` (`user:anne`).
 
 		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @param storeId
 		 * @return ApiReadRequest
 	*/
-	Read(ctx _context.Context) ApiReadRequest
+	Read(ctx _context.Context, storeId string) ApiReadRequest
 
 	/*
 	 * ReadExecute executes the request
@@ -419,10 +436,11 @@ type OpenFgaApi interface {
 	 * ReadAssertions Read assertions for an authorization model ID
 	 * The ReadAssertions API will return, for a given authorization model id, all the assertions stored for it. An assertion is an object that contains a tuple key, and the expectation of whether a call to the Check API of that tuple key will return true or false.
 	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @param storeId
 	 * @param authorizationModelId
 	 * @return ApiReadAssertionsRequest
 	 */
-	ReadAssertions(ctx _context.Context, authorizationModelId string) ApiReadAssertionsRequest
+	ReadAssertions(ctx _context.Context, storeId string, authorizationModelId string) ApiReadAssertionsRequest
 
 	/*
 	 * ReadAssertionsExecute executes the request
@@ -474,10 +492,11 @@ type OpenFgaApi interface {
 	```
 	In the above example, there are 2 types (`user` and `document`). The `document` type has 2 relations (`writer` and `reader`).
 		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @param storeId
 		 * @param id
 		 * @return ApiReadAuthorizationModelRequest
 	*/
-	ReadAuthorizationModel(ctx _context.Context, id string) ApiReadAuthorizationModelRequest
+	ReadAuthorizationModel(ctx _context.Context, storeId string, id string) ApiReadAuthorizationModelRequest
 
 	/*
 	 * ReadAuthorizationModelExecute executes the request
@@ -525,9 +544,10 @@ type OpenFgaApi interface {
 	```
 
 		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @param storeId
 		 * @return ApiReadAuthorizationModelsRequest
 	*/
-	ReadAuthorizationModels(ctx _context.Context) ApiReadAuthorizationModelsRequest
+	ReadAuthorizationModels(ctx _context.Context, storeId string) ApiReadAuthorizationModelsRequest
 
 	/*
 	 * ReadAuthorizationModelsExecute executes the request
@@ -543,9 +563,10 @@ type OpenFgaApi interface {
 	When reading a delete tuple change, the condition will NOT be returned regardless of whether it was originally conditioned or not.
 
 		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @param storeId
 		 * @return ApiReadChangesRequest
 	*/
-	ReadChanges(ctx _context.Context) ApiReadChangesRequest
+	ReadChanges(ctx _context.Context, storeId string) ApiReadChangesRequest
 
 	/*
 	 * ReadChangesExecute executes the request
@@ -594,9 +615,10 @@ type OpenFgaApi interface {
 	```
 
 		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @param storeId
 		 * @return ApiWriteRequest
 	*/
-	Write(ctx _context.Context) ApiWriteRequest
+	Write(ctx _context.Context, storeId string) ApiWriteRequest
 
 	/*
 	 * WriteExecute executes the request
@@ -608,10 +630,11 @@ type OpenFgaApi interface {
 	 * WriteAssertions Upsert assertions for an authorization model ID
 	 * The WriteAssertions API will upsert new assertions for an authorization model id, or overwrite the existing ones. An assertion is an object that contains a tuple key, and the expectation of whether a call to the Check API of that tuple key will return true or false.
 	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @param storeId
 	 * @param authorizationModelId
 	 * @return ApiWriteAssertionsRequest
 	 */
-	WriteAssertions(ctx _context.Context, authorizationModelId string) ApiWriteAssertionsRequest
+	WriteAssertions(ctx _context.Context, storeId string, authorizationModelId string) ApiWriteAssertionsRequest
 
 	/*
 	 * WriteAssertionsExecute executes the request
@@ -664,9 +687,10 @@ type OpenFgaApi interface {
 	```
 
 		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @param storeId
 		 * @return ApiWriteAuthorizationModelRequest
 	*/
-	WriteAuthorizationModel(ctx _context.Context) ApiWriteAuthorizationModelRequest
+	WriteAuthorizationModel(ctx _context.Context, storeId string) ApiWriteAuthorizationModelRequest
 
 	/*
 	 * WriteAuthorizationModelExecute executes the request
@@ -681,8 +705,8 @@ type OpenFgaApiService service
 type ApiCheckRequest struct {
 	ctx        _context.Context
 	ApiService OpenFgaApi
-
-	body *CheckRequest
+	storeId    string
+	body       *CheckRequest
 }
 
 func (r ApiCheckRequest) Body(body CheckRequest) ApiCheckRequest {
@@ -768,8 +792,8 @@ the following query
 
 ```
 will always return `{ "allowed": true }`. This is because usersets are self-defining: the userset `document:2021-budget#reader` will always have the `reader` relation with `document:2021-budget`.
-### Querying usersets with exclusion in the model
-A Check for a userset can yield results that must be treated carefully if the model involves exclusion. For example, for the following authorization model
+### Querying usersets with difference in the model
+A Check for a userset can yield results that must be treated carefully if the model involves difference. For example, for the following authorization model
 ```python
 model
 
@@ -822,12 +846,14 @@ the following query
 will return `{ "allowed": true }`, even though a specific user of the userset `group:finance#member` does not have the `reader` relationship with the given object.
 
   - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param storeId
   - @return ApiCheckRequest
 */
-func (a *OpenFgaApiService) Check(ctx _context.Context) ApiCheckRequest {
+func (a *OpenFgaApiService) Check(ctx _context.Context, storeId string) ApiCheckRequest {
 	return ApiCheckRequest{
 		ApiService: a,
 		ctx:        ctx,
+		storeId:    storeId,
 	}
 }
 
@@ -854,14 +880,12 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 			localVarReturnValue CheckResponse
 		)
 
-		if a.client.cfg.StoreId == "" {
-			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
-		}
-		if a.client.cfg.StoreId != "" && !internalutils.IsWellFormedUlidString(a.client.cfg.StoreId) {
-			return localVarReturnValue, nil, reportError("Configuration.StoreId is invalid")
-		}
 		localVarPath := "/stores/{store_id}/check"
-		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(a.client.cfg.StoreId), -1)
+		if r.storeId == "" {
+			return localVarReturnValue, nil, reportError("storeId is required and must be specified")
+		}
+
+		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(parameterToString(r.storeId, "")), -1)
 
 		localVarHeaderParams := make(map[string]string)
 		localVarQueryParams := _neturl.Values{}
@@ -910,7 +934,7 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
+					storeId:            r.storeId,
 					endpointCategory:   "Check",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -935,9 +959,8 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "Check",
 					responseStatusCode: localVarHTTPResponse.StatusCode,
 					responseHeader:     localVarHTTPResponse.Header,
@@ -952,7 +975,7 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
+					storeId:            r.storeId,
 					endpointCategory:   "Check",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -982,9 +1005,8 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "Check",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -1004,9 +1026,8 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 					continue
 				}
 				newErr := FgaApiInternalError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "Check",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -1029,9 +1050,8 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr := FgaApiError{
-				body: localVarBody,
-
-				storeId:            a.client.cfg.StoreId,
+				body:               localVarBody,
+				storeId:            r.storeId,
 				endpointCategory:   "Check",
 				requestBody:        localVarPostBody,
 				requestMethod:      localVarHTTPMethod,
@@ -1073,8 +1093,7 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 type ApiCreateStoreRequest struct {
 	ctx        _context.Context
 	ApiService OpenFgaApi
-
-	body *CreateStoreRequest
+	body       *CreateStoreRequest
 }
 
 func (r ApiCreateStoreRequest) Body(body CreateStoreRequest) ApiCreateStoreRequest {
@@ -1171,7 +1190,6 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
 					endpointCategory:   "CreateStore",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -1196,9 +1214,7 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
 					endpointCategory:   "CreateStore",
 					responseStatusCode: localVarHTTPResponse.StatusCode,
 					responseHeader:     localVarHTTPResponse.Header,
@@ -1213,7 +1229,6 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
 					endpointCategory:   "CreateStore",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -1243,9 +1258,7 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
 					endpointCategory:   "CreateStore",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -1265,9 +1278,7 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 					continue
 				}
 				newErr := FgaApiInternalError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
 					endpointCategory:   "CreateStore",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -1290,9 +1301,7 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr := FgaApiError{
-				body: localVarBody,
-
-				storeId:            a.client.cfg.StoreId,
+				body:               localVarBody,
 				endpointCategory:   "CreateStore",
 				requestBody:        localVarPostBody,
 				requestMethod:      localVarHTTPMethod,
@@ -1334,6 +1343,7 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 type ApiDeleteStoreRequest struct {
 	ctx        _context.Context
 	ApiService OpenFgaApi
+	storeId    string
 }
 
 func (r ApiDeleteStoreRequest) Execute() (*_nethttp.Response, error) {
@@ -1344,12 +1354,14 @@ func (r ApiDeleteStoreRequest) Execute() (*_nethttp.Response, error) {
  * DeleteStore Delete a store
  * Delete an OpenFGA store. This does not delete the data associated with the store, like tuples or authorization models.
  * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param storeId
  * @return ApiDeleteStoreRequest
  */
-func (a *OpenFgaApiService) DeleteStore(ctx _context.Context) ApiDeleteStoreRequest {
+func (a *OpenFgaApiService) DeleteStore(ctx _context.Context, storeId string) ApiDeleteStoreRequest {
 	return ApiDeleteStoreRequest{
 		ApiService: a,
 		ctx:        ctx,
+		storeId:    storeId,
 	}
 }
 
@@ -1374,14 +1386,12 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 			localVarPostBody   interface{}
 		)
 
-		if a.client.cfg.StoreId == "" {
-			return nil, reportError("Configuration.StoreId is required and must be specified to call this method")
-		}
-		if a.client.cfg.StoreId != "" && !internalutils.IsWellFormedUlidString(a.client.cfg.StoreId) {
-			return nil, reportError("Configuration.StoreId is invalid")
-		}
 		localVarPath := "/stores/{store_id}"
-		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(a.client.cfg.StoreId), -1)
+		if r.storeId == "" {
+			return nil, reportError("storeId is required and must be specified")
+		}
+
+		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(parameterToString(r.storeId, "")), -1)
 
 		localVarHeaderParams := make(map[string]string)
 		localVarQueryParams := _neturl.Values{}
@@ -1425,7 +1435,7 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
+					storeId:            r.storeId,
 					endpointCategory:   "DeleteStore",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -1450,9 +1460,8 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "DeleteStore",
 					responseStatusCode: localVarHTTPResponse.StatusCode,
 					responseHeader:     localVarHTTPResponse.Header,
@@ -1467,7 +1476,7 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
+					storeId:            r.storeId,
 					endpointCategory:   "DeleteStore",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -1497,9 +1506,8 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "DeleteStore",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -1519,9 +1527,8 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 					continue
 				}
 				newErr := FgaApiInternalError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "DeleteStore",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -1544,9 +1551,8 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 				return localVarHTTPResponse, newErr
 			}
 			newErr := FgaApiError{
-				body: localVarBody,
-
-				storeId:            a.client.cfg.StoreId,
+				body:               localVarBody,
+				storeId:            r.storeId,
 				endpointCategory:   "DeleteStore",
 				requestBody:        localVarPostBody,
 				requestMethod:      localVarHTTPMethod,
@@ -1578,8 +1584,8 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 type ApiExpandRequest struct {
 	ctx        _context.Context
 	ApiService OpenFgaApi
-
-	body *ExpandRequest
+	storeId    string
+	body       *ExpandRequest
 }
 
 func (r ApiExpandRequest) Body(body ExpandRequest) ApiExpandRequest {
@@ -1648,12 +1654,14 @@ OpenFGA's response will be a userset tree of the users and usersets that have re
 ```
 The caller can then call expand API for the `writer` relationship for the `document:2021-budget`.
   - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param storeId
   - @return ApiExpandRequest
 */
-func (a *OpenFgaApiService) Expand(ctx _context.Context) ApiExpandRequest {
+func (a *OpenFgaApiService) Expand(ctx _context.Context, storeId string) ApiExpandRequest {
 	return ApiExpandRequest{
 		ApiService: a,
 		ctx:        ctx,
+		storeId:    storeId,
 	}
 }
 
@@ -1680,14 +1688,12 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 			localVarReturnValue ExpandResponse
 		)
 
-		if a.client.cfg.StoreId == "" {
-			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
-		}
-		if a.client.cfg.StoreId != "" && !internalutils.IsWellFormedUlidString(a.client.cfg.StoreId) {
-			return localVarReturnValue, nil, reportError("Configuration.StoreId is invalid")
-		}
 		localVarPath := "/stores/{store_id}/expand"
-		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(a.client.cfg.StoreId), -1)
+		if r.storeId == "" {
+			return localVarReturnValue, nil, reportError("storeId is required and must be specified")
+		}
+
+		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(parameterToString(r.storeId, "")), -1)
 
 		localVarHeaderParams := make(map[string]string)
 		localVarQueryParams := _neturl.Values{}
@@ -1736,7 +1742,7 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
+					storeId:            r.storeId,
 					endpointCategory:   "Expand",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -1761,9 +1767,8 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "Expand",
 					responseStatusCode: localVarHTTPResponse.StatusCode,
 					responseHeader:     localVarHTTPResponse.Header,
@@ -1778,7 +1783,7 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
+					storeId:            r.storeId,
 					endpointCategory:   "Expand",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -1808,9 +1813,8 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "Expand",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -1830,9 +1834,8 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 					continue
 				}
 				newErr := FgaApiInternalError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "Expand",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -1855,9 +1858,8 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr := FgaApiError{
-				body: localVarBody,
-
-				storeId:            a.client.cfg.StoreId,
+				body:               localVarBody,
+				storeId:            r.storeId,
 				endpointCategory:   "Expand",
 				requestBody:        localVarPostBody,
 				requestMethod:      localVarHTTPMethod,
@@ -1899,6 +1901,7 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 type ApiGetStoreRequest struct {
 	ctx        _context.Context
 	ApiService OpenFgaApi
+	storeId    string
 }
 
 func (r ApiGetStoreRequest) Execute() (GetStoreResponse, *_nethttp.Response, error) {
@@ -1909,12 +1912,14 @@ func (r ApiGetStoreRequest) Execute() (GetStoreResponse, *_nethttp.Response, err
  * GetStore Get a store
  * Returns an OpenFGA store by its identifier
  * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param storeId
  * @return ApiGetStoreRequest
  */
-func (a *OpenFgaApiService) GetStore(ctx _context.Context) ApiGetStoreRequest {
+func (a *OpenFgaApiService) GetStore(ctx _context.Context, storeId string) ApiGetStoreRequest {
 	return ApiGetStoreRequest{
 		ApiService: a,
 		ctx:        ctx,
+		storeId:    storeId,
 	}
 }
 
@@ -1941,14 +1946,12 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 			localVarReturnValue GetStoreResponse
 		)
 
-		if a.client.cfg.StoreId == "" {
-			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
-		}
-		if a.client.cfg.StoreId != "" && !internalutils.IsWellFormedUlidString(a.client.cfg.StoreId) {
-			return localVarReturnValue, nil, reportError("Configuration.StoreId is invalid")
-		}
 		localVarPath := "/stores/{store_id}"
-		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(a.client.cfg.StoreId), -1)
+		if r.storeId == "" {
+			return localVarReturnValue, nil, reportError("storeId is required and must be specified")
+		}
+
+		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(parameterToString(r.storeId, "")), -1)
 
 		localVarHeaderParams := make(map[string]string)
 		localVarQueryParams := _neturl.Values{}
@@ -1992,7 +1995,7 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
+					storeId:            r.storeId,
 					endpointCategory:   "GetStore",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -2017,9 +2020,8 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "GetStore",
 					responseStatusCode: localVarHTTPResponse.StatusCode,
 					responseHeader:     localVarHTTPResponse.Header,
@@ -2034,7 +2036,7 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
+					storeId:            r.storeId,
 					endpointCategory:   "GetStore",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -2064,9 +2066,8 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "GetStore",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -2086,9 +2087,8 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 					continue
 				}
 				newErr := FgaApiInternalError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "GetStore",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -2111,9 +2111,8 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr := FgaApiError{
-				body: localVarBody,
-
-				storeId:            a.client.cfg.StoreId,
+				body:               localVarBody,
+				storeId:            r.storeId,
 				endpointCategory:   "GetStore",
 				requestBody:        localVarPostBody,
 				requestMethod:      localVarHTTPMethod,
@@ -2155,8 +2154,8 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 type ApiListObjectsRequest struct {
 	ctx        _context.Context
 	ApiService OpenFgaApi
-
-	body *ListObjectsRequest
+	storeId    string
+	body       *ListObjectsRequest
 }
 
 func (r ApiListObjectsRequest) Body(body ListObjectsRequest) ApiListObjectsRequest {
@@ -2180,12 +2179,14 @@ The response will contain the related objects in an array in the "objects" field
 The number of objects in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_OBJECTS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_OBJECTS_MAX_RESULTS, whichever is hit first.
 The objects given will not be sorted, and therefore two identical calls can give a given different set of objects.
   - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param storeId
   - @return ApiListObjectsRequest
 */
-func (a *OpenFgaApiService) ListObjects(ctx _context.Context) ApiListObjectsRequest {
+func (a *OpenFgaApiService) ListObjects(ctx _context.Context, storeId string) ApiListObjectsRequest {
 	return ApiListObjectsRequest{
 		ApiService: a,
 		ctx:        ctx,
+		storeId:    storeId,
 	}
 }
 
@@ -2212,14 +2213,12 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 			localVarReturnValue ListObjectsResponse
 		)
 
-		if a.client.cfg.StoreId == "" {
-			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
-		}
-		if a.client.cfg.StoreId != "" && !internalutils.IsWellFormedUlidString(a.client.cfg.StoreId) {
-			return localVarReturnValue, nil, reportError("Configuration.StoreId is invalid")
-		}
 		localVarPath := "/stores/{store_id}/list-objects"
-		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(a.client.cfg.StoreId), -1)
+		if r.storeId == "" {
+			return localVarReturnValue, nil, reportError("storeId is required and must be specified")
+		}
+
+		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(parameterToString(r.storeId, "")), -1)
 
 		localVarHeaderParams := make(map[string]string)
 		localVarQueryParams := _neturl.Values{}
@@ -2268,7 +2267,7 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
+					storeId:            r.storeId,
 					endpointCategory:   "ListObjects",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -2293,9 +2292,8 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "ListObjects",
 					responseStatusCode: localVarHTTPResponse.StatusCode,
 					responseHeader:     localVarHTTPResponse.Header,
@@ -2310,7 +2308,7 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
+					storeId:            r.storeId,
 					endpointCategory:   "ListObjects",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -2340,9 +2338,8 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "ListObjects",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -2362,9 +2359,8 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 					continue
 				}
 				newErr := FgaApiInternalError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "ListObjects",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -2387,9 +2383,8 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr := FgaApiError{
-				body: localVarBody,
-
-				storeId:            a.client.cfg.StoreId,
+				body:               localVarBody,
+				storeId:            r.storeId,
 				endpointCategory:   "ListObjects",
 				requestBody:        localVarPostBody,
 				requestMethod:      localVarHTTPMethod,
@@ -2429,9 +2424,8 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 }
 
 type ApiListStoresRequest struct {
-	ctx        _context.Context
-	ApiService OpenFgaApi
-
+	ctx               _context.Context
+	ApiService        OpenFgaApi
 	pageSize          *int32
 	continuationToken *string
 }
@@ -2538,7 +2532,6 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
 					endpointCategory:   "ListStores",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -2563,9 +2556,7 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
 					endpointCategory:   "ListStores",
 					responseStatusCode: localVarHTTPResponse.StatusCode,
 					responseHeader:     localVarHTTPResponse.Header,
@@ -2580,7 +2571,6 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
 					endpointCategory:   "ListStores",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -2610,9 +2600,7 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
 					endpointCategory:   "ListStores",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -2632,9 +2620,7 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 					continue
 				}
 				newErr := FgaApiInternalError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
 					endpointCategory:   "ListStores",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -2657,9 +2643,7 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr := FgaApiError{
-				body: localVarBody,
-
-				storeId:            a.client.cfg.StoreId,
+				body:               localVarBody,
 				endpointCategory:   "ListStores",
 				requestBody:        localVarPostBody,
 				requestMethod:      localVarHTTPMethod,
@@ -2701,8 +2685,8 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 type ApiListUsersRequest struct {
 	ctx        _context.Context
 	ApiService OpenFgaApi
-
-	body *ListUsersRequest
+	storeId    string
+	body       *ListUsersRequest
 }
 
 func (r ApiListUsersRequest) Body(body ListUsersRequest) ApiListUsersRequest {
@@ -2715,14 +2699,27 @@ func (r ApiListUsersRequest) Execute() (ListUsersResponse, *_nethttp.Response, e
 }
 
 /*
- * ListUsers List all users of the given type that the object has a relation with
- * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return ApiListUsersRequest
- */
-func (a *OpenFgaApiService) ListUsers(ctx _context.Context) ApiListUsersRequest {
+  - ListUsers [EXPERIMENTAL] List the users matching the provided filter who have a certain relation to a particular type.
+  - The ListUsers API returns a list of all the users of a specific type that have a relation to a given object.
+    This API is available in an experimental capacity and can be enabled with the `--experimentals enable-list-users` flag.
+
+To arrive at a result, the API uses: an authorization model, explicit tuples written through the Write API, contextual tuples present in the request, and implicit tuples that exist by virtue of applying set theory (such as `document:2021-budget#viewer@document:2021-budget#viewer`; the set of users who are viewers of `document:2021-budget` are the set of users who are the viewers of `document:2021-budget`).
+An `authorization_model_id` may be specified in the body. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance.
+You may also specify `contextual_tuples` that will be treated as regular tuples. Each of these tuples may have an associated `condition`.
+You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly.
+The response will contain the related users in an array in the "users" field of the response. These results may include specific objects, usersets
+or type-bound public access. Each of these types of results is encoded in its own type and not represented as a string.In certain cases of negation via the `but not` operator, some results are marked as excluded from the main set of results. These exclusions
+are returned in the `excluded_users` property and should be handled appropriately at the point of implementation.The number of users in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_USERS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_USERS_MAX_RESULTS, whichever is hit first.
+The returned users will not be sorted, and therefore two identical calls may yield different sets of users.
+  - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param storeId
+  - @return ApiListUsersRequest
+*/
+func (a *OpenFgaApiService) ListUsers(ctx _context.Context, storeId string) ApiListUsersRequest {
 	return ApiListUsersRequest{
 		ApiService: a,
 		ctx:        ctx,
+		storeId:    storeId,
 	}
 }
 
@@ -2749,14 +2746,12 @@ func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersRe
 			localVarReturnValue ListUsersResponse
 		)
 
-		if a.client.cfg.StoreId == "" {
-			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
-		}
-		if a.client.cfg.StoreId != "" && !internalutils.IsWellFormedUlidString(a.client.cfg.StoreId) {
-			return localVarReturnValue, nil, reportError("Configuration.StoreId is invalid")
-		}
 		localVarPath := "/stores/{store_id}/list-users"
-		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(a.client.cfg.StoreId), -1)
+		if r.storeId == "" {
+			return localVarReturnValue, nil, reportError("storeId is required and must be specified")
+		}
+
+		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(parameterToString(r.storeId, "")), -1)
 
 		localVarHeaderParams := make(map[string]string)
 		localVarQueryParams := _neturl.Values{}
@@ -2805,7 +2800,7 @@ func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersRe
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
+					storeId:            r.storeId,
 					endpointCategory:   "ListUsers",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -2830,9 +2825,8 @@ func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersRe
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "ListUsers",
 					responseStatusCode: localVarHTTPResponse.StatusCode,
 					responseHeader:     localVarHTTPResponse.Header,
@@ -2847,7 +2841,7 @@ func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersRe
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
+					storeId:            r.storeId,
 					endpointCategory:   "ListUsers",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -2877,9 +2871,8 @@ func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersRe
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "ListUsers",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -2899,9 +2892,8 @@ func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersRe
 					continue
 				}
 				newErr := FgaApiInternalError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "ListUsers",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -2924,9 +2916,8 @@ func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersRe
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr := FgaApiError{
-				body: localVarBody,
-
-				storeId:            a.client.cfg.StoreId,
+				body:               localVarBody,
+				storeId:            r.storeId,
 				endpointCategory:   "ListUsers",
 				requestBody:        localVarPostBody,
 				requestMethod:      localVarHTTPMethod,
@@ -2968,8 +2959,8 @@ func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersRe
 type ApiReadRequest struct {
 	ctx        _context.Context
 	ApiService OpenFgaApi
-
-	body *ReadRequest
+	storeId    string
+	body       *ReadRequest
 }
 
 func (r ApiReadRequest) Body(body ReadRequest) ApiReadRequest {
@@ -3096,12 +3087,14 @@ The API will return something like
 This means that `document:2021-budget` has 1 `reader` (`user:bob`) and 1 `writer` (`user:anne`).
 
   - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param storeId
   - @return ApiReadRequest
 */
-func (a *OpenFgaApiService) Read(ctx _context.Context) ApiReadRequest {
+func (a *OpenFgaApiService) Read(ctx _context.Context, storeId string) ApiReadRequest {
 	return ApiReadRequest{
 		ApiService: a,
 		ctx:        ctx,
+		storeId:    storeId,
 	}
 }
 
@@ -3128,14 +3121,12 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 			localVarReturnValue ReadResponse
 		)
 
-		if a.client.cfg.StoreId == "" {
-			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
-		}
-		if a.client.cfg.StoreId != "" && !internalutils.IsWellFormedUlidString(a.client.cfg.StoreId) {
-			return localVarReturnValue, nil, reportError("Configuration.StoreId is invalid")
-		}
 		localVarPath := "/stores/{store_id}/read"
-		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(a.client.cfg.StoreId), -1)
+		if r.storeId == "" {
+			return localVarReturnValue, nil, reportError("storeId is required and must be specified")
+		}
+
+		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(parameterToString(r.storeId, "")), -1)
 
 		localVarHeaderParams := make(map[string]string)
 		localVarQueryParams := _neturl.Values{}
@@ -3184,7 +3175,7 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
+					storeId:            r.storeId,
 					endpointCategory:   "Read",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -3209,9 +3200,8 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "Read",
 					responseStatusCode: localVarHTTPResponse.StatusCode,
 					responseHeader:     localVarHTTPResponse.Header,
@@ -3226,7 +3216,7 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
+					storeId:            r.storeId,
 					endpointCategory:   "Read",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -3256,9 +3246,8 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "Read",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -3278,9 +3267,8 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 					continue
 				}
 				newErr := FgaApiInternalError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "Read",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -3303,9 +3291,8 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr := FgaApiError{
-				body: localVarBody,
-
-				storeId:            a.client.cfg.StoreId,
+				body:               localVarBody,
+				storeId:            r.storeId,
 				endpointCategory:   "Read",
 				requestBody:        localVarPostBody,
 				requestMethod:      localVarHTTPMethod,
@@ -3345,9 +3332,9 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 }
 
 type ApiReadAssertionsRequest struct {
-	ctx        _context.Context
-	ApiService OpenFgaApi
-
+	ctx                  _context.Context
+	ApiService           OpenFgaApi
+	storeId              string
 	authorizationModelId string
 }
 
@@ -3359,13 +3346,15 @@ func (r ApiReadAssertionsRequest) Execute() (ReadAssertionsResponse, *_nethttp.R
  * ReadAssertions Read assertions for an authorization model ID
  * The ReadAssertions API will return, for a given authorization model id, all the assertions stored for it. An assertion is an object that contains a tuple key, and the expectation of whether a call to the Check API of that tuple key will return true or false.
  * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param storeId
  * @param authorizationModelId
  * @return ApiReadAssertionsRequest
  */
-func (a *OpenFgaApiService) ReadAssertions(ctx _context.Context, authorizationModelId string) ApiReadAssertionsRequest {
+func (a *OpenFgaApiService) ReadAssertions(ctx _context.Context, storeId string, authorizationModelId string) ApiReadAssertionsRequest {
 	return ApiReadAssertionsRequest{
 		ApiService:           a,
 		ctx:                  ctx,
+		storeId:              storeId,
 		authorizationModelId: authorizationModelId,
 	}
 }
@@ -3393,14 +3382,16 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 			localVarReturnValue ReadAssertionsResponse
 		)
 
-		if a.client.cfg.StoreId == "" {
-			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
-		}
-		if a.client.cfg.StoreId != "" && !internalutils.IsWellFormedUlidString(a.client.cfg.StoreId) {
-			return localVarReturnValue, nil, reportError("Configuration.StoreId is invalid")
-		}
 		localVarPath := "/stores/{store_id}/assertions/{authorization_model_id}"
-		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(a.client.cfg.StoreId), -1)
+		if r.storeId == "" {
+			return localVarReturnValue, nil, reportError("storeId is required and must be specified")
+		}
+
+		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(parameterToString(r.storeId, "")), -1)
+		if r.authorizationModelId == "" {
+			return localVarReturnValue, nil, reportError("authorizationModelId is required and must be specified")
+		}
+
 		localVarPath = strings.Replace(localVarPath, "{"+"authorization_model_id"+"}", _neturl.PathEscape(parameterToString(r.authorizationModelId, "")), -1)
 
 		localVarHeaderParams := make(map[string]string)
@@ -3445,7 +3436,7 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
+					storeId:            r.storeId,
 					endpointCategory:   "ReadAssertions",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -3470,9 +3461,8 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "ReadAssertions",
 					responseStatusCode: localVarHTTPResponse.StatusCode,
 					responseHeader:     localVarHTTPResponse.Header,
@@ -3487,7 +3477,7 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
+					storeId:            r.storeId,
 					endpointCategory:   "ReadAssertions",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -3517,9 +3507,8 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "ReadAssertions",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -3539,9 +3528,8 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 					continue
 				}
 				newErr := FgaApiInternalError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "ReadAssertions",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -3564,9 +3552,8 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr := FgaApiError{
-				body: localVarBody,
-
-				storeId:            a.client.cfg.StoreId,
+				body:               localVarBody,
+				storeId:            r.storeId,
 				endpointCategory:   "ReadAssertions",
 				requestBody:        localVarPostBody,
 				requestMethod:      localVarHTTPMethod,
@@ -3608,8 +3595,8 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 type ApiReadAuthorizationModelRequest struct {
 	ctx        _context.Context
 	ApiService OpenFgaApi
-
-	id string
+	storeId    string
+	id         string
 }
 
 func (r ApiReadAuthorizationModelRequest) Execute() (ReadAuthorizationModelResponse, *_nethttp.Response, error) {
@@ -3663,13 +3650,15 @@ To retrieve the authorization model with ID `01G5JAVJ41T49E9TT3SKVS7X1J` for the
 ```
 In the above example, there are 2 types (`user` and `document`). The `document` type has 2 relations (`writer` and `reader`).
   - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param storeId
   - @param id
   - @return ApiReadAuthorizationModelRequest
 */
-func (a *OpenFgaApiService) ReadAuthorizationModel(ctx _context.Context, id string) ApiReadAuthorizationModelRequest {
+func (a *OpenFgaApiService) ReadAuthorizationModel(ctx _context.Context, storeId string, id string) ApiReadAuthorizationModelRequest {
 	return ApiReadAuthorizationModelRequest{
 		ApiService: a,
 		ctx:        ctx,
+		storeId:    storeId,
 		id:         id,
 	}
 }
@@ -3697,14 +3686,16 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 			localVarReturnValue ReadAuthorizationModelResponse
 		)
 
-		if a.client.cfg.StoreId == "" {
-			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
-		}
-		if a.client.cfg.StoreId != "" && !internalutils.IsWellFormedUlidString(a.client.cfg.StoreId) {
-			return localVarReturnValue, nil, reportError("Configuration.StoreId is invalid")
-		}
 		localVarPath := "/stores/{store_id}/authorization-models/{id}"
-		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(a.client.cfg.StoreId), -1)
+		if r.storeId == "" {
+			return localVarReturnValue, nil, reportError("storeId is required and must be specified")
+		}
+
+		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(parameterToString(r.storeId, "")), -1)
+		if r.id == "" {
+			return localVarReturnValue, nil, reportError("id is required and must be specified")
+		}
+
 		localVarPath = strings.Replace(localVarPath, "{"+"id"+"}", _neturl.PathEscape(parameterToString(r.id, "")), -1)
 
 		localVarHeaderParams := make(map[string]string)
@@ -3749,7 +3740,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
+					storeId:            r.storeId,
 					endpointCategory:   "ReadAuthorizationModel",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -3774,9 +3765,8 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "ReadAuthorizationModel",
 					responseStatusCode: localVarHTTPResponse.StatusCode,
 					responseHeader:     localVarHTTPResponse.Header,
@@ -3791,7 +3781,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
+					storeId:            r.storeId,
 					endpointCategory:   "ReadAuthorizationModel",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -3821,9 +3811,8 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "ReadAuthorizationModel",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -3843,9 +3832,8 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 					continue
 				}
 				newErr := FgaApiInternalError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "ReadAuthorizationModel",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -3868,9 +3856,8 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr := FgaApiError{
-				body: localVarBody,
-
-				storeId:            a.client.cfg.StoreId,
+				body:               localVarBody,
+				storeId:            r.storeId,
 				endpointCategory:   "ReadAuthorizationModel",
 				requestBody:        localVarPostBody,
 				requestMethod:      localVarHTTPMethod,
@@ -3910,9 +3897,9 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 }
 
 type ApiReadAuthorizationModelsRequest struct {
-	ctx        _context.Context
-	ApiService OpenFgaApi
-
+	ctx               _context.Context
+	ApiService        OpenFgaApi
+	storeId           string
 	pageSize          *int32
 	continuationToken *string
 }
@@ -3975,12 +3962,14 @@ If there are no more authorization models available, the `continuation_token` fi
 ```
 
   - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param storeId
   - @return ApiReadAuthorizationModelsRequest
 */
-func (a *OpenFgaApiService) ReadAuthorizationModels(ctx _context.Context) ApiReadAuthorizationModelsRequest {
+func (a *OpenFgaApiService) ReadAuthorizationModels(ctx _context.Context, storeId string) ApiReadAuthorizationModelsRequest {
 	return ApiReadAuthorizationModelsRequest{
 		ApiService: a,
 		ctx:        ctx,
+		storeId:    storeId,
 	}
 }
 
@@ -4007,14 +3996,12 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 			localVarReturnValue ReadAuthorizationModelsResponse
 		)
 
-		if a.client.cfg.StoreId == "" {
-			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
-		}
-		if a.client.cfg.StoreId != "" && !internalutils.IsWellFormedUlidString(a.client.cfg.StoreId) {
-			return localVarReturnValue, nil, reportError("Configuration.StoreId is invalid")
-		}
 		localVarPath := "/stores/{store_id}/authorization-models"
-		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(a.client.cfg.StoreId), -1)
+		if r.storeId == "" {
+			return localVarReturnValue, nil, reportError("storeId is required and must be specified")
+		}
+
+		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(parameterToString(r.storeId, "")), -1)
 
 		localVarHeaderParams := make(map[string]string)
 		localVarQueryParams := _neturl.Values{}
@@ -4064,7 +4051,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
+					storeId:            r.storeId,
 					endpointCategory:   "ReadAuthorizationModels",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -4089,9 +4076,8 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "ReadAuthorizationModels",
 					responseStatusCode: localVarHTTPResponse.StatusCode,
 					responseHeader:     localVarHTTPResponse.Header,
@@ -4106,7 +4092,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
+					storeId:            r.storeId,
 					endpointCategory:   "ReadAuthorizationModels",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -4136,9 +4122,8 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "ReadAuthorizationModels",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -4158,9 +4143,8 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 					continue
 				}
 				newErr := FgaApiInternalError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "ReadAuthorizationModels",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -4183,9 +4167,8 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr := FgaApiError{
-				body: localVarBody,
-
-				storeId:            a.client.cfg.StoreId,
+				body:               localVarBody,
+				storeId:            r.storeId,
 				endpointCategory:   "ReadAuthorizationModels",
 				requestBody:        localVarPostBody,
 				requestMethod:      localVarHTTPMethod,
@@ -4225,9 +4208,9 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 }
 
 type ApiReadChangesRequest struct {
-	ctx        _context.Context
-	ApiService OpenFgaApi
-
+	ctx               _context.Context
+	ApiService        OpenFgaApi
+	storeId           string
 	type_             *string
 	pageSize          *int32
 	continuationToken *string
@@ -4259,12 +4242,14 @@ When reading a write tuple change, if it was conditioned, the condition will be 
 When reading a delete tuple change, the condition will NOT be returned regardless of whether it was originally conditioned or not.
 
   - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param storeId
   - @return ApiReadChangesRequest
 */
-func (a *OpenFgaApiService) ReadChanges(ctx _context.Context) ApiReadChangesRequest {
+func (a *OpenFgaApiService) ReadChanges(ctx _context.Context, storeId string) ApiReadChangesRequest {
 	return ApiReadChangesRequest{
 		ApiService: a,
 		ctx:        ctx,
+		storeId:    storeId,
 	}
 }
 
@@ -4291,14 +4276,12 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 			localVarReturnValue ReadChangesResponse
 		)
 
-		if a.client.cfg.StoreId == "" {
-			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
-		}
-		if a.client.cfg.StoreId != "" && !internalutils.IsWellFormedUlidString(a.client.cfg.StoreId) {
-			return localVarReturnValue, nil, reportError("Configuration.StoreId is invalid")
-		}
 		localVarPath := "/stores/{store_id}/changes"
-		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(a.client.cfg.StoreId), -1)
+		if r.storeId == "" {
+			return localVarReturnValue, nil, reportError("storeId is required and must be specified")
+		}
+
+		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(parameterToString(r.storeId, "")), -1)
 
 		localVarHeaderParams := make(map[string]string)
 		localVarQueryParams := _neturl.Values{}
@@ -4351,7 +4334,7 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
+					storeId:            r.storeId,
 					endpointCategory:   "ReadChanges",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -4376,9 +4359,8 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "ReadChanges",
 					responseStatusCode: localVarHTTPResponse.StatusCode,
 					responseHeader:     localVarHTTPResponse.Header,
@@ -4393,7 +4375,7 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
+					storeId:            r.storeId,
 					endpointCategory:   "ReadChanges",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -4423,9 +4405,8 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "ReadChanges",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -4445,9 +4426,8 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 					continue
 				}
 				newErr := FgaApiInternalError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "ReadChanges",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -4470,9 +4450,8 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr := FgaApiError{
-				body: localVarBody,
-
-				storeId:            a.client.cfg.StoreId,
+				body:               localVarBody,
+				storeId:            r.storeId,
 				endpointCategory:   "ReadChanges",
 				requestBody:        localVarPostBody,
 				requestMethod:      localVarHTTPMethod,
@@ -4514,8 +4493,8 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 type ApiWriteRequest struct {
 	ctx        _context.Context
 	ApiService OpenFgaApi
-
-	body *WriteRequest
+	storeId    string
+	body       *WriteRequest
 }
 
 func (r ApiWriteRequest) Body(body WriteRequest) ApiWriteRequest {
@@ -4573,12 +4552,14 @@ To remove `user:bob` as a `reader` for `document:2021-budget`, call write API wi
 ```
 
   - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param storeId
   - @return ApiWriteRequest
 */
-func (a *OpenFgaApiService) Write(ctx _context.Context) ApiWriteRequest {
+func (a *OpenFgaApiService) Write(ctx _context.Context, storeId string) ApiWriteRequest {
 	return ApiWriteRequest{
 		ApiService: a,
 		ctx:        ctx,
+		storeId:    storeId,
 	}
 }
 
@@ -4605,14 +4586,12 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 			localVarReturnValue map[string]interface{}
 		)
 
-		if a.client.cfg.StoreId == "" {
-			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
-		}
-		if a.client.cfg.StoreId != "" && !internalutils.IsWellFormedUlidString(a.client.cfg.StoreId) {
-			return localVarReturnValue, nil, reportError("Configuration.StoreId is invalid")
-		}
 		localVarPath := "/stores/{store_id}/write"
-		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(a.client.cfg.StoreId), -1)
+		if r.storeId == "" {
+			return localVarReturnValue, nil, reportError("storeId is required and must be specified")
+		}
+
+		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(parameterToString(r.storeId, "")), -1)
 
 		localVarHeaderParams := make(map[string]string)
 		localVarQueryParams := _neturl.Values{}
@@ -4661,7 +4640,7 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
+					storeId:            r.storeId,
 					endpointCategory:   "Write",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -4686,9 +4665,8 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "Write",
 					responseStatusCode: localVarHTTPResponse.StatusCode,
 					responseHeader:     localVarHTTPResponse.Header,
@@ -4703,7 +4681,7 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
+					storeId:            r.storeId,
 					endpointCategory:   "Write",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -4733,9 +4711,8 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "Write",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -4755,9 +4732,8 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 					continue
 				}
 				newErr := FgaApiInternalError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "Write",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -4780,9 +4756,8 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr := FgaApiError{
-				body: localVarBody,
-
-				storeId:            a.client.cfg.StoreId,
+				body:               localVarBody,
+				storeId:            r.storeId,
 				endpointCategory:   "Write",
 				requestBody:        localVarPostBody,
 				requestMethod:      localVarHTTPMethod,
@@ -4822,9 +4797,9 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 }
 
 type ApiWriteAssertionsRequest struct {
-	ctx        _context.Context
-	ApiService OpenFgaApi
-
+	ctx                  _context.Context
+	ApiService           OpenFgaApi
+	storeId              string
 	authorizationModelId string
 	body                 *WriteAssertionsRequest
 }
@@ -4842,13 +4817,15 @@ func (r ApiWriteAssertionsRequest) Execute() (*_nethttp.Response, error) {
  * WriteAssertions Upsert assertions for an authorization model ID
  * The WriteAssertions API will upsert new assertions for an authorization model id, or overwrite the existing ones. An assertion is an object that contains a tuple key, and the expectation of whether a call to the Check API of that tuple key will return true or false.
  * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param storeId
  * @param authorizationModelId
  * @return ApiWriteAssertionsRequest
  */
-func (a *OpenFgaApiService) WriteAssertions(ctx _context.Context, authorizationModelId string) ApiWriteAssertionsRequest {
+func (a *OpenFgaApiService) WriteAssertions(ctx _context.Context, storeId string, authorizationModelId string) ApiWriteAssertionsRequest {
 	return ApiWriteAssertionsRequest{
 		ApiService:           a,
 		ctx:                  ctx,
+		storeId:              storeId,
 		authorizationModelId: authorizationModelId,
 	}
 }
@@ -4874,14 +4851,16 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 			localVarPostBody   interface{}
 		)
 
-		if a.client.cfg.StoreId == "" {
-			return nil, reportError("Configuration.StoreId is required and must be specified to call this method")
-		}
-		if a.client.cfg.StoreId != "" && !internalutils.IsWellFormedUlidString(a.client.cfg.StoreId) {
-			return nil, reportError("Configuration.StoreId is invalid")
-		}
 		localVarPath := "/stores/{store_id}/assertions/{authorization_model_id}"
-		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(a.client.cfg.StoreId), -1)
+		if r.storeId == "" {
+			return nil, reportError("storeId is required and must be specified")
+		}
+
+		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(parameterToString(r.storeId, "")), -1)
+		if r.authorizationModelId == "" {
+			return nil, reportError("authorizationModelId is required and must be specified")
+		}
+
 		localVarPath = strings.Replace(localVarPath, "{"+"authorization_model_id"+"}", _neturl.PathEscape(parameterToString(r.authorizationModelId, "")), -1)
 
 		localVarHeaderParams := make(map[string]string)
@@ -4931,7 +4910,7 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
+					storeId:            r.storeId,
 					endpointCategory:   "WriteAssertions",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -4956,9 +4935,8 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "WriteAssertions",
 					responseStatusCode: localVarHTTPResponse.StatusCode,
 					responseHeader:     localVarHTTPResponse.Header,
@@ -4973,7 +4951,7 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
+					storeId:            r.storeId,
 					endpointCategory:   "WriteAssertions",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -5003,9 +4981,8 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "WriteAssertions",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -5025,9 +5002,8 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 					continue
 				}
 				newErr := FgaApiInternalError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "WriteAssertions",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -5050,9 +5026,8 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 				return localVarHTTPResponse, newErr
 			}
 			newErr := FgaApiError{
-				body: localVarBody,
-
-				storeId:            a.client.cfg.StoreId,
+				body:               localVarBody,
+				storeId:            r.storeId,
 				endpointCategory:   "WriteAssertions",
 				requestBody:        localVarPostBody,
 				requestMethod:      localVarHTTPMethod,
@@ -5084,8 +5059,8 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 type ApiWriteAuthorizationModelRequest struct {
 	ctx        _context.Context
 	ApiService OpenFgaApi
-
-	body *WriteAuthorizationModelRequest
+	storeId    string
+	body       *WriteAuthorizationModelRequest
 }
 
 func (r ApiWriteAuthorizationModelRequest) Body(body WriteAuthorizationModelRequest) ApiWriteAuthorizationModelRequest {
@@ -5146,12 +5121,14 @@ OpenFGA's response will include the version id for this authorization model, whi
 ```
 
   - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param storeId
   - @return ApiWriteAuthorizationModelRequest
 */
-func (a *OpenFgaApiService) WriteAuthorizationModel(ctx _context.Context) ApiWriteAuthorizationModelRequest {
+func (a *OpenFgaApiService) WriteAuthorizationModel(ctx _context.Context, storeId string) ApiWriteAuthorizationModelRequest {
 	return ApiWriteAuthorizationModelRequest{
 		ApiService: a,
 		ctx:        ctx,
+		storeId:    storeId,
 	}
 }
 
@@ -5178,14 +5155,12 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 			localVarReturnValue WriteAuthorizationModelResponse
 		)
 
-		if a.client.cfg.StoreId == "" {
-			return localVarReturnValue, nil, reportError("Configuration.StoreId is required and must be specified to call this method")
-		}
-		if a.client.cfg.StoreId != "" && !internalutils.IsWellFormedUlidString(a.client.cfg.StoreId) {
-			return localVarReturnValue, nil, reportError("Configuration.StoreId is invalid")
-		}
 		localVarPath := "/stores/{store_id}/authorization-models"
-		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(a.client.cfg.StoreId), -1)
+		if r.storeId == "" {
+			return localVarReturnValue, nil, reportError("storeId is required and must be specified")
+		}
+
+		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(parameterToString(r.storeId, "")), -1)
 
 		localVarHeaderParams := make(map[string]string)
 		localVarQueryParams := _neturl.Values{}
@@ -5234,7 +5209,7 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
+					storeId:            r.storeId,
 					endpointCategory:   "WriteAuthorizationModel",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -5259,9 +5234,8 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "WriteAuthorizationModel",
 					responseStatusCode: localVarHTTPResponse.StatusCode,
 					responseHeader:     localVarHTTPResponse.Header,
@@ -5276,7 +5250,7 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
-					storeId:            a.client.cfg.StoreId,
+					storeId:            r.storeId,
 					endpointCategory:   "WriteAuthorizationModel",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -5306,9 +5280,8 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "WriteAuthorizationModel",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -5328,9 +5301,8 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 					continue
 				}
 				newErr := FgaApiInternalError{
-					body: localVarBody,
-
-					storeId:            a.client.cfg.StoreId,
+					body:               localVarBody,
+					storeId:            r.storeId,
 					endpointCategory:   "WriteAuthorizationModel",
 					requestBody:        localVarPostBody,
 					requestMethod:      localVarHTTPMethod,
@@ -5353,9 +5325,8 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr := FgaApiError{
-				body: localVarBody,
-
-				storeId:            a.client.cfg.StoreId,
+				body:               localVarBody,
+				storeId:            r.storeId,
 				endpointCategory:   "WriteAuthorizationModel",
 				requestBody:        localVarPostBody,
 				requestMethod:      localVarHTTPMethod,

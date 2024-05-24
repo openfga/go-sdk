@@ -1,7 +1,7 @@
 /**
  * Go SDK for OpenFGA
  *
- * API version: 0.1
+ * API version: 1.x
  * Website: https://openfga.dev
  * Documentation: https://openfga.dev/docs
  * Support: https://openfga.dev/community
@@ -57,7 +57,6 @@ func newClientConfiguration(cfg *fgaSdk.Configuration) ClientConfiguration {
 		ApiScheme:      cfg.ApiScheme,
 		ApiHost:        cfg.ApiHost,
 		ApiUrl:         cfg.ApiUrl,
-		StoreId:        cfg.StoreId,
 		Credentials:    cfg.Credentials,
 		DefaultHeaders: cfg.DefaultHeaders,
 		UserAgent:      cfg.UserAgent,
@@ -77,7 +76,6 @@ func NewSdkClient(cfg *ClientConfiguration) (*OpenFgaClient, error) {
 		ApiScheme:      cfg.ApiScheme,
 		ApiHost:        cfg.ApiHost,
 		ApiUrl:         cfg.ApiUrl,
-		StoreId:        cfg.StoreId,
 		Credentials:    cfg.Credentials,
 		DefaultHeaders: cfg.DefaultHeaders,
 		UserAgent:      cfg.UserAgent,
@@ -91,11 +89,16 @@ func NewSdkClient(cfg *ClientConfiguration) (*OpenFgaClient, error) {
 
 	clientConfig := newClientConfiguration(apiConfiguration)
 	clientConfig.AuthorizationModelId = cfg.AuthorizationModelId
+	clientConfig.StoreId = cfg.StoreId
 
 	// store id is already validate as part of configuration validation
 
 	if cfg.AuthorizationModelId != "" && !internalutils.IsWellFormedUlidString(cfg.AuthorizationModelId) {
 		return nil, FgaInvalidError{param: "AuthorizationModelId", description: "ULID"}
+	}
+
+	if cfg.StoreId != "" && !internalutils.IsWellFormedUlidString(cfg.StoreId) {
+		return nil, FgaInvalidError{param: "StoreId", description: "ULID"}
 	}
 
 	apiClient := fgaSdk.NewAPIClient(apiConfiguration)
@@ -461,6 +464,34 @@ func (client *OpenFgaClient) getAuthorizationModelId(authorizationModelId *strin
 	return &modelId, nil
 }
 
+func (client *OpenFgaClient) SetStoreId(storeId string) error {
+	if storeId != "" && !internalutils.IsWellFormedUlidString(storeId) {
+		return FgaInvalidError{param: "StoreId", description: "ULID"}
+	}
+	client.config.StoreId = storeId
+	return nil
+}
+
+func (client *OpenFgaClient) GetStoreId() (string, error) {
+	storeId := client.config.StoreId
+	if storeId != "" && !internalutils.IsWellFormedUlidString(storeId) {
+		return "", FgaInvalidError{param: "StoreId", description: "ULID"}
+	}
+	return storeId, nil
+}
+
+func (client *OpenFgaClient) getStoreId(storeId *string) (*string, error) {
+	store := client.config.StoreId
+	if storeId != nil && *storeId != "" {
+		store = *storeId
+	}
+	if store != "" && !internalutils.IsWellFormedUlidString(store) {
+		return nil, FgaInvalidError{param: "StoreId", description: "ULID"}
+	}
+
+	return &store, nil
+}
+
 /* Stores */
 
 // / ListStores
@@ -608,12 +639,14 @@ type SdkClientGetStoreRequest struct {
 type SdkClientGetStoreRequestInterface interface {
 	Options(options ClientGetStoreOptions) SdkClientGetStoreRequestInterface
 	Execute() (*ClientGetStoreResponse, error)
+	GetStoreIdOverride() *string
 
 	GetContext() _context.Context
 	GetOptions() *ClientGetStoreOptions
 }
 
 type ClientGetStoreOptions struct {
+	StoreId *string `json:"store_id,omitempty"`
 }
 
 type ClientGetStoreResponse = fgaSdk.GetStoreResponse
@@ -621,6 +654,13 @@ type ClientGetStoreResponse = fgaSdk.GetStoreResponse
 func (request *SdkClientGetStoreRequest) Options(options ClientGetStoreOptions) SdkClientGetStoreRequestInterface {
 	request.options = &options
 	return request
+}
+
+func (request *SdkClientGetStoreRequest) GetStoreIdOverride() *string {
+	if request.options == nil {
+		return nil
+	}
+	return request.options.StoreId
 }
 
 func (request *SdkClientGetStoreRequest) Execute() (*ClientGetStoreResponse, error) {
@@ -636,7 +676,11 @@ func (request *SdkClientGetStoreRequest) GetOptions() *ClientGetStoreOptions {
 }
 
 func (client *OpenFgaClient) GetStoreExecute(request SdkClientGetStoreRequestInterface) (*ClientGetStoreResponse, error) {
-	data, _, err := client.OpenFgaApi.GetStore(request.GetContext()).Execute()
+	storeId, err := client.getStoreId(request.GetStoreIdOverride())
+	if err != nil {
+		return nil, err
+	}
+	data, _, err := client.OpenFgaApi.GetStore(request.GetContext(), *storeId).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -661,12 +705,14 @@ type SdkClientDeleteStoreRequest struct {
 type SdkClientDeleteStoreRequestInterface interface {
 	Options(options ClientDeleteStoreOptions) SdkClientDeleteStoreRequestInterface
 	Execute() (*ClientDeleteStoreResponse, error)
+	GetStoreIdOverride() *string
 
 	GetContext() _context.Context
 	GetOptions() *ClientDeleteStoreOptions
 }
 
 type ClientDeleteStoreOptions struct {
+	StoreId *string `json:"store_id,omitempty"`
 }
 
 type ClientDeleteStoreResponse struct{}
@@ -680,6 +726,13 @@ func (request *SdkClientDeleteStoreRequest) Execute() (*ClientDeleteStoreRespons
 	return request.Client.DeleteStoreExecute(request)
 }
 
+func (request *SdkClientDeleteStoreRequest) GetStoreIdOverride() *string {
+	if request.options == nil {
+		return nil
+	}
+	return request.options.StoreId
+}
+
 func (request *SdkClientDeleteStoreRequest) GetContext() _context.Context {
 	return request.ctx
 }
@@ -689,7 +742,11 @@ func (request *SdkClientDeleteStoreRequest) GetOptions() *ClientDeleteStoreOptio
 }
 
 func (client *OpenFgaClient) DeleteStoreExecute(request SdkClientDeleteStoreRequestInterface) (*ClientDeleteStoreResponse, error) {
-	_, err := client.OpenFgaApi.DeleteStore(request.GetContext()).Execute()
+	storeId, err := client.getStoreId(request.GetStoreIdOverride())
+	if err != nil {
+		return nil, err
+	}
+	_, err = client.OpenFgaApi.DeleteStore(request.GetContext(), *storeId).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -716,6 +773,7 @@ type SdkClientReadAuthorizationModelsRequest struct {
 type SdkClientReadAuthorizationModelsRequestInterface interface {
 	Options(options ClientReadAuthorizationModelsOptions) SdkClientReadAuthorizationModelsRequestInterface
 	Execute() (*ClientReadAuthorizationModelsResponse, error)
+	GetStoreIdOverride() *string
 
 	GetContext() _context.Context
 	GetOptions() *ClientReadAuthorizationModelsOptions
@@ -724,6 +782,7 @@ type SdkClientReadAuthorizationModelsRequestInterface interface {
 type ClientReadAuthorizationModelsOptions struct {
 	PageSize          *int32  `json:"page_size,omitempty"`
 	ContinuationToken *string `json:"continuation_token,omitempty"`
+	StoreId           *string `json:"store_id,omitempty"`
 }
 
 type ClientReadAuthorizationModelsResponse = fgaSdk.ReadAuthorizationModelsResponse
@@ -737,6 +796,13 @@ func (request *SdkClientReadAuthorizationModelsRequest) Execute() (*ClientReadAu
 	return request.Client.ReadAuthorizationModelsExecute(request)
 }
 
+func (request *SdkClientReadAuthorizationModelsRequest) GetStoreIdOverride() *string {
+	if request.options == nil {
+		return nil
+	}
+	return request.options.StoreId
+}
+
 func (request *SdkClientReadAuthorizationModelsRequest) GetContext() _context.Context {
 	return request.ctx
 }
@@ -746,12 +812,23 @@ func (request *SdkClientReadAuthorizationModelsRequest) GetOptions() *ClientRead
 }
 
 func (client *OpenFgaClient) ReadAuthorizationModelsExecute(request SdkClientReadAuthorizationModelsRequestInterface) (*ClientReadAuthorizationModelsResponse, error) {
-	req := client.OpenFgaApi.ReadAuthorizationModels(request.GetContext())
-	pageSize := getPageSizeFromRequest((*ClientPaginationOptions)(request.GetOptions()))
+	pagingOpts := ClientPaginationOptions{}
+	if request.GetOptions() != nil {
+		pagingOpts.PageSize = request.GetOptions().PageSize
+		pagingOpts.ContinuationToken = request.GetOptions().ContinuationToken
+	}
+
+	storeId, err := client.getStoreId(request.GetStoreIdOverride())
+	if err != nil {
+		return nil, err
+	}
+
+	req := client.OpenFgaApi.ReadAuthorizationModels(request.GetContext(), *storeId)
+	pageSize := getPageSizeFromRequest(&pagingOpts)
 	if pageSize != nil {
 		req = req.PageSize(*pageSize)
 	}
-	continuationToken := getContinuationTokenFromRequest((*ClientPaginationOptions)(request.GetOptions()))
+	continuationToken := getContinuationTokenFromRequest(&pagingOpts)
 	if continuationToken != nil {
 		req = req.ContinuationToken(*continuationToken)
 	}
@@ -782,6 +859,7 @@ type SdkClientWriteAuthorizationModelRequestInterface interface {
 	Options(options ClientWriteAuthorizationModelOptions) SdkClientWriteAuthorizationModelRequestInterface
 	Body(body ClientWriteAuthorizationModelRequest) SdkClientWriteAuthorizationModelRequestInterface
 	Execute() (*ClientWriteAuthorizationModelResponse, error)
+	GetStoreIdOverride() *string
 
 	GetBody() *ClientWriteAuthorizationModelRequest
 	GetOptions() *ClientWriteAuthorizationModelOptions
@@ -791,6 +869,7 @@ type SdkClientWriteAuthorizationModelRequestInterface interface {
 type ClientWriteAuthorizationModelRequest = fgaSdk.WriteAuthorizationModelRequest
 
 type ClientWriteAuthorizationModelOptions struct {
+	StoreId *string `json:"store_id,omitempty"`
 }
 
 type ClientWriteAuthorizationModelResponse = fgaSdk.WriteAuthorizationModelResponse
@@ -809,6 +888,13 @@ func (request *SdkClientWriteAuthorizationModelRequest) Execute() (*ClientWriteA
 	return request.Client.WriteAuthorizationModelExecute(request)
 }
 
+func (request *SdkClientWriteAuthorizationModelRequest) GetStoreIdOverride() *string {
+	if request.options == nil {
+		return nil
+	}
+	return request.options.StoreId
+}
+
 func (request *SdkClientWriteAuthorizationModelRequest) GetBody() *ClientWriteAuthorizationModelRequest {
 	return request.body
 }
@@ -822,7 +908,11 @@ func (request *SdkClientWriteAuthorizationModelRequest) GetContext() _context.Co
 }
 
 func (client *OpenFgaClient) WriteAuthorizationModelExecute(request SdkClientWriteAuthorizationModelRequestInterface) (*ClientWriteAuthorizationModelResponse, error) {
-	data, _, err := client.OpenFgaApi.WriteAuthorizationModel(request.GetContext()).Body(*request.GetBody()).Execute()
+	storeId, err := client.getStoreId(request.GetStoreIdOverride())
+	if err != nil {
+		return nil, err
+	}
+	data, _, err := client.OpenFgaApi.WriteAuthorizationModel(request.GetContext(), *storeId).Body(*request.GetBody()).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -850,6 +940,7 @@ type SdkClientReadAuthorizationModelRequestInterface interface {
 	Body(body ClientReadAuthorizationModelRequest) SdkClientReadAuthorizationModelRequestInterface
 	Execute() (*ClientReadAuthorizationModelResponse, error)
 	GetAuthorizationModelIdOverride() *string
+	GetStoreIdOverride() *string
 
 	GetContext() _context.Context
 	GetBody() *ClientReadAuthorizationModelRequest
@@ -861,6 +952,7 @@ type ClientReadAuthorizationModelRequest struct {
 
 type ClientReadAuthorizationModelOptions struct {
 	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
+	StoreId              *string `json:"store_id,omitempty"`
 }
 
 type ClientReadAuthorizationModelResponse = fgaSdk.ReadAuthorizationModelResponse
@@ -875,6 +967,13 @@ func (request *SdkClientReadAuthorizationModelRequest) GetAuthorizationModelIdOv
 		return nil
 	}
 	return request.options.AuthorizationModelId
+}
+
+func (request *SdkClientReadAuthorizationModelRequest) GetStoreIdOverride() *string {
+	if request.options == nil {
+		return nil
+	}
+	return request.options.StoreId
 }
 
 func (request *SdkClientReadAuthorizationModelRequest) Body(body ClientReadAuthorizationModelRequest) SdkClientReadAuthorizationModelRequestInterface {
@@ -906,7 +1005,11 @@ func (client *OpenFgaClient) ReadAuthorizationModelExecute(request SdkClientRead
 	if authorizationModelId == nil || *authorizationModelId == "" {
 		return nil, FgaRequiredParamError{param: "AuthorizationModelId"}
 	}
-	data, _, err := client.OpenFgaApi.ReadAuthorizationModel(request.GetContext(), *authorizationModelId).Execute()
+	storeId, err := client.getStoreId(request.GetStoreIdOverride())
+	if err != nil {
+		return nil, err
+	}
+	data, _, err := client.OpenFgaApi.ReadAuthorizationModel(request.GetContext(), *storeId, *authorizationModelId).Execute()
 
 	if err != nil {
 		return nil, err
@@ -932,12 +1035,14 @@ type SdkClientReadLatestAuthorizationModelRequest struct {
 type SdkClientReadLatestAuthorizationModelRequestInterface interface {
 	Options(options ClientReadLatestAuthorizationModelOptions) SdkClientReadLatestAuthorizationModelRequestInterface
 	Execute() (*ClientReadAuthorizationModelResponse, error)
+	GetStoreIdOverride() *string
 
 	GetContext() _context.Context
 	GetOptions() *ClientReadLatestAuthorizationModelOptions
 }
 
 type ClientReadLatestAuthorizationModelOptions struct {
+	StoreId *string `json:"store_id,omitempty"`
 }
 
 func (client *OpenFgaClient) ReadLatestAuthorizationModel(ctx _context.Context) SdkClientReadLatestAuthorizationModelRequestInterface {
@@ -956,6 +1061,13 @@ func (request *SdkClientReadLatestAuthorizationModelRequest) Execute() (*ClientR
 	return request.Client.ReadLatestAuthorizationModelExecute(request)
 }
 
+func (request *SdkClientReadLatestAuthorizationModelRequest) GetStoreIdOverride() *string {
+	if request.options == nil {
+		return nil
+	}
+	return request.options.StoreId
+}
+
 func (request *SdkClientReadLatestAuthorizationModelRequest) GetContext() _context.Context {
 	return request.ctx
 }
@@ -965,9 +1077,15 @@ func (request *SdkClientReadLatestAuthorizationModelRequest) GetOptions() *Clien
 }
 
 func (client *OpenFgaClient) ReadLatestAuthorizationModelExecute(request SdkClientReadLatestAuthorizationModelRequestInterface) (*ClientReadAuthorizationModelResponse, error) {
-	response, err := client.ReadAuthorizationModels(request.GetContext()).Options(ClientReadAuthorizationModelsOptions{
+	opts := ClientReadAuthorizationModelsOptions{
 		PageSize: fgaSdk.PtrInt32(1),
-	}).Execute()
+	}
+	if request.GetOptions() != nil {
+		opts.StoreId = request.GetOptions().StoreId
+	}
+	req := client.ReadAuthorizationModels(request.GetContext()).Options(opts)
+
+	response, err := req.Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -999,6 +1117,7 @@ type SdkClientReadChangesRequestInterface interface {
 	Options(options ClientReadChangesOptions) SdkClientReadChangesRequestInterface
 	Body(body ClientReadChangesRequest) SdkClientReadChangesRequestInterface
 	Execute() (*ClientReadChangesResponse, error)
+	GetStoreIdOverride() *string
 
 	GetContext() _context.Context
 	GetBody() *ClientReadChangesRequest
@@ -1012,6 +1131,7 @@ type ClientReadChangesRequest struct {
 type ClientReadChangesOptions struct {
 	PageSize          *int32  `json:"page_size,omitempty"`
 	ContinuationToken *string `json:"continuation_token,omitempty"`
+	StoreId           *string `json:"store_id"`
 }
 
 type ClientReadChangesResponse = fgaSdk.ReadChangesResponse
@@ -1037,6 +1157,13 @@ func (request *SdkClientReadChangesRequest) Execute() (*ClientReadChangesRespons
 	return request.Client.ReadChangesExecute(request)
 }
 
+func (request *SdkClientReadChangesRequest) GetStoreIdOverride() *string {
+	if request.options == nil {
+		return nil
+	}
+	return request.options.StoreId
+}
+
 func (request *SdkClientReadChangesRequest) GetContext() _context.Context {
 	return request.ctx
 }
@@ -1050,12 +1177,23 @@ func (request *SdkClientReadChangesRequest) GetOptions() *ClientReadChangesOptio
 }
 
 func (client *OpenFgaClient) ReadChangesExecute(request SdkClientReadChangesRequestInterface) (*ClientReadChangesResponse, error) {
-	req := client.OpenFgaApi.ReadChanges(request.GetContext())
-	pageSize := getPageSizeFromRequest((*ClientPaginationOptions)(request.GetOptions()))
+	pagingOpts := ClientPaginationOptions{}
+	if request.GetOptions() != nil {
+		pagingOpts.PageSize = request.GetOptions().PageSize
+		pagingOpts.ContinuationToken = request.GetOptions().ContinuationToken
+	}
+
+	storeId, err := client.getStoreId(request.GetStoreIdOverride())
+	if err != nil {
+		return nil, err
+	}
+
+	req := client.OpenFgaApi.ReadChanges(request.GetContext(), *storeId)
+	pageSize := getPageSizeFromRequest(&pagingOpts)
 	if pageSize != nil {
 		req = req.PageSize(*pageSize)
 	}
-	continuationToken := getContinuationTokenFromRequest((*ClientPaginationOptions)(request.GetOptions()))
+	continuationToken := getContinuationTokenFromRequest(&pagingOpts)
 	if continuationToken != nil {
 		req = req.ContinuationToken(*continuationToken)
 	}
@@ -1084,6 +1222,7 @@ type SdkClientReadRequestInterface interface {
 	Options(options ClientReadOptions) SdkClientReadRequestInterface
 	Body(body ClientReadRequest) SdkClientReadRequestInterface
 	Execute() (*ClientReadResponse, error)
+	GetStoreIdOverride() *string
 
 	GetContext() _context.Context
 	GetBody() *ClientReadRequest
@@ -1099,6 +1238,7 @@ type ClientReadRequest struct {
 type ClientReadOptions struct {
 	PageSize          *int32  `json:"page_size,omitempty"`
 	ContinuationToken *string `json:"continuation_token,omitempty"`
+	StoreId           *string `json:"store_id,omitempty"`
 }
 
 type ClientReadResponse = fgaSdk.ReadResponse
@@ -1124,6 +1264,13 @@ func (request *SdkClientReadRequest) Execute() (*ClientReadResponse, error) {
 	return request.Client.ReadExecute(request)
 }
 
+func (request *SdkClientReadRequest) GetStoreIdOverride() *string {
+	if request.options == nil {
+		return nil
+	}
+	return request.options.StoreId
+}
+
 func (request *SdkClientReadRequest) GetContext() _context.Context {
 	return request.ctx
 }
@@ -1137,9 +1284,15 @@ func (request *SdkClientReadRequest) GetOptions() *ClientReadOptions {
 }
 
 func (client *OpenFgaClient) ReadExecute(request SdkClientReadRequestInterface) (*ClientReadResponse, error) {
+	pagingOpts := ClientPaginationOptions{}
+	if request.GetOptions() != nil {
+		pagingOpts.PageSize = request.GetOptions().PageSize
+		pagingOpts.ContinuationToken = request.GetOptions().ContinuationToken
+	}
+
 	body := fgaSdk.ReadRequest{
-		PageSize:          getPageSizeFromRequest((*ClientPaginationOptions)(request.GetOptions())),
-		ContinuationToken: getContinuationTokenFromRequest((*ClientPaginationOptions)(request.GetOptions())),
+		PageSize:          getPageSizeFromRequest(&pagingOpts),
+		ContinuationToken: getContinuationTokenFromRequest(&pagingOpts),
 	}
 	if request.GetBody() != nil && (request.GetBody().User != nil || request.GetBody().Relation != nil || request.GetBody().Object != nil) {
 		body.TupleKey = &fgaSdk.ReadRequestTupleKey{
@@ -1148,7 +1301,11 @@ func (client *OpenFgaClient) ReadExecute(request SdkClientReadRequestInterface) 
 			Object:   request.GetBody().Object,
 		}
 	}
-	data, _, err := client.OpenFgaApi.Read(request.GetContext()).Body(body).Execute()
+	storeId, err := client.getStoreId(request.GetStoreIdOverride())
+	if err != nil {
+		return nil, err
+	}
+	data, _, err := client.OpenFgaApi.Read(request.GetContext(), *storeId).Body(body).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -1169,6 +1326,7 @@ type SdkClientWriteRequestInterface interface {
 	Body(body ClientWriteRequest) SdkClientWriteRequestInterface
 	Execute() (*ClientWriteResponse, error)
 	GetAuthorizationModelIdOverride() *string
+	GetStoreIdOverride() *string
 
 	GetContext() _context.Context
 	GetOptions() *ClientWriteOptions
@@ -1191,6 +1349,7 @@ type TransactionOptions struct {
 
 type ClientWriteOptions struct {
 	AuthorizationModelId *string             `json:"authorization_model_id,omitempty"`
+	StoreId              *string             `json:"store_id,omitempty"`
 	Transaction          *TransactionOptions `json:"transaction_options,omitempty"`
 }
 
@@ -1277,6 +1436,13 @@ func (request *SdkClientWriteRequest) GetAuthorizationModelIdOverride() *string 
 	return request.options.AuthorizationModelId
 }
 
+func (request *SdkClientWriteRequest) GetStoreIdOverride() *string {
+	if request.options == nil {
+		return nil
+	}
+	return request.options.StoreId
+}
+
 func (request *SdkClientWriteRequest) Body(body ClientWriteRequest) SdkClientWriteRequestInterface {
 	request.body = &body
 	return request
@@ -1318,6 +1484,11 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 		return nil, err
 	}
 
+	storeId, err := client.getStoreId(request.GetStoreIdOverride())
+	if err != nil {
+		return nil, err
+	}
+
 	// Unless explicitly disabled, transaction mode is enabled
 	// In transaction mode, the client will send the request to the server as is
 	if request.GetOptions() == nil || request.GetOptions().Transaction == nil || !request.GetOptions().Transaction.Disable {
@@ -1338,7 +1509,7 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 			}
 			writeRequest.Deletes = &deletes
 		}
-		_, httpResponse, err := client.OpenFgaApi.Write(request.GetContext()).Body(writeRequest).Execute()
+		_, httpResponse, err := client.OpenFgaApi.Write(request.GetContext(), *storeId).Body(writeRequest).Execute()
 
 		clientWriteStatus := SUCCESS
 		if err != nil {
@@ -1623,6 +1794,7 @@ type SdkClientCheckRequestInterface interface {
 	Body(body ClientCheckRequest) SdkClientCheckRequestInterface
 	Execute() (*ClientCheckResponse, error)
 	GetAuthorizationModelIdOverride() *string
+	GetStoreIdOverride() *string
 
 	GetContext() _context.Context
 	GetBody() *ClientCheckRequest
@@ -1639,6 +1811,7 @@ type ClientCheckRequest struct {
 
 type ClientCheckOptions struct {
 	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
+	StoreId              *string `json:"store_id,omitempty"`
 }
 
 type ClientCheckResponse struct {
@@ -1663,6 +1836,13 @@ func (request *SdkClientCheckRequest) GetAuthorizationModelIdOverride() *string 
 		return nil
 	}
 	return request.options.AuthorizationModelId
+}
+
+func (request *SdkClientCheckRequest) GetStoreIdOverride() *string {
+	if request.options == nil {
+		return nil
+	}
+	return request.options.StoreId
 }
 
 func (request *SdkClientCheckRequest) Body(body ClientCheckRequest) SdkClientCheckRequestInterface {
@@ -1694,11 +1874,13 @@ func (client *OpenFgaClient) CheckExecute(request SdkClientCheckRequestInterface
 		}
 	}
 	authorizationModelId, err := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
-
 	if err != nil {
 		return nil, err
 	}
-
+	storeId, err := client.getStoreId(request.GetStoreIdOverride())
+	if err != nil {
+		return nil, err
+	}
 	requestBody := fgaSdk.CheckRequest{
 		TupleKey: fgaSdk.CheckRequestTupleKey{
 			User:     request.GetBody().User,
@@ -1710,7 +1892,7 @@ func (client *OpenFgaClient) CheckExecute(request SdkClientCheckRequestInterface
 		AuthorizationModelId: authorizationModelId,
 	}
 
-	data, httpResponse, err := client.OpenFgaApi.Check(request.GetContext()).Body(requestBody).Execute()
+	data, httpResponse, err := client.OpenFgaApi.Check(request.GetContext(), *storeId).Body(requestBody).Execute()
 	return &ClientCheckResponse{CheckResponse: data, HttpResponse: httpResponse}, err
 }
 
@@ -1729,6 +1911,7 @@ type SdkClientBatchCheckRequestInterface interface {
 	Body(body ClientBatchCheckBody) SdkClientBatchCheckRequestInterface
 	Execute() (*ClientBatchCheckResponse, error)
 	GetAuthorizationModelIdOverride() *string
+	GetStoreIdOverride() *string
 
 	GetContext() _context.Context
 	GetBody() *ClientBatchCheckBody
@@ -1739,6 +1922,7 @@ type ClientBatchCheckBody = []ClientCheckRequest
 
 type ClientBatchCheckOptions struct {
 	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
+	StoreId              *string `json:"store_id,omitempty"`
 	MaxParallelRequests  *int32  `json:"max_parallel_requests,omitempty"`
 }
 
@@ -1767,6 +1951,13 @@ func (request *SdkClientBatchCheckRequest) GetAuthorizationModelIdOverride() *st
 		return nil
 	}
 	return request.options.AuthorizationModelId
+}
+
+func (request *SdkClientBatchCheckRequest) GetStoreIdOverride() *string {
+	if request.options == nil {
+		return nil
+	}
+	return request.options.StoreId
 }
 
 func (request *SdkClientBatchCheckRequest) Body(body ClientBatchCheckBody) SdkClientBatchCheckRequestInterface {
@@ -1802,7 +1993,11 @@ func (client *OpenFgaClient) BatchCheckExecute(request SdkClientBatchCheckReques
 	var numOfChecks = len(*request.GetBody())
 	response := make(ClientBatchCheckResponse, numOfChecks)
 	authorizationModelId, err := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
+	if err != nil {
+		return nil, err
+	}
 
+	storeId, err := client.getStoreId(request.GetStoreIdOverride())
 	if err != nil {
 		return nil, err
 	}
@@ -1816,12 +2011,12 @@ func (client *OpenFgaClient) BatchCheckExecute(request SdkClientBatchCheckReques
 				body:   &checkBody,
 				options: &ClientCheckOptions{
 					AuthorizationModelId: authorizationModelId,
+					StoreId:              storeId,
 				},
 			})
 
 			if _, ok := err.(fgaSdk.FgaApiAuthenticationError); ok {
 				return err
-
 			}
 
 			response[index] = ClientBatchCheckSingleResponse{
@@ -1855,6 +2050,7 @@ type SdkClientExpandRequestInterface interface {
 	Body(body ClientExpandRequest) SdkClientExpandRequestInterface
 	Execute() (*ClientExpandResponse, error)
 	GetAuthorizationModelIdOverride() *string
+	GetStoreIdOverride() *string
 
 	GetContext() _context.Context
 	GetBody() *ClientExpandRequest
@@ -1868,6 +2064,7 @@ type ClientExpandRequest struct {
 
 type ClientExpandOptions struct {
 	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
+	StoreId              *string `json:"store_id,omitempty"`
 }
 
 type ClientExpandResponse = fgaSdk.ExpandResponse
@@ -1889,6 +2086,13 @@ func (request *SdkClientExpandRequest) GetAuthorizationModelIdOverride() *string
 		return nil
 	}
 	return request.options.AuthorizationModelId
+}
+
+func (request *SdkClientExpandRequest) GetStoreIdOverride() *string {
+	if request.options == nil {
+		return nil
+	}
+	return request.options.StoreId
 }
 
 func (request *SdkClientExpandRequest) Body(body ClientExpandRequest) SdkClientExpandRequestInterface {
@@ -1917,8 +2121,12 @@ func (client *OpenFgaClient) ExpandExecute(request SdkClientExpandRequestInterfa
 	if err != nil {
 		return nil, err
 	}
+	storeId, err := client.getStoreId(request.GetStoreIdOverride())
+	if err != nil {
+		return nil, err
+	}
 
-	data, _, err := client.OpenFgaApi.Expand(request.GetContext()).Body(fgaSdk.ExpandRequest{
+	data, _, err := client.OpenFgaApi.Expand(request.GetContext(), *storeId).Body(fgaSdk.ExpandRequest{
 		TupleKey: fgaSdk.ExpandRequestTupleKey{
 			Relation: request.GetBody().Relation,
 			Object:   request.GetBody().Object,
@@ -1945,6 +2153,7 @@ type SdkClientListObjectsRequestInterface interface {
 	Body(body ClientListObjectsRequest) SdkClientListObjectsRequestInterface
 	Execute() (*ClientListObjectsResponse, error)
 	GetAuthorizationModelIdOverride() *string
+	GetStoreIdOverride() *string
 
 	GetContext() _context.Context
 	GetBody() *ClientListObjectsRequest
@@ -1961,6 +2170,7 @@ type ClientListObjectsRequest struct {
 
 type ClientListObjectsOptions struct {
 	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
+	StoreId              *string `json:"store_id,omitempty"`
 }
 
 type ClientListObjectsResponse = fgaSdk.ListObjectsResponse
@@ -1982,6 +2192,13 @@ func (request *SdkClientListObjectsRequest) GetAuthorizationModelIdOverride() *s
 		return nil
 	}
 	return request.options.AuthorizationModelId
+}
+
+func (request *SdkClientListObjectsRequest) GetStoreIdOverride() *string {
+	if request.options == nil {
+		return nil
+	}
+	return request.options.StoreId
 }
 
 func (request *SdkClientListObjectsRequest) Body(body ClientListObjectsRequest) SdkClientListObjectsRequestInterface {
@@ -2016,7 +2233,11 @@ func (client *OpenFgaClient) ListObjectsExecute(request SdkClientListObjectsRequ
 	if err != nil {
 		return nil, err
 	}
-	data, _, err := client.OpenFgaApi.ListObjects(request.GetContext()).Body(fgaSdk.ListObjectsRequest{
+	storeId, err := client.getStoreId(request.GetStoreIdOverride())
+	if err != nil {
+		return nil, err
+	}
+	data, _, err := client.OpenFgaApi.ListObjects(request.GetContext(), *storeId).Body(fgaSdk.ListObjectsRequest{
 		User:                 request.GetBody().User,
 		Relation:             request.GetBody().Relation,
 		Type:                 request.GetBody().Type,
@@ -2045,6 +2266,7 @@ type SdkClientListRelationsRequestInterface interface {
 	Body(body ClientListRelationsRequest) SdkClientListRelationsRequestInterface
 	Execute() (*ClientListRelationsResponse, error)
 	GetAuthorizationModelIdOverride() *string
+	GetStoreIdOverride() *string
 
 	GetContext() _context.Context
 	GetBody() *ClientListRelationsRequest
@@ -2061,7 +2283,7 @@ type ClientListRelationsRequest struct {
 
 type ClientListRelationsOptions struct {
 	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
-	MaxParallelRequests  *int32  `json:"max_parallel_requests,omitempty"`
+	StoreId              *string `json:"store_id,omitempty"`
 }
 
 type ClientListRelationsResponse struct {
@@ -2091,6 +2313,13 @@ func (request *SdkClientListRelationsRequest) GetAuthorizationModelIdOverride() 
 		return nil
 	}
 	return request.options.AuthorizationModelId
+}
+
+func (request *SdkClientListRelationsRequest) GetStoreIdOverride() *string {
+	if request.options == nil {
+		return nil
+	}
+	return request.options.StoreId
 }
 
 func (request *SdkClientListRelationsRequest) Body(body ClientListRelationsRequest) SdkClientListRelationsRequestInterface {
@@ -2133,9 +2362,9 @@ func (client *OpenFgaClient) ListRelationsExecute(request SdkClientListRelations
 	if err != nil {
 		return nil, err
 	}
-	var maxParallelReqs *int32
-	if request.GetOptions() != nil {
-		maxParallelReqs = request.GetOptions().MaxParallelRequests
+	storeId, err := client.getStoreId(request.GetStoreIdOverride())
+	if err != nil {
+		return nil, err
 	}
 	batchResponse, err := client.BatchCheckExecute(&SdkClientBatchCheckRequest{
 		ctx:    request.GetContext(),
@@ -2143,7 +2372,7 @@ func (client *OpenFgaClient) ListRelationsExecute(request SdkClientListRelations
 		body:   &batchRequestBody,
 		options: &ClientBatchCheckOptions{
 			AuthorizationModelId: authorizationModelId,
-			MaxParallelRequests:  maxParallelReqs,
+			StoreId:              storeId,
 		},
 	})
 
@@ -2175,6 +2404,7 @@ type SdkClientListUsersRequestInterface interface {
 	Body(body ClientListUsersRequest) SdkClientListUsersRequestInterface
 	Execute() (*ClientListUsersResponse, error)
 	GetAuthorizationModelIdOverride() *string
+	GetStoreIdOverride() *string
 
 	GetContext() _context.Context
 	GetBody() *ClientListUsersRequest
@@ -2192,6 +2422,7 @@ type ClientListUsersRequest struct {
 
 type ClientListUsersOptions struct {
 	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
+	StoreId              *string `json:"store_id,omitempty"`
 }
 
 type ClientListUsersResponse = fgaSdk.ListUsersResponse
@@ -2213,6 +2444,13 @@ func (request *SdkClientListUsersRequest) GetAuthorizationModelIdOverride() *str
 		return nil
 	}
 	return request.options.AuthorizationModelId
+}
+
+func (request *SdkClientListUsersRequest) GetStoreIdOverride() *string {
+	if request.options == nil {
+		return nil
+	}
+	return request.options.StoreId
 }
 
 func (request *SdkClientListUsersRequest) Body(body ClientListUsersRequest) SdkClientListUsersRequestInterface {
@@ -2247,7 +2485,11 @@ func (client *OpenFgaClient) ListUsersExecute(request SdkClientListUsersRequestI
 	if err != nil {
 		return nil, err
 	}
-	data, _, err := client.OpenFgaApi.ListUsers(request.GetContext()).Body(fgaSdk.ListUsersRequest{
+	storeId, err := client.getStoreId(request.GetStoreIdOverride())
+	if err != nil {
+		return nil, err
+	}
+	data, _, err := client.OpenFgaApi.ListUsers(request.GetContext(), *storeId).Body(fgaSdk.ListUsersRequest{
 		Object:               request.GetBody().Object,
 		Relation:             request.GetBody().Relation,
 		UserFilters:          request.GetBody().UserFilters,
@@ -2273,6 +2515,7 @@ type SdkClientReadAssertionsRequestInterface interface {
 	Options(options ClientReadAssertionsOptions) SdkClientReadAssertionsRequestInterface
 	Execute() (*ClientReadAssertionsResponse, error)
 	GetAuthorizationModelIdOverride() *string
+	GetStoreIdOverride() *string
 
 	GetContext() _context.Context
 	GetOptions() *ClientReadAssertionsOptions
@@ -2280,6 +2523,7 @@ type SdkClientReadAssertionsRequestInterface interface {
 
 type ClientReadAssertionsOptions struct {
 	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
+	StoreId              *string `json:"store_id,omitempty"`
 }
 
 type ClientReadAssertionsResponse = fgaSdk.ReadAssertionsResponse
@@ -2303,6 +2547,13 @@ func (request *SdkClientReadAssertionsRequest) GetAuthorizationModelIdOverride()
 	return request.options.AuthorizationModelId
 }
 
+func (request *SdkClientReadAssertionsRequest) GetStoreIdOverride() *string {
+	if request.options == nil {
+		return nil
+	}
+	return request.options.StoreId
+}
+
 func (request *SdkClientReadAssertionsRequest) Execute() (*ClientReadAssertionsResponse, error) {
 	return request.Client.ReadAssertionsExecute(request)
 }
@@ -2323,7 +2574,11 @@ func (client *OpenFgaClient) ReadAssertionsExecute(request SdkClientReadAssertio
 	if authorizationModelId == nil || *authorizationModelId == "" {
 		return nil, FgaRequiredParamError{param: "AuthorizationModelId"}
 	}
-	data, _, err := client.OpenFgaApi.ReadAssertions(request.GetContext(), *authorizationModelId).Execute()
+	storeId, err := client.getStoreId(request.GetStoreIdOverride())
+	if err != nil {
+		return nil, err
+	}
+	data, _, err := client.OpenFgaApi.ReadAssertions(request.GetContext(), *storeId, *authorizationModelId).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -2344,6 +2599,7 @@ type SdkClientWriteAssertionsRequestInterface interface {
 	Body(body ClientWriteAssertionsRequest) SdkClientWriteAssertionsRequestInterface
 	Execute() (*ClientWriteAssertionsResponse, error)
 	GetAuthorizationModelIdOverride() *string
+	GetStoreIdOverride() *string
 
 	GetContext() _context.Context
 	GetBody() *ClientWriteAssertionsRequest
@@ -2372,6 +2628,7 @@ func (clientAssertion ClientAssertion) ToAssertion() fgaSdk.Assertion {
 
 type ClientWriteAssertionsOptions struct {
 	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
+	StoreId              *string `json:"store_id,omitempty"`
 }
 
 type ClientWriteAssertionsResponse struct {
@@ -2394,6 +2651,13 @@ func (request *SdkClientWriteAssertionsRequest) GetAuthorizationModelIdOverride(
 		return nil
 	}
 	return request.options.AuthorizationModelId
+}
+
+func (request *SdkClientWriteAssertionsRequest) GetStoreIdOverride() *string {
+	if request.options == nil {
+		return nil
+	}
+	return request.options.StoreId
 }
 
 func (request *SdkClientWriteAssertionsRequest) Body(body ClientWriteAssertionsRequest) SdkClientWriteAssertionsRequestInterface {
@@ -2426,11 +2690,15 @@ func (client *OpenFgaClient) WriteAssertionsExecute(request SdkClientWriteAssert
 	if authorizationModelId == nil || *authorizationModelId == "" {
 		return nil, FgaRequiredParamError{param: "AuthorizationModelId"}
 	}
+	storeId, err := client.getStoreId(request.GetStoreIdOverride())
+	if err != nil {
+		return nil, err
+	}
 	for index := 0; index < len(*request.GetBody()); index++ {
 		clientAssertion := (*request.GetBody())[index]
 		writeAssertionsRequest.Assertions = append(writeAssertionsRequest.Assertions, clientAssertion.ToAssertion())
 	}
-	_, err = client.OpenFgaApi.WriteAssertions(request.GetContext(), *authorizationModelId).Body(writeAssertionsRequest).Execute()
+	_, err = client.OpenFgaApi.WriteAssertions(request.GetContext(), *storeId, *authorizationModelId).Body(writeAssertionsRequest).Execute()
 
 	if err != nil {
 		return nil, err

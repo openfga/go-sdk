@@ -1,7 +1,7 @@
 /**
  * Go SDK for OpenFGA
  *
- * API version: 0.1
+ * API version: 1.x
  * Website: https://openfga.dev
  * Documentation: https://openfga.dev/docs
  * Support: https://openfga.dev/community
@@ -20,11 +20,12 @@ import (
 
 // ListUsersRequest struct for ListUsersRequest
 type ListUsersRequest struct {
-	AuthorizationModelId *string          `json:"authorization_model_id,omitempty"yaml:"authorization_model_id,omitempty"`
-	Object               FgaObject        `json:"object"yaml:"object"`
-	Relation             string           `json:"relation"yaml:"relation"`
-	UserFilters          []UserTypeFilter `json:"user_filters"yaml:"user_filters"`
-	ContextualTuples     *[]TupleKey      `json:"contextual_tuples,omitempty"yaml:"contextual_tuples,omitempty"`
+	AuthorizationModelId *string   `json:"authorization_model_id,omitempty"yaml:"authorization_model_id,omitempty"`
+	Object               FgaObject `json:"object"yaml:"object"`
+	Relation             string    `json:"relation"yaml:"relation"`
+	// The type of results returned. Only accepts exactly one value.
+	UserFilters      []UserTypeFilter `json:"user_filters"yaml:"user_filters"`
+	ContextualTuples *[]TupleKey      `json:"contextual_tuples,omitempty"yaml:"contextual_tuples,omitempty"`
 	// Additional request context that will be used to evaluate any ABAC conditions encountered in the query evaluation.
 	Context *map[string]interface{} `json:"context,omitempty"yaml:"context,omitempty"`
 }
