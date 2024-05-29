@@ -775,6 +775,8 @@ List the users who have a certain relation to a particular type.
 options := ClientListRelationsOptions{
     // You can rely on the model id set in the configuration or override it for this specific request
     AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+    // Max number of requests to issue in parallel, defaults to 10
+    MaxParallelRequests: openfga.PtrInt32(5),
 }
 
 // Only a single filter is allowed by the API for the time being
