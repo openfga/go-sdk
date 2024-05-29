@@ -94,11 +94,11 @@ func NewSdkClient(cfg *ClientConfiguration) (*OpenFgaClient, error) {
 	// store id is already validate as part of configuration validation
 
 	if cfg.AuthorizationModelId != "" && !internalutils.IsWellFormedUlidString(cfg.AuthorizationModelId) {
-		return nil, FgaInvalidError{param: "AuthorizationModelId", description: "ULID"}
+		return nil, FgaInvalidError{param: "AuthorizationModelId", description: "Expected ULID format"}
 	}
 
 	if cfg.StoreId != "" && !internalutils.IsWellFormedUlidString(cfg.StoreId) {
-		return nil, FgaInvalidError{param: "StoreId", description: "ULID"}
+		return nil, FgaInvalidError{param: "StoreId", description: "Expected ULID format"}
 	}
 
 	apiClient := fgaSdk.NewAPIClient(apiConfiguration)
@@ -435,7 +435,7 @@ type SdkClient interface {
 
 func (client *OpenFgaClient) SetAuthorizationModelId(authorizationModelId string) error {
 	if authorizationModelId != "" && !internalutils.IsWellFormedUlidString(authorizationModelId) {
-		return FgaInvalidError{param: "AuthorizationModelId", description: "ULID"}
+		return FgaInvalidError{param: "AuthorizationModelId", description: "Expected ULID format"}
 	}
 
 	client.config.AuthorizationModelId = authorizationModelId
@@ -446,7 +446,7 @@ func (client *OpenFgaClient) SetAuthorizationModelId(authorizationModelId string
 func (client *OpenFgaClient) GetAuthorizationModelId() (string, error) {
 	modelId := client.config.AuthorizationModelId
 	if modelId != "" && !internalutils.IsWellFormedUlidString(modelId) {
-		return "", FgaInvalidError{param: "AuthorizationModelId", description: "ULID"}
+		return "", FgaInvalidError{param: "AuthorizationModelId", description: "Expected ULID format"}
 	}
 
 	return modelId, nil
@@ -459,14 +459,14 @@ func (client *OpenFgaClient) getAuthorizationModelId(authorizationModelId *strin
 	}
 
 	if modelId != "" && !internalutils.IsWellFormedUlidString(modelId) {
-		return nil, FgaInvalidError{param: "AuthorizationModelId", description: "ULID"}
+		return nil, FgaInvalidError{param: "AuthorizationModelId", description: "Expected ULID format"}
 	}
 	return &modelId, nil
 }
 
 func (client *OpenFgaClient) SetStoreId(storeId string) error {
 	if storeId != "" && !internalutils.IsWellFormedUlidString(storeId) {
-		return FgaInvalidError{param: "StoreId", description: "ULID"}
+		return FgaInvalidError{param: "StoreId", description: "Expected ULID format"}
 	}
 	client.config.StoreId = storeId
 	return nil
@@ -475,7 +475,7 @@ func (client *OpenFgaClient) SetStoreId(storeId string) error {
 func (client *OpenFgaClient) GetStoreId() (string, error) {
 	storeId := client.config.StoreId
 	if storeId != "" && !internalutils.IsWellFormedUlidString(storeId) {
-		return "", FgaInvalidError{param: "StoreId", description: "ULID"}
+		return "", FgaInvalidError{param: "StoreId", description: "Expected ULID format"}
 	}
 	return storeId, nil
 }
@@ -486,7 +486,7 @@ func (client *OpenFgaClient) getStoreId(storeId *string) (*string, error) {
 		store = *storeId
 	}
 	if store != "" && !internalutils.IsWellFormedUlidString(store) {
-		return nil, FgaInvalidError{param: "StoreId", description: "ULID"}
+		return nil, FgaInvalidError{param: "StoreId", description: "Expected ULID format"}
 	}
 
 	return &store, nil
