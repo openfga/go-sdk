@@ -2283,6 +2283,7 @@ type ClientListRelationsRequest struct {
 
 type ClientListRelationsOptions struct {
 	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
+	MaxParallelRequests  *int32  `json:"max_parallel_requests,omitempty"`
 	StoreId              *string `json:"store_id,omitempty"`
 }
 
@@ -2366,6 +2367,10 @@ func (client *OpenFgaClient) ListRelationsExecute(request SdkClientListRelations
 	if err != nil {
 		return nil, err
 	}
+	var maxParallelReqs *int32
+	if request.GetOptions() != nil {
+		maxParallelReqs = request.GetOptions().MaxParallelRequests
+	}
 	batchResponse, err := client.BatchCheckExecute(&SdkClientBatchCheckRequest{
 		ctx:    request.GetContext(),
 		Client: client,
@@ -2373,6 +2378,7 @@ func (client *OpenFgaClient) ListRelationsExecute(request SdkClientListRelations
 		options: &ClientBatchCheckOptions{
 			AuthorizationModelId: authorizationModelId,
 			StoreId:              storeId,
+			MaxParallelRequests:  maxParallelReqs,
 		},
 	})
 

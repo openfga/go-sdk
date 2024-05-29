@@ -744,6 +744,8 @@ List the relations a user has on an object.
 options := ClientListRelationsOptions{
     // You can rely on the model id set in the configuration or override it for this specific request
     AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+    // Max number of requests to issue in parallel, defaults to 10
+    MaxParallelRequests: openfga.PtrInt32(5),
 }
 body := ClientListRelationsRequest{
     User:      "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
