@@ -3,7 +3,7 @@
 ## v0.4.0
 
 ### [0.4.0](https://github.com/openfga/go-sdk/compare/v0.3.7...v0.4.0) (2024-05-30)
-- feat!: remove store ID from API config, allow override per-request
+- feat!: remove store ID from API config, allow store ID override per-request (see README for additional documentation and examples)
 - fix: only retry on client credential requests that are 429 or 5x
 
 BREAKING CHANGE:
