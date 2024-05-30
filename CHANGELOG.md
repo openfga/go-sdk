@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.4.0
+
+### [0.4.0](https://github.com/openfga/go-sdk/compare/v0.3.7...v0.4.0) (2024-05-30)
+- feat!: remove store ID from API config, allow store ID override per-request (see README for additional documentation and examples)
+- fix: only retry on client credential requests that are 429 or 5x
+
+BREAKING CHANGE:
+
+This version removes the `StoreId` from the API client configuration. Instead, the `StoreId` parameter 
+must now be passed to each of the API methods that require a store ID. 
+
+**If you are using `api_open_fga.go` directly, you will now need to pass the `StoreId` parameter.**
+
 ## v0.3.7
 
 ### [0.3.7](https://github.com/openfga/go-sdk/compare/v0.3.6...v0.3.7) (2024-05-08)
