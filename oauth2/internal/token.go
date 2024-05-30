@@ -297,7 +297,19 @@ func doTokenRoundTrip(ctx context.Context, req *http.Request) (*Token, error) {
 		if err == nil {
 			return token, err
 		}
-		time.Sleep(time.Duration(internalutils.RandomTime(i, cMinWaitInMs)) * time.Millisecond)
+
+		// If this was a request error, then check if it was a 429 or 5xx error and retry.
+		// We do not want to retry any other error
+		if rErr, ok := err.(*RetrieveError); ok {
+			statusCode := rErr.Response.StatusCode
+			if statusCode == http.StatusTooManyRequests || (statusCode >= http.StatusInternalServerError && statusCode <= 599) {
+				time.Sleep(time.Duration(internalutils.RandomTime(i, cMinWaitInMs)) * time.Millisecond)
+				continue
+			}
+		}
+
+		return nil, err
+
 	}
 	return nil, err
 }

@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"math"
 	"net/http"
 	"net/http/httptest"
@@ -118,6 +119,90 @@ func TestRetrieveTokenWithContextsFailure(t *testing.T) {
 	_, err := RetrieveToken(context.Background(), clientID, "", testURL, url.Values{}, AuthStyleUnknown)
 	if err == nil {
 		t.Errorf("Expect error to be returned when oauth server fails consistently")
+	}
+}
+
+// Test that a 401 returns an error straight away
+func TestRetrieveTokenWithUnauthorizedErrors(t *testing.T) {
+	ResetAuthCache()
+	const clientID = "client-id"
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	firstMock := httpmock.NewStringResponder(401, "")
+
+	const testURL = "http://testserver.com"
+	httpmock.RegisterResponder("POST", testURL,
+		firstMock,
+	)
+
+	// Set AuthStyleInHeader to avoid making a discovery request
+	_, err := RetrieveToken(context.Background(), clientID, "", testURL, url.Values{}, AuthStyleInHeader)
+	if err == nil {
+		t.Errorf("Expect error to be returned when oauth server fails consistently")
+	}
+
+	log.Print(httpmock.GetTotalCallCount())
+
+	if httpmock.GetTotalCallCount() != 1 {
+		t.Errorf("Expected request to not be retried on a 401")
+	}
+}
+
+// Test that a 500 retries
+func TestRetrieveTokenWithServerErrorRetries(t *testing.T) {
+	ResetAuthCache()
+	const clientID = "client-id"
+
+	type JSONResponse struct {
+		AccessToken string `json:"access_token"`
+		TokenType   string `json:"token_type"`
+	}
+	expectedResponse := JSONResponse{
+		AccessToken: "ACCESS_TOKEN",
+		TokenType:   "bearer",
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	firstMock := httpmock.NewStringResponder(500, "")
+	secondMock, _ := httpmock.NewJsonResponder(200, expectedResponse)
+
+	const testURL = "http://testserver.com"
+	httpmock.RegisterResponder("POST", testURL,
+		firstMock.Then(firstMock).Then(firstMock).Then(secondMock),
+	)
+
+	_, err := RetrieveToken(context.Background(), clientID, "", testURL, url.Values{}, AuthStyleUnknown)
+	if err != nil {
+		t.Errorf("RetrieveToken (with background context) = %v; want no error", err)
+	}
+}
+
+// Test that constant 500s errors
+func TestRetrieveTokenWithServerErrorEventuallyErrors(t *testing.T) {
+	ResetAuthCache()
+	const clientID = "client-id"
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	firstMock := httpmock.NewStringResponder(500, "")
+
+	const testURL = "http://testserver.com"
+	httpmock.RegisterResponder("POST", testURL,
+		firstMock,
+	)
+
+	// Set AuthStyleInHeader to avoid making a discovery request
+	_, err := RetrieveToken(context.Background(), clientID, "", testURL, url.Values{}, AuthStyleInHeader)
+	if err == nil {
+		t.Errorf("Expect error to be returned when oauth server fails consistently")
+	}
+
+	log.Print(httpmock.GetTotalCallCount())
+
+	if httpmock.GetTotalCallCount() != cMaxRetry {
+		t.Errorf("Expected request to not be retried on a 401")
 	}
 }
 
