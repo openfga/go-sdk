@@ -1,7 +1,7 @@
 /**
  * Go SDK for OpenFGA
  *
- * API version: 0.1
+ * API version: 1.x
  * Website: https://openfga.dev
  * Documentation: https://openfga.dev/docs
  * Support: https://openfga.dev/community
@@ -18,7 +18,7 @@ import (
 	"encoding/json"
 )
 
-// User struct for User
+// User User.  Represents any possible value for a user (subject or principal). Can be a: - Specific user object e.g.: 'user:will', 'folder:marketing', 'org:contoso', ...) - Specific userset (e.g. 'group:engineering#member') - Public-typed wildcard (e.g. 'user:*')  See https://openfga.dev/docs/concepts#what-is-a-user
 type User struct {
 	Object   *FgaObject     `json:"object,omitempty"yaml:"object,omitempty"`
 	Userset  *UsersetUser   `json:"userset,omitempty"yaml:"userset,omitempty"`

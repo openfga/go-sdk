@@ -744,6 +744,8 @@ List the relations a user has on an object.
 options := ClientListRelationsOptions{
     // You can rely on the model id set in the configuration or override it for this specific request
     AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+    // Max number of requests to issue in parallel, defaults to 10
+    MaxParallelRequests: openfga.PtrInt32(5),
 }
 body := ClientListRelationsRequest{
     User:      "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
@@ -896,7 +898,7 @@ Class | Method | HTTP request | Description
 *OpenFgaApi* | [**GetStore**](docs/OpenFgaApi.md#getstore) | **Get** /stores/{store_id} | Get a store
 *OpenFgaApi* | [**ListObjects**](docs/OpenFgaApi.md#listobjects) | **Post** /stores/{store_id}/list-objects | List all objects of the given type that the user has a relation with
 *OpenFgaApi* | [**ListStores**](docs/OpenFgaApi.md#liststores) | **Get** /stores | List all stores
-*OpenFgaApi* | [**ListUsers**](docs/OpenFgaApi.md#listusers) | **Post** /stores/{store_id}/list-users | List all users of the given type that the object has a relation with
+*OpenFgaApi* | [**ListUsers**](docs/OpenFgaApi.md#listusers) | **Post** /stores/{store_id}/list-users | [EXPERIMENTAL] List the users matching the provided filter who have a certain relation to a particular type.
 *OpenFgaApi* | [**Read**](docs/OpenFgaApi.md#read) | **Post** /stores/{store_id}/read | Get tuples from the store that matches a query, without following userset rewrite rules
 *OpenFgaApi* | [**ReadAssertions**](docs/OpenFgaApi.md#readassertions) | **Get** /stores/{store_id}/assertions/{authorization_model_id} | Read assertions for an authorization model ID
 *OpenFgaApi* | [**ReadAuthorizationModel**](docs/OpenFgaApi.md#readauthorizationmodel) | **Get** /stores/{store_id}/authorization-models/{id} | Return a particular version of an authorization model
@@ -969,6 +971,7 @@ Class | Method | HTTP request | Description
  - [TypeDefinition](docs/TypeDefinition.md)
  - [TypeName](docs/TypeName.md)
  - [TypedWildcard](docs/TypedWildcard.md)
+ - [UnauthenticatedResponse](docs/UnauthenticatedResponse.md)
  - [UnprocessableContentErrorCode](docs/UnprocessableContentErrorCode.md)
  - [UnprocessableContentMessageResponse](docs/UnprocessableContentMessageResponse.md)
  - [User](docs/User.md)

@@ -1,7 +1,7 @@
 /**
  * Go SDK for OpenFGA
  *
- * API version: 0.1
+ * API version: 1.x
  * Website: https://openfga.dev
  * Documentation: https://openfga.dev/docs
  * Support: https://openfga.dev/community
@@ -18,7 +18,7 @@ import (
 	"encoding/json"
 )
 
-// TypedWildcard struct for TypedWildcard
+// TypedWildcard Type bound public access.  Normally represented using the `<type>:*` syntax  `employee:*` represents every object of type `employee`, including those not currently present in the system  See https://openfga.dev/docs/concepts#what-is-type-bound-public-access
 type TypedWildcard struct {
 	Type string `json:"type"yaml:"type"`
 }

@@ -1,7 +1,7 @@
 /**
  * Go SDK for OpenFGA
  *
- * API version: 0.1
+ * API version: 1.x
  * Website: https://openfga.dev
  * Documentation: https://openfga.dev/docs
  * Support: https://openfga.dev/community
@@ -18,7 +18,7 @@ import (
 	"encoding/json"
 )
 
-// UsersetUser struct for UsersetUser
+// UsersetUser Userset.  A set or group of users, represented in the `<type>:<id>#<relation>` format  `group:fga#member` represents all members of group FGA, not to be confused by `group:fga` which represents the group itself as a specific object.  See: https://openfga.dev/docs/modeling/building-blocks/usersets#what-is-a-userset
 type UsersetUser struct {
 	Type     string `json:"type"yaml:"type"`
 	Id       string `json:"id"yaml:"id"`
