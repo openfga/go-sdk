@@ -3,10 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+
 	openfga "github.com/openfga/go-sdk"
 	"github.com/openfga/go-sdk/client"
 	"github.com/openfga/go-sdk/credentials"
-	"os"
 )
 
 func mainInner() error {
@@ -265,11 +266,11 @@ func mainInner() error {
 	fmt.Println("Listing user who have access to object")
 	listUsersResponse, err := fgaClient.ListUsers(ctx).Body(client.ClientListUsersRequest{
 		Relation: "viewer",
-		Object: openfga.Object{
+		Object: openfga.FgaObject{
 			Type: "document",
 			Id:   "roadmap",
 		},
-		UserFilters: []openfga.ListUsersFilter{{
+		UserFilters: []openfga.UserTypeFilter{{
 			Type: "user",
 		}},
 	}).Execute()
