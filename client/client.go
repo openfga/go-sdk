@@ -61,6 +61,7 @@ func newClientConfiguration(cfg *fgaSdk.Configuration) ClientConfiguration {
 		DefaultHeaders: cfg.DefaultHeaders,
 		UserAgent:      cfg.UserAgent,
 		Debug:          cfg.Debug,
+		HTTPClient:     cfg.HTTPClient,
 		RetryParams:    cfg.RetryParams,
 	}
 }
@@ -80,6 +81,7 @@ func NewSdkClient(cfg *ClientConfiguration) (*OpenFgaClient, error) {
 		DefaultHeaders: cfg.DefaultHeaders,
 		UserAgent:      cfg.UserAgent,
 		Debug:          cfg.Debug,
+		HTTPClient:     cfg.HTTPClient,
 		RetryParams:    cfg.RetryParams,
 	})
 

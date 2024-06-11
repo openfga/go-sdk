@@ -79,6 +79,7 @@ func NewConfiguration(config Configuration) (*Configuration, error) {
 		DefaultHeaders: config.DefaultHeaders,
 		UserAgent:      config.UserAgent,
 		Debug:          config.Debug,
+		HTTPClient:     config.HTTPClient,
 		RetryParams:    config.RetryParams,
 	}
 
