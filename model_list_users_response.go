@@ -20,18 +20,16 @@ import (
 
 // ListUsersResponse struct for ListUsersResponse
 type ListUsersResponse struct {
-	Users         []User            `json:"users"yaml:"users"`
-	ExcludedUsers []ObjectOrUserset `json:"excluded_users"yaml:"excluded_users"`
+	Users []User `json:"users"yaml:"users"`
 }
 
 // NewListUsersResponse instantiates a new ListUsersResponse object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewListUsersResponse(users []User, excludedUsers []ObjectOrUserset) *ListUsersResponse {
+func NewListUsersResponse(users []User) *ListUsersResponse {
 	this := ListUsersResponse{}
 	this.Users = users
-	this.ExcludedUsers = excludedUsers
 	return &this
 }
 
@@ -67,34 +65,9 @@ func (o *ListUsersResponse) SetUsers(v []User) {
 	o.Users = v
 }
 
-// GetExcludedUsers returns the ExcludedUsers field value
-func (o *ListUsersResponse) GetExcludedUsers() []ObjectOrUserset {
-	if o == nil {
-		var ret []ObjectOrUserset
-		return ret
-	}
-
-	return o.ExcludedUsers
-}
-
-// GetExcludedUsersOk returns a tuple with the ExcludedUsers field value
-// and a boolean to check if the value has been set.
-func (o *ListUsersResponse) GetExcludedUsersOk() (*[]ObjectOrUserset, bool) {
-	if o == nil {
-		return nil, false
-	}
-	return &o.ExcludedUsers, true
-}
-
-// SetExcludedUsers sets field value
-func (o *ListUsersResponse) SetExcludedUsers(v []ObjectOrUserset) {
-	o.ExcludedUsers = v
-}
-
 func (o ListUsersResponse) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["users"] = o.Users
-	toSerialize["excluded_users"] = o.ExcludedUsers
 	var b bytes.Buffer
 	enc := json.NewEncoder(&b)
 	enc.SetEscapeHTML(false)

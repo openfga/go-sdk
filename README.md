@@ -823,7 +823,7 @@ userFilters := []openfga.UserTypeFilter{{ Type: "user" }}
 // userFilters := []openfga.UserTypeFilter{{ Type: "team", Relation: openfga.PtrString("member") }}
 
 requestBody := ClientListUsersRequest{
-    Object: openfga.Object{
+    Object: openfga.FgaObject{
         Type: "document",
         Id:   "roadmap",
     },
@@ -846,7 +846,6 @@ data, err := fgaClient.ListRelations(context.Background()).
   Execute()
 
 // response.users = [{object: {type: "user", id: "81684243-9356-4421-8fbf-a4f8d36aa31b"}}, {userset: { type: "user" }}, ...]
-// response.excluded_users = [ {object: {type: "user", id: "4a455e27-d15a-4434-82e0-136f9c2aa4cf"}}, ... ]
 ```
 
 ### Assertions
@@ -990,7 +989,6 @@ Class | Method | HTTP request | Description
  - [Nodes](docs/Nodes.md)
  - [NotFoundErrorCode](docs/NotFoundErrorCode.md)
  - [NullValue](docs/NullValue.md)
- - [ObjectOrUserset](docs/ObjectOrUserset.md)
  - [ObjectRelation](docs/ObjectRelation.md)
  - [PathUnknownErrorMessageResponse](docs/PathUnknownErrorMessageResponse.md)
  - [ReadAssertionsResponse](docs/ReadAssertionsResponse.md)

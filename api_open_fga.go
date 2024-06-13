@@ -304,8 +304,9 @@ type OpenFgaApi interface {
 	You may also specify `contextual_tuples` that will be treated as regular tuples. Each of these tuples may have an associated `condition`.
 	You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly.
 	The response will contain the related users in an array in the "users" field of the response. These results may include specific objects, usersets
-	or type-bound public access. Each of these types of results is encoded in its own type and not represented as a string.In certain cases of negation via the `but not` operator, some results are marked as excluded from the main set of results. These exclusions
-	are returned in the `excluded_users` property and should be handled appropriately at the point of implementation.The number of users in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_USERS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_USERS_MAX_RESULTS, whichever is hit first.
+	or type-bound public access. Each of these types of results is encoded in its own type and not represented as a string.In cases where a type-bound public acces result is returned (e.g. `user:*`), it cannot be inferred that all subjects
+	of that type have a relation to the object; it is possible that negations exist and checks should still be queried
+	on individual subjects to ensure access to that document.The number of users in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_USERS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_USERS_MAX_RESULTS, whichever is hit first.
 	The returned users will not be sorted, and therefore two identical calls may yield different sets of users.
 		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 		 * @param storeId
@@ -2708,8 +2709,9 @@ An `authorization_model_id` may be specified in the body. If it is not specified
 You may also specify `contextual_tuples` that will be treated as regular tuples. Each of these tuples may have an associated `condition`.
 You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly.
 The response will contain the related users in an array in the "users" field of the response. These results may include specific objects, usersets
-or type-bound public access. Each of these types of results is encoded in its own type and not represented as a string.In certain cases of negation via the `but not` operator, some results are marked as excluded from the main set of results. These exclusions
-are returned in the `excluded_users` property and should be handled appropriately at the point of implementation.The number of users in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_USERS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_USERS_MAX_RESULTS, whichever is hit first.
+or type-bound public access. Each of these types of results is encoded in its own type and not represented as a string.In cases where a type-bound public acces result is returned (e.g. `user:*`), it cannot be inferred that all subjects
+of that type have a relation to the object; it is possible that negations exist and checks should still be queried
+on individual subjects to ensure access to that document.The number of users in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_USERS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_USERS_MAX_RESULTS, whichever is hit first.
 The returned users will not be sorted, and therefore two identical calls may yield different sets of users.
   - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @param storeId

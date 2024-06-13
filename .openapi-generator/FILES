@@ -57,7 +57,6 @@ docs/Node.md
 docs/Nodes.md
 docs/NotFoundErrorCode.md
 docs/NullValue.md
-docs/ObjectOrUserset.md
 docs/ObjectRelation.md
 docs/OpenFgaApi.md
 docs/PathUnknownErrorMessageResponse.md
@@ -147,7 +146,6 @@ model_node.go
 model_nodes.go
 model_not_found_error_code.go
 model_null_value.go
-model_object_or_userset.go
 model_object_relation.go
 model_path_unknown_error_message_response.go
 model_read_assertions_response.go
