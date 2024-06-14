@@ -885,7 +885,7 @@ func TestOpenFgaApi(t *testing.T) {
 		test := TestDefinition{
 			Name: "ListUsers",
 			// A real API would not return all these for the filter provided, these are just for test purposes
-			JsonResponse:   `{"excluded_users":null,"users":[{"object":{"id":"81684243-9356-4421-8fbf-a4f8d36aa31b","type":"user"}},{"userset":{"id":"fga","relation":"member","type":"team"}},{"wildcard":{"type":"user"}}]}`,
+			JsonResponse:   `{"users":[{"object":{"id":"81684243-9356-4421-8fbf-a4f8d36aa31b","type":"user"}},{"userset":{"id":"fga","relation":"member","type":"team"}},{"wildcard":{"type":"user"}}]}`,
 			ResponseStatus: http.StatusOK,
 			Method:         http.MethodPost,
 			RequestPath:    "list-users",
@@ -963,10 +963,6 @@ func TestOpenFgaApi(t *testing.T) {
 
 		if got.Users[2].GetWildcard().Type != expectedResponse.Users[2].GetWildcard().Type {
 			t.Fatalf("OpenFga%v().Execute() = %v, want %v (%v)", test.Name, got.Users[2], expectedResponse.Users[2], "wildcard: { type: \"user\" }")
-		}
-
-		if len(got.ExcludedUsers) != len(expectedResponse.ExcludedUsers) {
-			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, got.GetExcludedUsers(), expectedResponse.GetExcludedUsers())
 		}
 	})
 

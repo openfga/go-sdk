@@ -5,13 +5,12 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Users** | [**[]User**](User.md) |  | 
-**ExcludedUsers** | [**[]ObjectOrUserset**](ObjectOrUserset.md) |  | 
 
 ## Methods
 
 ### NewListUsersResponse
 
-`func NewListUsersResponse(users []User, excludedUsers []ObjectOrUserset, ) *ListUsersResponse`
+`func NewListUsersResponse(users []User, ) *ListUsersResponse`
 
 NewListUsersResponse instantiates a new ListUsersResponse object
 This constructor will assign default values to properties that have it defined,
@@ -44,26 +43,6 @@ and a boolean to check if the value has been set.
 `func (o *ListUsersResponse) SetUsers(v []User)`
 
 SetUsers sets Users field to given value.
-
-
-### GetExcludedUsers
-
-`func (o *ListUsersResponse) GetExcludedUsers() []ObjectOrUserset`
-
-GetExcludedUsers returns the ExcludedUsers field if non-nil, zero value otherwise.
-
-### GetExcludedUsersOk
-
-`func (o *ListUsersResponse) GetExcludedUsersOk() (*[]ObjectOrUserset, bool)`
-
-GetExcludedUsersOk returns a tuple with the ExcludedUsers field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetExcludedUsers
-
-`func (o *ListUsersResponse) SetExcludedUsers(v []ObjectOrUserset)`
-
-SetExcludedUsers sets ExcludedUsers field to given value.
 
 
 
