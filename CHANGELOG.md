@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.5.0
+
+### [0.5.0](https://github.com/openfga/go-sdk/compare/v0.4.0...v0.5.0) (2024-06-14)
+- fix: correctly set HTTPClient - thanks @wonyx
+- chore!: remove excluded users from ListUsers response
+
+BREAKING CHANGE:
+
+This version removes the `ExcludedUsers` field from the `ListUsersResponse` and `ClientListUsersResponse` structs,
+for more details see the [associated API change](https://github.com/openfga/api/pull/171).
+
 ## v0.4.0
 
 ### [0.4.0](https://github.com/openfga/go-sdk/compare/v0.3.7...v0.4.0) (2024-05-30)
