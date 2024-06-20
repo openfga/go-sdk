@@ -275,7 +275,7 @@ options := ClientGetStoreOptions{
     // You can rely on the store id set in the configuration or override it for this specific request
     StoreId: openfga.PtrString("01FQH7V8BEG3GPQW93KTRFR8JB"), 
 }
-store,  err := fgaClient.GetStore(context.Background()).Options(options)Execute()
+store,  err := fgaClient.GetStore(context.Background()).Options(options).Execute()
 if err != nil {
     // handle error
 }
