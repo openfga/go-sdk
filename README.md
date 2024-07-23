@@ -507,7 +507,7 @@ By default, write runs in a transaction mode where any invalid operation (deleti
 
 ```golang
 body := ClientWriteRequest{
-    Writes: &[]ClientTupleKey{ {
+    Writes: []ClientTupleKey{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "viewer",
         Object:   "document:roadmap",
@@ -516,7 +516,7 @@ body := ClientWriteRequest{
         Relation: "viewer",
         Object:   "document:budget",
     } },
-    Deletes: &[]ClientTupleKeyWithoutCondition{ {
+    Deletes: []ClientTupleKeyWithoutCondition{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "writer",
         Object:   "document:roadmap",
@@ -540,7 +540,7 @@ The SDK will split the writes into separate chunks and send them in separate req
 
 ```golang
 body := ClientWriteRequest{
-    Writes: &[]ClientTupleKey{ {
+    Writes: []ClientTupleKey{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "viewer",
         Object:   "document:roadmap",
@@ -549,7 +549,7 @@ body := ClientWriteRequest{
         Relation: "viewer",
         Object:   "document:budget",
     } },
-	  Deletes: &[]ClientTupleKeyWithoutCondition{ {
+	  Deletes: []ClientTupleKeyWithoutCondition{ {
       User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
       Relation: "writer",
       Object:   "document:roadmap",
@@ -601,7 +601,7 @@ body := ClientCheckRequest{
     User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     Relation: "viewer",
     Object:   "document:roadmap",
-    ContextualTuples: &[]ClientTupleKey{ {
+    ContextualTuples: []ClientTupleKey{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "editor",
         Object:   "document:roadmap",
@@ -639,7 +639,7 @@ body := ClientBatchCheckBody{ {
     User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     Relation: "viewer",
     Object:   "document:roadmap",
-    ContextualTuples: &[]ClientTupleKey{ {
+    ContextualTuples: []ClientTupleKey{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "editor",
         Object:   "document:roadmap",
@@ -648,7 +648,7 @@ body := ClientBatchCheckBody{ {
     User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     Relation: "admin",
     Object:   "document:roadmap",
-    ContextualTuples: &[]ClientTupleKey{ {
+    ContextualTuples: []ClientTupleKey{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "editor",
         Object:   "document:roadmap",
@@ -752,7 +752,7 @@ body := ClientListObjectsRequest{
     User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     Relation: "can_read",
     Type:     "document",
-    ContextualTuples: &[]ClientTupleKey{ {
+    ContextualTuples: []ClientTupleKey{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "editor",
         Object:   "folder:product",
@@ -787,7 +787,7 @@ body := ClientListRelationsRequest{
     User:      "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     Object:    "document:roadmap",
     Relations: []string{"can_view", "can_edit", "can_delete", "can_rename"},
-    ContextualTuples: &[]ClientTupleKey{ {
+    ContextualTuples: []ClientTupleKey{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "editor",
         Object:   "document:roadmap",
