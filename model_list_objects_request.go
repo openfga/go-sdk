@@ -26,7 +26,8 @@ type ListObjectsRequest struct {
 	User                 string               `json:"user"yaml:"user"`
 	ContextualTuples     *ContextualTupleKeys `json:"contextual_tuples,omitempty"yaml:"contextual_tuples,omitempty"`
 	// Additional request context that will be used to evaluate any ABAC conditions encountered in the query evaluation.
-	Context *map[string]interface{} `json:"context,omitempty"yaml:"context,omitempty"`
+	Context     *map[string]interface{} `json:"context,omitempty"yaml:"context,omitempty"`
+	Consistency *ConsistencyPreference  `json:"consistency,omitempty"yaml:"consistency,omitempty"`
 }
 
 // NewListObjectsRequest instantiates a new ListObjectsRequest object
@@ -38,6 +39,8 @@ func NewListObjectsRequest(type_ string, relation string, user string) *ListObje
 	this.Type = type_
 	this.Relation = relation
 	this.User = user
+	var consistency ConsistencyPreference = CONSISTENCY_UNSPECIFIED
+	this.Consistency = &consistency
 	return &this
 }
 
@@ -46,6 +49,8 @@ func NewListObjectsRequest(type_ string, relation string, user string) *ListObje
 // but it doesn't guarantee that properties required by API are set
 func NewListObjectsRequestWithDefaults() *ListObjectsRequest {
 	this := ListObjectsRequest{}
+	var consistency ConsistencyPreference = CONSISTENCY_UNSPECIFIED
+	this.Consistency = &consistency
 	return &this
 }
 
@@ -217,6 +222,38 @@ func (o *ListObjectsRequest) SetContext(v map[string]interface{}) {
 	o.Context = &v
 }
 
+// GetConsistency returns the Consistency field value if set, zero value otherwise.
+func (o *ListObjectsRequest) GetConsistency() ConsistencyPreference {
+	if o == nil || o.Consistency == nil {
+		var ret ConsistencyPreference
+		return ret
+	}
+	return *o.Consistency
+}
+
+// GetConsistencyOk returns a tuple with the Consistency field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *ListObjectsRequest) GetConsistencyOk() (*ConsistencyPreference, bool) {
+	if o == nil || o.Consistency == nil {
+		return nil, false
+	}
+	return o.Consistency, true
+}
+
+// HasConsistency returns a boolean if a field has been set.
+func (o *ListObjectsRequest) HasConsistency() bool {
+	if o != nil && o.Consistency != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetConsistency gets a reference to the given ConsistencyPreference and assigns it to the Consistency field.
+func (o *ListObjectsRequest) SetConsistency(v ConsistencyPreference) {
+	o.Consistency = &v
+}
+
 func (o ListObjectsRequest) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.AuthorizationModelId != nil {
@@ -230,6 +267,9 @@ func (o ListObjectsRequest) MarshalJSON() ([]byte, error) {
 	}
 	if o.Context != nil {
 		toSerialize["context"] = o.Context
+	}
+	if o.Consistency != nil {
+		toSerialize["consistency"] = o.Consistency
 	}
 	var b bytes.Buffer
 	enc := json.NewEncoder(&b)

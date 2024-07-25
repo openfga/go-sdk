@@ -966,6 +966,7 @@ Class | Method | HTTP request | Description
  - [Condition](docs/Condition.md)
  - [ConditionMetadata](docs/ConditionMetadata.md)
  - [ConditionParamTypeRef](docs/ConditionParamTypeRef.md)
+ - [ConsistencyPreference](docs/ConsistencyPreference.md)
  - [ContextualTupleKeys](docs/ContextualTupleKeys.md)
  - [CreateStoreRequest](docs/CreateStoreRequest.md)
  - [CreateStoreResponse](docs/CreateStoreResponse.md)

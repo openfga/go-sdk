@@ -6,6 +6,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **TupleKey** | [**ExpandRequestTupleKey**](ExpandRequestTupleKey.md) |  | 
 **AuthorizationModelId** | Pointer to **string** |  | [optional] 
+**Consistency** | Pointer to [**ConsistencyPreference**](ConsistencyPreference.md) |  | [optional] [default to UNSPECIFIED]
 
 ## Methods
 
@@ -70,6 +71,31 @@ SetAuthorizationModelId sets AuthorizationModelId field to given value.
 `func (o *ExpandRequest) HasAuthorizationModelId() bool`
 
 HasAuthorizationModelId returns a boolean if a field has been set.
+
+### GetConsistency
+
+`func (o *ExpandRequest) GetConsistency() ConsistencyPreference`
+
+GetConsistency returns the Consistency field if non-nil, zero value otherwise.
+
+### GetConsistencyOk
+
+`func (o *ExpandRequest) GetConsistencyOk() (*ConsistencyPreference, bool)`
+
+GetConsistencyOk returns a tuple with the Consistency field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetConsistency
+
+`func (o *ExpandRequest) SetConsistency(v ConsistencyPreference)`
+
+SetConsistency sets Consistency field to given value.
+
+### HasConsistency
+
+`func (o *ExpandRequest) HasConsistency() bool`
+
+HasConsistency returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
