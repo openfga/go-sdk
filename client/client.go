@@ -1238,9 +1238,10 @@ type ClientReadRequest struct {
 }
 
 type ClientReadOptions struct {
-	PageSize          *int32  `json:"page_size,omitempty"`
-	ContinuationToken *string `json:"continuation_token,omitempty"`
-	StoreId           *string `json:"store_id,omitempty"`
+	PageSize          *int32                        `json:"page_size,omitempty"`
+	ContinuationToken *string                       `json:"continuation_token,omitempty"`
+	StoreId           *string                       `json:"store_id,omitempty"`
+	Consistency       *fgaSdk.ConsistencyPreference `json:"consistency,omitempty"`
 }
 
 type ClientReadResponse = fgaSdk.ReadResponse
@@ -1287,14 +1288,17 @@ func (request *SdkClientReadRequest) GetOptions() *ClientReadOptions {
 
 func (client *OpenFgaClient) ReadExecute(request SdkClientReadRequestInterface) (*ClientReadResponse, error) {
 	pagingOpts := ClientPaginationOptions{}
+	var consistency *fgaSdk.ConsistencyPreference
 	if request.GetOptions() != nil {
 		pagingOpts.PageSize = request.GetOptions().PageSize
 		pagingOpts.ContinuationToken = request.GetOptions().ContinuationToken
+		consistency = request.GetOptions().Consistency
 	}
 
 	body := fgaSdk.ReadRequest{
 		PageSize:          getPageSizeFromRequest(&pagingOpts),
 		ContinuationToken: getContinuationTokenFromRequest(&pagingOpts),
+		Consistency:       consistency,
 	}
 	if request.GetBody() != nil && (request.GetBody().User != nil || request.GetBody().Relation != nil || request.GetBody().Object != nil) {
 		body.TupleKey = &fgaSdk.ReadRequestTupleKey{
@@ -1812,8 +1816,9 @@ type ClientCheckRequest struct {
 }
 
 type ClientCheckOptions struct {
-	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
-	StoreId              *string `json:"store_id,omitempty"`
+	AuthorizationModelId *string                       `json:"authorization_model_id,omitempty"`
+	StoreId              *string                       `json:"store_id,omitempty"`
+	Consistency          *fgaSdk.ConsistencyPreference `json:"consistency,omitempty"`
 }
 
 type ClientCheckResponse struct {
@@ -1894,6 +1899,10 @@ func (client *OpenFgaClient) CheckExecute(request SdkClientCheckRequestInterface
 		AuthorizationModelId: authorizationModelId,
 	}
 
+	if request.GetOptions() != nil {
+		requestBody.Consistency = request.GetOptions().Consistency
+	}
+
 	data, httpResponse, err := client.OpenFgaApi.Check(request.GetContext(), *storeId).Body(requestBody).Execute()
 	return &ClientCheckResponse{CheckResponse: data, HttpResponse: httpResponse}, err
 }
@@ -1923,9 +1932,10 @@ type SdkClientBatchCheckRequestInterface interface {
 type ClientBatchCheckBody = []ClientCheckRequest
 
 type ClientBatchCheckOptions struct {
-	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
-	StoreId              *string `json:"store_id,omitempty"`
-	MaxParallelRequests  *int32  `json:"max_parallel_requests,omitempty"`
+	AuthorizationModelId *string                       `json:"authorization_model_id,omitempty"`
+	StoreId              *string                       `json:"store_id,omitempty"`
+	MaxParallelRequests  *int32                        `json:"max_parallel_requests,omitempty"`
+	Consistency          *fgaSdk.ConsistencyPreference `json:"consistency,omitempty"`
 }
 
 type ClientBatchCheckSingleResponse struct {
@@ -2065,8 +2075,9 @@ type ClientExpandRequest struct {
 }
 
 type ClientExpandOptions struct {
-	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
-	StoreId              *string `json:"store_id,omitempty"`
+	AuthorizationModelId *string                       `json:"authorization_model_id,omitempty"`
+	StoreId              *string                       `json:"store_id,omitempty"`
+	Consistency          *fgaSdk.ConsistencyPreference `json:"consistency,omitempty"`
 }
 
 type ClientExpandResponse = fgaSdk.ExpandResponse
@@ -2128,13 +2139,19 @@ func (client *OpenFgaClient) ExpandExecute(request SdkClientExpandRequestInterfa
 		return nil, err
 	}
 
-	data, _, err := client.OpenFgaApi.Expand(request.GetContext(), *storeId).Body(fgaSdk.ExpandRequest{
+	body := fgaSdk.ExpandRequest{
 		TupleKey: fgaSdk.ExpandRequestTupleKey{
 			Relation: request.GetBody().Relation,
 			Object:   request.GetBody().Object,
 		},
 		AuthorizationModelId: authorizationModelId,
-	}).Execute()
+	}
+
+	if request.GetOptions() != nil {
+		body.Consistency = request.GetOptions().Consistency
+	}
+
+	data, _, err := client.OpenFgaApi.Expand(request.GetContext(), *storeId).Body(body).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -2171,8 +2188,9 @@ type ClientListObjectsRequest struct {
 }
 
 type ClientListObjectsOptions struct {
-	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
-	StoreId              *string `json:"store_id,omitempty"`
+	AuthorizationModelId *string                       `json:"authorization_model_id,omitempty"`
+	StoreId              *string                       `json:"store_id,omitempty"`
+	Consistency          *fgaSdk.ConsistencyPreference `json:"consistency,omitempty"`
 }
 
 type ClientListObjectsResponse = fgaSdk.ListObjectsResponse
@@ -2239,14 +2257,18 @@ func (client *OpenFgaClient) ListObjectsExecute(request SdkClientListObjectsRequ
 	if err != nil {
 		return nil, err
 	}
-	data, _, err := client.OpenFgaApi.ListObjects(request.GetContext(), *storeId).Body(fgaSdk.ListObjectsRequest{
+	body := fgaSdk.ListObjectsRequest{
 		User:                 request.GetBody().User,
 		Relation:             request.GetBody().Relation,
 		Type:                 request.GetBody().Type,
 		ContextualTuples:     fgaSdk.NewContextualTupleKeys(contextualTuples),
 		Context:              request.GetBody().Context,
 		AuthorizationModelId: authorizationModelId,
-	}).Execute()
+	}
+	if request.GetOptions() != nil {
+		body.Consistency = request.GetOptions().Consistency
+	}
+	data, _, err := client.OpenFgaApi.ListObjects(request.GetContext(), *storeId).Body(body).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -2284,9 +2306,10 @@ type ClientListRelationsRequest struct {
 }
 
 type ClientListRelationsOptions struct {
-	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
-	MaxParallelRequests  *int32  `json:"max_parallel_requests,omitempty"`
-	StoreId              *string `json:"store_id,omitempty"`
+	AuthorizationModelId *string                       `json:"authorization_model_id,omitempty"`
+	MaxParallelRequests  *int32                        `json:"max_parallel_requests,omitempty"`
+	StoreId              *string                       `json:"store_id,omitempty"`
+	Consistency          *fgaSdk.ConsistencyPreference `json:"consistency,omitempty"`
 }
 
 type ClientListRelationsResponse struct {
@@ -2369,19 +2392,21 @@ func (client *OpenFgaClient) ListRelationsExecute(request SdkClientListRelations
 	if err != nil {
 		return nil, err
 	}
-	var maxParallelReqs *int32
-	if request.GetOptions() != nil {
-		maxParallelReqs = request.GetOptions().MaxParallelRequests
+
+	options := &ClientBatchCheckOptions{
+		AuthorizationModelId: authorizationModelId,
+		StoreId:              storeId,
 	}
+	if request.GetOptions() != nil {
+		options.Consistency = request.GetOptions().Consistency
+		options.MaxParallelRequests = request.GetOptions().MaxParallelRequests
+	}
+
 	batchResponse, err := client.BatchCheckExecute(&SdkClientBatchCheckRequest{
-		ctx:    request.GetContext(),
-		Client: client,
-		body:   &batchRequestBody,
-		options: &ClientBatchCheckOptions{
-			AuthorizationModelId: authorizationModelId,
-			StoreId:              storeId,
-			MaxParallelRequests:  maxParallelReqs,
-		},
+		ctx:     request.GetContext(),
+		Client:  client,
+		body:    &batchRequestBody,
+		options: options,
 	})
 
 	if err != nil {
@@ -2429,8 +2454,9 @@ type ClientListUsersRequest struct {
 }
 
 type ClientListUsersOptions struct {
-	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
-	StoreId              *string `json:"store_id,omitempty"`
+	AuthorizationModelId *string                       `json:"authorization_model_id,omitempty"`
+	StoreId              *string                       `json:"store_id,omitempty"`
+	Consistency          *fgaSdk.ConsistencyPreference `json:"consistency,omitempty"`
 }
 
 type ClientListUsersResponse = fgaSdk.ListUsersResponse
@@ -2497,14 +2523,20 @@ func (client *OpenFgaClient) ListUsersExecute(request SdkClientListUsersRequestI
 	if err != nil {
 		return nil, err
 	}
-	data, _, err := client.OpenFgaApi.ListUsers(request.GetContext(), *storeId).Body(fgaSdk.ListUsersRequest{
+	body := fgaSdk.ListUsersRequest{
 		Object:               request.GetBody().Object,
 		Relation:             request.GetBody().Relation,
 		UserFilters:          request.GetBody().UserFilters,
 		ContextualTuples:     &fgaSdk.NewContextualTupleKeys(contextualTuples).TupleKeys,
 		Context:              request.GetBody().Context,
 		AuthorizationModelId: authorizationModelId,
-	}).Execute()
+	}
+
+	if request.GetOptions() != nil {
+		body.Consistency = request.GetOptions().Consistency
+	}
+
+	data, _, err := client.OpenFgaApi.ListUsers(request.GetContext(), *storeId).Body(body).Execute()
 	if err != nil {
 		return nil, err
 	}

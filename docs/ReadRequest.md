@@ -7,6 +7,7 @@ Name | Type | Description | Notes
 **TupleKey** | Pointer to [**ReadRequestTupleKey**](ReadRequestTupleKey.md) |  | [optional] 
 **PageSize** | Pointer to **int32** |  | [optional] 
 **ContinuationToken** | Pointer to **string** |  | [optional] 
+**Consistency** | Pointer to [**ConsistencyPreference**](ConsistencyPreference.md) |  | [optional] [default to CONSISTENCYPREFERENCE_UNSPECIFIED]
 
 ## Methods
 
@@ -101,6 +102,31 @@ SetContinuationToken sets ContinuationToken field to given value.
 `func (o *ReadRequest) HasContinuationToken() bool`
 
 HasContinuationToken returns a boolean if a field has been set.
+
+### GetConsistency
+
+`func (o *ReadRequest) GetConsistency() ConsistencyPreference`
+
+GetConsistency returns the Consistency field if non-nil, zero value otherwise.
+
+### GetConsistencyOk
+
+`func (o *ReadRequest) GetConsistencyOk() (*ConsistencyPreference, bool)`
+
+GetConsistencyOk returns a tuple with the Consistency field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetConsistency
+
+`func (o *ReadRequest) SetConsistency(v ConsistencyPreference)`
+
+SetConsistency sets Consistency field to given value.
+
+### HasConsistency
+
+`func (o *ReadRequest) HasConsistency() bool`
+
+HasConsistency returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

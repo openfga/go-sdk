@@ -22,17 +22,17 @@ type InternalErrorCode string
 
 // List of InternalErrorCode
 const (
-	NO_INTERNAL_ERROR   InternalErrorCode = "no_internal_error"
-	INTERNAL_ERROR      InternalErrorCode = "internal_error"
-	CANCELLED           InternalErrorCode = "cancelled"
-	DEADLINE_EXCEEDED   InternalErrorCode = "deadline_exceeded"
-	ALREADY_EXISTS      InternalErrorCode = "already_exists"
-	RESOURCE_EXHAUSTED  InternalErrorCode = "resource_exhausted"
-	FAILED_PRECONDITION InternalErrorCode = "failed_precondition"
-	ABORTED             InternalErrorCode = "aborted"
-	OUT_OF_RANGE        InternalErrorCode = "out_of_range"
-	UNAVAILABLE         InternalErrorCode = "unavailable"
-	DATA_LOSS           InternalErrorCode = "data_loss"
+	INTERNALERRORCODE_NO_INTERNAL_ERROR   InternalErrorCode = "no_internal_error"
+	INTERNALERRORCODE_INTERNAL_ERROR      InternalErrorCode = "internal_error"
+	INTERNALERRORCODE_CANCELLED           InternalErrorCode = "cancelled"
+	INTERNALERRORCODE_DEADLINE_EXCEEDED   InternalErrorCode = "deadline_exceeded"
+	INTERNALERRORCODE_ALREADY_EXISTS      InternalErrorCode = "already_exists"
+	INTERNALERRORCODE_RESOURCE_EXHAUSTED  InternalErrorCode = "resource_exhausted"
+	INTERNALERRORCODE_FAILED_PRECONDITION InternalErrorCode = "failed_precondition"
+	INTERNALERRORCODE_ABORTED             InternalErrorCode = "aborted"
+	INTERNALERRORCODE_OUT_OF_RANGE        InternalErrorCode = "out_of_range"
+	INTERNALERRORCODE_UNAVAILABLE         InternalErrorCode = "unavailable"
+	INTERNALERRORCODE_DATA_LOSS           InternalErrorCode = "data_loss"
 )
 
 var allowedInternalErrorCodeEnumValues = []InternalErrorCode{

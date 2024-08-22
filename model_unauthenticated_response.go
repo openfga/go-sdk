@@ -30,7 +30,7 @@ type UnauthenticatedResponse struct {
 // will change when the set of required properties is changed
 func NewUnauthenticatedResponse() *UnauthenticatedResponse {
 	this := UnauthenticatedResponse{}
-	var code ErrorCode = NO_ERROR
+	var code ErrorCode = ERRORCODE_NO_ERROR
 	this.Code = &code
 	return &this
 }
@@ -40,7 +40,7 @@ func NewUnauthenticatedResponse() *UnauthenticatedResponse {
 // but it doesn't guarantee that properties required by API are set
 func NewUnauthenticatedResponseWithDefaults() *UnauthenticatedResponse {
 	this := UnauthenticatedResponse{}
-	var code ErrorCode = NO_ERROR
+	var code ErrorCode = ERRORCODE_NO_ERROR
 	this.Code = &code
 	return &this
 }
