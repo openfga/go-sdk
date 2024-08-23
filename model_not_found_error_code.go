@@ -22,10 +22,10 @@ type NotFoundErrorCode string
 
 // List of NotFoundErrorCode
 const (
-	NO_NOT_FOUND_ERROR NotFoundErrorCode = "no_not_found_error"
-	UNDEFINED_ENDPOINT NotFoundErrorCode = "undefined_endpoint"
-	STORE_ID_NOT_FOUND NotFoundErrorCode = "store_id_not_found"
-	UNIMPLEMENTED      NotFoundErrorCode = "unimplemented"
+	NOTFOUNDERRORCODE_NO_NOT_FOUND_ERROR NotFoundErrorCode = "no_not_found_error"
+	NOTFOUNDERRORCODE_UNDEFINED_ENDPOINT NotFoundErrorCode = "undefined_endpoint"
+	NOTFOUNDERRORCODE_STORE_ID_NOT_FOUND NotFoundErrorCode = "store_id_not_found"
+	NOTFOUNDERRORCODE_UNIMPLEMENTED      NotFoundErrorCode = "unimplemented"
 )
 
 var allowedNotFoundErrorCodeEnumValues = []NotFoundErrorCode{

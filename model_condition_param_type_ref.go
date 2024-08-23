@@ -39,7 +39,7 @@ func NewConditionParamTypeRef(typeName TypeName) *ConditionParamTypeRef {
 // but it doesn't guarantee that properties required by API are set
 func NewConditionParamTypeRefWithDefaults() *ConditionParamTypeRef {
 	this := ConditionParamTypeRef{}
-	var typeName TypeName = UNSPECIFIED
+	var typeName TypeName = TYPENAME_UNSPECIFIED
 	this.TypeName = typeName
 	return &this
 }

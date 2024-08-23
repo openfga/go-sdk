@@ -22,18 +22,18 @@ type TypeName string
 
 // List of TypeName
 const (
-	UNSPECIFIED TypeName = "TYPE_NAME_UNSPECIFIED"
-	ANY         TypeName = "TYPE_NAME_ANY"
-	BOOL        TypeName = "TYPE_NAME_BOOL"
-	STRING      TypeName = "TYPE_NAME_STRING"
-	INT         TypeName = "TYPE_NAME_INT"
-	UINT        TypeName = "TYPE_NAME_UINT"
-	DOUBLE      TypeName = "TYPE_NAME_DOUBLE"
-	DURATION    TypeName = "TYPE_NAME_DURATION"
-	TIMESTAMP   TypeName = "TYPE_NAME_TIMESTAMP"
-	MAP         TypeName = "TYPE_NAME_MAP"
-	LIST        TypeName = "TYPE_NAME_LIST"
-	IPADDRESS   TypeName = "TYPE_NAME_IPADDRESS"
+	TYPENAME_UNSPECIFIED TypeName = "TYPE_NAME_UNSPECIFIED"
+	TYPENAME_ANY         TypeName = "TYPE_NAME_ANY"
+	TYPENAME_BOOL        TypeName = "TYPE_NAME_BOOL"
+	TYPENAME_STRING      TypeName = "TYPE_NAME_STRING"
+	TYPENAME_INT         TypeName = "TYPE_NAME_INT"
+	TYPENAME_UINT        TypeName = "TYPE_NAME_UINT"
+	TYPENAME_DOUBLE      TypeName = "TYPE_NAME_DOUBLE"
+	TYPENAME_DURATION    TypeName = "TYPE_NAME_DURATION"
+	TYPENAME_TIMESTAMP   TypeName = "TYPE_NAME_TIMESTAMP"
+	TYPENAME_MAP         TypeName = "TYPE_NAME_MAP"
+	TYPENAME_LIST        TypeName = "TYPE_NAME_LIST"
+	TYPENAME_IPADDRESS   TypeName = "TYPE_NAME_IPADDRESS"
 )
 
 var allowedTypeNameEnumValues = []TypeName{

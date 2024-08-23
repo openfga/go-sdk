@@ -1025,8 +1025,8 @@ func TestOpenFgaApi(t *testing.T) {
 			t.Fatalf("Expected status code to be 400 but actual %d", validationError.ResponseStatusCode())
 		}
 
-		if validationError.ResponseCode() != VALIDATION_ERROR {
-			t.Fatalf("Expected response code to be VALIDATION_ERROR but actual %s", validationError.ResponseCode())
+		if validationError.ResponseCode() != ERRORCODE_VALIDATION_ERROR {
+			t.Fatalf("Expected response code to be ERRORCODE_VALIDATION_ERROR but actual %s", validationError.ResponseCode())
 		}
 	})
 
@@ -1146,8 +1146,8 @@ func TestOpenFgaApi(t *testing.T) {
 			t.Fatalf("Expected status code to be 404 but actual %d", notFoundError.ResponseStatusCode())
 		}
 
-		if notFoundError.ResponseCode() != UNDEFINED_ENDPOINT {
-			t.Fatalf("Expected response code to be UNDEFINED_ENDPOINT but actual %s", notFoundError.ResponseCode())
+		if notFoundError.ResponseCode() != NOTFOUNDERRORCODE_UNDEFINED_ENDPOINT {
+			t.Fatalf("Expected response code to be NOTFOUNDERRORCODE_UNDEFINED_ENDPOINT but actual %s", notFoundError.ResponseCode())
 		}
 	})
 
@@ -1342,8 +1342,8 @@ func TestOpenFgaApi(t *testing.T) {
 			t.Fatalf("Expected status code to be 500 but actual %d", internalError.ResponseStatusCode())
 		}
 
-		if internalError.ResponseCode() != INTERNAL_ERROR {
-			t.Fatalf("Expected response code to be INTERNAL_ERROR but actual %s", internalError.ResponseCode())
+		if internalError.ResponseCode() != INTERNALERRORCODE_INTERNAL_ERROR {
+			t.Fatalf("Expected response code to be INTERNALERRORCODE_INTERNAL_ERROR but actual %s", internalError.ResponseCode())
 		}
 	})
 }

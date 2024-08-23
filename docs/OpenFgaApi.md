@@ -11,7 +11,7 @@ Method | HTTP request | Description
 [**GetStore**](OpenFgaApi.md#GetStore) | **Get** /stores/{store_id} | Get a store
 [**ListObjects**](OpenFgaApi.md#ListObjects) | **Post** /stores/{store_id}/list-objects | List all objects of the given type that the user has a relation with
 [**ListStores**](OpenFgaApi.md#ListStores) | **Get** /stores | List all stores
-[**ListUsers**](OpenFgaApi.md#ListUsers) | **Post** /stores/{store_id}/list-users | [EXPERIMENTAL] List the users matching the provided filter who have a certain relation to a particular type.
+[**ListUsers**](OpenFgaApi.md#ListUsers) | **Post** /stores/{store_id}/list-users | List the users matching the provided filter who have a certain relation to a particular type.
 [**Read**](OpenFgaApi.md#Read) | **Post** /stores/{store_id}/read | Get tuples from the store that matches a query, without following userset rewrite rules
 [**ReadAssertions**](OpenFgaApi.md#ReadAssertions) | **Get** /stores/{store_id}/assertions/{authorization_model_id} | Read assertions for an authorization model ID
 [**ReadAuthorizationModel**](OpenFgaApi.md#ReadAuthorizationModel) | **Get** /stores/{store_id}/authorization-models/{id} | Return a particular version of an authorization model
@@ -666,7 +666,7 @@ No authorization required
 
 > ListUsersResponse ListUsers(ctx).Body(body).Execute()
 
-[EXPERIMENTAL] List the users matching the provided filter who have a certain relation to a particular type.
+List the users matching the provided filter who have a certain relation to a particular type.
 
 
 

@@ -141,13 +141,13 @@ func mainInner() error {
 				Expression: "ViewCount < 200",
 				Parameters: &map[string]openfga.ConditionParamTypeRef{
 					"ViewCount": {
-						TypeName: openfga.INT,
+						TypeName: openfga.TYPENAME_INT,
 					},
 					"Type": {
-						TypeName: openfga.STRING,
+						TypeName: openfga.TYPENAME_STRING,
 					},
 					"Name": {
-						TypeName: openfga.STRING,
+						TypeName: openfga.TYPENAME_STRING,
 					},
 				},
 			},

@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Code** | Pointer to [**UnprocessableContentErrorCode**](UnprocessableContentErrorCode.md) |  | [optional] [default to NO_THROTTLED_ERROR_CODE]
+**Code** | Pointer to [**UnprocessableContentErrorCode**](UnprocessableContentErrorCode.md) |  | [optional] [default to UNPROCESSABLECONTENTERRORCODE_NO_THROTTLED_ERROR_CODE]
 **Message** | Pointer to **string** |  | [optional] 
 
 ## Methods

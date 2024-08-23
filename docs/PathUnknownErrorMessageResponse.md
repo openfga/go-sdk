@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Code** | Pointer to [**NotFoundErrorCode**](NotFoundErrorCode.md) |  | [optional] [default to NO_NOT_FOUND_ERROR]
+**Code** | Pointer to [**NotFoundErrorCode**](NotFoundErrorCode.md) |  | [optional] [default to NOTFOUNDERRORCODE_NO_NOT_FOUND_ERROR]
 **Message** | Pointer to **string** |  | [optional] 
 
 ## Methods

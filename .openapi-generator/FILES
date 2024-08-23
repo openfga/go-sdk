@@ -34,6 +34,7 @@ docs/Computed.md
 docs/Condition.md
 docs/ConditionMetadata.md
 docs/ConditionParamTypeRef.md
+docs/ConsistencyPreference.md
 docs/ContextualTupleKeys.md
 docs/CreateStoreRequest.md
 docs/CreateStoreResponse.md
@@ -123,6 +124,7 @@ model_computed.go
 model_condition.go
 model_condition_metadata.go
 model_condition_param_type_ref.go
+model_consistency_preference.go
 model_contextual_tuple_keys.go
 model_create_store_request.go
 model_create_store_response.go

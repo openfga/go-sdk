@@ -5,7 +5,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **TupleKey** | [**TupleKey**](TupleKey.md) |  | 
-**Operation** | [**TupleOperation**](TupleOperation.md) |  | [default to WRITE]
+**Operation** | [**TupleOperation**](TupleOperation.md) |  | [default to TUPLEOPERATION_WRITE]
 **Timestamp** | **time.Time** |  | 
 
 ## Methods

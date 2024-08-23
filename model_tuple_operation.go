@@ -22,8 +22,8 @@ type TupleOperation string
 
 // List of TupleOperation
 const (
-	WRITE  TupleOperation = "TUPLE_OPERATION_WRITE"
-	DELETE TupleOperation = "TUPLE_OPERATION_DELETE"
+	TUPLEOPERATION_WRITE  TupleOperation = "TUPLE_OPERATION_WRITE"
+	TUPLEOPERATION_DELETE TupleOperation = "TUPLE_OPERATION_DELETE"
 )
 
 var allowedTupleOperationEnumValues = []TupleOperation{

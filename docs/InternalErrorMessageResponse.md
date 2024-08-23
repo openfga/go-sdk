@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Code** | Pointer to [**InternalErrorCode**](InternalErrorCode.md) |  | [optional] [default to NO_INTERNAL_ERROR]
+**Code** | Pointer to [**InternalErrorCode**](InternalErrorCode.md) |  | [optional] [default to INTERNALERRORCODE_NO_INTERNAL_ERROR]
 **Message** | Pointer to **string** |  | [optional] 
 
 ## Methods

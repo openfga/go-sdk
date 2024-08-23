@@ -30,7 +30,7 @@ type UnprocessableContentMessageResponse struct {
 // will change when the set of required properties is changed
 func NewUnprocessableContentMessageResponse() *UnprocessableContentMessageResponse {
 	this := UnprocessableContentMessageResponse{}
-	var code UnprocessableContentErrorCode = NO_THROTTLED_ERROR_CODE
+	var code UnprocessableContentErrorCode = UNPROCESSABLECONTENTERRORCODE_NO_THROTTLED_ERROR_CODE
 	this.Code = &code
 	return &this
 }
@@ -40,7 +40,7 @@ func NewUnprocessableContentMessageResponse() *UnprocessableContentMessageRespon
 // but it doesn't guarantee that properties required by API are set
 func NewUnprocessableContentMessageResponseWithDefaults() *UnprocessableContentMessageResponse {
 	this := UnprocessableContentMessageResponse{}
-	var code UnprocessableContentErrorCode = NO_THROTTLED_ERROR_CODE
+	var code UnprocessableContentErrorCode = UNPROCESSABLECONTENTERRORCODE_NO_THROTTLED_ERROR_CODE
 	this.Code = &code
 	return &this
 }

@@ -30,7 +30,7 @@ type PathUnknownErrorMessageResponse struct {
 // will change when the set of required properties is changed
 func NewPathUnknownErrorMessageResponse() *PathUnknownErrorMessageResponse {
 	this := PathUnknownErrorMessageResponse{}
-	var code NotFoundErrorCode = NO_NOT_FOUND_ERROR
+	var code NotFoundErrorCode = NOTFOUNDERRORCODE_NO_NOT_FOUND_ERROR
 	this.Code = &code
 	return &this
 }
@@ -40,7 +40,7 @@ func NewPathUnknownErrorMessageResponse() *PathUnknownErrorMessageResponse {
 // but it doesn't guarantee that properties required by API are set
 func NewPathUnknownErrorMessageResponseWithDefaults() *PathUnknownErrorMessageResponse {
 	this := PathUnknownErrorMessageResponse{}
-	var code NotFoundErrorCode = NO_NOT_FOUND_ERROR
+	var code NotFoundErrorCode = NOTFOUNDERRORCODE_NO_NOT_FOUND_ERROR
 	this.Code = &code
 	return &this
 }

@@ -22,8 +22,8 @@ type UnprocessableContentErrorCode string
 
 // List of UnprocessableContentErrorCode
 const (
-	NO_THROTTLED_ERROR_CODE UnprocessableContentErrorCode = "no_throttled_error_code"
-	THROTTLED_TIMEOUT_ERROR UnprocessableContentErrorCode = "throttled_timeout_error"
+	UNPROCESSABLECONTENTERRORCODE_NO_THROTTLED_ERROR_CODE UnprocessableContentErrorCode = "no_throttled_error_code"
+	UNPROCESSABLECONTENTERRORCODE_THROTTLED_TIMEOUT_ERROR UnprocessableContentErrorCode = "throttled_timeout_error"
 )
 
 var allowedUnprocessableContentErrorCodeEnumValues = []UnprocessableContentErrorCode{
