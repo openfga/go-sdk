@@ -1,10 +1,11 @@
 package telemetry
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
-	openfga "github.com/openfga/go-sdk"
 	"go.opentelemetry.io/otel/attribute"
 )
 
@@ -63,32 +64,38 @@ func (m *Metrics) AttributesFromRequest(req *http.Request, params map[string]int
 		UserAgent:         req.UserAgent(),
 	}
 
-	var attrs = make(map[*Attribute]string)
-
 	if storeId, ok := params["storeId"].(string); ok && storeId != "" {
-		attrs[FGAClientRequestStoreID] = storeId
+		request[FGAClientRequestStoreID] = storeId
 	}
 
 	if authorizationModelId, ok := params["authorizationModelId"].(string); ok && authorizationModelId != "" {
-		attrs[FGAClientRequestModelID] = authorizationModelId
+		request[FGAClientRequestModelID] = authorizationModelId
 	}
 
 	if body, ok := params["body"]; ok {
-		switch req := body.(type) {
-		case *openfga.CheckRequest:
-			if req.TupleKey.User != "" {
-				attrs[FGAClientUser] = req.TupleKey.User
-			}
+		requestType := fmt.Sprintf("%T", body)
 
-			if req.AuthorizationModelId != nil && *req.AuthorizationModelId != "" {
-				attrs[FGAClientRequestModelID] = *req.AuthorizationModelId
+		switch requestType {
+		case "*openfga.CheckRequest":
+			if req, ok := body.(CheckRequestInterface); ok {
+				if tupleKey := req.GetTupleKey(); tupleKey != nil {
+					if user := tupleKey.GetUser(); user != nil {
+						request[FGAClientUser] = *user
+					}
+				}
+
+				if modelId := req.GetAuthorizationModelId(); modelId != nil {
+					request[FGAClientRequestModelID] = *modelId
+				}
 			}
-		case *openfga.ExpandRequest:
-		case *openfga.ListObjectsRequest:
-		case *openfga.ListUsersRequest:
-		case *openfga.WriteRequest:
-			if modelId := req.AuthorizationModelId; modelId != nil && *modelId != "" {
-				attrs[FGAClientRequestModelID] = *modelId
+		case "*openfga.ExpandRequest":
+		case "*openfga.ListObjectsRequest":
+		case "*openfga.ListUsersRequest":
+		case "*openfga.WriteRequest":
+			if req, ok := body.(RequestAuthorizationModelIdInterface); ok {
+				if modelId := req.GetAuthorizationModelId(); modelId != nil {
+					request[FGAClientRequestModelID] = *modelId
+				}
 			}
 		}
 	}
@@ -108,4 +115,48 @@ func (m *Metrics) AttributesFromResponse(res *http.Response, attrs map[*Attribut
 	}
 
 	return attrs, nil
+}
+
+func (m *Metrics) AttributesFromRequestDuration(requestStarted time.Time, attrs map[*Attribute]string) (float64, map[*Attribute]string, error) {
+	requestDurationFloat := time.Since(requestStarted).Seconds() * 1000
+	attrs[HTTPClientRequestDuration] = strconv.FormatFloat(requestDurationFloat, 'f', -1, 64)
+
+	return requestDurationFloat, attrs, nil
+}
+
+func (m *Metrics) AttributesFromQueryDuration(attrs map[*Attribute]string) (float64, map[*Attribute]string, error) {
+	if attrs[HTTPServerRequestDuration] == "" {
+		return 0, attrs, nil
+	}
+
+	queryDurationFloat, queryDurationFloatErr := strconv.ParseFloat(attrs[HTTPServerRequestDuration], 64)
+
+	if queryDurationFloatErr != nil {
+		return 0, attrs, queryDurationFloatErr
+	}
+
+	return queryDurationFloat, attrs, nil
+}
+
+func (m *Metrics) AttributesFromResendCount(resendCount int, attrs map[*Attribute]string) (map[*Attribute]string, error) {
+	if resendCount > 0 {
+		attrs[HTTPRequestResendCount] = strconv.Itoa(resendCount)
+	}
+
+	return attrs, nil
+}
+
+func (m *Metrics) BuildTelemetryAttributes(requestMethod string, methodParameters map[string]interface{}, req *http.Request, res *http.Response, requestStarted time.Time, resendCount int) (map[*Attribute]string, float64, float64, error) {
+	var attrs = make(map[*Attribute]string)
+
+	attrs[FGAClientRequestMethod] = requestMethod
+	attrs, _ = m.AttributesFromRequest(req, methodParameters)
+	attrs, _ = m.AttributesFromResponse(res, attrs)
+	attrs, _ = m.AttributesFromResendCount(resendCount, attrs)
+
+	var requestDuration, queryDuration float64
+	queryDuration, attrs, _ = m.AttributesFromQueryDuration(attrs)
+	requestDuration, attrs, _ = m.AttributesFromRequestDuration(requestStarted, attrs)
+
+	return attrs, queryDuration, requestDuration, nil
 }

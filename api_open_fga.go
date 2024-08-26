@@ -18,7 +18,6 @@ import (
 	_ioutil "io/ioutil"
 	_nethttp "net/http"
 	_neturl "net/url"
-	"strconv"
 	"strings"
 	"time"
 
@@ -921,14 +920,6 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 			return localVarReturnValue, nil, err
 		}
 
-		var methodParameters = make(map[string]interface{})
-		methodParameters["storeId"] = r.storeId
-		methodParameters["body"] = localVarPostBody
-
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, _ = otel.Metrics.AttributesFromRequest(req, methodParameters)
-		attrs[telemetry.FGAClientRequestMethod] = "Check"
-
 		localVarHTTPResponse, err := a.client.callAPI(req)
 		if err != nil || localVarHTTPResponse == nil {
 			return localVarReturnValue, localVarHTTPResponse, err
@@ -1095,22 +1086,25 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		if i > 0 {
-			attrs[telemetry.HTTPRequestResendCount] = strconv.Itoa(i)
+		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
+		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+			"Check",
+			map[string]interface{}{
+				"storeId": r.storeId,
+				"body":    localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			otel.Metrics.RequestDuration(requestDuration, attrs)
 		}
 
-		attrs, _ = otel.Metrics.AttributesFromResponse(localVarHTTPResponse, attrs)
-
-		requestDurationFloat := time.Since(requestStarted).Seconds() * 1000
-		attrs[telemetry.HTTPClientRequestDuration] = strconv.FormatFloat(requestDurationFloat, 'f', -1, 64)
-		otel.Metrics.RequestDuration(requestDurationFloat, attrs)
-
-		if attrs[telemetry.HTTPServerRequestDuration] != "" {
-			queryDurationFloat, queryDurationFloatErr := strconv.ParseFloat(localVarHTTPResponse.Header.Get("fga-query-duration-ms"), 64)
-
-			if queryDurationFloatErr == nil {
-				otel.Metrics.QueryDuration(queryDurationFloat, attrs)
-			}
+		if queryDuration > 0 {
+			otel.Metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarReturnValue, localVarHTTPResponse, nil
@@ -1215,13 +1209,6 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 		if err != nil {
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
-
-		var methodParameters = make(map[string]interface{})
-		methodParameters["body"] = localVarPostBody
-
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, _ = otel.Metrics.AttributesFromRequest(req, methodParameters)
-		attrs[telemetry.FGAClientRequestMethod] = "CreateStore"
 
 		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
@@ -1371,22 +1358,24 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		if i > 0 {
-			attrs[telemetry.HTTPRequestResendCount] = strconv.Itoa(i)
+		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
+		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+			"CreateStore",
+			map[string]interface{}{
+				"body": localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			otel.Metrics.RequestDuration(requestDuration, attrs)
 		}
 
-		attrs, _ = otel.Metrics.AttributesFromResponse(localVarHTTPResponse, attrs)
-
-		requestDurationFloat := time.Since(requestStarted).Seconds() * 1000
-		attrs[telemetry.HTTPClientRequestDuration] = strconv.FormatFloat(requestDurationFloat, 'f', -1, 64)
-		otel.Metrics.RequestDuration(requestDurationFloat, attrs)
-
-		if attrs[telemetry.HTTPServerRequestDuration] != "" {
-			queryDurationFloat, queryDurationFloatErr := strconv.ParseFloat(localVarHTTPResponse.Header.Get("fga-query-duration-ms"), 64)
-
-			if queryDurationFloatErr == nil {
-				otel.Metrics.QueryDuration(queryDurationFloat, attrs)
-			}
+		if queryDuration > 0 {
+			otel.Metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarReturnValue, localVarHTTPResponse, nil
@@ -1486,14 +1475,6 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 		if err != nil {
 			return localVarHTTPResponse, err
 		}
-
-		var methodParameters = make(map[string]interface{})
-		methodParameters["storeId"] = r.storeId
-		methodParameters["body"] = localVarPostBody
-
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, _ = otel.Metrics.AttributesFromRequest(req, methodParameters)
-		attrs[telemetry.FGAClientRequestMethod] = "DeleteStore"
 
 		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
@@ -1640,22 +1621,25 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 			return localVarHTTPResponse, newErr
 		}
 
-		if i > 0 {
-			attrs[telemetry.HTTPRequestResendCount] = strconv.Itoa(i)
+		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
+		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+			"DeleteStore",
+			map[string]interface{}{
+				"storeId": r.storeId,
+				"body":    localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			otel.Metrics.RequestDuration(requestDuration, attrs)
 		}
 
-		attrs, _ = otel.Metrics.AttributesFromResponse(localVarHTTPResponse, attrs)
-
-		requestDurationFloat := time.Since(requestStarted).Seconds() * 1000
-		attrs[telemetry.HTTPClientRequestDuration] = strconv.FormatFloat(requestDurationFloat, 'f', -1, 64)
-		otel.Metrics.RequestDuration(requestDurationFloat, attrs)
-
-		if attrs[telemetry.HTTPServerRequestDuration] != "" {
-			queryDurationFloat, queryDurationFloatErr := strconv.ParseFloat(localVarHTTPResponse.Header.Get("fga-query-duration-ms"), 64)
-
-			if queryDurationFloatErr == nil {
-				otel.Metrics.QueryDuration(queryDurationFloat, attrs)
-			}
+		if queryDuration > 0 {
+			otel.Metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarHTTPResponse, nil
@@ -1821,14 +1805,6 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		var methodParameters = make(map[string]interface{})
-		methodParameters["storeId"] = r.storeId
-		methodParameters["body"] = localVarPostBody
-
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, _ = otel.Metrics.AttributesFromRequest(req, methodParameters)
-		attrs[telemetry.FGAClientRequestMethod] = "Expand"
-
 		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
@@ -1983,22 +1959,25 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		if i > 0 {
-			attrs[telemetry.HTTPRequestResendCount] = strconv.Itoa(i)
+		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
+		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+			"Expand",
+			map[string]interface{}{
+				"storeId": r.storeId,
+				"body":    localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			otel.Metrics.RequestDuration(requestDuration, attrs)
 		}
 
-		attrs, _ = otel.Metrics.AttributesFromResponse(localVarHTTPResponse, attrs)
-
-		requestDurationFloat := time.Since(requestStarted).Seconds() * 1000
-		attrs[telemetry.HTTPClientRequestDuration] = strconv.FormatFloat(requestDurationFloat, 'f', -1, 64)
-		otel.Metrics.RequestDuration(requestDurationFloat, attrs)
-
-		if attrs[telemetry.HTTPServerRequestDuration] != "" {
-			queryDurationFloat, queryDurationFloatErr := strconv.ParseFloat(localVarHTTPResponse.Header.Get("fga-query-duration-ms"), 64)
-
-			if queryDurationFloatErr == nil {
-				otel.Metrics.QueryDuration(queryDurationFloat, attrs)
-			}
+		if queryDuration > 0 {
+			otel.Metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarReturnValue, localVarHTTPResponse, nil
@@ -2100,14 +2079,6 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 		if err != nil {
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
-
-		var methodParameters = make(map[string]interface{})
-		methodParameters["storeId"] = r.storeId
-		methodParameters["body"] = localVarPostBody
-
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, _ = otel.Metrics.AttributesFromRequest(req, methodParameters)
-		attrs[telemetry.FGAClientRequestMethod] = "GetStore"
 
 		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
@@ -2263,22 +2234,25 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		if i > 0 {
-			attrs[telemetry.HTTPRequestResendCount] = strconv.Itoa(i)
+		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
+		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+			"GetStore",
+			map[string]interface{}{
+				"storeId": r.storeId,
+				"body":    localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			otel.Metrics.RequestDuration(requestDuration, attrs)
 		}
 
-		attrs, _ = otel.Metrics.AttributesFromResponse(localVarHTTPResponse, attrs)
-
-		requestDurationFloat := time.Since(requestStarted).Seconds() * 1000
-		attrs[telemetry.HTTPClientRequestDuration] = strconv.FormatFloat(requestDurationFloat, 'f', -1, 64)
-		otel.Metrics.RequestDuration(requestDurationFloat, attrs)
-
-		if attrs[telemetry.HTTPServerRequestDuration] != "" {
-			queryDurationFloat, queryDurationFloatErr := strconv.ParseFloat(localVarHTTPResponse.Header.Get("fga-query-duration-ms"), 64)
-
-			if queryDurationFloatErr == nil {
-				otel.Metrics.QueryDuration(queryDurationFloat, attrs)
-			}
+		if queryDuration > 0 {
+			otel.Metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarReturnValue, localVarHTTPResponse, nil
@@ -2399,14 +2373,6 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 		if err != nil {
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
-
-		var methodParameters = make(map[string]interface{})
-		methodParameters["storeId"] = r.storeId
-		methodParameters["body"] = localVarPostBody
-
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, _ = otel.Metrics.AttributesFromRequest(req, methodParameters)
-		attrs[telemetry.FGAClientRequestMethod] = "ListObjects"
 
 		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
@@ -2562,22 +2528,25 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		if i > 0 {
-			attrs[telemetry.HTTPRequestResendCount] = strconv.Itoa(i)
+		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
+		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+			"ListObjects",
+			map[string]interface{}{
+				"storeId": r.storeId,
+				"body":    localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			otel.Metrics.RequestDuration(requestDuration, attrs)
 		}
 
-		attrs, _ = otel.Metrics.AttributesFromResponse(localVarHTTPResponse, attrs)
-
-		requestDurationFloat := time.Since(requestStarted).Seconds() * 1000
-		attrs[telemetry.HTTPClientRequestDuration] = strconv.FormatFloat(requestDurationFloat, 'f', -1, 64)
-		otel.Metrics.RequestDuration(requestDurationFloat, attrs)
-
-		if attrs[telemetry.HTTPServerRequestDuration] != "" {
-			queryDurationFloat, queryDurationFloatErr := strconv.ParseFloat(localVarHTTPResponse.Header.Get("fga-query-duration-ms"), 64)
-
-			if queryDurationFloatErr == nil {
-				otel.Metrics.QueryDuration(queryDurationFloat, attrs)
-			}
+		if queryDuration > 0 {
+			otel.Metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarReturnValue, localVarHTTPResponse, nil
@@ -2691,13 +2660,6 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 		if err != nil {
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
-
-		var methodParameters = make(map[string]interface{})
-		methodParameters["body"] = localVarPostBody
-
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, _ = otel.Metrics.AttributesFromRequest(req, methodParameters)
-		attrs[telemetry.FGAClientRequestMethod] = "ListStores"
 
 		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
@@ -2847,22 +2809,24 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		if i > 0 {
-			attrs[telemetry.HTTPRequestResendCount] = strconv.Itoa(i)
+		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
+		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+			"ListStores",
+			map[string]interface{}{
+				"body": localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			otel.Metrics.RequestDuration(requestDuration, attrs)
 		}
 
-		attrs, _ = otel.Metrics.AttributesFromResponse(localVarHTTPResponse, attrs)
-
-		requestDurationFloat := time.Since(requestStarted).Seconds() * 1000
-		attrs[telemetry.HTTPClientRequestDuration] = strconv.FormatFloat(requestDurationFloat, 'f', -1, 64)
-		otel.Metrics.RequestDuration(requestDurationFloat, attrs)
-
-		if attrs[telemetry.HTTPServerRequestDuration] != "" {
-			queryDurationFloat, queryDurationFloatErr := strconv.ParseFloat(localVarHTTPResponse.Header.Get("fga-query-duration-ms"), 64)
-
-			if queryDurationFloatErr == nil {
-				otel.Metrics.QueryDuration(queryDurationFloat, attrs)
-			}
+		if queryDuration > 0 {
+			otel.Metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarReturnValue, localVarHTTPResponse, nil
@@ -2986,14 +2950,6 @@ func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersRe
 		if err != nil {
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
-
-		var methodParameters = make(map[string]interface{})
-		methodParameters["storeId"] = r.storeId
-		methodParameters["body"] = localVarPostBody
-
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, _ = otel.Metrics.AttributesFromRequest(req, methodParameters)
-		attrs[telemetry.FGAClientRequestMethod] = "ListUsers"
 
 		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
@@ -3149,22 +3105,25 @@ func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersRe
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		if i > 0 {
-			attrs[telemetry.HTTPRequestResendCount] = strconv.Itoa(i)
+		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
+		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+			"ListUsers",
+			map[string]interface{}{
+				"storeId": r.storeId,
+				"body":    localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			otel.Metrics.RequestDuration(requestDuration, attrs)
 		}
 
-		attrs, _ = otel.Metrics.AttributesFromResponse(localVarHTTPResponse, attrs)
-
-		requestDurationFloat := time.Since(requestStarted).Seconds() * 1000
-		attrs[telemetry.HTTPClientRequestDuration] = strconv.FormatFloat(requestDurationFloat, 'f', -1, 64)
-		otel.Metrics.RequestDuration(requestDurationFloat, attrs)
-
-		if attrs[telemetry.HTTPServerRequestDuration] != "" {
-			queryDurationFloat, queryDurationFloatErr := strconv.ParseFloat(localVarHTTPResponse.Header.Get("fga-query-duration-ms"), 64)
-
-			if queryDurationFloatErr == nil {
-				otel.Metrics.QueryDuration(queryDurationFloat, attrs)
-			}
+		if queryDuration > 0 {
+			otel.Metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarReturnValue, localVarHTTPResponse, nil
@@ -3389,14 +3348,6 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		var methodParameters = make(map[string]interface{})
-		methodParameters["storeId"] = r.storeId
-		methodParameters["body"] = localVarPostBody
-
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, _ = otel.Metrics.AttributesFromRequest(req, methodParameters)
-		attrs[telemetry.FGAClientRequestMethod] = "Read"
-
 		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
@@ -3551,22 +3502,25 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		if i > 0 {
-			attrs[telemetry.HTTPRequestResendCount] = strconv.Itoa(i)
+		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
+		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+			"Read",
+			map[string]interface{}{
+				"storeId": r.storeId,
+				"body":    localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			otel.Metrics.RequestDuration(requestDuration, attrs)
 		}
 
-		attrs, _ = otel.Metrics.AttributesFromResponse(localVarHTTPResponse, attrs)
-
-		requestDurationFloat := time.Since(requestStarted).Seconds() * 1000
-		attrs[telemetry.HTTPClientRequestDuration] = strconv.FormatFloat(requestDurationFloat, 'f', -1, 64)
-		otel.Metrics.RequestDuration(requestDurationFloat, attrs)
-
-		if attrs[telemetry.HTTPServerRequestDuration] != "" {
-			queryDurationFloat, queryDurationFloatErr := strconv.ParseFloat(localVarHTTPResponse.Header.Get("fga-query-duration-ms"), 64)
-
-			if queryDurationFloatErr == nil {
-				otel.Metrics.QueryDuration(queryDurationFloat, attrs)
-			}
+		if queryDuration > 0 {
+			otel.Metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarReturnValue, localVarHTTPResponse, nil
@@ -3676,14 +3630,6 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 		if err != nil {
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
-
-		var methodParameters = make(map[string]interface{})
-		methodParameters["storeId"] = r.storeId
-		methodParameters["body"] = localVarPostBody
-
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, _ = otel.Metrics.AttributesFromRequest(req, methodParameters)
-		attrs[telemetry.FGAClientRequestMethod] = "ReadAssertions"
 
 		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
@@ -3839,22 +3785,25 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		if i > 0 {
-			attrs[telemetry.HTTPRequestResendCount] = strconv.Itoa(i)
+		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
+		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+			"ReadAssertions",
+			map[string]interface{}{
+				"storeId": r.storeId,
+				"body":    localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			otel.Metrics.RequestDuration(requestDuration, attrs)
 		}
 
-		attrs, _ = otel.Metrics.AttributesFromResponse(localVarHTTPResponse, attrs)
-
-		requestDurationFloat := time.Since(requestStarted).Seconds() * 1000
-		attrs[telemetry.HTTPClientRequestDuration] = strconv.FormatFloat(requestDurationFloat, 'f', -1, 64)
-		otel.Metrics.RequestDuration(requestDurationFloat, attrs)
-
-		if attrs[telemetry.HTTPServerRequestDuration] != "" {
-			queryDurationFloat, queryDurationFloatErr := strconv.ParseFloat(localVarHTTPResponse.Header.Get("fga-query-duration-ms"), 64)
-
-			if queryDurationFloatErr == nil {
-				otel.Metrics.QueryDuration(queryDurationFloat, attrs)
-			}
+		if queryDuration > 0 {
+			otel.Metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarReturnValue, localVarHTTPResponse, nil
@@ -4007,14 +3956,6 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 		if err != nil {
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
-
-		var methodParameters = make(map[string]interface{})
-		methodParameters["storeId"] = r.storeId
-		methodParameters["body"] = localVarPostBody
-
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, _ = otel.Metrics.AttributesFromRequest(req, methodParameters)
-		attrs[telemetry.FGAClientRequestMethod] = "ReadAuthorizationModel"
 
 		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
@@ -4170,22 +4111,25 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		if i > 0 {
-			attrs[telemetry.HTTPRequestResendCount] = strconv.Itoa(i)
+		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
+		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+			"ReadAuthorizationModel",
+			map[string]interface{}{
+				"storeId": r.storeId,
+				"body":    localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			otel.Metrics.RequestDuration(requestDuration, attrs)
 		}
 
-		attrs, _ = otel.Metrics.AttributesFromResponse(localVarHTTPResponse, attrs)
-
-		requestDurationFloat := time.Since(requestStarted).Seconds() * 1000
-		attrs[telemetry.HTTPClientRequestDuration] = strconv.FormatFloat(requestDurationFloat, 'f', -1, 64)
-		otel.Metrics.RequestDuration(requestDurationFloat, attrs)
-
-		if attrs[telemetry.HTTPServerRequestDuration] != "" {
-			queryDurationFloat, queryDurationFloatErr := strconv.ParseFloat(localVarHTTPResponse.Header.Get("fga-query-duration-ms"), 64)
-
-			if queryDurationFloatErr == nil {
-				otel.Metrics.QueryDuration(queryDurationFloat, attrs)
-			}
+		if queryDuration > 0 {
+			otel.Metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarReturnValue, localVarHTTPResponse, nil
@@ -4346,14 +4290,6 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		var methodParameters = make(map[string]interface{})
-		methodParameters["storeId"] = r.storeId
-		methodParameters["body"] = localVarPostBody
-
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, _ = otel.Metrics.AttributesFromRequest(req, methodParameters)
-		attrs[telemetry.FGAClientRequestMethod] = "ReadAuthorizationModels"
-
 		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
@@ -4508,22 +4444,25 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		if i > 0 {
-			attrs[telemetry.HTTPRequestResendCount] = strconv.Itoa(i)
+		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
+		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+			"ReadAuthorizationModels",
+			map[string]interface{}{
+				"storeId": r.storeId,
+				"body":    localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			otel.Metrics.RequestDuration(requestDuration, attrs)
 		}
 
-		attrs, _ = otel.Metrics.AttributesFromResponse(localVarHTTPResponse, attrs)
-
-		requestDurationFloat := time.Since(requestStarted).Seconds() * 1000
-		attrs[telemetry.HTTPClientRequestDuration] = strconv.FormatFloat(requestDurationFloat, 'f', -1, 64)
-		otel.Metrics.RequestDuration(requestDurationFloat, attrs)
-
-		if attrs[telemetry.HTTPServerRequestDuration] != "" {
-			queryDurationFloat, queryDurationFloatErr := strconv.ParseFloat(localVarHTTPResponse.Header.Get("fga-query-duration-ms"), 64)
-
-			if queryDurationFloatErr == nil {
-				otel.Metrics.QueryDuration(queryDurationFloat, attrs)
-			}
+		if queryDuration > 0 {
+			otel.Metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarReturnValue, localVarHTTPResponse, nil
@@ -4655,14 +4594,6 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 		if err != nil {
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
-
-		var methodParameters = make(map[string]interface{})
-		methodParameters["storeId"] = r.storeId
-		methodParameters["body"] = localVarPostBody
-
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, _ = otel.Metrics.AttributesFromRequest(req, methodParameters)
-		attrs[telemetry.FGAClientRequestMethod] = "ReadChanges"
 
 		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
@@ -4818,22 +4749,25 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		if i > 0 {
-			attrs[telemetry.HTTPRequestResendCount] = strconv.Itoa(i)
+		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
+		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+			"ReadChanges",
+			map[string]interface{}{
+				"storeId": r.storeId,
+				"body":    localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			otel.Metrics.RequestDuration(requestDuration, attrs)
 		}
 
-		attrs, _ = otel.Metrics.AttributesFromResponse(localVarHTTPResponse, attrs)
-
-		requestDurationFloat := time.Since(requestStarted).Seconds() * 1000
-		attrs[telemetry.HTTPClientRequestDuration] = strconv.FormatFloat(requestDurationFloat, 'f', -1, 64)
-		otel.Metrics.RequestDuration(requestDurationFloat, attrs)
-
-		if attrs[telemetry.HTTPServerRequestDuration] != "" {
-			queryDurationFloat, queryDurationFloatErr := strconv.ParseFloat(localVarHTTPResponse.Header.Get("fga-query-duration-ms"), 64)
-
-			if queryDurationFloatErr == nil {
-				otel.Metrics.QueryDuration(queryDurationFloat, attrs)
-			}
+		if queryDuration > 0 {
+			otel.Metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarReturnValue, localVarHTTPResponse, nil
@@ -4989,14 +4923,6 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		var methodParameters = make(map[string]interface{})
-		methodParameters["storeId"] = r.storeId
-		methodParameters["body"] = localVarPostBody
-
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, _ = otel.Metrics.AttributesFromRequest(req, methodParameters)
-		attrs[telemetry.FGAClientRequestMethod] = "Write"
-
 		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
@@ -5151,22 +5077,25 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		if i > 0 {
-			attrs[telemetry.HTTPRequestResendCount] = strconv.Itoa(i)
+		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
+		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+			"Write",
+			map[string]interface{}{
+				"storeId": r.storeId,
+				"body":    localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			otel.Metrics.RequestDuration(requestDuration, attrs)
 		}
 
-		attrs, _ = otel.Metrics.AttributesFromResponse(localVarHTTPResponse, attrs)
-
-		requestDurationFloat := time.Since(requestStarted).Seconds() * 1000
-		attrs[telemetry.HTTPClientRequestDuration] = strconv.FormatFloat(requestDurationFloat, 'f', -1, 64)
-		otel.Metrics.RequestDuration(requestDurationFloat, attrs)
-
-		if attrs[telemetry.HTTPServerRequestDuration] != "" {
-			queryDurationFloat, queryDurationFloatErr := strconv.ParseFloat(localVarHTTPResponse.Header.Get("fga-query-duration-ms"), 64)
-
-			if queryDurationFloatErr == nil {
-				otel.Metrics.QueryDuration(queryDurationFloat, attrs)
-			}
+		if queryDuration > 0 {
+			otel.Metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarReturnValue, localVarHTTPResponse, nil
@@ -5285,14 +5214,6 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 		if err != nil {
 			return localVarHTTPResponse, err
 		}
-
-		var methodParameters = make(map[string]interface{})
-		methodParameters["storeId"] = r.storeId
-		methodParameters["body"] = localVarPostBody
-
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, _ = otel.Metrics.AttributesFromRequest(req, methodParameters)
-		attrs[telemetry.FGAClientRequestMethod] = "WriteAssertions"
 
 		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
@@ -5439,22 +5360,25 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 			return localVarHTTPResponse, newErr
 		}
 
-		if i > 0 {
-			attrs[telemetry.HTTPRequestResendCount] = strconv.Itoa(i)
+		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
+		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+			"WriteAssertions",
+			map[string]interface{}{
+				"storeId": r.storeId,
+				"body":    localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			otel.Metrics.RequestDuration(requestDuration, attrs)
 		}
 
-		attrs, _ = otel.Metrics.AttributesFromResponse(localVarHTTPResponse, attrs)
-
-		requestDurationFloat := time.Since(requestStarted).Seconds() * 1000
-		attrs[telemetry.HTTPClientRequestDuration] = strconv.FormatFloat(requestDurationFloat, 'f', -1, 64)
-		otel.Metrics.RequestDuration(requestDurationFloat, attrs)
-
-		if attrs[telemetry.HTTPServerRequestDuration] != "" {
-			queryDurationFloat, queryDurationFloatErr := strconv.ParseFloat(localVarHTTPResponse.Header.Get("fga-query-duration-ms"), 64)
-
-			if queryDurationFloatErr == nil {
-				otel.Metrics.QueryDuration(queryDurationFloat, attrs)
-			}
+		if queryDuration > 0 {
+			otel.Metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarHTTPResponse, nil
@@ -5612,14 +5536,6 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		var methodParameters = make(map[string]interface{})
-		methodParameters["storeId"] = r.storeId
-		methodParameters["body"] = localVarPostBody
-
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, _ = otel.Metrics.AttributesFromRequest(req, methodParameters)
-		attrs[telemetry.FGAClientRequestMethod] = "WriteAuthorizationModel"
-
 		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
 
 			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
@@ -5774,22 +5690,25 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		if i > 0 {
-			attrs[telemetry.HTTPRequestResendCount] = strconv.Itoa(i)
+		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
+		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+			"WriteAuthorizationModel",
+			map[string]interface{}{
+				"storeId": r.storeId,
+				"body":    localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			otel.Metrics.RequestDuration(requestDuration, attrs)
 		}
 
-		attrs, _ = otel.Metrics.AttributesFromResponse(localVarHTTPResponse, attrs)
-
-		requestDurationFloat := time.Since(requestStarted).Seconds() * 1000
-		attrs[telemetry.HTTPClientRequestDuration] = strconv.FormatFloat(requestDurationFloat, 'f', -1, 64)
-		otel.Metrics.RequestDuration(requestDurationFloat, attrs)
-
-		if attrs[telemetry.HTTPServerRequestDuration] != "" {
-			queryDurationFloat, queryDurationFloatErr := strconv.ParseFloat(localVarHTTPResponse.Header.Get("fga-query-duration-ms"), 64)
-
-			if queryDurationFloatErr == nil {
-				otel.Metrics.QueryDuration(queryDurationFloat, attrs)
-			}
+		if queryDuration > 0 {
+			otel.Metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarReturnValue, localVarHTTPResponse, nil
