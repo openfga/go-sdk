@@ -7,51 +7,79 @@ import (
 )
 
 type Metrics struct {
-	meter      metric.Meter
-	counters   map[string]metric.Int64Counter
-	histograms map[string]metric.Float64Histogram
+	Meter         metric.Meter
+	Counters      map[string]metric.Int64Counter
+	Histograms    map[string]metric.Float64Histogram
+	Configuration *MetricsConfiguration
 }
 
-func (m *Metrics) GetCounter(name string, description string) metric.Int64Counter {
-	if counter, exists := m.counters[name]; exists {
-		return counter
+func NewMetrics(meter metric.Meter, configuration *MetricsConfiguration) (*Metrics, error) {
+	return &Metrics{
+		Meter:         meter,
+		Counters:      make(map[string]metric.Int64Counter),
+		Histograms:    make(map[string]metric.Float64Histogram),
+		Configuration: configuration,
+	}, nil
+}
+
+func (m *Metrics) GetCounter(name string, description string) (metric.Int64Counter, error) {
+	if counter, exists := m.Counters[name]; exists {
+		return counter, nil
 	}
-	counter, _ := m.meter.Int64Counter(name, metric.WithDescription(description))
-	m.counters[name] = counter
-	return counter
+	counter, _ := m.Meter.Int64Counter(name, metric.WithDescription(description))
+	m.Counters[name] = counter
+	return counter, nil
 }
 
-func (m *Metrics) GetHistogram(name string, description string, unit string) metric.Float64Histogram {
-	if histogram, exists := m.histograms[name]; exists {
-		return histogram
+func (m *Metrics) GetHistogram(name string, description string, unit string) (metric.Float64Histogram, error) {
+	if histogram, exists := m.Histograms[name]; exists {
+		return histogram, nil
 	}
 
-	histogram, _ := m.meter.Float64Histogram(name, metric.WithDescription(description), metric.WithUnit(unit))
-	m.histograms[name] = histogram
+	histogram, _ := m.Meter.Float64Histogram(name, metric.WithDescription(description), metric.WithUnit(unit))
+	m.Histograms[name] = histogram
 
-	return histogram
+	return histogram, nil
 }
 
-func (m *Metrics) CredentialsRequest(value int64, attrs map[*Attribute]string) metric.Int64Counter {
-	var counter = m.GetCounter(CredentialsRequest.Name, CredentialsRequest.Description)
+func (m *Metrics) CredentialsRequest(value int64, attrs map[*Attribute]string) (metric.Int64Counter, error) {
+	var counter, err = m.GetCounter(CredentialsRequest.Name, CredentialsRequest.Description)
 
-	counter.Add(context.Background(), value, metric.WithAttributeSet(m.PrepareAttributes(attrs)))
+	if err != nil {
+		attrs, err := m.PrepareAttributes(attrs)
 
-	return counter
+		if err != nil {
+			counter.Add(context.Background(), value, metric.WithAttributeSet(attrs))
+		}
+	}
+
+	return counter, err
 }
 
-func (m *Metrics) RequestDuration(value float64, attrs map[*Attribute]string) metric.Float64Histogram {
-	var histogram = m.GetHistogram(RequestDuration.Name, RequestDuration.Description, RequestDuration.Unit)
+func (m *Metrics) RequestDuration(value float64, attrs map[*Attribute]string) (metric.Float64Histogram, error) {
+	var histogram, err = m.GetHistogram(RequestDuration.Name, RequestDuration.Description, RequestDuration.Unit)
 
-	histogram.Record(context.Background(), value, metric.WithAttributeSet(m.PrepareAttributes(attrs)))
+	if err != nil {
+		attrs, err := m.PrepareAttributes(attrs)
 
-	return histogram
+		if err != nil {
+			histogram.Record(context.Background(), value, metric.WithAttributeSet(attrs))
+		}
+	}
+
+	return histogram, err
 }
 
-func (m *Metrics) QueryDuration(value float64, attrs map[*Attribute]string) metric.Float64Histogram {
-	var histogram = m.GetHistogram(QueryDuration.Name, QueryDuration.Description, QueryDuration.Unit)
+func (m *Metrics) QueryDuration(value float64, attrs map[*Attribute]string) (metric.Float64Histogram, error) {
+	var histogram, err = m.GetHistogram(QueryDuration.Name, QueryDuration.Description, QueryDuration.Unit)
 
-	histogram.Record(context.Background(), value, metric.WithAttributeSet(m.PrepareAttributes(attrs)))
+	if err != nil {
+		attrs, err := m.PrepareAttributes(attrs)
 
-	return histogram
+		if err != nil {
+			histogram.Record(context.Background(), value, metric.WithAttributeSet(attrs))
+		}
+	}
+
+	return histogram, err
 }

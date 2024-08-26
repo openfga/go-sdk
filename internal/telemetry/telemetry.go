@@ -6,17 +6,34 @@ import (
 )
 
 type Telemetry struct {
-	metrics *Metrics
+	Metrics       *Metrics
+	Configuration *Configuration
 }
 
-func (t *Telemetry) Metrics() *Metrics {
-	if t.metrics == nil {
-		t.metrics = &Metrics{
-			meter:      otel.Meter("openfga-sdk/0.5.0"),
-			counters:   make(map[string]metric.Int64Counter),
-			histograms: make(map[string]metric.Float64Histogram),
-		}
+var (
+	TelemetryInstance *Telemetry
+)
+
+func CreateTelemetry(configuration *Configuration) (*Telemetry, error) {
+	return &Telemetry{
+		Metrics: &Metrics{
+			Meter:         otel.Meter("openfga-sdk/0.5.0"),
+			Counters:      make(map[string]metric.Int64Counter),
+			Histograms:    make(map[string]metric.Float64Histogram),
+			Configuration: configuration.Metrics,
+		},
+		Configuration: configuration,
+	}, nil
+}
+
+func GetTelemetry(configuration *Configuration) *Telemetry {
+	if TelemetryInstance == nil {
+		TelemetryInstance, _ = CreateTelemetry(configuration)
 	}
 
-	return t.metrics
+	if TelemetryInstance.Configuration != configuration {
+		TelemetryInstance.Configuration = configuration
+	}
+
+	return TelemetryInstance
 }

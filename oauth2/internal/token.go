@@ -20,7 +20,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/openfga/go-sdk/internal/telemetry"
 	internalutils "github.com/openfga/go-sdk/internal/utils"
 )
 
@@ -229,10 +228,6 @@ func RetrieveToken(ctx context.Context, clientID, clientSecret, tokenURL string,
 	if token != nil && token.RefreshToken == "" {
 		token.RefreshToken = v.Get("refresh_token")
 	}
-	var otel = &telemetry.Telemetry{}
-	otel.Metrics().CredentialsRequest(1, map[*telemetry.Attribute]string{
-		telemetry.FGAClientRequestClientID: clientID,
-	})
 	return token, err
 }
 

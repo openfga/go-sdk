@@ -40,7 +40,7 @@ func TestPrepareAttributes(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			result := m.PrepareAttributes(tc.attrs)
+			result, _ := m.PrepareAttributes(tc.attrs)
 
 			if len(result.ToSlice()) != tc.expectedLength {
 				t.Errorf("Test %s failed: expected length %d, got %d", tc.name, tc.expectedLength, len(result.ToSlice()))
