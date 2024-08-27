@@ -31,3 +31,49 @@ type MetricsConfiguration struct {
 type Configuration struct {
 	Metrics *MetricsConfiguration `json:"metrics,omitempty"`
 }
+
+func DefaultTelemetryConfiguration() *Configuration {
+	return &Configuration{
+		Metrics: &MetricsConfiguration{
+			METRIC_COUNTER_CREDENTIALS_REQUEST: &MetricConfiguration{
+				ATTR_FGA_CLIENT_REQUEST_CLIENT_ID: &AttributeConfiguration{Enabled: true},
+				ATTR_HTTP_REQUEST_METHOD:          &AttributeConfiguration{Enabled: true},
+				ATTR_FGA_CLIENT_REQUEST_MODEL_ID:  &AttributeConfiguration{Enabled: true},
+				ATTR_FGA_CLIENT_REQUEST_STORE_ID:  &AttributeConfiguration{Enabled: true},
+				ATTR_FGA_CLIENT_RESPONSE_MODEL_ID: &AttributeConfiguration{Enabled: true},
+				ATTR_HTTP_HOST:                    &AttributeConfiguration{Enabled: true},
+				ATTR_HTTP_REQUEST_RESEND_COUNT:    &AttributeConfiguration{Enabled: true},
+				ATTR_HTTP_RESPONSE_STATUS_CODE:    &AttributeConfiguration{Enabled: true},
+				ATTR_URL_FULL:                     &AttributeConfiguration{Enabled: true},
+				ATTR_URL_SCHEME:                   &AttributeConfiguration{Enabled: true},
+				ATTR_USER_AGENT_ORIGINAL:          &AttributeConfiguration{Enabled: true},
+			},
+			METRIC_HISTOGRAM_REQUEST_DURATION: &MetricConfiguration{
+				ATTR_FGA_CLIENT_REQUEST_CLIENT_ID: &AttributeConfiguration{Enabled: true},
+				ATTR_HTTP_REQUEST_METHOD:          &AttributeConfiguration{Enabled: true},
+				ATTR_FGA_CLIENT_REQUEST_MODEL_ID:  &AttributeConfiguration{Enabled: true},
+				ATTR_FGA_CLIENT_REQUEST_STORE_ID:  &AttributeConfiguration{Enabled: true},
+				ATTR_FGA_CLIENT_RESPONSE_MODEL_ID: &AttributeConfiguration{Enabled: true},
+				ATTR_HTTP_HOST:                    &AttributeConfiguration{Enabled: true},
+				ATTR_HTTP_REQUEST_RESEND_COUNT:    &AttributeConfiguration{Enabled: true},
+				ATTR_HTTP_RESPONSE_STATUS_CODE:    &AttributeConfiguration{Enabled: true},
+				ATTR_URL_FULL:                     &AttributeConfiguration{Enabled: true},
+				ATTR_URL_SCHEME:                   &AttributeConfiguration{Enabled: true},
+				ATTR_USER_AGENT_ORIGINAL:          &AttributeConfiguration{Enabled: true},
+			},
+			METRIC_HISTOGRAM_QUERY_DURATION: &MetricConfiguration{
+				ATTR_FGA_CLIENT_REQUEST_CLIENT_ID: &AttributeConfiguration{Enabled: true},
+				ATTR_HTTP_REQUEST_METHOD:          &AttributeConfiguration{Enabled: true},
+				ATTR_FGA_CLIENT_REQUEST_MODEL_ID:  &AttributeConfiguration{Enabled: true},
+				ATTR_FGA_CLIENT_REQUEST_STORE_ID:  &AttributeConfiguration{Enabled: true},
+				ATTR_FGA_CLIENT_RESPONSE_MODEL_ID: &AttributeConfiguration{Enabled: true},
+				ATTR_HTTP_HOST:                    &AttributeConfiguration{Enabled: true},
+				ATTR_HTTP_REQUEST_RESEND_COUNT:    &AttributeConfiguration{Enabled: true},
+				ATTR_HTTP_RESPONSE_STATUS_CODE:    &AttributeConfiguration{Enabled: true},
+				ATTR_URL_FULL:                     &AttributeConfiguration{Enabled: true},
+				ATTR_URL_SCHEME:                   &AttributeConfiguration{Enabled: true},
+				ATTR_USER_AGENT_ORIGINAL:          &AttributeConfiguration{Enabled: true},
+			},
+		},
+	}
+}

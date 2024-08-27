@@ -95,49 +95,7 @@ func NewConfiguration(config Configuration) (*Configuration, error) {
 	}
 
 	if cfg.Telemetry == nil {
-		cfg.Telemetry = &telemetry.Configuration{
-			Metrics: &telemetry.MetricsConfiguration{
-				METRIC_COUNTER_CREDENTIALS_REQUEST: &telemetry.MetricConfiguration{
-					ATTR_FGA_CLIENT_REQUEST_CLIENT_ID: &telemetry.AttributeConfiguration{Enabled: true},
-					ATTR_HTTP_REQUEST_METHOD:          &telemetry.AttributeConfiguration{Enabled: true},
-					ATTR_FGA_CLIENT_REQUEST_MODEL_ID:  &telemetry.AttributeConfiguration{Enabled: true},
-					ATTR_FGA_CLIENT_REQUEST_STORE_ID:  &telemetry.AttributeConfiguration{Enabled: true},
-					ATTR_FGA_CLIENT_RESPONSE_MODEL_ID: &telemetry.AttributeConfiguration{Enabled: true},
-					ATTR_HTTP_HOST:                    &telemetry.AttributeConfiguration{Enabled: true},
-					ATTR_HTTP_REQUEST_RESEND_COUNT:    &telemetry.AttributeConfiguration{Enabled: true},
-					ATTR_HTTP_RESPONSE_STATUS_CODE:    &telemetry.AttributeConfiguration{Enabled: true},
-					ATTR_URL_FULL:                     &telemetry.AttributeConfiguration{Enabled: true},
-					ATTR_URL_SCHEME:                   &telemetry.AttributeConfiguration{Enabled: true},
-					ATTR_USER_AGENT_ORIGINAL:          &telemetry.AttributeConfiguration{Enabled: true},
-				},
-				METRIC_HISTOGRAM_REQUEST_DURATION: &telemetry.MetricConfiguration{
-					ATTR_FGA_CLIENT_REQUEST_CLIENT_ID: &telemetry.AttributeConfiguration{Enabled: true},
-					ATTR_HTTP_REQUEST_METHOD:          &telemetry.AttributeConfiguration{Enabled: true},
-					ATTR_FGA_CLIENT_REQUEST_MODEL_ID:  &telemetry.AttributeConfiguration{Enabled: true},
-					ATTR_FGA_CLIENT_REQUEST_STORE_ID:  &telemetry.AttributeConfiguration{Enabled: true},
-					ATTR_FGA_CLIENT_RESPONSE_MODEL_ID: &telemetry.AttributeConfiguration{Enabled: true},
-					ATTR_HTTP_HOST:                    &telemetry.AttributeConfiguration{Enabled: true},
-					ATTR_HTTP_REQUEST_RESEND_COUNT:    &telemetry.AttributeConfiguration{Enabled: true},
-					ATTR_HTTP_RESPONSE_STATUS_CODE:    &telemetry.AttributeConfiguration{Enabled: true},
-					ATTR_URL_FULL:                     &telemetry.AttributeConfiguration{Enabled: true},
-					ATTR_URL_SCHEME:                   &telemetry.AttributeConfiguration{Enabled: true},
-					ATTR_USER_AGENT_ORIGINAL:          &telemetry.AttributeConfiguration{Enabled: true},
-				},
-				METRIC_HISTOGRAM_QUERY_DURATION: &telemetry.MetricConfiguration{
-					ATTR_FGA_CLIENT_REQUEST_CLIENT_ID: &telemetry.AttributeConfiguration{Enabled: true},
-					ATTR_HTTP_REQUEST_METHOD:          &telemetry.AttributeConfiguration{Enabled: true},
-					ATTR_FGA_CLIENT_REQUEST_MODEL_ID:  &telemetry.AttributeConfiguration{Enabled: true},
-					ATTR_FGA_CLIENT_REQUEST_STORE_ID:  &telemetry.AttributeConfiguration{Enabled: true},
-					ATTR_FGA_CLIENT_RESPONSE_MODEL_ID: &telemetry.AttributeConfiguration{Enabled: true},
-					ATTR_HTTP_HOST:                    &telemetry.AttributeConfiguration{Enabled: true},
-					ATTR_HTTP_REQUEST_RESEND_COUNT:    &telemetry.AttributeConfiguration{Enabled: true},
-					ATTR_HTTP_RESPONSE_STATUS_CODE:    &telemetry.AttributeConfiguration{Enabled: true},
-					ATTR_URL_FULL:                     &telemetry.AttributeConfiguration{Enabled: true},
-					ATTR_URL_SCHEME:                   &telemetry.AttributeConfiguration{Enabled: true},
-					ATTR_USER_AGENT_ORIGINAL:          &telemetry.AttributeConfiguration{Enabled: true},
-				},
-			},
-		}
+		cfg.Telemetry = telemetry.DefaultTelemetryConfiguration()
 	}
 
 	err := cfg.ValidateConfig()

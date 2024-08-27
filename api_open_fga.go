@@ -1086,8 +1086,9 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
 			"Check",
 			map[string]interface{}{
 				"storeId": r.storeId,
@@ -1100,11 +1101,11 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 		)
 
 		if requestDuration > 0 {
-			otel.Metrics.RequestDuration(requestDuration, attrs)
+			metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			otel.Metrics.QueryDuration(queryDuration, attrs)
+			metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarReturnValue, localVarHTTPResponse, nil
@@ -1358,8 +1359,9 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
 			"CreateStore",
 			map[string]interface{}{
 				"body": localVarPostBody,
@@ -1371,11 +1373,11 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 		)
 
 		if requestDuration > 0 {
-			otel.Metrics.RequestDuration(requestDuration, attrs)
+			metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			otel.Metrics.QueryDuration(queryDuration, attrs)
+			metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarReturnValue, localVarHTTPResponse, nil
@@ -1621,8 +1623,9 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 			return localVarHTTPResponse, newErr
 		}
 
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
 			"DeleteStore",
 			map[string]interface{}{
 				"storeId": r.storeId,
@@ -1635,11 +1638,11 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 		)
 
 		if requestDuration > 0 {
-			otel.Metrics.RequestDuration(requestDuration, attrs)
+			metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			otel.Metrics.QueryDuration(queryDuration, attrs)
+			metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarHTTPResponse, nil
@@ -1959,8 +1962,9 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
 			"Expand",
 			map[string]interface{}{
 				"storeId": r.storeId,
@@ -1973,11 +1977,11 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 		)
 
 		if requestDuration > 0 {
-			otel.Metrics.RequestDuration(requestDuration, attrs)
+			metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			otel.Metrics.QueryDuration(queryDuration, attrs)
+			metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarReturnValue, localVarHTTPResponse, nil
@@ -2234,8 +2238,9 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
 			"GetStore",
 			map[string]interface{}{
 				"storeId": r.storeId,
@@ -2248,11 +2253,11 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 		)
 
 		if requestDuration > 0 {
-			otel.Metrics.RequestDuration(requestDuration, attrs)
+			metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			otel.Metrics.QueryDuration(queryDuration, attrs)
+			metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarReturnValue, localVarHTTPResponse, nil
@@ -2528,8 +2533,9 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
 			"ListObjects",
 			map[string]interface{}{
 				"storeId": r.storeId,
@@ -2542,11 +2548,11 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 		)
 
 		if requestDuration > 0 {
-			otel.Metrics.RequestDuration(requestDuration, attrs)
+			metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			otel.Metrics.QueryDuration(queryDuration, attrs)
+			metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarReturnValue, localVarHTTPResponse, nil
@@ -2809,8 +2815,9 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
 			"ListStores",
 			map[string]interface{}{
 				"body": localVarPostBody,
@@ -2822,11 +2829,11 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 		)
 
 		if requestDuration > 0 {
-			otel.Metrics.RequestDuration(requestDuration, attrs)
+			metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			otel.Metrics.QueryDuration(queryDuration, attrs)
+			metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarReturnValue, localVarHTTPResponse, nil
@@ -3105,8 +3112,9 @@ func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersRe
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
 			"ListUsers",
 			map[string]interface{}{
 				"storeId": r.storeId,
@@ -3119,11 +3127,11 @@ func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersRe
 		)
 
 		if requestDuration > 0 {
-			otel.Metrics.RequestDuration(requestDuration, attrs)
+			metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			otel.Metrics.QueryDuration(queryDuration, attrs)
+			metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarReturnValue, localVarHTTPResponse, nil
@@ -3502,8 +3510,9 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
 			"Read",
 			map[string]interface{}{
 				"storeId": r.storeId,
@@ -3516,11 +3525,11 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 		)
 
 		if requestDuration > 0 {
-			otel.Metrics.RequestDuration(requestDuration, attrs)
+			metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			otel.Metrics.QueryDuration(queryDuration, attrs)
+			metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarReturnValue, localVarHTTPResponse, nil
@@ -3785,8 +3794,9 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
 			"ReadAssertions",
 			map[string]interface{}{
 				"storeId": r.storeId,
@@ -3799,11 +3809,11 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 		)
 
 		if requestDuration > 0 {
-			otel.Metrics.RequestDuration(requestDuration, attrs)
+			metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			otel.Metrics.QueryDuration(queryDuration, attrs)
+			metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarReturnValue, localVarHTTPResponse, nil
@@ -4111,8 +4121,9 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
 			"ReadAuthorizationModel",
 			map[string]interface{}{
 				"storeId": r.storeId,
@@ -4125,11 +4136,11 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 		)
 
 		if requestDuration > 0 {
-			otel.Metrics.RequestDuration(requestDuration, attrs)
+			metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			otel.Metrics.QueryDuration(queryDuration, attrs)
+			metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarReturnValue, localVarHTTPResponse, nil
@@ -4444,8 +4455,9 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
 			"ReadAuthorizationModels",
 			map[string]interface{}{
 				"storeId": r.storeId,
@@ -4458,11 +4470,11 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 		)
 
 		if requestDuration > 0 {
-			otel.Metrics.RequestDuration(requestDuration, attrs)
+			metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			otel.Metrics.QueryDuration(queryDuration, attrs)
+			metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarReturnValue, localVarHTTPResponse, nil
@@ -4749,8 +4761,9 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
 			"ReadChanges",
 			map[string]interface{}{
 				"storeId": r.storeId,
@@ -4763,11 +4776,11 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 		)
 
 		if requestDuration > 0 {
-			otel.Metrics.RequestDuration(requestDuration, attrs)
+			metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			otel.Metrics.QueryDuration(queryDuration, attrs)
+			metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarReturnValue, localVarHTTPResponse, nil
@@ -5077,8 +5090,9 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
 			"Write",
 			map[string]interface{}{
 				"storeId": r.storeId,
@@ -5091,11 +5105,11 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 		)
 
 		if requestDuration > 0 {
-			otel.Metrics.RequestDuration(requestDuration, attrs)
+			metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			otel.Metrics.QueryDuration(queryDuration, attrs)
+			metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarReturnValue, localVarHTTPResponse, nil
@@ -5360,8 +5374,9 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 			return localVarHTTPResponse, newErr
 		}
 
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
 			"WriteAssertions",
 			map[string]interface{}{
 				"storeId": r.storeId,
@@ -5374,11 +5389,11 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 		)
 
 		if requestDuration > 0 {
-			otel.Metrics.RequestDuration(requestDuration, attrs)
+			metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			otel.Metrics.QueryDuration(queryDuration, attrs)
+			metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarHTTPResponse, nil
@@ -5690,8 +5705,9 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		var otel = telemetry.GetTelemetry(a.client.cfg.Telemetry)
-		var attrs, queryDuration, requestDuration, _ = otel.Metrics.BuildTelemetryAttributes(
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
 			"WriteAuthorizationModel",
 			map[string]interface{}{
 				"storeId": r.storeId,
@@ -5704,11 +5720,11 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 		)
 
 		if requestDuration > 0 {
-			otel.Metrics.RequestDuration(requestDuration, attrs)
+			metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			otel.Metrics.QueryDuration(queryDuration, attrs)
+			metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarReturnValue, localVarHTTPResponse, nil

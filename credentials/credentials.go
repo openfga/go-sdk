@@ -35,8 +35,9 @@ type Config struct {
 }
 
 type Credentials struct {
-	Method CredentialsMethod `json:"method,omitempty"`
-	Config *Config           `json:"config,omitempty"`
+	Method  CredentialsMethod `json:"method,omitempty"`
+	Config  *Config           `json:"config,omitempty"`
+	Context context.Context
 }
 
 func NewCredentials(config Credentials) (*Credentials, error) {
@@ -117,7 +118,10 @@ func (c *Credentials) GetHttpClientAndHeaderOverrides() (*http.Client, []*Header
 			scopes := strings.Split(strings.TrimSpace(c.Config.ClientCredentialsScopes), " ")
 			ccConfig.Scopes = append(ccConfig.Scopes, scopes...)
 		}
-		client = ccConfig.Client(context.Background())
+		if c.Context == nil {
+			c.Context = context.Background()
+		}
+		client = ccConfig.Client(c.Context)
 	case CredentialsMethodApiToken:
 		var header = c.GetApiTokenHeader()
 		if header != nil {

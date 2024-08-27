@@ -30,6 +30,8 @@ import (
 	"strings"
 	"time"
 	"unicode/utf8"
+
+	"github.com/openfga/go-sdk/internal/telemetry"
 )
 
 var (
@@ -67,6 +69,8 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 		if cfg.Credentials == nil {
 			cfg.HTTPClient = http.DefaultClient
 		} else {
+			cfg.Credentials.Context = context.Background()
+			telemetry.Bind(cfg.Credentials.Context, telemetry.Get(telemetry.TelemetryFactoryParameters{Configuration: cfg.Telemetry}))
 			var httpClient, headers = cfg.Credentials.GetHttpClientAndHeaderOverrides()
 			if len(headers) > 0 {
 				for idx := range headers {
