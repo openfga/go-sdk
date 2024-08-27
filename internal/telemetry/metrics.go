@@ -2,6 +2,8 @@ package telemetry
 
 import (
 	"context"
+	"net/http"
+	"time"
 
 	"go.opentelemetry.io/otel/metric"
 )
@@ -11,6 +13,15 @@ type Metrics struct {
 	Counters      map[string]metric.Int64Counter
 	Histograms    map[string]metric.Float64Histogram
 	Configuration *MetricsConfiguration
+}
+
+type MetricsInterface interface {
+	GetCounter(name string, description string) (metric.Int64Counter, error)
+	GetHistogram(name string, description string, unit string) (metric.Float64Histogram, error)
+	CredentialsRequest(value int64, attrs map[*Attribute]string) (metric.Int64Counter, error)
+	RequestDuration(value float64, attrs map[*Attribute]string) (metric.Float64Histogram, error)
+	QueryDuration(value float64, attrs map[*Attribute]string) (metric.Float64Histogram, error)
+	BuildTelemetryAttributes(requestMethod string, methodParameters map[string]interface{}, req *http.Request, res *http.Response, requestStarted time.Time, resendCount int) (map[*Attribute]string, float64, float64, error)
 }
 
 func (m *Metrics) GetCounter(name string, description string) (metric.Int64Counter, error) {

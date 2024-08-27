@@ -13,7 +13,7 @@ type TelemetryInterface interface {
 }
 
 type Telemetry struct {
-	Metrics       *Metrics
+	Metrics       MetricsInterface
 	Configuration *Configuration
 }
 
@@ -97,7 +97,7 @@ func Extract(ctx context.Context) *Telemetry {
 	return nil
 }
 
-func GetMetrics(factory TelemetryFactoryParameters) *Metrics {
+func GetMetrics(factory TelemetryFactoryParameters) MetricsInterface {
 	return Get(factory).Metrics
 }
 
