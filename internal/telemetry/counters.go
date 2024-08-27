@@ -1,7 +1,7 @@
 package telemetry
 
 const (
-	METRIC_COUNTER_CREDENTIALS_REQUEST = "fga-client.credentials.request"
+	METRIC_COUNTER_CREDENTIALS_REQUEST string = "fga-client.credentials.request"
 )
 
 var CredentialsRequest = &Counter{

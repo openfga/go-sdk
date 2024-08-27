@@ -1,8 +1,8 @@
 package telemetry
 
 const (
-	METRIC_HISTOGRAM_REQUEST_DURATION = "fga-client.request.duration"
-	METRIC_HISTOGRAM_QUERY_DURATION   = "fga-client.query.duration"
+	METRIC_HISTOGRAM_REQUEST_DURATION string = "fga-client.request.duration"
+	METRIC_HISTOGRAM_QUERY_DURATION   string = "fga-client.query.duration"
 )
 
 var (

@@ -45,10 +45,107 @@ var (
 	UserAgent                 = &Attribute{Name: ATTR_USER_AGENT_ORIGINAL}
 )
 
-func (m *Metrics) PrepareAttributes(attrs map[*Attribute]string) (attribute.Set, error) {
+func (m *Metrics) PrepareAttributes(metric MetricInterface, attrs map[*Attribute]string, config *MetricsConfiguration) (attribute.Set, error) {
 	var prepared []attribute.KeyValue
+	var allowed *MetricConfiguration
+
+	if config == nil || metric == nil || attrs == nil {
+		return *attribute.EmptySet(), nil
+	}
+
+	switch metric.GetName() {
+	case METRIC_COUNTER_CREDENTIALS_REQUEST:
+		if config.METRIC_COUNTER_CREDENTIALS_REQUEST == nil {
+			return *attribute.EmptySet(), nil
+		}
+
+		allowed = config.METRIC_COUNTER_CREDENTIALS_REQUEST
+	case METRIC_HISTOGRAM_REQUEST_DURATION:
+		if config.METRIC_HISTOGRAM_REQUEST_DURATION == nil {
+			return *attribute.EmptySet(), nil
+		}
+
+		allowed = config.METRIC_HISTOGRAM_REQUEST_DURATION
+	case METRIC_HISTOGRAM_QUERY_DURATION:
+		if config.METRIC_HISTOGRAM_QUERY_DURATION == nil {
+			return *attribute.EmptySet(), nil
+		}
+
+		allowed = config.METRIC_HISTOGRAM_QUERY_DURATION
+	}
+
+	if allowed == nil {
+		return *attribute.EmptySet(), nil
+	}
 
 	for attr, value := range attrs {
+		if attr == nil {
+			continue
+		}
+
+		switch attr {
+		case FGAClientRequestClientID:
+			if allowed.ATTR_FGA_CLIENT_REQUEST_CLIENT_ID == nil || !allowed.ATTR_FGA_CLIENT_REQUEST_CLIENT_ID.Enabled {
+				continue
+			}
+		case FGAClientRequestMethod:
+			if allowed.ATTR_HTTP_REQUEST_METHOD == nil || !allowed.ATTR_HTTP_REQUEST_METHOD.Enabled {
+				continue
+			}
+		case FGAClientRequestModelID:
+			if allowed.ATTR_FGA_CLIENT_REQUEST_MODEL_ID == nil || !allowed.ATTR_FGA_CLIENT_REQUEST_MODEL_ID.Enabled {
+				continue
+			}
+		case FGAClientRequestStoreID:
+			if allowed.ATTR_FGA_CLIENT_REQUEST_STORE_ID == nil || !allowed.ATTR_FGA_CLIENT_REQUEST_STORE_ID.Enabled {
+				continue
+			}
+		case FGAClientResponseModelID:
+			if allowed.ATTR_FGA_CLIENT_RESPONSE_MODEL_ID == nil || !allowed.ATTR_FGA_CLIENT_RESPONSE_MODEL_ID.Enabled {
+				continue
+			}
+		case FGAClientUser:
+			if allowed.ATTR_FGA_CLIENT_USER == nil || !allowed.ATTR_FGA_CLIENT_USER.Enabled {
+				continue
+			}
+		case HTTPClientRequestDuration:
+			if allowed.ATTR_HTTP_CLIENT_REQUEST_DURATION == nil || !allowed.ATTR_HTTP_CLIENT_REQUEST_DURATION.Enabled {
+				continue
+			}
+		case HTTPHost:
+			if allowed.ATTR_HTTP_HOST == nil || !allowed.ATTR_HTTP_HOST.Enabled {
+				continue
+			}
+		case HTTPRequestMethod:
+			if allowed.ATTR_HTTP_REQUEST_METHOD == nil || !allowed.ATTR_HTTP_REQUEST_METHOD.Enabled {
+				continue
+			}
+		case HTTPRequestResendCount:
+			if allowed.ATTR_HTTP_REQUEST_RESEND_COUNT == nil || !allowed.ATTR_HTTP_REQUEST_RESEND_COUNT.Enabled {
+				continue
+			}
+		case HTTPResponseStatusCode:
+			if allowed.ATTR_HTTP_RESPONSE_STATUS_CODE == nil || !allowed.ATTR_HTTP_RESPONSE_STATUS_CODE.Enabled {
+				continue
+			}
+		case HTTPServerRequestDuration:
+			if allowed.ATTR_HTTP_SERVER_REQUEST_DURATION == nil || !allowed.ATTR_HTTP_SERVER_REQUEST_DURATION.Enabled {
+				continue
+			}
+		case URLScheme:
+			if allowed.ATTR_URL_SCHEME == nil || !allowed.ATTR_URL_SCHEME.Enabled {
+				continue
+			}
+		case URLFull:
+			if allowed.ATTR_URL_FULL == nil || !allowed.ATTR_URL_FULL.Enabled {
+				continue
+			}
+		case UserAgent:
+			if allowed.ATTR_USER_AGENT_ORIGINAL == nil || !allowed.ATTR_USER_AGENT_ORIGINAL.Enabled {
+				continue
+			}
+		}
+
 		prepared = append(prepared, attribute.String(attr.Name, value))
 	}
 
@@ -149,7 +246,6 @@ func (m *Metrics) AttributesFromResendCount(resendCount int, attrs map[*Attribut
 func (m *Metrics) BuildTelemetryAttributes(requestMethod string, methodParameters map[string]interface{}, req *http.Request, res *http.Response, requestStarted time.Time, resendCount int) (map[*Attribute]string, float64, float64, error) {
 	var attrs = make(map[*Attribute]string)
 
-	attrs[FGAClientRequestMethod] = requestMethod
 	attrs, _ = m.AttributesFromRequest(req, methodParameters)
 	attrs, _ = m.AttributesFromResponse(res, attrs)
 	attrs, _ = m.AttributesFromResendCount(resendCount, attrs)
@@ -157,6 +253,8 @@ func (m *Metrics) BuildTelemetryAttributes(requestMethod string, methodParameter
 	var requestDuration, queryDuration float64
 	queryDuration, attrs, _ = m.AttributesFromQueryDuration(attrs)
 	requestDuration, attrs, _ = m.AttributesFromRequestDuration(requestStarted, attrs)
+
+	attrs[FGAClientRequestMethod] = requestMethod
 
 	return attrs, queryDuration, requestDuration, nil
 }
