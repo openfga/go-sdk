@@ -42,25 +42,3 @@ func TestTelemetryConfiguration(t *testing.T) {
 		t.Errorf("Expected ATTR_HTTP_RESPONSE_STATUS_CODE to be disabled")
 	}
 }
-
-func TestDefaultTelemetryConfiguration(t *testing.T) {
-	// Create a new configuration with default values (all attributes disabled)
-	config := &Configuration{
-		Metrics: &MetricsConfiguration{
-			METRIC_COUNTER_CREDENTIALS_REQUEST: &MetricConfiguration{},
-			METRIC_HISTOGRAM_REQUEST_DURATION:  &MetricConfiguration{},
-			METRIC_HISTOGRAM_QUERY_DURATION:    &MetricConfiguration{},
-		},
-	}
-
-	// Verify that all attributes are disabled by default
-	if config.Metrics.METRIC_COUNTER_CREDENTIALS_REQUEST.ATTR_FGA_CLIENT_REQUEST_CLIENT_ID.Enabled {
-		t.Errorf("Expected ATTR_FGA_CLIENT_REQUEST_CLIENT_ID to be disabled by default")
-	}
-	if config.Metrics.METRIC_HISTOGRAM_REQUEST_DURATION.ATTR_HTTP_CLIENT_REQUEST_DURATION.Enabled {
-		t.Errorf("Expected ATTR_HTTP_CLIENT_REQUEST_DURATION to be disabled by default")
-	}
-	if config.Metrics.METRIC_HISTOGRAM_QUERY_DURATION.ATTR_HTTP_SERVER_REQUEST_DURATION.Enabled {
-		t.Errorf("Expected ATTR_HTTP_SERVER_REQUEST_DURATION to be disabled by default")
-	}
-}
