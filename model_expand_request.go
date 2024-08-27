@@ -20,8 +20,9 @@ import (
 
 // ExpandRequest struct for ExpandRequest
 type ExpandRequest struct {
-	TupleKey             ExpandRequestTupleKey `json:"tuple_key"yaml:"tuple_key"`
-	AuthorizationModelId *string               `json:"authorization_model_id,omitempty"yaml:"authorization_model_id,omitempty"`
+	TupleKey             ExpandRequestTupleKey  `json:"tuple_key"yaml:"tuple_key"`
+	AuthorizationModelId *string                `json:"authorization_model_id,omitempty"yaml:"authorization_model_id,omitempty"`
+	Consistency          *ConsistencyPreference `json:"consistency,omitempty"yaml:"consistency,omitempty"`
 }
 
 // NewExpandRequest instantiates a new ExpandRequest object
@@ -31,6 +32,8 @@ type ExpandRequest struct {
 func NewExpandRequest(tupleKey ExpandRequestTupleKey) *ExpandRequest {
 	this := ExpandRequest{}
 	this.TupleKey = tupleKey
+	var consistency ConsistencyPreference = CONSISTENCYPREFERENCE_UNSPECIFIED
+	this.Consistency = &consistency
 	return &this
 }
 
@@ -39,6 +42,8 @@ func NewExpandRequest(tupleKey ExpandRequestTupleKey) *ExpandRequest {
 // but it doesn't guarantee that properties required by API are set
 func NewExpandRequestWithDefaults() *ExpandRequest {
 	this := ExpandRequest{}
+	var consistency ConsistencyPreference = CONSISTENCYPREFERENCE_UNSPECIFIED
+	this.Consistency = &consistency
 	return &this
 }
 
@@ -98,11 +103,46 @@ func (o *ExpandRequest) SetAuthorizationModelId(v string) {
 	o.AuthorizationModelId = &v
 }
 
+// GetConsistency returns the Consistency field value if set, zero value otherwise.
+func (o *ExpandRequest) GetConsistency() ConsistencyPreference {
+	if o == nil || o.Consistency == nil {
+		var ret ConsistencyPreference
+		return ret
+	}
+	return *o.Consistency
+}
+
+// GetConsistencyOk returns a tuple with the Consistency field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *ExpandRequest) GetConsistencyOk() (*ConsistencyPreference, bool) {
+	if o == nil || o.Consistency == nil {
+		return nil, false
+	}
+	return o.Consistency, true
+}
+
+// HasConsistency returns a boolean if a field has been set.
+func (o *ExpandRequest) HasConsistency() bool {
+	if o != nil && o.Consistency != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetConsistency gets a reference to the given ConsistencyPreference and assigns it to the Consistency field.
+func (o *ExpandRequest) SetConsistency(v ConsistencyPreference) {
+	o.Consistency = &v
+}
+
 func (o ExpandRequest) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["tuple_key"] = o.TupleKey
 	if o.AuthorizationModelId != nil {
 		toSerialize["authorization_model_id"] = o.AuthorizationModelId
+	}
+	if o.Consistency != nil {
+		toSerialize["consistency"] = o.Consistency
 	}
 	var b bytes.Buffer
 	enc := json.NewEncoder(&b)

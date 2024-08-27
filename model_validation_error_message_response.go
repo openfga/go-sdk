@@ -30,7 +30,7 @@ type ValidationErrorMessageResponse struct {
 // will change when the set of required properties is changed
 func NewValidationErrorMessageResponse() *ValidationErrorMessageResponse {
 	this := ValidationErrorMessageResponse{}
-	var code ErrorCode = NO_ERROR
+	var code ErrorCode = ERRORCODE_NO_ERROR
 	this.Code = &code
 	return &this
 }
@@ -40,7 +40,7 @@ func NewValidationErrorMessageResponse() *ValidationErrorMessageResponse {
 // but it doesn't guarantee that properties required by API are set
 func NewValidationErrorMessageResponseWithDefaults() *ValidationErrorMessageResponse {
 	this := ValidationErrorMessageResponse{}
-	var code ErrorCode = NO_ERROR
+	var code ErrorCode = ERRORCODE_NO_ERROR
 	this.Code = &code
 	return &this
 }

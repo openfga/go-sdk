@@ -297,10 +297,9 @@ type OpenFgaApi interface {
 	ListStoresExecute(r ApiListStoresRequest) (ListStoresResponse, *_nethttp.Response, error)
 
 	/*
-		 * ListUsers [EXPERIMENTAL] List the users matching the provided filter who have a certain relation to a particular type.
+		 * ListUsers List the users matching the provided filter who have a certain relation to a particular type.
 		 * The ListUsers API returns a list of all the users of a specific type that have a relation to a given object.
-	 This API is available in an experimental capacity and can be enabled with the `--experimentals enable-list-users` flag.
-	To arrive at a result, the API uses: an authorization model, explicit tuples written through the Write API, contextual tuples present in the request, and implicit tuples that exist by virtue of applying set theory (such as `document:2021-budget#viewer@document:2021-budget#viewer`; the set of users who are viewers of `document:2021-budget` are the set of users who are the viewers of `document:2021-budget`).
+	 To arrive at a result, the API uses: an authorization model, explicit tuples written through the Write API, contextual tuples present in the request, and implicit tuples that exist by virtue of applying set theory (such as `document:2021-budget#viewer@document:2021-budget#viewer`; the set of users who are viewers of `document:2021-budget` are the set of users who are the viewers of `document:2021-budget`).
 	An `authorization_model_id` may be specified in the body. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance.
 	You may also specify `contextual_tuples` that will be treated as regular tuples. Each of these tuples may have an associated `condition`.
 	You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly.
@@ -2860,11 +2859,10 @@ func (r ApiListUsersRequest) Execute() (ListUsersResponse, *_nethttp.Response, e
 }
 
 /*
-  - ListUsers [EXPERIMENTAL] List the users matching the provided filter who have a certain relation to a particular type.
+  - ListUsers List the users matching the provided filter who have a certain relation to a particular type.
   - The ListUsers API returns a list of all the users of a specific type that have a relation to a given object.
-    This API is available in an experimental capacity and can be enabled with the `--experimentals enable-list-users` flag.
+    To arrive at a result, the API uses: an authorization model, explicit tuples written through the Write API, contextual tuples present in the request, and implicit tuples that exist by virtue of applying set theory (such as `document:2021-budget#viewer@document:2021-budget#viewer`; the set of users who are viewers of `document:2021-budget` are the set of users who are the viewers of `document:2021-budget`).
 
-To arrive at a result, the API uses: an authorization model, explicit tuples written through the Write API, contextual tuples present in the request, and implicit tuples that exist by virtue of applying set theory (such as `document:2021-budget#viewer@document:2021-budget#viewer`; the set of users who are viewers of `document:2021-budget` are the set of users who are the viewers of `document:2021-budget`).
 An `authorization_model_id` may be specified in the body. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance.
 You may also specify `contextual_tuples` that will be treated as regular tuples. Each of these tuples may have an associated `condition`.
 You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly.

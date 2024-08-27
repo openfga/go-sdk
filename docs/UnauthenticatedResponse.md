@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Code** | Pointer to [**ErrorCode**](ErrorCode.md) |  | [optional] [default to NO_ERROR]
+**Code** | Pointer to [**ErrorCode**](ErrorCode.md) |  | [optional] [default to ERRORCODE_NO_ERROR]
 **Message** | Pointer to **string** |  | [optional] 
 
 ## Methods

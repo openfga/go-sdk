@@ -43,7 +43,7 @@ func NewTupleChange(tupleKey TupleKey, operation TupleOperation, timestamp time.
 // but it doesn't guarantee that properties required by API are set
 func NewTupleChangeWithDefaults() *TupleChange {
 	this := TupleChange{}
-	var operation TupleOperation = WRITE
+	var operation TupleOperation = TUPLEOPERATION_WRITE
 	this.Operation = operation
 	return &this
 }

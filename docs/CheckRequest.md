@@ -9,6 +9,7 @@ Name | Type | Description | Notes
 **AuthorizationModelId** | Pointer to **string** |  | [optional] 
 **Trace** | Pointer to **bool** | Defaults to false. Making it true has performance implications. | [optional] [readonly] 
 **Context** | Pointer to **map[string]interface{}** | Additional request context that will be used to evaluate any ABAC conditions encountered in the query evaluation. | [optional] 
+**Consistency** | Pointer to [**ConsistencyPreference**](ConsistencyPreference.md) |  | [optional] [default to CONSISTENCYPREFERENCE_UNSPECIFIED]
 
 ## Methods
 
@@ -148,6 +149,31 @@ SetContext sets Context field to given value.
 `func (o *CheckRequest) HasContext() bool`
 
 HasContext returns a boolean if a field has been set.
+
+### GetConsistency
+
+`func (o *CheckRequest) GetConsistency() ConsistencyPreference`
+
+GetConsistency returns the Consistency field if non-nil, zero value otherwise.
+
+### GetConsistencyOk
+
+`func (o *CheckRequest) GetConsistencyOk() (*ConsistencyPreference, bool)`
+
+GetConsistencyOk returns a tuple with the Consistency field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetConsistency
+
+`func (o *CheckRequest) SetConsistency(v ConsistencyPreference)`
+
+SetConsistency sets Consistency field to given value.
+
+### HasConsistency
+
+`func (o *CheckRequest) HasConsistency() bool`
+
+HasConsistency returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

@@ -6,7 +6,7 @@ require (
 	github.com/jarcoal/httpmock v1.3.1
 	go.opentelemetry.io/otel v1.28.0
 	go.opentelemetry.io/otel/metric v1.28.0
-	golang.org/x/sync v0.7.0
+	golang.org/x/sync v0.8.0
 )
 
 require (

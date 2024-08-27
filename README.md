@@ -275,7 +275,7 @@ options := ClientGetStoreOptions{
     // You can rely on the store id set in the configuration or override it for this specific request
     StoreId: openfga.PtrString("01FQH7V8BEG3GPQW93KTRFR8JB"), 
 }
-store,  err := fgaClient.GetStore(context.Background()).Options(options).Execute()
+store,  err := fgaClient.GetStore(context.Background()).Options(options)Execute()
 if err != nil {
     // handle error
 }
@@ -941,7 +941,7 @@ Class | Method | HTTP request | Description
 *OpenFgaApi* | [**GetStore**](docs/OpenFgaApi.md#getstore) | **Get** /stores/{store_id} | Get a store
 *OpenFgaApi* | [**ListObjects**](docs/OpenFgaApi.md#listobjects) | **Post** /stores/{store_id}/list-objects | List all objects of the given type that the user has a relation with
 *OpenFgaApi* | [**ListStores**](docs/OpenFgaApi.md#liststores) | **Get** /stores | List all stores
-*OpenFgaApi* | [**ListUsers**](docs/OpenFgaApi.md#listusers) | **Post** /stores/{store_id}/list-users | [EXPERIMENTAL] List the users matching the provided filter who have a certain relation to a particular type.
+*OpenFgaApi* | [**ListUsers**](docs/OpenFgaApi.md#listusers) | **Post** /stores/{store_id}/list-users | List the users matching the provided filter who have a certain relation to a particular type.
 *OpenFgaApi* | [**Read**](docs/OpenFgaApi.md#read) | **Post** /stores/{store_id}/read | Get tuples from the store that matches a query, without following userset rewrite rules
 *OpenFgaApi* | [**ReadAssertions**](docs/OpenFgaApi.md#readassertions) | **Get** /stores/{store_id}/assertions/{authorization_model_id} | Read assertions for an authorization model ID
 *OpenFgaApi* | [**ReadAuthorizationModel**](docs/OpenFgaApi.md#readauthorizationmodel) | **Get** /stores/{store_id}/authorization-models/{id} | Return a particular version of an authorization model
@@ -966,6 +966,7 @@ Class | Method | HTTP request | Description
  - [Condition](docs/Condition.md)
  - [ConditionMetadata](docs/ConditionMetadata.md)
  - [ConditionParamTypeRef](docs/ConditionParamTypeRef.md)
+ - [ConsistencyPreference](docs/ConsistencyPreference.md)
  - [ContextualTupleKeys](docs/ContextualTupleKeys.md)
  - [CreateStoreRequest](docs/CreateStoreRequest.md)
  - [CreateStoreResponse](docs/CreateStoreResponse.md)

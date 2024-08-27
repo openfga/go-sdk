@@ -22,7 +22,7 @@ type NullValue string
 
 // List of NullValue
 const (
-	NULL_VALUE NullValue = "NULL_VALUE"
+	NULLVALUE_NULL_VALUE NullValue = "NULL_VALUE"
 )
 
 var allowedNullValueEnumValues = []NullValue{

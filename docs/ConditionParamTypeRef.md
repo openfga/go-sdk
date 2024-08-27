@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**TypeName** | [**TypeName**](TypeName.md) |  | [default to UNSPECIFIED]
+**TypeName** | [**TypeName**](TypeName.md) |  | [default to TYPENAME_UNSPECIFIED]
 **GenericTypes** | Pointer to [**[]ConditionParamTypeRef**](ConditionParamTypeRef.md) |  | [optional] 
 
 ## Methods
