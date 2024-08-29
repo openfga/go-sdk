@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.6.0
+
+### [0.6.0](https://github.com/openfga/go-sdk/compare/v0.5.0...v0.6.0) (2024-08-29)
+
+- feat: support OpenTelemetry metrics reporting (#115)
+- feat!: support for sending the consistency parameter to the read, check, list users, list objects, and expand endpoints (#117)
+- chore(docs): update stale README (#113) - thanks @Code2Life
+
+BREAKING CHANGE:
+
+When the generator converts enums in the open API definition, by default it removes the type prefix. For example, `TYPE_NAME_UNSPECIFIED` is converted to a const named `UNSPECIFIED`. This leads to potential collisions with other enums, and as the consistency type is a new enum, we finally got a collision (was just a matter of time).
+
+The fix for this is to specify `"enumClassPrefix": true` in the generation config. This will then include the class name on the const name, which resoles collision issues. This means any enum value, such as `INT` now becomes `TYPENAME_INT`. The main impact of this is the `TypeName` consts and error codes. The fix is to add the class name prefix as discussed above.
+
 ## v0.5.0
 
 ### [0.5.0](https://github.com/openfga/go-sdk/compare/v0.4.0...v0.5.0) (2024-06-14)
