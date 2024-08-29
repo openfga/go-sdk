@@ -16,6 +16,7 @@ import (
 	"net/http"
 
 	"github.com/openfga/go-sdk/credentials"
+	"github.com/openfga/go-sdk/internal/telemetry"
 )
 
 const (
@@ -45,6 +46,7 @@ type Configuration struct {
 	Debug          bool                     `json:"debug,omitempty"`
 	HTTPClient     *http.Client
 	RetryParams    *RetryParams
+	Telemetry      *telemetry.Configuration `json:"telemetry,omitempty"`
 }
 
 // DefaultRetryParams returns the default retry parameters
@@ -81,6 +83,7 @@ func NewConfiguration(config Configuration) (*Configuration, error) {
 		Debug:          config.Debug,
 		HTTPClient:     config.HTTPClient,
 		RetryParams:    config.RetryParams,
+		Telemetry:      config.Telemetry,
 	}
 
 	if cfg.UserAgent == "" {
@@ -89,6 +92,10 @@ func NewConfiguration(config Configuration) (*Configuration, error) {
 
 	if cfg.DefaultHeaders == nil {
 		cfg.DefaultHeaders = make(map[string]string)
+	}
+
+	if cfg.Telemetry == nil {
+		cfg.Telemetry = telemetry.DefaultTelemetryConfiguration()
 	}
 
 	err := cfg.ValidateConfig()

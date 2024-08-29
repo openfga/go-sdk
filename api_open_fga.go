@@ -21,7 +21,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/openfga/go-sdk/internal/utils"
+	telemetry "github.com/openfga/go-sdk/internal/telemetry"
+	internalutils "github.com/openfga/go-sdk/internal/utils"
 )
 
 // Linger please
@@ -864,6 +865,7 @@ func (a *OpenFgaApiService) Check(ctx _context.Context, storeId string) ApiCheck
 func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_nethttp.Response, error) {
 	var maxRetry int
 	var minWaitInMs int
+	var requestStarted time.Time = time.Now()
 
 	if a.RetryParams != nil {
 		maxRetry = a.RetryParams.MinWaitInMs
@@ -1083,6 +1085,28 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
+			"Check",
+			map[string]interface{}{
+				"storeId": r.storeId,
+				"body":    localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			metrics.RequestDuration(requestDuration, attrs)
+		}
+
+		if queryDuration > 0 {
+			metrics.QueryDuration(queryDuration, attrs)
+		}
+
 		return localVarReturnValue, localVarHTTPResponse, nil
 	}
 	// should never have reached this
@@ -1125,6 +1149,7 @@ func (a *OpenFgaApiService) CreateStore(ctx _context.Context) ApiCreateStoreRequ
 func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateStoreResponse, *_nethttp.Response, error) {
 	var maxRetry int
 	var minWaitInMs int
+	var requestStarted time.Time = time.Now()
 
 	if a.RetryParams != nil {
 		maxRetry = a.RetryParams.MinWaitInMs
@@ -1333,6 +1358,27 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
+			"CreateStore",
+			map[string]interface{}{
+				"body": localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			metrics.RequestDuration(requestDuration, attrs)
+		}
+
+		if queryDuration > 0 {
+			metrics.QueryDuration(queryDuration, attrs)
+		}
+
 		return localVarReturnValue, localVarHTTPResponse, nil
 	}
 	// should never have reached this
@@ -1371,6 +1417,7 @@ func (a *OpenFgaApiService) DeleteStore(ctx _context.Context, storeId string) Ap
 func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_nethttp.Response, error) {
 	var maxRetry int
 	var minWaitInMs int
+	var requestStarted time.Time = time.Now()
 
 	if a.RetryParams != nil {
 		maxRetry = a.RetryParams.MinWaitInMs
@@ -1575,6 +1622,28 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 			return localVarHTTPResponse, newErr
 		}
 
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
+			"DeleteStore",
+			map[string]interface{}{
+				"storeId": r.storeId,
+				"body":    localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			metrics.RequestDuration(requestDuration, attrs)
+		}
+
+		if queryDuration > 0 {
+			metrics.QueryDuration(queryDuration, attrs)
+		}
+
 		return localVarHTTPResponse, nil
 	}
 	// should never have reached this
@@ -1672,6 +1741,7 @@ func (a *OpenFgaApiService) Expand(ctx _context.Context, storeId string) ApiExpa
 func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *_nethttp.Response, error) {
 	var maxRetry int
 	var minWaitInMs int
+	var requestStarted time.Time = time.Now()
 
 	if a.RetryParams != nil {
 		maxRetry = a.RetryParams.MinWaitInMs
@@ -1891,6 +1961,28 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
+			"Expand",
+			map[string]interface{}{
+				"storeId": r.storeId,
+				"body":    localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			metrics.RequestDuration(requestDuration, attrs)
+		}
+
+		if queryDuration > 0 {
+			metrics.QueryDuration(queryDuration, attrs)
+		}
+
 		return localVarReturnValue, localVarHTTPResponse, nil
 	}
 	// should never have reached this
@@ -1930,6 +2022,7 @@ func (a *OpenFgaApiService) GetStore(ctx _context.Context, storeId string) ApiGe
 func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreResponse, *_nethttp.Response, error) {
 	var maxRetry int
 	var minWaitInMs int
+	var requestStarted time.Time = time.Now()
 
 	if a.RetryParams != nil {
 		maxRetry = a.RetryParams.MinWaitInMs
@@ -2144,6 +2237,28 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
+			"GetStore",
+			map[string]interface{}{
+				"storeId": r.storeId,
+				"body":    localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			metrics.RequestDuration(requestDuration, attrs)
+		}
+
+		if queryDuration > 0 {
+			metrics.QueryDuration(queryDuration, attrs)
+		}
+
 		return localVarReturnValue, localVarHTTPResponse, nil
 	}
 	// should never have reached this
@@ -2197,6 +2312,7 @@ func (a *OpenFgaApiService) ListObjects(ctx _context.Context, storeId string) Ap
 func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObjectsResponse, *_nethttp.Response, error) {
 	var maxRetry int
 	var minWaitInMs int
+	var requestStarted time.Time = time.Now()
 
 	if a.RetryParams != nil {
 		maxRetry = a.RetryParams.MinWaitInMs
@@ -2416,6 +2532,28 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
+			"ListObjects",
+			map[string]interface{}{
+				"storeId": r.storeId,
+				"body":    localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			metrics.RequestDuration(requestDuration, attrs)
+		}
+
+		if queryDuration > 0 {
+			metrics.QueryDuration(queryDuration, attrs)
+		}
+
 		return localVarReturnValue, localVarHTTPResponse, nil
 	}
 	// should never have reached this
@@ -2466,6 +2604,7 @@ func (a *OpenFgaApiService) ListStores(ctx _context.Context) ApiListStoresReques
 func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStoresResponse, *_nethttp.Response, error) {
 	var maxRetry int
 	var minWaitInMs int
+	var requestStarted time.Time = time.Now()
 
 	if a.RetryParams != nil {
 		maxRetry = a.RetryParams.MinWaitInMs
@@ -2675,6 +2814,27 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
+			"ListStores",
+			map[string]interface{}{
+				"body": localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			metrics.RequestDuration(requestDuration, attrs)
+		}
+
+		if queryDuration > 0 {
+			metrics.QueryDuration(queryDuration, attrs)
+		}
+
 		return localVarReturnValue, localVarHTTPResponse, nil
 	}
 	// should never have reached this
@@ -2730,6 +2890,7 @@ func (a *OpenFgaApiService) ListUsers(ctx _context.Context, storeId string) ApiL
 func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersResponse, *_nethttp.Response, error) {
 	var maxRetry int
 	var minWaitInMs int
+	var requestStarted time.Time = time.Now()
 
 	if a.RetryParams != nil {
 		maxRetry = a.RetryParams.MinWaitInMs
@@ -2949,6 +3110,28 @@ func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersRe
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
+			"ListUsers",
+			map[string]interface{}{
+				"storeId": r.storeId,
+				"body":    localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			metrics.RequestDuration(requestDuration, attrs)
+		}
+
+		if queryDuration > 0 {
+			metrics.QueryDuration(queryDuration, attrs)
+		}
+
 		return localVarReturnValue, localVarHTTPResponse, nil
 	}
 	// should never have reached this
@@ -3105,6 +3288,7 @@ func (a *OpenFgaApiService) Read(ctx _context.Context, storeId string) ApiReadRe
 func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_nethttp.Response, error) {
 	var maxRetry int
 	var minWaitInMs int
+	var requestStarted time.Time = time.Now()
 
 	if a.RetryParams != nil {
 		maxRetry = a.RetryParams.MinWaitInMs
@@ -3324,6 +3508,28 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
+			"Read",
+			map[string]interface{}{
+				"storeId": r.storeId,
+				"body":    localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			metrics.RequestDuration(requestDuration, attrs)
+		}
+
+		if queryDuration > 0 {
+			metrics.QueryDuration(queryDuration, attrs)
+		}
+
 		return localVarReturnValue, localVarHTTPResponse, nil
 	}
 	// should never have reached this
@@ -3366,6 +3572,7 @@ func (a *OpenFgaApiService) ReadAssertions(ctx _context.Context, storeId string,
 func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (ReadAssertionsResponse, *_nethttp.Response, error) {
 	var maxRetry int
 	var minWaitInMs int
+	var requestStarted time.Time = time.Now()
 
 	if a.RetryParams != nil {
 		maxRetry = a.RetryParams.MinWaitInMs
@@ -3585,6 +3792,28 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
+			"ReadAssertions",
+			map[string]interface{}{
+				"storeId": r.storeId,
+				"body":    localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			metrics.RequestDuration(requestDuration, attrs)
+		}
+
+		if queryDuration > 0 {
+			metrics.QueryDuration(queryDuration, attrs)
+		}
+
 		return localVarReturnValue, localVarHTTPResponse, nil
 	}
 	// should never have reached this
@@ -3670,6 +3899,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModel(ctx _context.Context, storeId
 func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorizationModelRequest) (ReadAuthorizationModelResponse, *_nethttp.Response, error) {
 	var maxRetry int
 	var minWaitInMs int
+	var requestStarted time.Time = time.Now()
 
 	if a.RetryParams != nil {
 		maxRetry = a.RetryParams.MinWaitInMs
@@ -3889,6 +4119,28 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
+			"ReadAuthorizationModel",
+			map[string]interface{}{
+				"storeId": r.storeId,
+				"body":    localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			metrics.RequestDuration(requestDuration, attrs)
+		}
+
+		if queryDuration > 0 {
+			metrics.QueryDuration(queryDuration, attrs)
+		}
+
 		return localVarReturnValue, localVarHTTPResponse, nil
 	}
 	// should never have reached this
@@ -3980,6 +4232,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModels(ctx _context.Context, storeI
 func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizationModelsRequest) (ReadAuthorizationModelsResponse, *_nethttp.Response, error) {
 	var maxRetry int
 	var minWaitInMs int
+	var requestStarted time.Time = time.Now()
 
 	if a.RetryParams != nil {
 		maxRetry = a.RetryParams.MinWaitInMs
@@ -4200,6 +4453,28 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
+			"ReadAuthorizationModels",
+			map[string]interface{}{
+				"storeId": r.storeId,
+				"body":    localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			metrics.RequestDuration(requestDuration, attrs)
+		}
+
+		if queryDuration > 0 {
+			metrics.QueryDuration(queryDuration, attrs)
+		}
+
 		return localVarReturnValue, localVarHTTPResponse, nil
 	}
 	// should never have reached this
@@ -4260,6 +4535,7 @@ func (a *OpenFgaApiService) ReadChanges(ctx _context.Context, storeId string) Ap
 func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadChangesResponse, *_nethttp.Response, error) {
 	var maxRetry int
 	var minWaitInMs int
+	var requestStarted time.Time = time.Now()
 
 	if a.RetryParams != nil {
 		maxRetry = a.RetryParams.MinWaitInMs
@@ -4483,6 +4759,28 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
+			"ReadChanges",
+			map[string]interface{}{
+				"storeId": r.storeId,
+				"body":    localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			metrics.RequestDuration(requestDuration, attrs)
+		}
+
+		if queryDuration > 0 {
+			metrics.QueryDuration(queryDuration, attrs)
+		}
+
 		return localVarReturnValue, localVarHTTPResponse, nil
 	}
 	// should never have reached this
@@ -4570,6 +4868,7 @@ func (a *OpenFgaApiService) Write(ctx _context.Context, storeId string) ApiWrite
 func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interface{}, *_nethttp.Response, error) {
 	var maxRetry int
 	var minWaitInMs int
+	var requestStarted time.Time = time.Now()
 
 	if a.RetryParams != nil {
 		maxRetry = a.RetryParams.MinWaitInMs
@@ -4789,6 +5088,28 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
+			"Write",
+			map[string]interface{}{
+				"storeId": r.storeId,
+				"body":    localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			metrics.RequestDuration(requestDuration, attrs)
+		}
+
+		if queryDuration > 0 {
+			metrics.QueryDuration(queryDuration, attrs)
+		}
+
 		return localVarReturnValue, localVarHTTPResponse, nil
 	}
 	// should never have reached this
@@ -4836,6 +5157,7 @@ func (a *OpenFgaApiService) WriteAssertions(ctx _context.Context, storeId string
 func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) (*_nethttp.Response, error) {
 	var maxRetry int
 	var minWaitInMs int
+	var requestStarted time.Time = time.Now()
 
 	if a.RetryParams != nil {
 		maxRetry = a.RetryParams.MinWaitInMs
@@ -5050,6 +5372,28 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 			return localVarHTTPResponse, newErr
 		}
 
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
+			"WriteAssertions",
+			map[string]interface{}{
+				"storeId": r.storeId,
+				"body":    localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			metrics.RequestDuration(requestDuration, attrs)
+		}
+
+		if queryDuration > 0 {
+			metrics.QueryDuration(queryDuration, attrs)
+		}
+
 		return localVarHTTPResponse, nil
 	}
 	// should never have reached this
@@ -5139,6 +5483,7 @@ func (a *OpenFgaApiService) WriteAuthorizationModel(ctx _context.Context, storeI
 func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizationModelRequest) (WriteAuthorizationModelResponse, *_nethttp.Response, error) {
 	var maxRetry int
 	var minWaitInMs int
+	var requestStarted time.Time = time.Now()
 
 	if a.RetryParams != nil {
 		maxRetry = a.RetryParams.MinWaitInMs
@@ -5356,6 +5701,28 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 				error: err.Error(),
 			}
 			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
+			"WriteAuthorizationModel",
+			map[string]interface{}{
+				"storeId": r.storeId,
+				"body":    localVarPostBody,
+			},
+			req,
+			localVarHTTPResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			metrics.RequestDuration(requestDuration, attrs)
+		}
+
+		if queryDuration > 0 {
+			metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return localVarReturnValue, localVarHTTPResponse, nil

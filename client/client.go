@@ -21,6 +21,7 @@ import (
 
 	fgaSdk "github.com/openfga/go-sdk"
 	"github.com/openfga/go-sdk/credentials"
+	"github.com/openfga/go-sdk/internal/telemetry"
 	internalutils "github.com/openfga/go-sdk/internal/utils"
 	"golang.org/x/sync/errgroup"
 )
@@ -50,6 +51,7 @@ type ClientConfiguration struct {
 	Debug                bool                     `json:"debug"`
 	HTTPClient           *_nethttp.Client
 	RetryParams          *fgaSdk.RetryParams
+	Telemetry            *telemetry.Configuration `json:"telemetry,omitempty"`
 }
 
 func newClientConfiguration(cfg *fgaSdk.Configuration) ClientConfiguration {
@@ -63,6 +65,7 @@ func newClientConfiguration(cfg *fgaSdk.Configuration) ClientConfiguration {
 		Debug:          cfg.Debug,
 		HTTPClient:     cfg.HTTPClient,
 		RetryParams:    cfg.RetryParams,
+		Telemetry:      cfg.Telemetry,
 	}
 }
 
@@ -83,6 +86,7 @@ func NewSdkClient(cfg *ClientConfiguration) (*OpenFgaClient, error) {
 		Debug:          cfg.Debug,
 		HTTPClient:     cfg.HTTPClient,
 		RetryParams:    cfg.RetryParams,
+		Telemetry:      cfg.Telemetry,
 	})
 
 	if err != nil {

@@ -16,11 +16,12 @@ package clientcredentials
 import (
 	"context"
 	"fmt"
-	"github.com/openfga/go-sdk/oauth2"
-	"github.com/openfga/go-sdk/oauth2/internal"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/openfga/go-sdk/oauth2"
+	"github.com/openfga/go-sdk/oauth2/internal"
 )
 
 // Config describes a 2-legged OAuth2 flow, with both the
