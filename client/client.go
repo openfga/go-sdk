@@ -21,8 +21,8 @@ import (
 
 	fgaSdk "github.com/openfga/go-sdk"
 	"github.com/openfga/go-sdk/credentials"
-	"github.com/openfga/go-sdk/internal/telemetry"
 	internalutils "github.com/openfga/go-sdk/internal/utils"
+	"github.com/openfga/go-sdk/telemetry"
 	"golang.org/x/sync/errgroup"
 )
 

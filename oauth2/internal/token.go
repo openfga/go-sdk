@@ -20,8 +20,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/openfga/go-sdk/internal/telemetry"
 	internalutils "github.com/openfga/go-sdk/internal/utils"
+	"github.com/openfga/go-sdk/telemetry"
 )
 
 const cMaxRetry = 3

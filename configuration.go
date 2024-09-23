@@ -16,7 +16,7 @@ import (
 	"net/http"
 
 	"github.com/openfga/go-sdk/credentials"
-	"github.com/openfga/go-sdk/internal/telemetry"
+	"github.com/openfga/go-sdk/telemetry"
 )
 
 const (

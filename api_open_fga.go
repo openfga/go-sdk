@@ -21,8 +21,8 @@ import (
 	"strings"
 	"time"
 
-	telemetry "github.com/openfga/go-sdk/internal/telemetry"
 	internalutils "github.com/openfga/go-sdk/internal/utils"
+	telemetry "github.com/openfga/go-sdk/telemetry"
 )
 
 // Linger please
