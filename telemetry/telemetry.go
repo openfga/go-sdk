@@ -49,7 +49,7 @@ var (
 func Configure(configuration *Configuration) (*Telemetry, error) {
 	return &Telemetry{
 		Metrics: &Metrics{
-			Meter:         otel.Meter("openfga-sdk/0.6.0"),
+			Meter:         otel.Meter("openfga-sdk"),
 			Counters:      make(map[string]metric.Int64Counter),
 			Histograms:    make(map[string]metric.Float64Histogram),
 			Configuration: configuration.Metrics,
