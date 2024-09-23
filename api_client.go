@@ -31,7 +31,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/openfga/go-sdk/internal/telemetry"
+	"github.com/openfga/go-sdk/telemetry"
 )
 
 var (
