@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.6.1
+
+### [0.6.1](https://github.com/openfga/go-sdk/compare/v0.6.0...v0.6.1) (2024-09-23)
+
+- refactor(OpenTelemetry): move configuration API into public package namespace (#122)
+- docs(OpenTelemetry): initial documentation and example (#123)
+
 ## v0.6.0
 
 ### [0.6.0](https://github.com/openfga/go-sdk/compare/v0.5.0...v0.6.0) (2024-08-29)
