@@ -2202,7 +2202,7 @@ func TestOpenFgaClient(t *testing.T) {
 		options := ClientBatchCheckOptions{
 			AuthorizationModelId: openfga.PtrString(authModelId),
 			MaxParallelRequests:  openfga.PtrInt32(5),
-			Consistency:          openfga.CONSISTENCYPREFERENCE_UNSPECIFIED.Ptr(),
+			Consistency:          openfga.CONSISTENCYPREFERENCE_HIGHER_CONSISTENCY.Ptr(),
 		}
 
 		var expectedResponse openfga.CheckResponse
@@ -2213,7 +2213,7 @@ func TestOpenFgaClient(t *testing.T) {
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
 		httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			httpmock.BodyContainsString(`"consistency":"UNSPECIFIED"`),
+			httpmock.BodyContainsString(`"consistency":"HIGHER_CONSISTENCY"`),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
@@ -2223,9 +2223,15 @@ func TestOpenFgaClient(t *testing.T) {
 			},
 		)
 
-		_, err := fgaClient.BatchCheck(context.Background()).Body(requestBody).Options(options).Execute()
+		checks, err := fgaClient.BatchCheck(context.Background()).Body(requestBody).Options(options).Execute()
 		if err != nil {
 			t.Fatalf("%v", err)
+		}
+
+		for _, check := range *checks {
+			if check.Error != nil {
+				t.Fatalf("a check failed %v", check.Error)
+			}
 		}
 	})
 
