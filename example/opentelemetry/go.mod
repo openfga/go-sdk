@@ -2,11 +2,12 @@ module openfga-opentelemetry-example
 
 go 1.21
 
-replace github.com/openfga/go-sdk => ../..
+// To reference local build, uncomment below and run `go mod tidy`
+// replace github.com/openfga/go-sdk v0.6.1 => ../../
 
 require (
 	github.com/joho/godotenv v1.5.1
-	github.com/openfga/go-sdk v0.0.0-00010101000000-000000000000
+	github.com/openfga/go-sdk v0.6.1
 	go.opentelemetry.io/otel v1.29.0
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v1.29.0
 	go.opentelemetry.io/otel/sdk v1.29.0

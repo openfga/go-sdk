@@ -244,7 +244,7 @@ func (m *Metrics) AttributesFromResendCount(resendCount int, attrs map[*Attribut
 }
 
 func (m *Metrics) BuildTelemetryAttributes(requestMethod string, methodParameters map[string]interface{}, req *http.Request, res *http.Response, requestStarted time.Time, resendCount int) (map[*Attribute]string, float64, float64, error) {
-	var attrs = make(map[*Attribute]string)
+	var attrs map[*Attribute]string
 
 	attrs, _ = m.AttributesFromRequest(req, methodParameters)
 	attrs, _ = m.AttributesFromResponse(res, attrs)
