@@ -232,7 +232,7 @@ If your server is configured with [authentication enabled](https://openfga.dev/d
 
 Get a paginated list of stores.
 
-[API Documentation](https://openfga.dev/api/service/docs/api#/Stores/ListStores)
+[API Documentation](https://openfga.dev/api/service#/Stores/ListStores)
 
 ```golang
 options := ClientListStoresOptions{
@@ -248,7 +248,7 @@ stores, err := fgaClient.ListStores(context.Background()).Options(options).Execu
 
 Create and initialize a store.
 
-[API Documentation](https://openfga.dev/api/service/docs/api#/Stores/CreateStore)
+[API Documentation](https://openfga.dev/api/service#/Stores/CreateStore)
 
 ```golang
 body := ClientCreateStoreRequest{Name: "FGA Demo"}
@@ -269,7 +269,7 @@ fgaClient.SetStoreId(store.Id)
 
 Get information about the current store.
 
-[API Documentation](https://openfga.dev/api/service/docs/api#/Stores/GetStore)
+[API Documentation](https://openfga.dev/api/service#/Stores/GetStore)
 
 ```golang
 options := ClientGetStoreOptions{
@@ -288,7 +288,7 @@ if err != nil {
 
 Delete a store.
 
-[API Documentation](https://openfga.dev/api/service/docs/api#/Stores/DeleteStore)
+[API Documentation](https://openfga.dev/api/service#/Stores/DeleteStore)
 
 ```golang
 options := ClientDeleteStoreOptions{
@@ -508,7 +508,7 @@ By default, write runs in a transaction mode where any invalid operation (deleti
 
 ```golang
 body := ClientWriteRequest{
-    Writes: []ClientTupleKey{ {
+    Writes: &[]ClientTupleKey{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "viewer",
         Object:   "document:roadmap",
@@ -517,7 +517,7 @@ body := ClientWriteRequest{
         Relation: "viewer",
         Object:   "document:budget",
     } },
-    Deletes: []ClientTupleKeyWithoutCondition{ {
+    Deletes: &[]ClientTupleKeyWithoutCondition{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "writer",
         Object:   "document:roadmap",
@@ -541,7 +541,7 @@ The SDK will split the writes into separate chunks and send them in separate req
 
 ```golang
 body := ClientWriteRequest{
-    Writes: []ClientTupleKey{ {
+    Writes: &[]ClientTupleKey{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "viewer",
         Object:   "document:roadmap",
@@ -550,7 +550,7 @@ body := ClientWriteRequest{
         Relation: "viewer",
         Object:   "document:budget",
     } },
-	  Deletes: []ClientTupleKeyWithoutCondition{ {
+	  Deletes: &[]ClientTupleKeyWithoutCondition{ {
       User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
       Relation: "writer",
       Object:   "document:roadmap",
@@ -602,7 +602,7 @@ body := ClientCheckRequest{
     User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     Relation: "viewer",
     Object:   "document:roadmap",
-    ContextualTuples: []ClientTupleKey{ {
+    ContextualTuples: &[]ClientTupleKey{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "editor",
         Object:   "document:roadmap",
@@ -640,7 +640,7 @@ body := ClientBatchCheckBody{ {
     User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     Relation: "viewer",
     Object:   "document:roadmap",
-    ContextualTuples: []ClientTupleKey{ {
+    ContextualTuples: &[]ClientTupleKey{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "editor",
         Object:   "document:roadmap",
@@ -649,7 +649,7 @@ body := ClientBatchCheckBody{ {
     User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     Relation: "admin",
     Object:   "document:roadmap",
-    ContextualTuples: []ClientTupleKey{ {
+    ContextualTuples: &[]ClientTupleKey{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "editor",
         Object:   "document:roadmap",
@@ -753,7 +753,7 @@ body := ClientListObjectsRequest{
     User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     Relation: "can_read",
     Type:     "document",
-    ContextualTuples: []ClientTupleKey{ {
+    ContextualTuples: &[]ClientTupleKey{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "editor",
         Object:   "folder:product",
@@ -788,7 +788,7 @@ body := ClientListRelationsRequest{
     User:      "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     Object:    "document:roadmap",
     Relations: []string{"can_view", "can_edit", "can_delete", "can_rename"},
-    ContextualTuples: []ClientTupleKey{ {
+    ContextualTuples: &[]ClientTupleKey{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "editor",
         Object:   "document:roadmap",
@@ -1038,7 +1038,7 @@ Class | Method | HTTP request | Description
 
 ### OpenTelemetry
 
-This SDK supports producing metrics that can be consumed as part of an [OpenTelemetry](https://opentelemetry.io/) setup. For more information, please see [the documentation](https://github.com/openfga/go-sdk/blob/main/docs/OpenTelemetry.md)
+This SDK supports producing metrics that can be consumed as part of an [OpenTelemetry](https://opentelemetry.io/) setup. For more information, please see [the documentation](https://github.com/openfga/go-sdk/blob/main/docs/opentelemetry.md)
 
 ## Contributing
 
