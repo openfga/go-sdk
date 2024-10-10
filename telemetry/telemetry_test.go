@@ -120,6 +120,11 @@ func TestUnbind(t *testing.T) {
 	}
 }
 
+func (m *MockMetrics) HTTPRequestDuration(value float64, attrs map[*Attribute]string) (metric.Float64Histogram, error) {
+	histogram, _ := m.GetHistogram("http_request_duration", "HTTP request duration", "ms")
+	return histogram, nil
+}
+
 func TestCredentialsRequestMetric(t *testing.T) {
 	config := &Configuration{}
 	metrics := &MockMetrics{

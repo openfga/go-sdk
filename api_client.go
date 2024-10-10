@@ -186,9 +186,28 @@ func (c *APIClient) callAPI(request *http.Request) (*http.Response, error) {
 		log.Printf("\n%s\n", string(dump))
 	}
 
+	start := time.Now()
+
 	resp, err := c.cfg.HTTPClient.Do(request)
-	if err != nil {
-		return resp, err
+
+	duration := time.Since(start).Milliseconds()
+
+	attrs := map[*telemetry.Attribute]string{
+		telemetry.HTTPRequestMethod: request.Method,
+		telemetry.URLFull:           request.URL.String(),
+		telemetry.HTTPHost:          request.URL.Host,
+		telemetry.URLScheme:         request.URL.Scheme,
+		telemetry.UserAgent:         request.Header.Get("User-Agent"),
+	}
+
+	if c.cfg.Telemetry != nil {
+		telemetryParams := telemetry.TelemetryFactoryParameters{
+			Configuration: c.cfg.Telemetry,
+		}
+		telemetryInstance := telemetry.Get(telemetryParams)
+		if telemetryInstance != nil && telemetryInstance.Metrics != nil {
+			_, _ = telemetryInstance.Metrics.HTTPRequestDuration(float64(duration), attrs)
+		}
 	}
 
 	if c.cfg.Debug {
