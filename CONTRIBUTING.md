@@ -43,4 +43,4 @@ Please do not open issues for general support or usage questions. Instead, join 
 
 ### Vulnerability Reporting
 
-Please do not report security vulnerabilities on the public GitHub issue tracker. The [Responsible Disclosure Program](https://github.com/openfga/go-sdk/blob/main/.github/SECURITY.md) details the procedure for disclosing security issues.
+Please do not report security vulnerabilities on the public GitHub issue tracker. The [Responsible Disclosure Program](https://github.com/openfga/.github/blob/main/SECURITY.md) details the procedure for disclosing security issues.

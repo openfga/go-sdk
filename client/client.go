@@ -2018,17 +2018,23 @@ func (client *OpenFgaClient) BatchCheckExecute(request SdkClientBatchCheckReques
 		return nil, err
 	}
 
+	checkOptions := &ClientCheckOptions{
+		AuthorizationModelId: authorizationModelId,
+		StoreId:              storeId,
+	}
+
+	if request.GetOptions() != nil && request.GetOptions().Consistency != nil {
+		checkOptions.Consistency = request.GetOptions().Consistency
+	}
+
 	for index, checkBody := range *request.GetBody() {
 		index, checkBody := index, checkBody
 		group.Go(func() error {
 			singleResponse, err := client.CheckExecute(&SdkClientCheckRequest{
-				ctx:    ctx,
-				Client: client,
-				body:   &checkBody,
-				options: &ClientCheckOptions{
-					AuthorizationModelId: authorizationModelId,
-					StoreId:              storeId,
-				},
+				ctx:     ctx,
+				Client:  client,
+				body:    &checkBody,
+				options: checkOptions,
 			})
 
 			if _, ok := err.(fgaSdk.FgaApiAuthenticationError); ok {

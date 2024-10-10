@@ -36,8 +36,82 @@ In cases when metrics events are sent, they will not be viewable outside of infr
 | `url.full`                     | string | Yes                | Full URL of the request                                                           |
 | `user_agent.original`          | string | Yes                | User Agent used in the query                                                      |
 
-## Example
+## Customizing Reporting
 
-You can find a basic example integration in the [examples/opentelemetry](../../examples/opentelemetry) directory, which demonstrates how to configure the OpenFGA SDK with OpenTelemetry.
+To control which metrics and attributes are reported by the SDK, you can provide your own `TelemetryConfiguration` instance during initialization, as shown in the example above. The `TelemetryConfiguration` class allows you to configure the metrics and attributes that are reported by the SDK, as outlined in [the tables above](#metrics).
 
-Please see [the OpenTelemetry documentation](https://opentelemetry.io/docs/languages/go/) for additional details on how to further configure their SDK for your applications.
+## Usage
+
+### 1. Install Dependencies
+
+Install the OpenFGA SDK and OpenTelemetry SDK in your application using `pip`:
+
+```sh
+go get "github.com/openfg/go-sdk" \
+  "go.opentelemetry.io/otel" \
+  "go.opentelemetry.io/otel/sdk/metric"
+  ```
+
+You must also install an OpenTelemetry exporter; for example, the OTLP gRPC exporter:
+
+```sh
+go get "go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
+```
+
+### 2. Configure OpenTelemetry
+
+Configure your application to use OpenTelemetry, and set up the metrics provider to export metrics using an exporter:
+
+```go
+package main
+
+import (
+	"context"
+	"errors"
+	"time"
+
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
+	"go.opentelemetry.io/otel/sdk/metric"
+)
+
+// Configure OpenTelemetry
+metricExporter, _ := otlpmetricgrpc.New(ctx, otlpmetricgrpc.WithGRPCConn(conn))
+
+meterProvider := sdkmetric.NewMeterProvider(
+  sdkmetric.WithReader(sdkmetric.NewPeriodicReader(metricExporter)),
+  sdkmetric.WithResource(res),
+)
+otel.SetMeterProvider(meterProvider)
+defer meterProvider.Shutdown()
+```
+
+### 3. Configure OpenFGA
+
+Configure the OpenFGA client, and (optionally) customize what metrics and attributes are reported:
+
+```go
+import (
+  "github.com/openfga/go-sdk/client"
+  "os"
+)
+
+fgaClient, err := NewSdkClient(&ClientConfiguration{
+  ApiUrl:  os.Getenv("FGA_API_URL"), // required, e.g. https://api.fga.example
+  StoreId: os.Getenv("FGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
+  AuthorizationModelId: os.Getenv("FGA_MODEL_ID"), // optional, recommended to be set for production
+  Telemetry: &telemetry.Configuration{
+    Metrics: &telemetry.MetricsConfiguration{
+      METRIC_HISTOGRAM_REQUEST_DURATION: &telemetry.MetricConfiguration{
+        ATTR_FGA_CLIENT_REQUEST_CLIENT_ID: &telemetry.AttributeConfiguration{Enabled: true},
+        ATTR_HTTP_RESPONSE_STATUS_CODE:    &telemetry.AttributeConfiguration{Enabled: true},
+      }
+    }
+  }
+})
+
+```
+
+## Example Integration
+
+An [example integration](../example/opentelemetry) is provided that also demonstrates how to configure an application with OpenFGA and OpenTelemetry. Please refer to [the README](../example/opentelemetry/README.md) for more information.
