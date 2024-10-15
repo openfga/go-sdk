@@ -3,6 +3,7 @@ package telemetry
 import (
 	"context"
 	"net/http"
+	"sync"
 	"testing"
 	"time"
 
@@ -224,4 +225,25 @@ func TestBuildTelemetryAttributesMethod(t *testing.T) {
 	if requestDuration != 100 {
 		t.Fatalf("Expected requestDuration to be 100, but got %v", requestDuration)
 	}
+}
+
+// Run this test with the "-race" flag.
+//
+//	go test -race -run ^TestGetRace$ github.com/openfga/go-sdk/telemetry
+func TestGetRace(t *testing.T) {
+	t.Parallel()
+
+	var wg sync.WaitGroup
+
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+
+		go func() {
+			defer wg.Done()
+
+			Get(TelemetryFactoryParameters{})
+		}()
+	}
+
+	wg.Wait()
 }
