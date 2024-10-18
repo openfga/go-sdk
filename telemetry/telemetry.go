@@ -2,6 +2,7 @@ package telemetry
 
 import (
 	"context"
+	"sync"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
@@ -42,7 +43,7 @@ type QueryDurationMetricParameters struct {
 type TelemetryContextKey struct{}
 
 var (
-	TelemetryInstances map[*Configuration]*Telemetry
+	TelemetryInstances sync.Map
 	TelemetryContext   TelemetryContextKey
 )
 
@@ -65,16 +66,17 @@ func Get(factory TelemetryFactoryParameters) *Telemetry {
 		configuration = DefaultTelemetryConfiguration()
 	}
 
-	if TelemetryInstances == nil {
-		TelemetryInstances = make(map[*Configuration]*Telemetry)
+	telemetry, _ := TelemetryInstances.LoadOrStore(configuration, func() interface{} {
+		tel, _ := Configure(configuration)
+		return tel
+	})
+
+	// if telemetry was not already stored, check if the function was returned and if so, execute it
+	if fn, ok := telemetry.(func() interface{}); ok {
+		return fn().(*Telemetry)
 	}
 
-	if _, exists := TelemetryInstances[configuration]; !exists {
-		telemetry, _ := Configure(configuration)
-		TelemetryInstances[configuration] = telemetry
-	}
-
-	return TelemetryInstances[configuration]
+	return telemetry.(*Telemetry)
 }
 
 func Bind(ctx context.Context, instance *Telemetry) context.Context {
