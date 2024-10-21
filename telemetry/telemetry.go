@@ -2,6 +2,7 @@ package telemetry
 
 import (
 	"context"
+	"sync"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
@@ -42,6 +43,9 @@ type QueryDurationMetricParameters struct {
 type TelemetryContextKey struct{}
 
 var (
+	telemetryInstancesLock sync.Mutex
+	// Warning: do not use directly, it may cause data race.
+	// Deprecated: this map will be renamed to telemetryInstances.
 	TelemetryInstances map[*Configuration]*Telemetry
 	TelemetryContext   TelemetryContextKey
 )
@@ -64,6 +68,9 @@ func Get(factory TelemetryFactoryParameters) *Telemetry {
 	if configuration == nil {
 		configuration = DefaultTelemetryConfiguration()
 	}
+
+	telemetryInstancesLock.Lock()
+	defer telemetryInstancesLock.Unlock()
 
 	if TelemetryInstances == nil {
 		TelemetryInstances = make(map[*Configuration]*Telemetry)
