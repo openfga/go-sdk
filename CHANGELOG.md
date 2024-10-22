@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.6.2
+
+### [0.6.2](https://github.com/openfga/go-sdk/compare/v0.6.1...v0.6.2) (2024-10-21)
+
+- fix: fix batch check consistency (#131)
+- fix: fix data race on TelemetryInstances (#136) - thanks @Kryvchun!
+
+NOTE: `TelemetryInstances` in `telemetry.go` has been deprecated, as its usage is intended to be internal. It will be removed in a future release.
+
 ## v0.6.1
 
 ### [0.6.1](https://github.com/openfga/go-sdk/compare/v0.6.0...v0.6.1) (2024-09-23)
