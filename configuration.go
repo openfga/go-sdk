@@ -20,9 +20,9 @@ import (
 )
 
 const (
-	SdkVersion = "0.6.2"
+	SdkVersion = "0.6.3"
 
-	defaultUserAgent = "openfga-sdk go/0.6.2"
+	defaultUserAgent = "openfga-sdk go/0.6.3"
 )
 
 // RetryParams configures configuration for retry in case of HTTP too many request

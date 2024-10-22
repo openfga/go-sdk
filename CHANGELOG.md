@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.6.3
+
+### [0.6.3](https://github.com/openfga/go-sdk/compare/v0.6.2...v0.6.3) (2024-10-22)
+
+- fix: fix metrics data race issues (#139)
+
 ## v0.6.2
 
 ### [0.6.2](https://github.com/openfga/go-sdk/compare/v0.6.1...v0.6.2) (2024-10-21)
