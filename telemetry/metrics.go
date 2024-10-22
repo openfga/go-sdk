@@ -22,6 +22,7 @@ type MetricsInterface interface {
 	RequestDuration(value float64, attrs map[*Attribute]string) (metric.Float64Histogram, error)
 	QueryDuration(value float64, attrs map[*Attribute]string) (metric.Float64Histogram, error)
 	BuildTelemetryAttributes(requestMethod string, methodParameters map[string]interface{}, req *http.Request, res *http.Response, requestStarted time.Time, resendCount int) (map[*Attribute]string, float64, float64, error)
+	HTTPRequestDuration(value float64, attrs map[*Attribute]string) (metric.Float64Histogram, error)
 }
 
 func (m *Metrics) GetCounter(name string, description string) (metric.Int64Counter, error) {
@@ -77,6 +78,20 @@ func (m *Metrics) QueryDuration(value float64, attrs map[*Attribute]string) (met
 
 	if err == nil {
 		attrs, err := m.PrepareAttributes(QueryDuration, attrs, m.Configuration)
+
+		if err == nil {
+			histogram.Record(context.Background(), value, metric.WithAttributeSet(attrs))
+		}
+	}
+
+	return histogram, err
+}
+
+func (m *Metrics) HTTPRequestDuration(value float64, attrs map[*Attribute]string) (metric.Float64Histogram, error) {
+	var histogram, err = m.GetHistogram(HTTPRequestDuration.Name, HTTPRequestDuration.Description, HTTPRequestDuration.Unit)
+
+	if err == nil {
+		attrs, err := m.PrepareAttributes(HTTPRequestDuration, attrs, m.Configuration)
 
 		if err == nil {
 			histogram.Record(context.Background(), value, metric.WithAttributeSet(attrs))
