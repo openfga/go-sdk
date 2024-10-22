@@ -3,16 +3,19 @@ package telemetry
 import (
 	"context"
 	"net/http"
+	"sync"
 	"time"
 
 	"go.opentelemetry.io/otel/metric"
 )
 
 type Metrics struct {
-	Meter         metric.Meter
-	Counters      map[string]metric.Int64Counter
-	Histograms    map[string]metric.Float64Histogram
-	Configuration *MetricsConfiguration
+	Meter          metric.Meter
+	countersLock   sync.Mutex
+	Counters       map[string]metric.Int64Counter
+	histogramsLock sync.Mutex
+	Histograms     map[string]metric.Float64Histogram
+	Configuration  *MetricsConfiguration
 }
 
 type MetricsInterface interface {
@@ -25,6 +28,9 @@ type MetricsInterface interface {
 }
 
 func (m *Metrics) GetCounter(name string, description string) (metric.Int64Counter, error) {
+	m.countersLock.Lock()
+	defer m.countersLock.Unlock()
+
 	if counter, exists := m.Counters[name]; exists {
 		return counter, nil
 	}
@@ -34,6 +40,9 @@ func (m *Metrics) GetCounter(name string, description string) (metric.Int64Count
 }
 
 func (m *Metrics) GetHistogram(name string, description string, unit string) (metric.Float64Histogram, error) {
+	m.histogramsLock.Lock()
+	defer m.histogramsLock.Unlock()
+
 	if histogram, exists := m.Histograms[name]; exists {
 		return histogram, nil
 	}
