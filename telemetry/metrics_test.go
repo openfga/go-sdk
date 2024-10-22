@@ -2,6 +2,7 @@ package telemetry
 
 import (
 	"context"
+	"sync"
 	"testing"
 
 	"go.opentelemetry.io/otel/metric"
@@ -81,6 +82,41 @@ func TestGetCounter(t *testing.T) {
 	}
 }
 
+// Run this test with the "-race" flag.
+//
+//	go test -race -run ^TestGetCounterRace github.com/openfga/go-sdk/telemetry
+func TestGetCounterRace(t *testing.T) {
+
+	mockMeter := &MockMeter{
+		counters:   make(map[string]metric.Int64Counter),
+		histograms: make(map[string]metric.Float64Histogram),
+	}
+	metrics := &Metrics{
+		Meter:    mockMeter,
+		Counters: make(map[string]metric.Int64Counter),
+	}
+
+	t.Parallel()
+
+	var wg sync.WaitGroup
+
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+
+		go func() {
+			defer wg.Done()
+			_, err := metrics.GetCounter("test_counter", "A test counter")
+			if err != nil {
+				t.Errorf("Expected no error, but got %v", err)
+				return
+			}
+			Get(TelemetryFactoryParameters{})
+		}()
+	}
+
+	wg.Wait()
+}
+
 func TestGetHistogram(t *testing.T) {
 	mockMeter := &MockMeter{
 		counters:   make(map[string]metric.Int64Counter),
@@ -108,6 +144,37 @@ func TestGetHistogram(t *testing.T) {
 	if histogram != histogram2 {
 		t.Fatalf("Expected the same histogram instance to be returned")
 	}
+}
+
+// go test -race -run ^TestGetHistogramRace github.com/openfga/go-sdk/telemetry
+func TestGetHistogramRace(t *testing.T) {
+	mockMeter := &MockMeter{
+		counters:   make(map[string]metric.Int64Counter),
+		histograms: make(map[string]metric.Float64Histogram),
+	}
+	metrics := &Metrics{
+		Meter:      mockMeter,
+		Histograms: make(map[string]metric.Float64Histogram),
+	}
+
+	t.Parallel()
+
+	var wg sync.WaitGroup
+
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+
+		go func() {
+			defer wg.Done()
+			_, err := metrics.GetHistogram("test_histogram", "A test histogram", "ms")
+			if err != nil {
+				t.Errorf("Expected no error, but got %v", err)
+				return
+			}
+		}()
+	}
+
+	wg.Wait()
 }
 
 func TestCredentialsRequest(t *testing.T) {
