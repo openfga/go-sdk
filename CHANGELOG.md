@@ -195,7 +195,7 @@ Updated to include support for [OpenFGA 0.3.0](https://github.com/openfga/openfg
 
 Changes:
 - [BREAKING] feat(list-objects)!: response has been changed to include the object type
-    e.g. response that was `{"object_ids":["roadmap"]}`, will now be `{"objects":["document:roadmap"]}`
+    e.g. response that was `{"object_ids":["roadmap"]}`, will now be `{"objects":["document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"]}`
 
 Fixes:
 - [BREAKING] fix(models): update interfaces that had incorrectly optional fields to make them required
