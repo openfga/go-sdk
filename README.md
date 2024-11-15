@@ -460,13 +460,13 @@ Reads the relationship tuples stored in the database. It does not evaluate nor e
 body := ClientReadRequest{
     User:     openfga.PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
     Relation: openfga.PtrString("viewer"),
-    Object:   openfga.PtrString("document:roadmap"),
+    Object:   openfga.PtrString("document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"),
 }
 
 // Find all relationship tuples where a certain user has a relationship as any relation to a certain document
 body := ClientReadRequest{
     User:     openfga.PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-    Object:   openfga.PtrString("document:roadmap"),
+    Object:   openfga.PtrString("document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"),
 }
 
 // Find all relationship tuples where a certain user is a viewer of any document
@@ -478,7 +478,7 @@ body := ClientReadRequest{
 
 // Find all relationship tuples where any user has a relationship as any relation with a particular document
 body := ClientReadRequest{
-    Object:   openfga.PtrString("document:roadmap"),
+    Object:   openfga.PtrString("document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"),
 }
 
 // Read all stored relationship tuples
@@ -511,16 +511,16 @@ body := ClientWriteRequest{
     Writes: &[]ClientTupleKey{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "viewer",
-        Object:   "document:roadmap",
+        Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
     }, {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "viewer",
-        Object:   "document:budget",
+        Object:   "document:0192ab2d-d36e-7cb3-a4a8-5d1d67a300c5",
     } },
     Deletes: &[]ClientTupleKeyWithoutCondition{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "writer",
-        Object:   "document:roadmap",
+        Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
     } }
 }
 
@@ -544,16 +544,16 @@ body := ClientWriteRequest{
     Writes: &[]ClientTupleKey{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "viewer",
-        Object:   "document:roadmap",
+        Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
     }, {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "viewer",
-        Object:   "document:budget",
+        Object:   "document:0192ab2d-d36e-7cb3-a4a8-5d1d67a300c5",
     } },
 	  Deletes: &[]ClientTupleKeyWithoutCondition{ {
       User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
       Relation: "writer",
-      Object:   "document:roadmap",
+      Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
     } }
 }
 
@@ -601,11 +601,11 @@ Check if a user has a particular relation with an object.
 body := ClientCheckRequest{
     User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     Relation: "viewer",
-    Object:   "document:roadmap",
+    Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
     ContextualTuples: &[]ClientTupleKey{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "editor",
-        Object:   "document:roadmap",
+        Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
     } },
 }
 
@@ -639,29 +639,29 @@ options := ClientBatchCheckOptions{
 body := ClientBatchCheckBody{ {
     User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     Relation: "viewer",
-    Object:   "document:roadmap",
+    Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
     ContextualTuples: &[]ClientTupleKey{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "editor",
-        Object:   "document:roadmap",
+        Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
     } },
 }, {
     User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     Relation: "admin",
-    Object:   "document:roadmap",
+    Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
     ContextualTuples: &[]ClientTupleKey{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "editor",
-        Object:   "document:roadmap",
+        Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
     } },
 }, {
     User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     Relation: "creator",
-    Object:   "document:roadmap",
+    Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 }, {
     User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     Relation: "deleter",
-    Object:   "document:roadmap",
+    Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 } }
 
 data, err := fgaClient.BatchCheck(context.Background()).Body(requestBody).Options(options).Execute()
@@ -672,11 +672,11 @@ data = [{
   Request: {
     User: "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     Relation: "viewer",
-    Object: "document:roadmap",
+    Object: "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
     ContextualTuples: [{
       User: "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
       Relation: "editor",
-      Object: "document:roadmap"
+      Object: "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"
     }]
   },
   HttpResponse: ...
@@ -685,11 +685,11 @@ data = [{
   Request: {
     User: "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     Relation: "admin",
-    Object: "document:roadmap",
+    Object: "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
     ContextualTuples: [{
       User: "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
       Relation: "editor",
-      Object: "document:roadmap"
+      Object: "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"
     }]
   },
   HttpResponse: ...
@@ -698,7 +698,7 @@ data = [{
   Request: {
     User: "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     Relation: "creator",
-    Object: "document:roadmap",
+    Object: "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
   },
   HttpResponse: ...,
   Error: <FgaError ...>
@@ -707,7 +707,7 @@ data = [{
   Request: {
     User: "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     Relation: "deleter",
-    Object: "document:roadmap",
+    Object: "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
   }},
   HttpResponse: ...,
 ]
@@ -729,11 +729,11 @@ options := ClientExpandOptions{
 }
 body := ClientExpandRequest{
     Relation: "viewer",
-    Object:   "document:roadmap",
+    Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 }
 data, err := fgaClient.Expand(context.Background()).Body(requestBody).Options(options).Execute()
 
-// data.Tree.Root = {"name":"document:roadmap#viewer","leaf":{"users":{"users":["user:81684243-9356-4421-8fbf-a4f8d36aa31b","user:f52a4f7a-054d-47ff-bb6e-3ac81269988f"]}}}
+// data.Tree.Root = {"name":"document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a#viewer","leaf":{"users":{"users":["user:81684243-9356-4421-8fbf-a4f8d36aa31b","user:f52a4f7a-054d-47ff-bb6e-3ac81269988f"]}}}
 ```
 
 #### List Objects
@@ -760,7 +760,7 @@ body := ClientListObjectsRequest{
     }, {
         User:     "folder:product",
         Relation: "parent",
-        Object:   "document:roadmap",
+        Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
     } },
 }
 data, err := fgaClient.ListObjects(context.Background()).
@@ -768,7 +768,7 @@ data, err := fgaClient.ListObjects(context.Background()).
   Options(options).
   Execute()
 
-// data.Objects = ["document:roadmap"]
+// data.Objects = ["document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"]
 ```
 
 #### List Relations
@@ -786,12 +786,12 @@ options := ClientListRelationsOptions{
 }
 body := ClientListRelationsRequest{
     User:      "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-    Object:    "document:roadmap",
+    Object:    "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
     Relations: []string{"can_view", "can_edit", "can_delete", "can_rename"},
     ContextualTuples: &[]ClientTupleKey{ {
         User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation: "editor",
-        Object:   "document:roadmap",
+        Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
     } },
 }
 data, err := fgaClient.ListRelations(context.Background()).
@@ -837,7 +837,7 @@ requestBody := ClientListUsersRequest{
     }, {
         User:     "folder:product",
         Relation: "parent",
-        Object:   "document:roadmap",
+        Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
     }},
     Context: &map[string]interface{}{"ViewCount": 100},
 }
@@ -886,7 +886,7 @@ requestBody := ClientWriteAssertionsRequest{
     ClientAssertion{
         User:        "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation:    "can_view",
-        Object:      "document:roadmap",
+        Object:      "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
         Expectation: true,
     },
 }
