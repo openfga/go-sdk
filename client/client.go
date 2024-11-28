@@ -1382,9 +1382,6 @@ func (o ClientWriteRequestWriteResponse) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["tuple_key"] = o.TupleKey
 	toSerialize["status"] = o.Status
-	if o.HttpResponse != nil {
-		toSerialize["http_response"] = o.HttpResponse
-	}
 	if o.Error != nil {
 		toSerialize["error"] = o.Error
 	}
@@ -1402,9 +1399,6 @@ func (o ClientWriteRequestDeleteResponse) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["tuple_key"] = o.TupleKey
 	toSerialize["status"] = o.Status
-	if o.HttpResponse != nil {
-		toSerialize["http_response"] = o.HttpResponse
-	}
 	if o.Error != nil {
 		toSerialize["error"] = o.Error
 	}
