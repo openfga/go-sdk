@@ -23,9 +23,10 @@ type MetricConfiguration struct {
 }
 
 type MetricsConfiguration struct {
-	METRIC_COUNTER_CREDENTIALS_REQUEST *MetricConfiguration `json:"fga_client_credentials_request,omitempty"`
-	METRIC_HISTOGRAM_REQUEST_DURATION  *MetricConfiguration `json:"fga_client_request_duration,omitempty"`
-	METRIC_HISTOGRAM_QUERY_DURATION    *MetricConfiguration `json:"fga_client_query_duration,omitempty"`
+	METRIC_COUNTER_CREDENTIALS_REQUEST     *MetricConfiguration `json:"fga_client_credentials_request,omitempty"`
+	METRIC_HISTOGRAM_REQUEST_DURATION      *MetricConfiguration `json:"fga_client_request_duration,omitempty"`
+	METRIC_HISTOGRAM_QUERY_DURATION        *MetricConfiguration `json:"fga_client_query_duration,omitempty"`
+	METRIC_HISTOGRAM_HTTP_REQUEST_DURATION *MetricConfiguration `json:"fga_client_http_request_duration,omitempty"`
 }
 
 type Configuration struct {
