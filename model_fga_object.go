@@ -14,6 +14,8 @@ package openfga
 
 import (
 	"bytes"
+	"fmt"
+	"strings"
 
 	"encoding/json"
 )
@@ -103,6 +105,23 @@ func (o FgaObject) MarshalJSON() ([]byte, error) {
 		return nil, err
 	}
 	return b.Bytes(), nil
+}
+
+func (o FgaObject) String() string {
+	return fmt.Sprintf("%s:%s", o.Type, o.Id)
+}
+
+func FgaObjectFromString(objectString string) (*FgaObject, error) {
+	if objectString == "" {
+		return nil, fmt.Errorf("failed parsing FgaObject, cannot build FgaObject from empty string")
+	}
+	objectTokens := strings.Split(objectString, ":")
+	if len(objectTokens) != 2 {
+		return nil, fmt.Errorf("failed parsing FgaObject, invalid FgaObject string")
+	}
+	objectType := objectTokens[0]
+	objectId := objectTokens[1]
+	return NewFgaObject(objectType, objectId), nil
 }
 
 type NullableFgaObject struct {
