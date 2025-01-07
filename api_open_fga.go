@@ -33,116 +33,116 @@ var (
 type OpenFgaApi interface {
 
 	/*
-		 * Check Check whether a user is authorized to access an object
-		 * The Check API returns whether a given user has a relationship with a given object in a given store.
-	The `user` field of the request can be a specific target, such as `user:anne`, or a userset (set of users) such as `group:marketing#member` or a type-bound public access `user:*`.
-	To arrive at a result, the API uses: an authorization model, explicit tuples written through the Write API, contextual tuples present in the request, and implicit tuples that exist by virtue of applying set theory (such as `document:2021-budget#viewer@document:2021-budget#viewer`; the set of users who are viewers of `document:2021-budget` are the set of users who are the viewers of `document:2021-budget`).
-	A `contextual_tuples` object may also be included in the body of the request. This object contains one field `tuple_keys`, which is an array of tuple keys. Each of these tuples may have an associated `condition`.
-	You may also provide an `authorization_model_id` in the body. This will be used to assert that the input `tuple_key` is valid for the model specified. If not specified, the assertion will be made against the latest authorization model ID. It is strongly recommended to specify authorization model id for better performance.
-	You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly.
-	The response will return whether the relationship exists in the field `allowed`.
+			 * Check Check whether a user is authorized to access an object
+			 * The Check API returns whether a given user has a relationship with a given object in a given store.
+		The `user` field of the request can be a specific target, such as `user:anne`, or a userset (set of users) such as `group:marketing#member` or a type-bound public access `user:*`.
+		To arrive at a result, the API uses: an authorization model, explicit tuples written through the Write API, contextual tuples present in the request, and implicit tuples that exist by virtue of applying set theory (such as `document:2021-budget#viewer@document:2021-budget#viewer`; the set of users who are viewers of `document:2021-budget` are the set of users who are the viewers of `document:2021-budget`).
+		A `contextual_tuples` object may also be included in the body of the request. This object contains one field `tuple_keys`, which is an array of tuple keys. Each of these tuples may have an associated `condition`.
+		You may also provide an `authorization_model_id` in the body. This will be used to assert that the input `tuple_key` is valid for the model specified. If not specified, the assertion will be made against the latest authorization model ID. It is strongly recommended to specify authorization model id for better performance.
+		You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly.
+		The response will return whether the relationship exists in the field `allowed`.
 
-	Some exceptions apply, but in general, if a Check API responds with `{allowed: true}`, then you can expect the equivalent ListObjects query to return the object, and viceversa.
-	For example, if `Check(user:anne, reader, document:2021-budget)` responds with `{allowed: true}`, then `ListObjects(user:anne, reader, document)` may include `document:2021-budget` in the response.
-	## Examples
-	### Querying with contextual tuples
-	In order to check if user `user:anne` of type `user` has a `reader` relationship with object `document:2021-budget` given the following contextual tuple
-	```json
-	{
-	  "user": "user:anne",
-	  "relation": "member",
-	  "object": "time_slot:office_hours"
-	}
-	```
-	the Check API can be used with the following request body:
-	```json
-	{
-	  "tuple_key": {
-	    "user": "user:anne",
-	    "relation": "reader",
-	    "object": "document:2021-budget"
-	  },
-	  "contextual_tuples": {
-	    "tuple_keys": [
-	      {
-	        "user": "user:anne",
-	        "relation": "member",
-	        "object": "time_slot:office_hours"
-	      }
-	    ]
-	  },
-	  "authorization_model_id": "01G50QVV17PECNVAHX1GG4Y5NC"
-	}
-	```
-	### Querying usersets
-	Some Checks will always return `true`, even without any tuples. For example, for the following authorization model
-	```python
-	model
-	  schema 1.1
-	type user
-	type document
-	  relations
-	    define reader: [user]
-	```
-	the following query
-	```json
-	{
-	  "tuple_key": {
-	     "user": "document:2021-budget#reader",
-	     "relation": "reader",
-	     "object": "document:2021-budget"
-	  }
-	}
-	```
-	will always return `{ "allowed": true }`. This is because usersets are self-defining: the userset `document:2021-budget#reader` will always have the `reader` relation with `document:2021-budget`.
-	### Querying usersets with difference in the model
-	A Check for a userset can yield results that must be treated carefully if the model involves difference. For example, for the following authorization model
-	```python
-	model
-	  schema 1.1
-	type user
-	type group
-	  relations
-	    define member: [user]
-	type document
-	  relations
-	    define blocked: [user]
-	    define reader: [group#member] but not blocked
-	```
-	the following query
-	```json
-	{
-	  "tuple_key": {
-	     "user": "group:finance#member",
-	     "relation": "reader",
-	     "object": "document:2021-budget"
-	  },
-	  "contextual_tuples": {
-	    "tuple_keys": [
-	      {
-	        "user": "user:anne",
-	        "relation": "member",
-	        "object": "group:finance"
-	      },
-	      {
-	        "user": "group:finance#member",
-	        "relation": "reader",
-	        "object": "document:2021-budget"
-	      },
-	      {
-	        "user": "user:anne",
-	        "relation": "blocked",
-	        "object": "document:2021-budget"
-	      }
-	    ]
-	  },
-	}
-	```
-	will return `{ "allowed": true }`, even though a specific user of the userset `group:finance#member` does not have the `reader` relationship with the given object.
+		Some exceptions apply, but in general, if a Check API responds with `{allowed: true}`, then you can expect the equivalent ListObjects query to return the object, and viceversa.
+		For example, if `Check(user:anne, reader, document:2021-budget)` responds with `{allowed: true}`, then `ListObjects(user:anne, reader, document)` may include `document:2021-budget` in the response.
+		## Examples
+		### Querying with contextual tuples
+		In order to check if user `user:anne` of type `user` has a `reader` relationship with object `document:2021-budget` given the following contextual tuple
+		```json
+		{
+		  "user": "user:anne",
+		  "relation": "member",
+		  "object": "time_slot:office_hours"
+		}
+		```
+		the Check API can be used with the following request body:
+		```json
+		{
+		  "tuple_key": {
+		    "user": "user:anne",
+		    "relation": "reader",
+		    "object": "document:2021-budget"
+		  },
+		  "contextual_tuples": {
+		    "tuple_keys": [
+		      {
+		        "user": "user:anne",
+		        "relation": "member",
+		        "object": "time_slot:office_hours"
+		      }
+		    ]
+		  },
+		  "authorization_model_id": "01G50QVV17PECNVAHX1GG4Y5NC"
+		}
+		```
+		### Querying usersets
+		Some Checks will always return `true`, even without any tuples. For example, for the following authorization model
+		```python
+		model
+		  schema 1.1
+		type user
+		type document
+		  relations
+		    define reader: [user]
+		```
+		the following query
+		```json
+		{
+		  "tuple_key": {
+		     "user": "document:2021-budget#reader",
+		     "relation": "reader",
+		     "object": "document:2021-budget"
+		  }
+		}
+		```
+		will always return `{ "allowed": true }`. This is because usersets are self-defining: the userset `document:2021-budget#reader` will always have the `reader` relation with `document:2021-budget`.
+		### Querying usersets with difference in the model
+		A Check for a userset can yield results that must be treated carefully if the model involves difference. For example, for the following authorization model
+		```python
+		model
+		  schema 1.1
+		type user
+		type group
+		  relations
+		    define member: [user]
+		type document
+		  relations
+		    define blocked: [user]
+		    define reader: [group#member] but not blocked
+		```
+		the following query
+		```json
+		{
+		  "tuple_key": {
+		     "user": "group:finance#member",
+		     "relation": "reader",
+		     "object": "document:2021-budget"
+		  },
+		  "contextual_tuples": {
+		    "tuple_keys": [
+		      {
+		        "user": "user:anne",
+		        "relation": "member",
+		        "object": "group:finance"
+		      },
+		      {
+		        "user": "group:finance#member",
+		        "relation": "reader",
+		        "object": "document:2021-budget"
+		      },
+		      {
+		        "user": "user:anne",
+		        "relation": "blocked",
+		        "object": "document:2021-budget"
+		      }
+		    ]
+		  },
+		}
+		```
+		will return `{ "allowed": true }`, even though a specific user of the userset `group:finance#member` does not have the `reader` relationship with the given object.
 
-		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-		 * @param storeId
-		 * @return ApiCheckRequest
+			 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+			 * @param storeId
+			 * @return ApiCheckRequest
 	*/
 	Check(ctx _context.Context, storeId string) ApiCheckRequest
 
@@ -181,59 +181,59 @@ type OpenFgaApi interface {
 	DeleteStoreExecute(r ApiDeleteStoreRequest) (*_nethttp.Response, error)
 
 	/*
-		 * Expand Expand all relationships in userset tree format, and following userset rewrite rules.  Useful to reason about and debug a certain relationship
-		 * The Expand API will return all users and usersets that have certain relationship with an object in a certain store.
-	This is different from the `/stores/{store_id}/read` API in that both users and computed usersets are returned.
-	Body parameters `tuple_key.object` and `tuple_key.relation` are all required.
-	The response will return a tree whose leaves are the specific users and usersets. Union, intersection and difference operator are located in the intermediate nodes.
+			 * Expand Expand all relationships in userset tree format, and following userset rewrite rules.  Useful to reason about and debug a certain relationship
+			 * The Expand API will return all users and usersets that have certain relationship with an object in a certain store.
+		This is different from the `/stores/{store_id}/read` API in that both users and computed usersets are returned.
+		Body parameters `tuple_key.object` and `tuple_key.relation` are all required.
+		The response will return a tree whose leaves are the specific users and usersets. Union, intersection and difference operator are located in the intermediate nodes.
 
-	## Example
-	To expand all users that have the `reader` relationship with object `document:2021-budget`, use the Expand API with the following request body
-	```json
-	{
-	  "tuple_key": {
-	    "object": "document:2021-budget",
-	    "relation": "reader"
-	  },
-	  "authorization_model_id": "01G50QVV17PECNVAHX1GG4Y5NC"
-	}
-	```
-	OpenFGA's response will be a userset tree of the users and usersets that have read access to the document.
-	```json
-	{
-	  "tree":{
-	    "root":{
-	      "type":"document:2021-budget#reader",
-	      "union":{
-	        "nodes":[
-	          {
-	            "type":"document:2021-budget#reader",
-	            "leaf":{
-	              "users":{
-	                "users":[
-	                  "user:bob"
-	                ]
-	              }
-	            }
-	          },
-	          {
-	            "type":"document:2021-budget#reader",
-	            "leaf":{
-	              "computed":{
-	                "userset":"document:2021-budget#writer"
-	              }
-	            }
-	          }
-	        ]
-	      }
-	    }
-	  }
-	}
-	```
-	The caller can then call expand API for the `writer` relationship for the `document:2021-budget`.
-		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-		 * @param storeId
-		 * @return ApiExpandRequest
+		## Example
+		To expand all users that have the `reader` relationship with object `document:2021-budget`, use the Expand API with the following request body
+		```json
+		{
+		  "tuple_key": {
+		    "object": "document:2021-budget",
+		    "relation": "reader"
+		  },
+		  "authorization_model_id": "01G50QVV17PECNVAHX1GG4Y5NC"
+		}
+		```
+		OpenFGA's response will be a userset tree of the users and usersets that have read access to the document.
+		```json
+		{
+		  "tree":{
+		    "root":{
+		      "type":"document:2021-budget#reader",
+		      "union":{
+		        "nodes":[
+		          {
+		            "type":"document:2021-budget#reader",
+		            "leaf":{
+		              "users":{
+		                "users":[
+		                  "user:bob"
+		                ]
+		              }
+		            }
+		          },
+		          {
+		            "type":"document:2021-budget#reader",
+		            "leaf":{
+		              "computed":{
+		                "userset":"document:2021-budget#writer"
+		              }
+		            }
+		          }
+		        ]
+		      }
+		    }
+		  }
+		}
+		```
+		The caller can then call expand API for the `writer` relationship for the `document:2021-budget`.
+			 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+			 * @param storeId
+			 * @return ApiExpandRequest
 	*/
 	Expand(ctx _context.Context, storeId string) ApiExpandRequest
 
@@ -259,18 +259,18 @@ type OpenFgaApi interface {
 	GetStoreExecute(r ApiGetStoreRequest) (GetStoreResponse, *_nethttp.Response, error)
 
 	/*
-		 * ListObjects List all objects of the given type that the user has a relation with
-		 * The ListObjects API returns a list of all the objects of the given type that the user has a relation with.
-	 To arrive at a result, the API uses: an authorization model, explicit tuples written through the Write API, contextual tuples present in the request, and implicit tuples that exist by virtue of applying set theory (such as `document:2021-budget#viewer@document:2021-budget#viewer`; the set of users who are viewers of `document:2021-budget` are the set of users who are the viewers of `document:2021-budget`).
-	An `authorization_model_id` may be specified in the body. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance.
-	You may also specify `contextual_tuples` that will be treated as regular tuples. Each of these tuples may have an associated `condition`.
-	You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly.
-	The response will contain the related objects in an array in the "objects" field of the response and they will be strings in the object format `<type>:<id>` (e.g. "document:roadmap").
-	The number of objects in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_OBJECTS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_OBJECTS_MAX_RESULTS, whichever is hit first.
-	The objects given will not be sorted, and therefore two identical calls can give a given different set of objects.
-		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-		 * @param storeId
-		 * @return ApiListObjectsRequest
+			 * ListObjects List all objects of the given type that the user has a relation with
+			 * The ListObjects API returns a list of all the objects of the given type that the user has a relation with.
+		 To arrive at a result, the API uses: an authorization model, explicit tuples written through the Write API, contextual tuples present in the request, and implicit tuples that exist by virtue of applying set theory (such as `document:2021-budget#viewer@document:2021-budget#viewer`; the set of users who are viewers of `document:2021-budget` are the set of users who are the viewers of `document:2021-budget`).
+		An `authorization_model_id` may be specified in the body. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance.
+		You may also specify `contextual_tuples` that will be treated as regular tuples. Each of these tuples may have an associated `condition`.
+		You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly.
+		The response will contain the related objects in an array in the "objects" field of the response and they will be strings in the object format `<type>:<id>` (e.g. "document:roadmap").
+		The number of objects in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_OBJECTS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_OBJECTS_MAX_RESULTS, whichever is hit first.
+		The objects given will not be sorted, and therefore two identical calls can give a given different set of objects.
+			 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+			 * @param storeId
+			 * @return ApiListObjectsRequest
 	*/
 	ListObjects(ctx _context.Context, storeId string) ApiListObjectsRequest
 
@@ -281,12 +281,12 @@ type OpenFgaApi interface {
 	ListObjectsExecute(r ApiListObjectsRequest) (ListObjectsResponse, *_nethttp.Response, error)
 
 	/*
-		 * ListStores List all stores
-		 * Returns a paginated list of OpenFGA stores and a continuation token to get additional stores.
-	The continuation token will be empty if there are no more stores.
+			 * ListStores List all stores
+			 * Returns a paginated list of OpenFGA stores and a continuation token to get additional stores.
+		The continuation token will be empty if there are no more stores.
 
-		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-		 * @return ApiListStoresRequest
+			 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+			 * @return ApiListStoresRequest
 	*/
 	ListStores(ctx _context.Context) ApiListStoresRequest
 
@@ -297,20 +297,20 @@ type OpenFgaApi interface {
 	ListStoresExecute(r ApiListStoresRequest) (ListStoresResponse, *_nethttp.Response, error)
 
 	/*
-		 * ListUsers List the users matching the provided filter who have a certain relation to a particular type.
-		 * The ListUsers API returns a list of all the users of a specific type that have a relation to a given object.
-	 To arrive at a result, the API uses: an authorization model, explicit tuples written through the Write API, contextual tuples present in the request, and implicit tuples that exist by virtue of applying set theory (such as `document:2021-budget#viewer@document:2021-budget#viewer`; the set of users who are viewers of `document:2021-budget` are the set of users who are the viewers of `document:2021-budget`).
-	An `authorization_model_id` may be specified in the body. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance.
-	You may also specify `contextual_tuples` that will be treated as regular tuples. Each of these tuples may have an associated `condition`.
-	You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly.
-	The response will contain the related users in an array in the "users" field of the response. These results may include specific objects, usersets
-	or type-bound public access. Each of these types of results is encoded in its own type and not represented as a string.In cases where a type-bound public acces result is returned (e.g. `user:*`), it cannot be inferred that all subjects
-	of that type have a relation to the object; it is possible that negations exist and checks should still be queried
-	on individual subjects to ensure access to that document.The number of users in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_USERS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_USERS_MAX_RESULTS, whichever is hit first.
-	The returned users will not be sorted, and therefore two identical calls may yield different sets of users.
-		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-		 * @param storeId
-		 * @return ApiListUsersRequest
+			 * ListUsers List the users matching the provided filter who have a certain relation to a particular type.
+			 * The ListUsers API returns a list of all the users of a specific type that have a relation to a given object.
+		 To arrive at a result, the API uses: an authorization model, explicit tuples written through the Write API, contextual tuples present in the request, and implicit tuples that exist by virtue of applying set theory (such as `document:2021-budget#viewer@document:2021-budget#viewer`; the set of users who are viewers of `document:2021-budget` are the set of users who are the viewers of `document:2021-budget`).
+		An `authorization_model_id` may be specified in the body. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance.
+		You may also specify `contextual_tuples` that will be treated as regular tuples. Each of these tuples may have an associated `condition`.
+		You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly.
+		The response will contain the related users in an array in the "users" field of the response. These results may include specific objects, usersets
+		or type-bound public access. Each of these types of results is encoded in its own type and not represented as a string.In cases where a type-bound public acces result is returned (e.g. `user:*`), it cannot be inferred that all subjects
+		of that type have a relation to the object; it is possible that negations exist and checks should still be queried
+		on individual subjects to ensure access to that document.The number of users in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_USERS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_USERS_MAX_RESULTS, whichever is hit first.
+		The returned users will not be sorted, and therefore two identical calls may yield different sets of users.
+			 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+			 * @param storeId
+			 * @return ApiListUsersRequest
 	*/
 	ListUsers(ctx _context.Context, storeId string) ApiListUsersRequest
 
@@ -321,109 +321,109 @@ type OpenFgaApi interface {
 	ListUsersExecute(r ApiListUsersRequest) (ListUsersResponse, *_nethttp.Response, error)
 
 	/*
-		 * Read Get tuples from the store that matches a query, without following userset rewrite rules
-		 * The Read API will return the tuples for a certain store that match a query filter specified in the body of the request.
-	The API doesn't guarantee order by any field.
-	It is different from the `/stores/{store_id}/expand` API in that it only returns relationship tuples that are stored in the system and satisfy the query.
-	In the body:
-	1. `tuple_key` is optional. If not specified, it will return all tuples in the store.
-	2. `tuple_key.object` is mandatory if `tuple_key` is specified. It can be a full object (e.g., `type:object_id`) or type only (e.g., `type:`).
-	3. `tuple_key.user` is mandatory if tuple_key is specified in the case the `tuple_key.object` is a type only.
-	## Examples
-	### Query for all objects in a type definition
-	To query for all objects that `user:bob` has `reader` relationship in the `document` type definition, call read API with body of
-	```json
-	{
-	 "tuple_key": {
-	     "user": "user:bob",
-	     "relation": "reader",
-	     "object": "document:"
-	  }
-	}
-	```
-	The API will return tuples and a continuation token, something like
-	```json
-	{
-	  "tuples": [
-	    {
-	      "key": {
-	        "user": "user:bob",
-	        "relation": "reader",
-	        "object": "document:2021-budget"
-	      },
-	      "timestamp": "2021-10-06T15:32:11.128Z"
-	    }
-	  ],
-	  "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
-	}
-	```
-	This means that `user:bob` has a `reader` relationship with 1 document `document:2021-budget`. Note that this API, unlike the List Objects API, does not evaluate the tuples in the store.
-	The continuation token will be empty if there are no more tuples to query.
-	### Query for all stored relationship tuples that have a particular relation and object
-	To query for all users that have `reader` relationship with `document:2021-budget`, call read API with body of
-	```json
-	{
-	  "tuple_key": {
-	     "object": "document:2021-budget",
-	     "relation": "reader"
-	   }
-	}
-	```
-	The API will return something like
-	```json
-	{
-	  "tuples": [
-	    {
-	      "key": {
-	        "user": "user:bob",
-	        "relation": "reader",
-	        "object": "document:2021-budget"
-	      },
-	      "timestamp": "2021-10-06T15:32:11.128Z"
-	    }
-	  ],
-	  "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
-	}
-	```
-	This means that `document:2021-budget` has 1 `reader` (`user:bob`).  Note that, even if the model said that all `writers` are also `readers`, the API will not return writers such as `user:anne` because it only returns tuples and does not evaluate them.
-	### Query for all users with all relationships for a particular document
-	To query for all users that have any relationship with `document:2021-budget`, call read API with body of
-	```json
-	{
-	  "tuple_key": {
-	      "object": "document:2021-budget"
-	   }
-	}
-	```
-	The API will return something like
-	```json
-	{
-	  "tuples": [
-	    {
-	      "key": {
-	        "user": "user:anne",
-	        "relation": "writer",
-	        "object": "document:2021-budget"
-	      },
-	      "timestamp": "2021-10-05T13:42:12.356Z"
-	    },
-	    {
-	      "key": {
-	        "user": "user:bob",
-	        "relation": "reader",
-	        "object": "document:2021-budget"
-	      },
-	      "timestamp": "2021-10-06T15:32:11.128Z"
-	    }
-	  ],
-	  "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
-	}
-	```
-	This means that `document:2021-budget` has 1 `reader` (`user:bob`) and 1 `writer` (`user:anne`).
+			 * Read Get tuples from the store that matches a query, without following userset rewrite rules
+			 * The Read API will return the tuples for a certain store that match a query filter specified in the body of the request.
+		The API doesn't guarantee order by any field.
+		It is different from the `/stores/{store_id}/expand` API in that it only returns relationship tuples that are stored in the system and satisfy the query.
+		In the body:
+		1. `tuple_key` is optional. If not specified, it will return all tuples in the store.
+		2. `tuple_key.object` is mandatory if `tuple_key` is specified. It can be a full object (e.g., `type:object_id`) or type only (e.g., `type:`).
+		3. `tuple_key.user` is mandatory if tuple_key is specified in the case the `tuple_key.object` is a type only.
+		## Examples
+		### Query for all objects in a type definition
+		To query for all objects that `user:bob` has `reader` relationship in the `document` type definition, call read API with body of
+		```json
+		{
+		 "tuple_key": {
+		     "user": "user:bob",
+		     "relation": "reader",
+		     "object": "document:"
+		  }
+		}
+		```
+		The API will return tuples and a continuation token, something like
+		```json
+		{
+		  "tuples": [
+		    {
+		      "key": {
+		        "user": "user:bob",
+		        "relation": "reader",
+		        "object": "document:2021-budget"
+		      },
+		      "timestamp": "2021-10-06T15:32:11.128Z"
+		    }
+		  ],
+		  "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
+		}
+		```
+		This means that `user:bob` has a `reader` relationship with 1 document `document:2021-budget`. Note that this API, unlike the List Objects API, does not evaluate the tuples in the store.
+		The continuation token will be empty if there are no more tuples to query.
+		### Query for all stored relationship tuples that have a particular relation and object
+		To query for all users that have `reader` relationship with `document:2021-budget`, call read API with body of
+		```json
+		{
+		  "tuple_key": {
+		     "object": "document:2021-budget",
+		     "relation": "reader"
+		   }
+		}
+		```
+		The API will return something like
+		```json
+		{
+		  "tuples": [
+		    {
+		      "key": {
+		        "user": "user:bob",
+		        "relation": "reader",
+		        "object": "document:2021-budget"
+		      },
+		      "timestamp": "2021-10-06T15:32:11.128Z"
+		    }
+		  ],
+		  "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
+		}
+		```
+		This means that `document:2021-budget` has 1 `reader` (`user:bob`).  Note that, even if the model said that all `writers` are also `readers`, the API will not return writers such as `user:anne` because it only returns tuples and does not evaluate them.
+		### Query for all users with all relationships for a particular document
+		To query for all users that have any relationship with `document:2021-budget`, call read API with body of
+		```json
+		{
+		  "tuple_key": {
+		      "object": "document:2021-budget"
+		   }
+		}
+		```
+		The API will return something like
+		```json
+		{
+		  "tuples": [
+		    {
+		      "key": {
+		        "user": "user:anne",
+		        "relation": "writer",
+		        "object": "document:2021-budget"
+		      },
+		      "timestamp": "2021-10-05T13:42:12.356Z"
+		    },
+		    {
+		      "key": {
+		        "user": "user:bob",
+		        "relation": "reader",
+		        "object": "document:2021-budget"
+		      },
+		      "timestamp": "2021-10-06T15:32:11.128Z"
+		    }
+		  ],
+		  "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
+		}
+		```
+		This means that `document:2021-budget` has 1 `reader` (`user:bob`) and 1 `writer` (`user:anne`).
 
-		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-		 * @param storeId
-		 * @return ApiReadRequest
+			 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+			 * @param storeId
+			 * @return ApiReadRequest
 	*/
 	Read(ctx _context.Context, storeId string) ApiReadRequest
 
@@ -450,52 +450,52 @@ type OpenFgaApi interface {
 	ReadAssertionsExecute(r ApiReadAssertionsRequest) (ReadAssertionsResponse, *_nethttp.Response, error)
 
 	/*
-		 * ReadAuthorizationModel Return a particular version of an authorization model
-		 * The ReadAuthorizationModel API returns an authorization model by its identifier.
-	The response will return the authorization model for the particular version.
+			 * ReadAuthorizationModel Return a particular version of an authorization model
+			 * The ReadAuthorizationModel API returns an authorization model by its identifier.
+		The response will return the authorization model for the particular version.
 
-	## Example
-	To retrieve the authorization model with ID `01G5JAVJ41T49E9TT3SKVS7X1J` for the store, call the GET authorization-models by ID API with `01G5JAVJ41T49E9TT3SKVS7X1J` as the `id` path parameter.  The API will return:
-	```json
-	{
-	  "authorization_model":{
-	    "id":"01G5JAVJ41T49E9TT3SKVS7X1J",
-	    "type_definitions":[
-	      {
-	        "type":"user"
-	      },
-	      {
-	        "type":"document",
-	        "relations":{
-	          "reader":{
-	            "union":{
-	              "child":[
-	                {
-	                  "this":{}
-	                },
-	                {
-	                  "computedUserset":{
-	                    "object":"",
-	                    "relation":"writer"
-	                  }
-	                }
-	              ]
-	            }
-	          },
-	          "writer":{
-	            "this":{}
-	          }
-	        }
-	      }
-	    ]
-	  }
-	}
-	```
-	In the above example, there are 2 types (`user` and `document`). The `document` type has 2 relations (`writer` and `reader`).
-		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-		 * @param storeId
-		 * @param id
-		 * @return ApiReadAuthorizationModelRequest
+		## Example
+		To retrieve the authorization model with ID `01G5JAVJ41T49E9TT3SKVS7X1J` for the store, call the GET authorization-models by ID API with `01G5JAVJ41T49E9TT3SKVS7X1J` as the `id` path parameter.  The API will return:
+		```json
+		{
+		  "authorization_model":{
+		    "id":"01G5JAVJ41T49E9TT3SKVS7X1J",
+		    "type_definitions":[
+		      {
+		        "type":"user"
+		      },
+		      {
+		        "type":"document",
+		        "relations":{
+		          "reader":{
+		            "union":{
+		              "child":[
+		                {
+		                  "this":{}
+		                },
+		                {
+		                  "computedUserset":{
+		                    "object":"",
+		                    "relation":"writer"
+		                  }
+		                }
+		              ]
+		            }
+		          },
+		          "writer":{
+		            "this":{}
+		          }
+		        }
+		      }
+		    ]
+		  }
+		}
+		```
+		In the above example, there are 2 types (`user` and `document`). The `document` type has 2 relations (`writer` and `reader`).
+			 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+			 * @param storeId
+			 * @param id
+			 * @return ApiReadAuthorizationModelRequest
 	*/
 	ReadAuthorizationModel(ctx _context.Context, storeId string, id string) ApiReadAuthorizationModelRequest
 
@@ -506,47 +506,47 @@ type OpenFgaApi interface {
 	ReadAuthorizationModelExecute(r ApiReadAuthorizationModelRequest) (ReadAuthorizationModelResponse, *_nethttp.Response, error)
 
 	/*
-		 * ReadAuthorizationModels Return all the authorization models for a particular store
-		 * The ReadAuthorizationModels API will return all the authorization models for a certain store.
-	OpenFGA's response will contain an array of all authorization models, sorted in descending order of creation.
+			 * ReadAuthorizationModels Return all the authorization models for a particular store
+			 * The ReadAuthorizationModels API will return all the authorization models for a certain store.
+		OpenFGA's response will contain an array of all authorization models, sorted in descending order of creation.
 
-	## Example
-	Assume that a store's authorization model has been configured twice. To get all the authorization models that have been created in this store, call GET authorization-models. The API will return a response that looks like:
-	```json
-	{
-	  "authorization_models": [
-	    {
-	      "id": "01G50QVV17PECNVAHX1GG4Y5NC",
-	      "type_definitions": [...]
-	    },
-	    {
-	      "id": "01G4ZW8F4A07AKQ8RHSVG9RW04",
-	      "type_definitions": [...]
-	    },
-	  ],
-	  "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
-	}
-	```
-	If there are no more authorization models available, the `continuation_token` field will be empty
-	```json
-	{
-	  "authorization_models": [
-	    {
-	      "id": "01G50QVV17PECNVAHX1GG4Y5NC",
-	      "type_definitions": [...]
-	    },
-	    {
-	      "id": "01G4ZW8F4A07AKQ8RHSVG9RW04",
-	      "type_definitions": [...]
-	    },
-	  ],
-	  "continuation_token": ""
-	}
-	```
+		## Example
+		Assume that a store's authorization model has been configured twice. To get all the authorization models that have been created in this store, call GET authorization-models. The API will return a response that looks like:
+		```json
+		{
+		  "authorization_models": [
+		    {
+		      "id": "01G50QVV17PECNVAHX1GG4Y5NC",
+		      "type_definitions": [...]
+		    },
+		    {
+		      "id": "01G4ZW8F4A07AKQ8RHSVG9RW04",
+		      "type_definitions": [...]
+		    },
+		  ],
+		  "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
+		}
+		```
+		If there are no more authorization models available, the `continuation_token` field will be empty
+		```json
+		{
+		  "authorization_models": [
+		    {
+		      "id": "01G50QVV17PECNVAHX1GG4Y5NC",
+		      "type_definitions": [...]
+		    },
+		    {
+		      "id": "01G4ZW8F4A07AKQ8RHSVG9RW04",
+		      "type_definitions": [...]
+		    },
+		  ],
+		  "continuation_token": ""
+		}
+		```
 
-		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-		 * @param storeId
-		 * @return ApiReadAuthorizationModelsRequest
+			 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+			 * @param storeId
+			 * @return ApiReadAuthorizationModelsRequest
 	*/
 	ReadAuthorizationModels(ctx _context.Context, storeId string) ApiReadAuthorizationModelsRequest
 
@@ -557,15 +557,15 @@ type OpenFgaApi interface {
 	ReadAuthorizationModelsExecute(r ApiReadAuthorizationModelsRequest) (ReadAuthorizationModelsResponse, *_nethttp.Response, error)
 
 	/*
-		 * ReadChanges Return a list of all the tuple changes
-		 * The ReadChanges API will return a paginated list of tuple changes (additions and deletions) that occurred in a given store, sorted by ascending time. The response will include a continuation token that is used to get the next set of changes. If there are no changes after the provided continuation token, the same token will be returned in order for it to be used when new changes are recorded. If the store never had any tuples added or removed, this token will be empty.
-	You can use the `type` parameter to only get the list of tuple changes that affect objects of that type.
-	When reading a write tuple change, if it was conditioned, the condition will be returned.
-	When reading a delete tuple change, the condition will NOT be returned regardless of whether it was originally conditioned or not.
+			 * ReadChanges Return a list of all the tuple changes
+			 * The ReadChanges API will return a paginated list of tuple changes (additions and deletions) that occurred in a given store, sorted by ascending time. The response will include a continuation token that is used to get the next set of changes. If there are no changes after the provided continuation token, the same token will be returned in order for it to be used when new changes are recorded. If the store never had any tuples added or removed, this token will be empty.
+		You can use the `type` parameter to only get the list of tuple changes that affect objects of that type.
+		When reading a write tuple change, if it was conditioned, the condition will be returned.
+		When reading a delete tuple change, the condition will NOT be returned regardless of whether it was originally conditioned or not.
 
-		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-		 * @param storeId
-		 * @return ApiReadChangesRequest
+			 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+			 * @param storeId
+			 * @return ApiReadChangesRequest
 	*/
 	ReadChanges(ctx _context.Context, storeId string) ApiReadChangesRequest
 
@@ -576,48 +576,48 @@ type OpenFgaApi interface {
 	ReadChangesExecute(r ApiReadChangesRequest) (ReadChangesResponse, *_nethttp.Response, error)
 
 	/*
-		 * Write Add or delete tuples from the store
-		 * The Write API will transactionally update the tuples for a certain store. Tuples and type definitions allow OpenFGA to determine whether a relationship exists between an object and an user.
-	In the body, `writes` adds new tuples and `deletes` removes existing tuples. When deleting a tuple, any `condition` specified with it is ignored.
-	The API is not idempotent: if, later on, you try to add the same tuple key (even if the `condition` is different), or if you try to delete a non-existing tuple, it will throw an error.
-	The API will not allow you to write tuples such as `document:2021-budget#viewer@document:2021-budget#viewer`, because they are implicit.
-	An `authorization_model_id` may be specified in the body. If it is, it will be used to assert that each written tuple (not deleted) is valid for the model specified. If it is not specified, the latest authorization model ID will be used.
-	## Example
-	### Adding relationships
-	To add `user:anne` as a `writer` for `document:2021-budget`, call write API with the following
-	```json
-	{
-	  "writes": {
-	    "tuple_keys": [
-	      {
-	        "user": "user:anne",
-	        "relation": "writer",
-	        "object": "document:2021-budget"
-	      }
-	    ]
-	  },
-	  "authorization_model_id": "01G50QVV17PECNVAHX1GG4Y5NC"
-	}
-	```
-	### Removing relationships
-	To remove `user:bob` as a `reader` for `document:2021-budget`, call write API with the following
-	```json
-	{
-	  "deletes": {
-	    "tuple_keys": [
-	      {
-	        "user": "user:bob",
-	        "relation": "reader",
-	        "object": "document:2021-budget"
-	      }
-	    ]
-	  }
-	}
-	```
+			 * Write Add or delete tuples from the store
+			 * The Write API will transactionally update the tuples for a certain store. Tuples and type definitions allow OpenFGA to determine whether a relationship exists between an object and an user.
+		In the body, `writes` adds new tuples and `deletes` removes existing tuples. When deleting a tuple, any `condition` specified with it is ignored.
+		The API is not idempotent: if, later on, you try to add the same tuple key (even if the `condition` is different), or if you try to delete a non-existing tuple, it will throw an error.
+		The API will not allow you to write tuples such as `document:2021-budget#viewer@document:2021-budget#viewer`, because they are implicit.
+		An `authorization_model_id` may be specified in the body. If it is, it will be used to assert that each written tuple (not deleted) is valid for the model specified. If it is not specified, the latest authorization model ID will be used.
+		## Example
+		### Adding relationships
+		To add `user:anne` as a `writer` for `document:2021-budget`, call write API with the following
+		```json
+		{
+		  "writes": {
+		    "tuple_keys": [
+		      {
+		        "user": "user:anne",
+		        "relation": "writer",
+		        "object": "document:2021-budget"
+		      }
+		    ]
+		  },
+		  "authorization_model_id": "01G50QVV17PECNVAHX1GG4Y5NC"
+		}
+		```
+		### Removing relationships
+		To remove `user:bob` as a `reader` for `document:2021-budget`, call write API with the following
+		```json
+		{
+		  "deletes": {
+		    "tuple_keys": [
+		      {
+		        "user": "user:bob",
+		        "relation": "reader",
+		        "object": "document:2021-budget"
+		      }
+		    ]
+		  }
+		}
+		```
 
-		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-		 * @param storeId
-		 * @return ApiWriteRequest
+			 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+			 * @param storeId
+			 * @return ApiWriteRequest
 	*/
 	Write(ctx _context.Context, storeId string) ApiWriteRequest
 
@@ -643,53 +643,53 @@ type OpenFgaApi interface {
 	WriteAssertionsExecute(r ApiWriteAssertionsRequest) (*_nethttp.Response, error)
 
 	/*
-		 * WriteAuthorizationModel Create a new authorization model
-		 * The WriteAuthorizationModel API will add a new authorization model to a store.
-	Each item in the `type_definitions` array is a type definition as specified in the field `type_definition`.
-	The response will return the authorization model's ID in the `id` field.
+			 * WriteAuthorizationModel Create a new authorization model
+			 * The WriteAuthorizationModel API will add a new authorization model to a store.
+		Each item in the `type_definitions` array is a type definition as specified in the field `type_definition`.
+		The response will return the authorization model's ID in the `id` field.
 
-	## Example
-	To add an authorization model with `user` and `document` type definitions, call POST authorization-models API with the body:
-	```json
-	{
-	  "type_definitions":[
-	    {
-	      "type":"user"
-	    },
-	    {
-	      "type":"document",
-	      "relations":{
-	        "reader":{
-	          "union":{
-	            "child":[
-	              {
-	                "this":{}
-	              },
-	              {
-	                "computedUserset":{
-	                  "object":"",
-	                  "relation":"writer"
-	                }
-	              }
-	            ]
-	          }
-	        },
-	        "writer":{
-	          "this":{}
-	        }
-	      }
-	    }
-	  ]
-	}
-	```
-	OpenFGA's response will include the version id for this authorization model, which will look like
-	```
-	{"authorization_model_id": "01G50QVV17PECNVAHX1GG4Y5NC"}
-	```
+		## Example
+		To add an authorization model with `user` and `document` type definitions, call POST authorization-models API with the body:
+		```json
+		{
+		  "type_definitions":[
+		    {
+		      "type":"user"
+		    },
+		    {
+		      "type":"document",
+		      "relations":{
+		        "reader":{
+		          "union":{
+		            "child":[
+		              {
+		                "this":{}
+		              },
+		              {
+		                "computedUserset":{
+		                  "object":"",
+		                  "relation":"writer"
+		                }
+		              }
+		            ]
+		          }
+		        },
+		        "writer":{
+		          "this":{}
+		        }
+		      }
+		    }
+		  ]
+		}
+		```
+		OpenFGA's response will include the version id for this authorization model, which will look like
+		```
+		{"authorization_model_id": "01G50QVV17PECNVAHX1GG4Y5NC"}
+		```
 
-		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-		 * @param storeId
-		 * @return ApiWriteAuthorizationModelRequest
+			 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+			 * @param storeId
+			 * @return ApiWriteAuthorizationModelRequest
 	*/
 	WriteAuthorizationModel(ctx _context.Context, storeId string) ApiWriteAuthorizationModelRequest
 
