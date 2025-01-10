@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"math"
 	_nethttp "net/http"
+	"time"
 
 	fgaSdk "github.com/openfga/go-sdk"
 	"github.com/openfga/go-sdk/credentials"
@@ -1131,7 +1132,8 @@ type SdkClientReadChangesRequestInterface interface {
 }
 
 type ClientReadChangesRequest struct {
-	Type string `json:"type,omitempty"`
+	Type      string    `json:"type,omitempty"`
+	StartTime time.Time `json:"start_time,omitempty"`
 }
 
 type ClientReadChangesOptions struct {
@@ -1382,9 +1384,6 @@ func (o ClientWriteRequestWriteResponse) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["tuple_key"] = o.TupleKey
 	toSerialize["status"] = o.Status
-	if o.HttpResponse != nil {
-		toSerialize["http_response"] = o.HttpResponse
-	}
 	if o.Error != nil {
 		toSerialize["error"] = o.Error
 	}
@@ -1402,9 +1401,6 @@ func (o ClientWriteRequestDeleteResponse) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["tuple_key"] = o.TupleKey
 	toSerialize["status"] = o.Status
-	if o.HttpResponse != nil {
-		toSerialize["http_response"] = o.HttpResponse
-	}
 	if o.Error != nil {
 		toSerialize["error"] = o.Error
 	}
