@@ -18,38 +18,38 @@ import (
 	"encoding/json"
 )
 
-// Assertion struct for Assertion
-type Assertion struct {
-	TupleKey         AssertionTupleKey `json:"tuple_key"yaml:"tuple_key"`
-	Expectation      bool              `json:"expectation"yaml:"expectation"`
-	ContextualTuples *[]TupleKey       `json:"contextual_tuples,omitempty"yaml:"contextual_tuples,omitempty"`
-	// Additional request context that will be used to evaluate any ABAC conditions encountered in the query evaluation.
-	Context *map[string]interface{} `json:"context,omitempty"yaml:"context,omitempty"`
+// BatchCheckItem struct for BatchCheckItem
+type BatchCheckItem struct {
+	TupleKey         CheckRequestTupleKey    `json:"tuple_key"yaml:"tuple_key"`
+	ContextualTuples *ContextualTupleKeys    `json:"contextual_tuples,omitempty"yaml:"contextual_tuples,omitempty"`
+	Context          *map[string]interface{} `json:"context,omitempty"yaml:"context,omitempty"`
+	// correlation_id must be a string containing only letters, numbers, or hyphens, with length ≤ 36 characters.
+	CorrelationId string `json:"correlation_id"yaml:"correlation_id"`
 }
 
-// NewAssertion instantiates a new Assertion object
+// NewBatchCheckItem instantiates a new BatchCheckItem object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewAssertion(tupleKey AssertionTupleKey, expectation bool) *Assertion {
-	this := Assertion{}
+func NewBatchCheckItem(tupleKey CheckRequestTupleKey, correlationId string) *BatchCheckItem {
+	this := BatchCheckItem{}
 	this.TupleKey = tupleKey
-	this.Expectation = expectation
+	this.CorrelationId = correlationId
 	return &this
 }
 
-// NewAssertionWithDefaults instantiates a new Assertion object
+// NewBatchCheckItemWithDefaults instantiates a new BatchCheckItem object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewAssertionWithDefaults() *Assertion {
-	this := Assertion{}
+func NewBatchCheckItemWithDefaults() *BatchCheckItem {
+	this := BatchCheckItem{}
 	return &this
 }
 
 // GetTupleKey returns the TupleKey field value
-func (o *Assertion) GetTupleKey() AssertionTupleKey {
+func (o *BatchCheckItem) GetTupleKey() CheckRequestTupleKey {
 	if o == nil {
-		var ret AssertionTupleKey
+		var ret CheckRequestTupleKey
 		return ret
 	}
 
@@ -58,7 +58,7 @@ func (o *Assertion) GetTupleKey() AssertionTupleKey {
 
 // GetTupleKeyOk returns a tuple with the TupleKey field value
 // and a boolean to check if the value has been set.
-func (o *Assertion) GetTupleKeyOk() (*AssertionTupleKey, bool) {
+func (o *BatchCheckItem) GetTupleKeyOk() (*CheckRequestTupleKey, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -66,38 +66,14 @@ func (o *Assertion) GetTupleKeyOk() (*AssertionTupleKey, bool) {
 }
 
 // SetTupleKey sets field value
-func (o *Assertion) SetTupleKey(v AssertionTupleKey) {
+func (o *BatchCheckItem) SetTupleKey(v CheckRequestTupleKey) {
 	o.TupleKey = v
 }
 
-// GetExpectation returns the Expectation field value
-func (o *Assertion) GetExpectation() bool {
-	if o == nil {
-		var ret bool
-		return ret
-	}
-
-	return o.Expectation
-}
-
-// GetExpectationOk returns a tuple with the Expectation field value
-// and a boolean to check if the value has been set.
-func (o *Assertion) GetExpectationOk() (*bool, bool) {
-	if o == nil {
-		return nil, false
-	}
-	return &o.Expectation, true
-}
-
-// SetExpectation sets field value
-func (o *Assertion) SetExpectation(v bool) {
-	o.Expectation = v
-}
-
 // GetContextualTuples returns the ContextualTuples field value if set, zero value otherwise.
-func (o *Assertion) GetContextualTuples() []TupleKey {
+func (o *BatchCheckItem) GetContextualTuples() ContextualTupleKeys {
 	if o == nil || o.ContextualTuples == nil {
-		var ret []TupleKey
+		var ret ContextualTupleKeys
 		return ret
 	}
 	return *o.ContextualTuples
@@ -105,7 +81,7 @@ func (o *Assertion) GetContextualTuples() []TupleKey {
 
 // GetContextualTuplesOk returns a tuple with the ContextualTuples field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *Assertion) GetContextualTuplesOk() (*[]TupleKey, bool) {
+func (o *BatchCheckItem) GetContextualTuplesOk() (*ContextualTupleKeys, bool) {
 	if o == nil || o.ContextualTuples == nil {
 		return nil, false
 	}
@@ -113,7 +89,7 @@ func (o *Assertion) GetContextualTuplesOk() (*[]TupleKey, bool) {
 }
 
 // HasContextualTuples returns a boolean if a field has been set.
-func (o *Assertion) HasContextualTuples() bool {
+func (o *BatchCheckItem) HasContextualTuples() bool {
 	if o != nil && o.ContextualTuples != nil {
 		return true
 	}
@@ -121,13 +97,13 @@ func (o *Assertion) HasContextualTuples() bool {
 	return false
 }
 
-// SetContextualTuples gets a reference to the given []TupleKey and assigns it to the ContextualTuples field.
-func (o *Assertion) SetContextualTuples(v []TupleKey) {
+// SetContextualTuples gets a reference to the given ContextualTupleKeys and assigns it to the ContextualTuples field.
+func (o *BatchCheckItem) SetContextualTuples(v ContextualTupleKeys) {
 	o.ContextualTuples = &v
 }
 
 // GetContext returns the Context field value if set, zero value otherwise.
-func (o *Assertion) GetContext() map[string]interface{} {
+func (o *BatchCheckItem) GetContext() map[string]interface{} {
 	if o == nil || o.Context == nil {
 		var ret map[string]interface{}
 		return ret
@@ -137,7 +113,7 @@ func (o *Assertion) GetContext() map[string]interface{} {
 
 // GetContextOk returns a tuple with the Context field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *Assertion) GetContextOk() (*map[string]interface{}, bool) {
+func (o *BatchCheckItem) GetContextOk() (*map[string]interface{}, bool) {
 	if o == nil || o.Context == nil {
 		return nil, false
 	}
@@ -145,7 +121,7 @@ func (o *Assertion) GetContextOk() (*map[string]interface{}, bool) {
 }
 
 // HasContext returns a boolean if a field has been set.
-func (o *Assertion) HasContext() bool {
+func (o *BatchCheckItem) HasContext() bool {
 	if o != nil && o.Context != nil {
 		return true
 	}
@@ -154,20 +130,44 @@ func (o *Assertion) HasContext() bool {
 }
 
 // SetContext gets a reference to the given map[string]interface{} and assigns it to the Context field.
-func (o *Assertion) SetContext(v map[string]interface{}) {
+func (o *BatchCheckItem) SetContext(v map[string]interface{}) {
 	o.Context = &v
 }
 
-func (o Assertion) MarshalJSON() ([]byte, error) {
+// GetCorrelationId returns the CorrelationId field value
+func (o *BatchCheckItem) GetCorrelationId() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.CorrelationId
+}
+
+// GetCorrelationIdOk returns a tuple with the CorrelationId field value
+// and a boolean to check if the value has been set.
+func (o *BatchCheckItem) GetCorrelationIdOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.CorrelationId, true
+}
+
+// SetCorrelationId sets field value
+func (o *BatchCheckItem) SetCorrelationId(v string) {
+	o.CorrelationId = v
+}
+
+func (o BatchCheckItem) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["tuple_key"] = o.TupleKey
-	toSerialize["expectation"] = o.Expectation
 	if o.ContextualTuples != nil {
 		toSerialize["contextual_tuples"] = o.ContextualTuples
 	}
 	if o.Context != nil {
 		toSerialize["context"] = o.Context
 	}
+	toSerialize["correlation_id"] = o.CorrelationId
 	var b bytes.Buffer
 	enc := json.NewEncoder(&b)
 	enc.SetEscapeHTML(false)
@@ -178,38 +178,38 @@ func (o Assertion) MarshalJSON() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-type NullableAssertion struct {
-	value *Assertion
+type NullableBatchCheckItem struct {
+	value *BatchCheckItem
 	isSet bool
 }
 
-func (v NullableAssertion) Get() *Assertion {
+func (v NullableBatchCheckItem) Get() *BatchCheckItem {
 	return v.value
 }
 
-func (v *NullableAssertion) Set(val *Assertion) {
+func (v *NullableBatchCheckItem) Set(val *BatchCheckItem) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableAssertion) IsSet() bool {
+func (v NullableBatchCheckItem) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableAssertion) Unset() {
+func (v *NullableBatchCheckItem) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableAssertion(val *Assertion) *NullableAssertion {
-	return &NullableAssertion{value: val, isSet: true}
+func NewNullableBatchCheckItem(val *BatchCheckItem) *NullableBatchCheckItem {
+	return &NullableBatchCheckItem{value: val, isSet: true}
 }
 
-func (v NullableAssertion) MarshalJSON() ([]byte, error) {
+func (v NullableBatchCheckItem) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableAssertion) UnmarshalJSON(src []byte) error {
+func (v *NullableBatchCheckItem) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
