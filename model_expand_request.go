@@ -23,7 +23,6 @@ type ExpandRequest struct {
 	TupleKey             ExpandRequestTupleKey  `json:"tuple_key"yaml:"tuple_key"`
 	AuthorizationModelId *string                `json:"authorization_model_id,omitempty"yaml:"authorization_model_id,omitempty"`
 	Consistency          *ConsistencyPreference `json:"consistency,omitempty"yaml:"consistency,omitempty"`
-	ContextualTuples     *ContextualTupleKeys   `json:"contextual_tuples,omitempty"yaml:"contextual_tuples,omitempty"`
 }
 
 // NewExpandRequest instantiates a new ExpandRequest object
@@ -136,38 +135,6 @@ func (o *ExpandRequest) SetConsistency(v ConsistencyPreference) {
 	o.Consistency = &v
 }
 
-// GetContextualTuples returns the ContextualTuples field value if set, zero value otherwise.
-func (o *ExpandRequest) GetContextualTuples() ContextualTupleKeys {
-	if o == nil || o.ContextualTuples == nil {
-		var ret ContextualTupleKeys
-		return ret
-	}
-	return *o.ContextualTuples
-}
-
-// GetContextualTuplesOk returns a tuple with the ContextualTuples field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *ExpandRequest) GetContextualTuplesOk() (*ContextualTupleKeys, bool) {
-	if o == nil || o.ContextualTuples == nil {
-		return nil, false
-	}
-	return o.ContextualTuples, true
-}
-
-// HasContextualTuples returns a boolean if a field has been set.
-func (o *ExpandRequest) HasContextualTuples() bool {
-	if o != nil && o.ContextualTuples != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetContextualTuples gets a reference to the given ContextualTupleKeys and assigns it to the ContextualTuples field.
-func (o *ExpandRequest) SetContextualTuples(v ContextualTupleKeys) {
-	o.ContextualTuples = &v
-}
-
 func (o ExpandRequest) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["tuple_key"] = o.TupleKey
@@ -176,9 +143,6 @@ func (o ExpandRequest) MarshalJSON() ([]byte, error) {
 	}
 	if o.Consistency != nil {
 		toSerialize["consistency"] = o.Consistency
-	}
-	if o.ContextualTuples != nil {
-		toSerialize["contextual_tuples"] = o.ContextualTuples
 	}
 	var b bytes.Buffer
 	enc := json.NewEncoder(&b)

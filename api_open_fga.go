@@ -33,70 +33,6 @@ var (
 type OpenFgaApi interface {
 
 	/*
-		 * BatchCheck Send a list of `check` operations in a single request
-		 * The `BatchCheck` API functions nearly identically to `Check`, but instead of checking a single user-object relationship BatchCheck accepts a list of relationships to check and returns a map containing `BatchCheckItem` response for each check it received.
-
-	An associated `correlation_id` is required for each check in the batch. This ID is used to correlate a check to the appropriate response. It is a string consisting of only alphanumeric characters or hyphens with a maximum length of 36 characters. This `correlation_id` is used to map the result of each check to the item which was checked, so it must be unique for each item in the batch. We recommend using a UUID or ULID as the `correlation_id`, but you can use whatever unique identifier you need as long  as it matches this regex pattern: `^[\w\d-]{1,36}$`
-
-	For more details on how `Check` functions, see the docs for `/check`.
-
-	### Examples
-	#### A BatchCheckRequest
-	```json
-	{
-	  "checks": [
-	     {
-	       "tuple_key": {
-	         "object": "document:2021-budget"
-	         "relation": "reader",
-	         "user": "user:anne",
-	       },
-	       "contextual_tuples": {...}
-	       "context": {}
-	       "correlation_id": "01JA8PM3QM7VBPGB8KMPK8SBD5"
-	     },
-	     {
-	       "tuple_key": {
-	         "object": "document:2021-budget"
-	         "relation": "reader",
-	         "user": "user:bob",
-	       },
-	       "contextual_tuples": {...}
-	       "context": {}
-	       "correlation_id": "01JA8PMM6A90NV5ET0F28CYSZQ"
-	     }
-	   ]
-	}
-	```
-
-	Below is a possible response to the above request. Note that the result map's keys are the `correlation_id` values from the checked items in the request:
-	```json
-	{
-	   "result": {
-	     "01JA8PMM6A90NV5ET0F28CYSZQ": {
-	       "allowed": false,
-	       "error": {"message": ""}
-	    },
-	     "01JA8PM3QM7VBPGB8KMPK8SBD5": {
-	       "allowed": true,
-	       "error": {"message": ""}
-	    }
-	}
-	```
-
-		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-		 * @param storeId
-		 * @return ApiBatchCheckRequest
-	*/
-	BatchCheck(ctx _context.Context, storeId string) ApiBatchCheckRequest
-
-	/*
-	 * BatchCheckExecute executes the request
-	 * @return BatchCheckResponse
-	 */
-	BatchCheckExecute(r ApiBatchCheckRequest) (BatchCheckResponse, *_nethttp.Response, error)
-
-	/*
 		 * Check Check whether a user is authorized to access an object
 		 * The Check API returns whether a given user has a relationship with a given object in a given store.
 	The `user` field of the request can be a specific target, such as `user:anne`, or a userset (set of users) such as `group:marketing#member` or a type-bound public access `user:*`.
@@ -104,7 +40,6 @@ type OpenFgaApi interface {
 	A `contextual_tuples` object may also be included in the body of the request. This object contains one field `tuple_keys`, which is an array of tuple keys. Each of these tuples may have an associated `condition`.
 	You may also provide an `authorization_model_id` in the body. This will be used to assert that the input `tuple_key` is valid for the model specified. If not specified, the assertion will be made against the latest authorization model ID. It is strongly recommended to specify authorization model id for better performance.
 	You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly.
-	By default, the Check API caches results for a short time to optimize performance. You may specify a value of `HIGHER_CONSISTENCY` for the optional `consistency` parameter in the body to inform the server that higher conisistency is preferred at the expense of increased latency. Consideration should be given to the increased latency if requesting higher consistency.
 	The response will return whether the relationship exists in the field `allowed`.
 
 	Some exceptions apply, but in general, if a Check API responds with `{allowed: true}`, then you can expect the equivalent ListObjects query to return the object, and viceversa.
@@ -204,18 +139,6 @@ type OpenFgaApi interface {
 	}
 	```
 	will return `{ "allowed": true }`, even though a specific user of the userset `group:finance#member` does not have the `reader` relationship with the given object.
-	### Requesting higher consistency
-	By default, the Check API caches results for a short time to optimize performance. You may request higher consistency to inform the server that higher consistency should be preferred at the expense of increased latency. Care should be taken when requesting higher consistency due to the increased latency.
-	```json
-	{
-	  "tuple_key": {
-	     "user": "group:finance#member",
-	     "relation": "reader",
-	     "object": "document:2021-budget"
-	  },
-	  "consistency": "HIGHER_CONSISTENCY"
-	}
-	```
 
 		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 		 * @param storeId
@@ -262,7 +185,6 @@ type OpenFgaApi interface {
 		 * The Expand API will return all users and usersets that have certain relationship with an object in a certain store.
 	This is different from the `/stores/{store_id}/read` API in that both users and computed usersets are returned.
 	Body parameters `tuple_key.object` and `tuple_key.relation` are all required.
-	A `contextual_tuples` object may also be included in the body of the request. This object contains one field `tuple_keys`, which is an array of tuple keys. Each of these tuples may have an associated `condition`.
 	The response will return a tree whose leaves are the specific users and usersets. Union, intersection and difference operator are located in the intermediate nodes.
 
 	## Example
@@ -309,115 +231,6 @@ type OpenFgaApi interface {
 	}
 	```
 	The caller can then call expand API for the `writer` relationship for the `document:2021-budget`.
-	### Expand Request with Contextual Tuples
-
-	Given the model
-	```python
-	model
-	    schema 1.1
-
-	type user
-
-	type folder
-	    relations
-	        define owner: [user]
-
-	type document
-	    relations
-	        define parent: [folder]
-	        define viewer: [user] or writer
-	        define writer: [user] or owner from parent
-	```
-	and the initial tuples
-	```json
-	[{
-	    "user": "user:bob",
-	    "relation": "owner",
-	    "object": "folder:1"
-	}]
-	```
-
-	To expand all `writers` of `document:1` when `document:1` is put in `folder:1`, the first call could be
-
-	```json
-	{
-	  "tuple_key": {
-	    "object": "document:1",
-	    "relation": "writer"
-	  },
-	  "contextual_tuples": {
-	    "tuple_keys": [
-	      {
-	        "user": "folder:1",
-	        "relation": "parent",
-	        "object": "document:1"
-	      }
-	    ]
-	  }
-	}
-	```
-	this returns:
-	```json
-	{
-	  "tree": {
-	    "root": {
-	      "name": "document:1#writer",
-	      "union": {
-	        "nodes": [
-	          {
-	            "name": "document:1#writer",
-	            "leaf": {
-	              "users": {
-	                "users": []
-	              }
-	            }
-	          },
-	          {
-	            "name": "document:1#writer",
-	            "leaf": {
-	              "tupleToUserset": {
-	                "tupleset": "document:1#parent",
-	                "computed": [
-	                  {
-	                    "userset": "folder:1#owner"
-	                  }
-	                ]
-	              }
-	            }
-	          }
-	        ]
-	      }
-	    }
-	  }
-	}
-	```
-	This tells us that the `owner` of `folder:1` may also be a writer. So our next call could be to find the `owners` of `folder:1`
-	```json
-	{
-	  "tuple_key": {
-	    "object": "folder:1",
-	    "relation": "owner"
-	  }
-	}
-	```
-	which gives
-	```json
-	{
-	  "tree": {
-	    "root": {
-	      "name": "folder:1#owner",
-	      "leaf": {
-	        "users": {
-	          "users": [
-	            "user:bob"
-	          ]
-	        }
-	      }
-	    }
-	  }
-	}
-	```
-
 		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 		 * @param storeId
 		 * @return ApiExpandRequest
@@ -452,7 +265,6 @@ type OpenFgaApi interface {
 	An `authorization_model_id` may be specified in the body. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance.
 	You may also specify `contextual_tuples` that will be treated as regular tuples. Each of these tuples may have an associated `condition`.
 	You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly.
-	By default, the Check API caches results for a short time to optimize performance. You may specify a value of `HIGHER_CONSISTENCY` for the optional `consistency` parameter in the body to inform the server that higher conisistency is preferred at the expense of increased latency. Consideration should be given to the increased latency if requesting higher consistency.
 	The response will contain the related objects in an array in the "objects" field of the response and they will be strings in the object format `<type>:<id>` (e.g. "document:roadmap").
 	The number of objects in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_OBJECTS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_OBJECTS_MAX_RESULTS, whichever is hit first.
 	The objects given will not be sorted, and therefore two identical calls can give a given different set of objects.
@@ -492,7 +304,7 @@ type OpenFgaApi interface {
 	You may also specify `contextual_tuples` that will be treated as regular tuples. Each of these tuples may have an associated `condition`.
 	You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly.
 	The response will contain the related users in an array in the "users" field of the response. These results may include specific objects, usersets
-	or type-bound public access. Each of these types of results is encoded in its own type and not represented as a string.In cases where a type-bound public access result is returned (e.g. `user:*`), it cannot be inferred that all subjects
+	or type-bound public access. Each of these types of results is encoded in its own type and not represented as a string.In cases where a type-bound public acces result is returned (e.g. `user:*`), it cannot be inferred that all subjects
 	of that type have a relation to the object; it is possible that negations exist and checks should still be queried
 	on individual subjects to ensure access to that document.The number of users in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_USERS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_USERS_MAX_RESULTS, whichever is hit first.
 	The returned users will not be sorted, and therefore two identical calls may yield different sets of users.
@@ -623,7 +435,7 @@ type OpenFgaApi interface {
 
 	/*
 	 * ReadAssertions Read assertions for an authorization model ID
-	 * The ReadAssertions API will return, for a given authorization model id, all the assertions stored for it.
+	 * The ReadAssertions API will return, for a given authorization model id, all the assertions stored for it. An assertion is an object that contains a tuple key, and the expectation of whether a call to the Check API of that tuple key will return true or false.
 	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	 * @param storeId
 	 * @param authorizationModelId
@@ -817,7 +629,7 @@ type OpenFgaApi interface {
 
 	/*
 	 * WriteAssertions Upsert assertions for an authorization model ID
-	 * The WriteAssertions API will upsert new assertions for an authorization model id, or overwrite the existing ones. An assertion is an object that contains a tuple key, the expectation of whether a call to the Check API of that tuple key will return true or false, and optionally a list of contextual tuples.
+	 * The WriteAssertions API will upsert new assertions for an authorization model id, or overwrite the existing ones. An assertion is an object that contains a tuple key, and the expectation of whether a call to the Check API of that tuple key will return true or false.
 	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	 * @param storeId
 	 * @param authorizationModelId
@@ -891,346 +703,6 @@ type OpenFgaApi interface {
 // OpenFgaApiService OpenFgaApi service
 type OpenFgaApiService service
 
-type ApiBatchCheckRequest struct {
-	ctx        _context.Context
-	ApiService OpenFgaApi
-	storeId    string
-	body       *BatchCheckRequest
-}
-
-func (r ApiBatchCheckRequest) Body(body BatchCheckRequest) ApiBatchCheckRequest {
-	r.body = &body
-	return r
-}
-
-func (r ApiBatchCheckRequest) Execute() (BatchCheckResponse, *_nethttp.Response, error) {
-	return r.ApiService.BatchCheckExecute(r)
-}
-
-/*
-  - BatchCheck Send a list of `check` operations in a single request
-  - The `BatchCheck` API functions nearly identically to `Check`, but instead of checking a single user-object relationship BatchCheck accepts a list of relationships to check and returns a map containing `BatchCheckItem` response for each check it received.
-
-An associated `correlation_id` is required for each check in the batch. This ID is used to correlate a check to the appropriate response. It is a string consisting of only alphanumeric characters or hyphens with a maximum length of 36 characters. This `correlation_id` is used to map the result of each check to the item which was checked, so it must be unique for each item in the batch. We recommend using a UUID or ULID as the `correlation_id`, but you can use whatever unique identifier you need as long  as it matches this regex pattern: `^[\w\d-]{1,36}$`
-
-For more details on how `Check` functions, see the docs for `/check`.
-
-### Examples
-#### A BatchCheckRequest
-```json
-
-	{
-	  "checks": [
-	     {
-	       "tuple_key": {
-	         "object": "document:2021-budget"
-	         "relation": "reader",
-	         "user": "user:anne",
-	       },
-	       "contextual_tuples": {...}
-	       "context": {}
-	       "correlation_id": "01JA8PM3QM7VBPGB8KMPK8SBD5"
-	     },
-	     {
-	       "tuple_key": {
-	         "object": "document:2021-budget"
-	         "relation": "reader",
-	         "user": "user:bob",
-	       },
-	       "contextual_tuples": {...}
-	       "context": {}
-	       "correlation_id": "01JA8PMM6A90NV5ET0F28CYSZQ"
-	     }
-	   ]
-	}
-
-```
-
-Below is a possible response to the above request. Note that the result map's keys are the `correlation_id` values from the checked items in the request:
-```json
-
-	{
-	   "result": {
-	     "01JA8PMM6A90NV5ET0F28CYSZQ": {
-	       "allowed": false,
-	       "error": {"message": ""}
-	    },
-	     "01JA8PM3QM7VBPGB8KMPK8SBD5": {
-	       "allowed": true,
-	       "error": {"message": ""}
-	    }
-	}
-
-```
-
-  - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-  - @param storeId
-  - @return ApiBatchCheckRequest
-*/
-func (a *OpenFgaApiService) BatchCheck(ctx _context.Context, storeId string) ApiBatchCheckRequest {
-	return ApiBatchCheckRequest{
-		ApiService: a,
-		ctx:        ctx,
-		storeId:    storeId,
-	}
-}
-
-/*
- * Execute executes the request
- * @return BatchCheckResponse
- */
-func (a *OpenFgaApiService) BatchCheckExecute(r ApiBatchCheckRequest) (BatchCheckResponse, *_nethttp.Response, error) {
-	var maxRetry int
-	var minWaitInMs int
-	var requestStarted time.Time = time.Now()
-
-	if a.RetryParams != nil {
-		maxRetry = a.RetryParams.MinWaitInMs
-		minWaitInMs = a.RetryParams.MinWaitInMs
-	} else {
-		maxRetry = 0
-		minWaitInMs = 0
-	}
-
-	for i := 0; i < maxRetry+1; i++ {
-		var (
-			localVarHTTPMethod  = _nethttp.MethodPost
-			localVarPostBody    interface{}
-			localVarReturnValue BatchCheckResponse
-		)
-
-		localVarPath := "/stores/{store_id}/batch-check"
-		if r.storeId == "" {
-			return localVarReturnValue, nil, reportError("storeId is required and must be specified")
-		}
-
-		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(parameterToString(r.storeId, "")), -1)
-
-		localVarHeaderParams := make(map[string]string)
-		localVarQueryParams := _neturl.Values{}
-		if r.body == nil {
-			return localVarReturnValue, nil, reportError("body is required and must be specified")
-		}
-
-		// to determine the Content-Type header
-		localVarHTTPContentTypes := []string{"application/json"}
-
-		// set Content-Type header
-		localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-		if localVarHTTPContentType != "" {
-			localVarHeaderParams["Content-Type"] = localVarHTTPContentType
-		}
-
-		// to determine the Accept header
-		localVarHTTPHeaderAccepts := []string{"application/json"}
-
-		// set Accept header
-		localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-		if localVarHTTPHeaderAccept != "" {
-			localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-		}
-		// body params
-		localVarPostBody = r.body
-		req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams)
-		if err != nil {
-			return localVarReturnValue, nil, err
-		}
-
-		localVarHTTPResponse, err := a.client.callAPI(req)
-		if err != nil || localVarHTTPResponse == nil {
-			return localVarReturnValue, localVarHTTPResponse, err
-		}
-
-		localVarBody, err := _ioutil.ReadAll(localVarHTTPResponse.Body)
-		localVarHTTPResponse.Body.Close()
-		localVarHTTPResponse.Body = _ioutil.NopCloser(bytes.NewBuffer(localVarBody))
-		if err != nil {
-			return localVarReturnValue, localVarHTTPResponse, err
-		}
-
-		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
-
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
-				newErr := FgaApiValidationError{
-					body:               localVarBody,
-					storeId:            r.storeId,
-					endpointCategory:   "BatchCheck",
-					requestBody:        localVarPostBody,
-					requestMethod:      localVarHTTPMethod,
-					responseStatusCode: localVarHTTPResponse.StatusCode,
-					responseHeader:     localVarHTTPResponse.Header,
-				}
-				// Due to CanonicalHeaderKey, header name is case-insensitive.
-				newErr.requestId = localVarHTTPResponse.Header.Get("Fga-Request-Id")
-				newErr.error = "BatchCheck validation error for " + localVarHTTPMethod + " BatchCheck with body " + string(localVarBody)
-				var v ValidationErrorMessageResponse
-				err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-				if err != nil {
-					newErr.modelDecodeError = err
-					return localVarReturnValue, localVarHTTPResponse, newErr
-				}
-				newErr.model = v
-				newErr.responseCode = v.GetCode()
-				newErr.error += " with error code " + string(v.GetCode()) + " error message: " + v.GetMessage()
-
-				return localVarReturnValue, localVarHTTPResponse, newErr
-			}
-
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
-				newErr := FgaApiAuthenticationError{
-					body:               localVarBody,
-					storeId:            r.storeId,
-					endpointCategory:   "BatchCheck",
-					responseStatusCode: localVarHTTPResponse.StatusCode,
-					responseHeader:     localVarHTTPResponse.Header,
-				}
-				// Due to CanonicalHeaderKey, header name is case-insensitive.
-				newErr.requestId = localVarHTTPResponse.Header.Get("Fga-Request-Id")
-				newErr.error = "BatchCheck auth error for " + localVarHTTPMethod + " BatchCheck with body " + string(localVarBody)
-
-				return localVarReturnValue, localVarHTTPResponse, newErr
-			}
-
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
-				newErr := FgaApiNotFoundError{
-					body:               localVarBody,
-					storeId:            r.storeId,
-					endpointCategory:   "BatchCheck",
-					requestBody:        localVarPostBody,
-					requestMethod:      localVarHTTPMethod,
-					responseStatusCode: localVarHTTPResponse.StatusCode,
-					responseHeader:     localVarHTTPResponse.Header,
-				}
-				// Due to CanonicalHeaderKey, header name is case-insensitive.
-				newErr.requestId = localVarHTTPResponse.Header.Get("Fga-Request-Id")
-				newErr.error = "BatchCheck validation error for " + localVarHTTPMethod + " BatchCheck with body " + string(localVarBody)
-				var v PathUnknownErrorMessageResponse
-				err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-				if err != nil {
-					newErr.modelDecodeError = err
-					return localVarReturnValue, localVarHTTPResponse, newErr
-				}
-				newErr.model = v
-				newErr.responseCode = v.GetCode()
-				newErr.error += " with error code " + string(v.GetCode()) + " error message: " + v.GetMessage()
-
-				return localVarReturnValue, localVarHTTPResponse, newErr
-			}
-
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
-				if i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
-				}
-				// maximum number of retry reached
-				newErr := FgaApiRateLimitExceededError{
-					body:               localVarBody,
-					storeId:            r.storeId,
-					endpointCategory:   "BatchCheck",
-					requestBody:        localVarPostBody,
-					requestMethod:      localVarHTTPMethod,
-					responseStatusCode: localVarHTTPResponse.StatusCode,
-					responseHeader:     localVarHTTPResponse.Header,
-				}
-				newErr.error = "BatchCheck rate limit error for " + localVarHTTPMethod + " BatchCheck with body " + string(localVarBody)
-
-				// Due to CanonicalHeaderKey, header name is case-insensitive.
-				newErr.requestId = localVarHTTPResponse.Header.Get("Fga-Request-Id")
-				return localVarReturnValue, localVarHTTPResponse, newErr
-			}
-
-			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
-				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
-				}
-				newErr := FgaApiInternalError{
-					body:               localVarBody,
-					storeId:            r.storeId,
-					endpointCategory:   "BatchCheck",
-					requestBody:        localVarPostBody,
-					requestMethod:      localVarHTTPMethod,
-					responseStatusCode: localVarHTTPResponse.StatusCode,
-					responseHeader:     localVarHTTPResponse.Header,
-				}
-				newErr.error = "BatchCheck internal error for " + localVarHTTPMethod + " BatchCheck with body " + string(localVarBody)
-				newErr.requestId = localVarHTTPResponse.Header.Get("Fga-Request-Id")
-
-				var v InternalErrorMessageResponse
-				err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-				if err != nil {
-					newErr.modelDecodeError = err
-					return localVarReturnValue, localVarHTTPResponse, newErr
-				}
-				newErr.model = v
-				newErr.responseCode = v.GetCode()
-				newErr.error += " with error code " + string(v.GetCode()) + " error message: " + v.GetMessage()
-
-				return localVarReturnValue, localVarHTTPResponse, newErr
-			}
-			newErr := FgaApiError{
-				body:               localVarBody,
-				storeId:            r.storeId,
-				endpointCategory:   "BatchCheck",
-				requestBody:        localVarPostBody,
-				requestMethod:      localVarHTTPMethod,
-				responseStatusCode: localVarHTTPResponse.StatusCode,
-				responseHeader:     localVarHTTPResponse.Header,
-			}
-			newErr.error = "BatchCheck error for " + localVarHTTPMethod + " BatchCheck with body " + string(localVarBody)
-			newErr.requestId = localVarHTTPResponse.Header.Get("Fga-Request-Id")
-
-			var v ErrorResponse
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.modelDecodeError = err
-				return localVarReturnValue, localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-			newErr.responseCode = v.Code
-			newErr.error += " with error code " + v.Code + " error message: " + v.Message
-
-			return localVarReturnValue, localVarHTTPResponse, newErr
-		}
-
-		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-		if err != nil {
-			newErr := GenericOpenAPIError{
-				body:  localVarBody,
-				error: err.Error(),
-			}
-			return localVarReturnValue, localVarHTTPResponse, newErr
-		}
-
-		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
-
-		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
-			"BatchCheck",
-			map[string]interface{}{
-				"storeId": r.storeId,
-				"body":    localVarPostBody,
-			},
-			req,
-			localVarHTTPResponse,
-			requestStarted,
-			i,
-		)
-
-		if requestDuration > 0 {
-			metrics.RequestDuration(requestDuration, attrs)
-		}
-
-		if queryDuration > 0 {
-			metrics.QueryDuration(queryDuration, attrs)
-		}
-
-		return localVarReturnValue, localVarHTTPResponse, nil
-	}
-	// should never have reached this
-	var localVarReturnValue BatchCheckResponse
-	return localVarReturnValue, nil, reportError("Error not handled properly")
-}
-
 type ApiCheckRequest struct {
 	ctx        _context.Context
 	ApiService OpenFgaApi
@@ -1256,7 +728,6 @@ To arrive at a result, the API uses: an authorization model, explicit tuples wri
 A `contextual_tuples` object may also be included in the body of the request. This object contains one field `tuple_keys`, which is an array of tuple keys. Each of these tuples may have an associated `condition`.
 You may also provide an `authorization_model_id` in the body. This will be used to assert that the input `tuple_key` is valid for the model specified. If not specified, the assertion will be made against the latest authorization model ID. It is strongly recommended to specify authorization model id for better performance.
 You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly.
-By default, the Check API caches results for a short time to optimize performance. You may specify a value of `HIGHER_CONSISTENCY` for the optional `consistency` parameter in the body to inform the server that higher conisistency is preferred at the expense of increased latency. Consideration should be given to the increased latency if requesting higher consistency.
 The response will return whether the relationship exists in the field `allowed`.
 
 Some exceptions apply, but in general, if a Check API responds with `{allowed: true}`, then you can expect the equivalent ListObjects query to return the object, and viceversa.
@@ -1374,20 +845,6 @@ the following query
 
 ```
 will return `{ "allowed": true }`, even though a specific user of the userset `group:finance#member` does not have the `reader` relationship with the given object.
-### Requesting higher consistency
-By default, the Check API caches results for a short time to optimize performance. You may request higher consistency to inform the server that higher consistency should be preferred at the expense of increased latency. Care should be taken when requesting higher consistency due to the increased latency.
-```json
-
-	{
-	  "tuple_key": {
-	     "user": "group:finance#member",
-	     "relation": "reader",
-	     "object": "document:2021-budget"
-	  },
-	  "consistency": "HIGHER_CONSISTENCY"
-	}
-
-```
 
   - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @param storeId
@@ -2215,7 +1672,6 @@ func (r ApiExpandRequest) Execute() (ExpandResponse, *_nethttp.Response, error) 
 
 This is different from the `/stores/{store_id}/read` API in that both users and computed usersets are returned.
 Body parameters `tuple_key.object` and `tuple_key.relation` are all required.
-A `contextual_tuples` object may also be included in the body of the request. This object contains one field `tuple_keys`, which is an array of tuple keys. Each of these tuples may have an associated `condition`.
 The response will return a tree whose leaves are the specific users and usersets. Union, intersection and difference operator are located in the intermediate nodes.
 
 ## Example
@@ -2266,129 +1722,6 @@ OpenFGA's response will be a userset tree of the users and usersets that have re
 
 ```
 The caller can then call expand API for the `writer` relationship for the `document:2021-budget`.
-### Expand Request with Contextual Tuples
-
-Given the model
-```python
-model
-
-	schema 1.1
-
-type user
-
-type folder
-
-	relations
-	    define owner: [user]
-
-type document
-
-	relations
-	    define parent: [folder]
-	    define viewer: [user] or writer
-	    define writer: [user] or owner from parent
-
-```
-and the initial tuples
-```json
-
-	[{
-	    "user": "user:bob",
-	    "relation": "owner",
-	    "object": "folder:1"
-	}]
-
-```
-
-To expand all `writers` of `document:1` when `document:1` is put in `folder:1`, the first call could be
-
-```json
-
-	{
-	  "tuple_key": {
-	    "object": "document:1",
-	    "relation": "writer"
-	  },
-	  "contextual_tuples": {
-	    "tuple_keys": [
-	      {
-	        "user": "folder:1",
-	        "relation": "parent",
-	        "object": "document:1"
-	      }
-	    ]
-	  }
-	}
-
-```
-this returns:
-```json
-
-	{
-	  "tree": {
-	    "root": {
-	      "name": "document:1#writer",
-	      "union": {
-	        "nodes": [
-	          {
-	            "name": "document:1#writer",
-	            "leaf": {
-	              "users": {
-	                "users": []
-	              }
-	            }
-	          },
-	          {
-	            "name": "document:1#writer",
-	            "leaf": {
-	              "tupleToUserset": {
-	                "tupleset": "document:1#parent",
-	                "computed": [
-	                  {
-	                    "userset": "folder:1#owner"
-	                  }
-	                ]
-	              }
-	            }
-	          }
-	        ]
-	      }
-	    }
-	  }
-	}
-
-```
-This tells us that the `owner` of `folder:1` may also be a writer. So our next call could be to find the `owners` of `folder:1`
-```json
-
-	{
-	  "tuple_key": {
-	    "object": "folder:1",
-	    "relation": "owner"
-	  }
-	}
-
-```
-which gives
-```json
-
-	{
-	  "tree": {
-	    "root": {
-	      "name": "folder:1#owner",
-	      "leaf": {
-	        "users": {
-	          "users": [
-	            "user:bob"
-	          ]
-	        }
-	      }
-	    }
-	  }
-	}
-
-```
-
   - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @param storeId
   - @return ApiExpandRequest
@@ -2957,7 +2290,6 @@ func (r ApiListObjectsRequest) Execute() (ListObjectsResponse, *_nethttp.Respons
 An `authorization_model_id` may be specified in the body. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance.
 You may also specify `contextual_tuples` that will be treated as regular tuples. Each of these tuples may have an associated `condition`.
 You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly.
-By default, the Check API caches results for a short time to optimize performance. You may specify a value of `HIGHER_CONSISTENCY` for the optional `consistency` parameter in the body to inform the server that higher conisistency is preferred at the expense of increased latency. Consideration should be given to the increased latency if requesting higher consistency.
 The response will contain the related objects in an array in the "objects" field of the response and they will be strings in the object format `<type>:<id>` (e.g. "document:roadmap").
 The number of objects in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_OBJECTS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_OBJECTS_MAX_RESULTS, whichever is hit first.
 The objects given will not be sorted, and therefore two identical calls can give a given different set of objects.
@@ -3535,7 +2867,7 @@ An `authorization_model_id` may be specified in the body. If it is not specified
 You may also specify `contextual_tuples` that will be treated as regular tuples. Each of these tuples may have an associated `condition`.
 You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly.
 The response will contain the related users in an array in the "users" field of the response. These results may include specific objects, usersets
-or type-bound public access. Each of these types of results is encoded in its own type and not represented as a string.In cases where a type-bound public access result is returned (e.g. `user:*`), it cannot be inferred that all subjects
+or type-bound public access. Each of these types of results is encoded in its own type and not represented as a string.In cases where a type-bound public acces result is returned (e.g. `user:*`), it cannot be inferred that all subjects
 of that type have a relation to the object; it is possible that negations exist and checks should still be queried
 on individual subjects to ensure access to that document.The number of users in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_USERS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_USERS_MAX_RESULTS, whichever is hit first.
 The returned users will not be sorted, and therefore two identical calls may yield different sets of users.
@@ -4218,7 +3550,7 @@ func (r ApiReadAssertionsRequest) Execute() (ReadAssertionsResponse, *_nethttp.R
 
 /*
  * ReadAssertions Read assertions for an authorization model ID
- * The ReadAssertions API will return, for a given authorization model id, all the assertions stored for it.
+ * The ReadAssertions API will return, for a given authorization model id, all the assertions stored for it. An assertion is an object that contains a tuple key, and the expectation of whether a call to the Check API of that tuple key will return true or false.
  * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @param storeId
  * @param authorizationModelId
@@ -5157,7 +4489,6 @@ type ApiReadChangesRequest struct {
 	type_             *string
 	pageSize          *int32
 	continuationToken *string
-	startTime         *time.Time
 }
 
 func (r ApiReadChangesRequest) Type_(type_ string) ApiReadChangesRequest {
@@ -5170,10 +4501,6 @@ func (r ApiReadChangesRequest) PageSize(pageSize int32) ApiReadChangesRequest {
 }
 func (r ApiReadChangesRequest) ContinuationToken(continuationToken string) ApiReadChangesRequest {
 	r.continuationToken = &continuationToken
-	return r
-}
-func (r ApiReadChangesRequest) StartTime(startTime time.Time) ApiReadChangesRequest {
-	r.startTime = &startTime
 	return r
 }
 
@@ -5243,9 +4570,6 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 		}
 		if r.continuationToken != nil {
 			localVarQueryParams.Add("continuation_token", parameterToString(*r.continuationToken, ""))
-		}
-		if r.startTime != nil {
-			localVarQueryParams.Add("start_time", parameterToString(*r.startTime, ""))
 		}
 		// to determine the Content-Type header
 		localVarHTTPContentTypes := []string{}
@@ -5812,7 +5136,7 @@ func (r ApiWriteAssertionsRequest) Execute() (*_nethttp.Response, error) {
 
 /*
  * WriteAssertions Upsert assertions for an authorization model ID
- * The WriteAssertions API will upsert new assertions for an authorization model id, or overwrite the existing ones. An assertion is an object that contains a tuple key, the expectation of whether a call to the Check API of that tuple key will return true or false, and optionally a list of contextual tuples.
+ * The WriteAssertions API will upsert new assertions for an authorization model id, or overwrite the existing ones. An assertion is an object that contains a tuple key, and the expectation of whether a call to the Check API of that tuple key will return true or false.
  * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @param storeId
  * @param authorizationModelId

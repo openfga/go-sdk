@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
-	"time"
 
 	"github.com/jarcoal/httpmock"
 	"github.com/openfga/go-sdk"
@@ -1028,7 +1027,7 @@ func TestOpenFgaClient(t *testing.T) {
 	t.Run("ReadChanges", func(t *testing.T) {
 		test := TestDefinition{
 			Name:           "ReadChanges",
-			JsonResponse:   `{"changes":[{"tuple_key":{"user":"user:81684243-9356-4421-8fbf-a4f8d36aa31b","relation":"viewer","object":"document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"},"operation":"TUPLE_OPERATION_WRITE","timestamp": "2000-01-01T00:00:00Z"}],"continuation_token":"eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="}`,
+			JsonResponse:   `{"changes":[{"tuple_key":{"user":"user:81684243-9356-4421-8fbf-a4f8d36aa31b","relation":"viewer","object":"document:roadmap"},"operation":"TUPLE_OPERATION_WRITE","timestamp": "2000-01-01T00:00:00Z"}],"continuation_token":"eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="}`,
 			ResponseStatus: http.StatusOK,
 			Method:         http.MethodGet,
 			RequestPath:    "changes",
@@ -1050,13 +1049,8 @@ func TestOpenFgaClient(t *testing.T) {
 				return resp, nil
 			},
 		)
-		startTime, err := time.Parse(time.RFC3339, "2022-01-01T00:00:00Z")
-		if err != nil {
-			t.Fatalf("Failed to parse startTime: %v", err)
-		}
 		body := ClientReadChangesRequest{
-			Type:      "document",
-			StartTime: startTime,
+			Type: "document",
 		}
 		options := ClientReadChangesOptions{ContinuationToken: openfga.PtrString("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="), PageSize: openfga.PtrInt32(25)}
 		got, err := fgaClient.ReadChanges(context.Background()).Body(body).Options(options).Execute()
@@ -1110,7 +1104,7 @@ func TestOpenFgaClient(t *testing.T) {
 	t.Run("Read", func(t *testing.T) {
 		test := TestDefinition{
 			Name:           "Read",
-			JsonResponse:   `{"tuples":[{"key":{"user":"user:81684243-9356-4421-8fbf-a4f8d36aa31b","relation":"viewer","object":"document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"},"timestamp": "2000-01-01T00:00:00Z"}]}`,
+			JsonResponse:   `{"tuples":[{"key":{"user":"user:81684243-9356-4421-8fbf-a4f8d36aa31b","relation":"viewer","object":"document:roadmap"},"timestamp": "2000-01-01T00:00:00Z"}]}`,
 			ResponseStatus: http.StatusOK,
 			Method:         http.MethodPost,
 			RequestPath:    "read",
@@ -1119,7 +1113,7 @@ func TestOpenFgaClient(t *testing.T) {
 		requestBody := ClientReadRequest{
 			User:     openfga.PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
 			Relation: openfga.PtrString("viewer"),
-			Object:   openfga.PtrString("document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"),
+			Object:   openfga.PtrString("document:roadmap"),
 		}
 
 		var expectedResponse openfga.ReadResponse
@@ -1194,7 +1188,7 @@ func TestOpenFgaClient(t *testing.T) {
 	t.Run("ReadWithConsistency", func(t *testing.T) {
 		test := TestDefinition{
 			Name:           "Read",
-			JsonResponse:   `{"tuples":[{"key":{"user":"user:81684243-9356-4421-8fbf-a4f8d36aa31b","relation":"viewer","object":"document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"},"timestamp": "2000-01-01T00:00:00Z"}]}`,
+			JsonResponse:   `{"tuples":[{"key":{"user":"user:81684243-9356-4421-8fbf-a4f8d36aa31b","relation":"viewer","object":"document:roadmap"},"timestamp": "2000-01-01T00:00:00Z"}]}`,
 			ResponseStatus: http.StatusOK,
 			Method:         http.MethodPost,
 			RequestPath:    "read",
@@ -1203,7 +1197,7 @@ func TestOpenFgaClient(t *testing.T) {
 		requestBody := ClientReadRequest{
 			User:     openfga.PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
 			Relation: openfga.PtrString("viewer"),
-			Object:   openfga.PtrString("document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"),
+			Object:   openfga.PtrString("document:roadmap"),
 		}
 
 		var expectedResponse openfga.ReadResponse
@@ -1247,7 +1241,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Writes: []ClientTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "viewer",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				Object:   "document:roadmap",
 			}},
 			Deletes: []ClientTupleKeyWithoutCondition{},
 		}
@@ -1351,7 +1345,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Writes: []ClientTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "viewer",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				Object:   "document:roadmap",
 			}},
 		}
 		options := ClientWriteOptions{
@@ -1381,7 +1375,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Writes: []ClientTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "viewer",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				Object:   "document:roadmap",
 			}},
 		}
 		options := ClientWriteOptions{
@@ -1411,7 +1405,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Writes: []ClientTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "viewer",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				Object:   "document:roadmap",
 			}, {
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "viewer",
@@ -1506,7 +1500,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Writes: []ClientTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "viewer",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				Object:   "document:roadmap",
 			}},
 		}
 		options := ClientWriteOptions{
@@ -1542,7 +1536,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Writes: []ClientTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "viewer",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				Object:   "document:roadmap",
 			}},
 		}
 		options := ClientWriteOptions{
@@ -1574,7 +1568,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Deletes: []openfga.TupleKeyWithoutCondition{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "viewer",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				Object:   "document:roadmap",
 			}},
 		}
 
@@ -1601,7 +1595,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Writes: []ClientTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "viewer",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				Object:   "document:roadmap",
 			}},
 		}
 		options := ClientWriteOptions{
@@ -1633,7 +1627,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Deletes: []openfga.TupleKeyWithoutCondition{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "viewer",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				Object:   "document:roadmap",
 			}},
 		}
 
@@ -1659,7 +1653,7 @@ func TestOpenFgaClient(t *testing.T) {
 		requestBody := []ClientTupleKey{{
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "viewer",
-			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+			Object:   "document:roadmap",
 		}}
 		options := ClientWriteOptions{
 			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
@@ -1770,7 +1764,7 @@ func TestOpenFgaClient(t *testing.T) {
 		requestBody := []ClientTupleKeyWithoutCondition{{
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "viewer",
-			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+			Object:   "document:roadmap",
 		}}
 		options := ClientWriteOptions{
 			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
@@ -1881,11 +1875,11 @@ func TestOpenFgaClient(t *testing.T) {
 		requestBody := ClientCheckRequest{
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "viewer",
-			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+			Object:   "document:roadmap",
 			ContextualTuples: []ClientContextualTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "editor",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				Object:   "document:roadmap",
 			}},
 		}
 
@@ -1977,11 +1971,11 @@ func TestOpenFgaClient(t *testing.T) {
 		requestBody := ClientCheckRequest{
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "viewer",
-			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+			Object:   "document:roadmap",
 			ContextualTuples: []ClientContextualTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "editor",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				Object:   "document:roadmap",
 			}},
 		}
 
@@ -2024,29 +2018,29 @@ func TestOpenFgaClient(t *testing.T) {
 		requestBody := ClientBatchCheckBody{{
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "viewer",
-			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+			Object:   "document:roadmap",
 			ContextualTuples: []ClientContextualTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "editor",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				Object:   "document:roadmap",
 			}},
 		}, {
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "admin",
-			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+			Object:   "document:roadmap",
 			ContextualTuples: []ClientContextualTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "editor",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				Object:   "document:roadmap",
 			}},
 		}, {
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "creator",
-			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+			Object:   "document:roadmap",
 		}, {
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "deleter",
-			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+			Object:   "document:roadmap",
 		}}
 
 		const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
@@ -2178,29 +2172,29 @@ func TestOpenFgaClient(t *testing.T) {
 		requestBody := ClientBatchCheckBody{{
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "viewer",
-			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+			Object:   "document:roadmap",
 			ContextualTuples: []ClientContextualTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "editor",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				Object:   "document:roadmap",
 			}},
 		}, {
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "admin",
-			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+			Object:   "document:roadmap",
 			ContextualTuples: []ClientContextualTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "editor",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				Object:   "document:roadmap",
 			}},
 		}, {
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "creator",
-			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+			Object:   "document:roadmap",
 		}, {
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "deleter",
-			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+			Object:   "document:roadmap",
 		}}
 
 		const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
@@ -2244,7 +2238,7 @@ func TestOpenFgaClient(t *testing.T) {
 	t.Run("Expand", func(t *testing.T) {
 		test := TestDefinition{
 			Name:           "Expand",
-			JsonResponse:   `{"tree":{"root":{"name":"document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a#viewer","union":{"nodes":[{"name": "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a#viewer","leaf":{"users":{"users":["user:81684243-9356-4421-8fbf-a4f8d36aa31b"]}}}]}}}}`,
+			JsonResponse:   `{"tree":{"root":{"name":"document:roadmap#viewer","union":{"nodes":[{"name": "document:roadmap#viewer","leaf":{"users":{"users":["user:81684243-9356-4421-8fbf-a4f8d36aa31b"]}}}]}}}}`,
 			ResponseStatus: http.StatusOK,
 			Method:         http.MethodPost,
 			RequestPath:    "expand",
@@ -2252,7 +2246,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		requestBody := ClientExpandRequest{
 			Relation: "viewer",
-			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+			Object:   "document:roadmap",
 		}
 		options := ClientExpandOptions{
 			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
@@ -2329,7 +2323,7 @@ func TestOpenFgaClient(t *testing.T) {
 	t.Run("ExpandWithConsistency", func(t *testing.T) {
 		test := TestDefinition{
 			Name:           "Expand",
-			JsonResponse:   `{"tree":{"root":{"name":"document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a#viewer","union":{"nodes":[{"name": "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a#viewer","leaf":{"users":{"users":["user:81684243-9356-4421-8fbf-a4f8d36aa31b"]}}}]}}}}`,
+			JsonResponse:   `{"tree":{"root":{"name":"document:roadmap#viewer","union":{"nodes":[{"name": "document:roadmap#viewer","leaf":{"users":{"users":["user:81684243-9356-4421-8fbf-a4f8d36aa31b"]}}}]}}}}`,
 			ResponseStatus: http.StatusOK,
 			Method:         http.MethodPost,
 			RequestPath:    "expand",
@@ -2337,7 +2331,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		requestBody := ClientExpandRequest{
 			Relation: "viewer",
-			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+			Object:   "document:roadmap",
 		}
 		options := ClientExpandOptions{
 			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
@@ -2370,7 +2364,7 @@ func TestOpenFgaClient(t *testing.T) {
 	t.Run("ListObjects", func(t *testing.T) {
 		test := TestDefinition{
 			Name:           "ListObjects",
-			JsonResponse:   `{"objects":["document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"]}`,
+			JsonResponse:   `{"objects":["document:roadmap"]}`,
 			ResponseStatus: http.StatusOK,
 			Method:         http.MethodPost,
 			RequestPath:    "list-objects",
@@ -2387,7 +2381,7 @@ func TestOpenFgaClient(t *testing.T) {
 			}, {
 				User:     "folder:product",
 				Relation: "parent",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				Object:   "document:roadmap",
 			}},
 		}
 		options := ClientListObjectsOptions{
@@ -2481,7 +2475,7 @@ func TestOpenFgaClient(t *testing.T) {
 	t.Run("ListObjectsWithConsistency", func(t *testing.T) {
 		test := TestDefinition{
 			Name:           "ListObjects",
-			JsonResponse:   `{"objects":["document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"]}`,
+			JsonResponse:   `{"objects":["document:roadmap"]}`,
 			ResponseStatus: http.StatusOK,
 			Method:         http.MethodPost,
 			RequestPath:    "list-objects",
@@ -2498,7 +2492,7 @@ func TestOpenFgaClient(t *testing.T) {
 			}, {
 				User:     "folder:product",
 				Relation: "parent",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				Object:   "document:roadmap",
 			}},
 		}
 		options := ClientListObjectsOptions{
@@ -2543,12 +2537,12 @@ func TestOpenFgaClient(t *testing.T) {
 
 		requestBody := ClientListRelationsRequest{
 			User:      "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-			Object:    "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+			Object:    "document:roadmap",
 			Relations: []string{"can_view", "can_edit", "can_delete", "can_rename"},
 			ContextualTuples: []ClientContextualTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "editor",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				Object:   "document:roadmap",
 			}},
 		}
 		const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
@@ -2679,12 +2673,12 @@ func TestOpenFgaClient(t *testing.T) {
 
 		requestBody := ClientListRelationsRequest{
 			User:      "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-			Object:    "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+			Object:    "document:roadmap",
 			Relations: []string{"can_view", "can_edit", "can_delete", "can_rename"},
 			ContextualTuples: []ClientContextualTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "editor",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				Object:   "document:roadmap",
 			}},
 		}
 		const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
@@ -2740,12 +2734,12 @@ func TestOpenFgaClient(t *testing.T) {
 
 		requestBody := ClientListRelationsRequest{
 			User:      "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-			Object:    "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+			Object:    "document:roadmap",
 			Relations: []string{},
 			ContextualTuples: []ClientContextualTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation: "editor",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				Object:   "document:roadmap",
 			}},
 		}
 		options := ClientListRelationsOptions{
@@ -2794,7 +2788,7 @@ func TestOpenFgaClient(t *testing.T) {
 			}, {
 				User:     "folder:product",
 				Relation: "parent",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				Object:   "document:roadmap",
 			}},
 			Context: &map[string]interface{}{"ViewCount": 100},
 		}
@@ -2929,7 +2923,7 @@ func TestOpenFgaClient(t *testing.T) {
 			}, {
 				User:     "folder:product",
 				Relation: "parent",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				Object:   "document:roadmap",
 			}},
 			Context: &map[string]interface{}{"ViewCount": 100},
 		}
@@ -2970,7 +2964,7 @@ func TestOpenFgaClient(t *testing.T) {
 		modelId := "01GAHCE4YVKPQEKZQHT2R89MQV"
 		test := TestDefinition{
 			Name:           "ReadAssertions",
-			JsonResponse:   fmt.Sprintf(`{"assertions":[{"tuple_key":{"user":"user:anna","relation":"can_view","object":"document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"},"expectation":true}],"authorization_model_id":"%s"}`, modelId),
+			JsonResponse:   fmt.Sprintf(`{"assertions":[{"tuple_key":{"user":"user:anna","relation":"can_view","object":"document:roadmap"},"expectation":true}],"authorization_model_id":"%s"}`, modelId),
 			ResponseStatus: http.StatusOK,
 			Method:         http.MethodGet,
 			RequestPath:    "assertions",
@@ -3077,7 +3071,7 @@ func TestOpenFgaClient(t *testing.T) {
 			{
 				User:        "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 				Relation:    "can_view",
-				Object:      "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				Object:      "document:roadmap",
 				Expectation: true,
 			},
 		}

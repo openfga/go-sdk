@@ -99,10 +99,6 @@
 
 * `UNSUPPORTED_SCHEMA_VERSION` (value: `"unsupported_schema_version"`)
 
-* `CANCELLED` (value: `"cancelled"`)
-
-* `INVALID_START_TIME` (value: `"invalid_start_time"`)
-
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

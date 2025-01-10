@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"math"
 	_nethttp "net/http"
-	"time"
 
 	fgaSdk "github.com/openfga/go-sdk"
 	"github.com/openfga/go-sdk/credentials"
@@ -438,27 +437,6 @@ type SdkClient interface {
 	 * @return *ClientWriteAssertionsResponse
 	 */
 	WriteAssertionsExecute(request SdkClientWriteAssertionsRequestInterface) (*ClientWriteAssertionsResponse, error)
-
-	/*
-	 * SetAuthorizationModelId allows setting the Authorization Model ID for an OpenFGAClient.
-	 * @param string authorizationModelId - The Authorization Model ID to set.
-	 */
-	SetAuthorizationModelId(authorizationModelId string) error
-	/*
-	 * GetAuthorizationModelId retrieves the Authorization Model ID for an OpenFGAClient.
-	 * @return string
-	 */
-	GetAuthorizationModelId() (string, error)
-	/*
-	 * SetStoreId allows setting the Store ID for an OpenFGAClient.
-	 * @param string storeId - The Store ID to set.
-	 */
-	SetStoreId(storeId string) error
-	/*
-	 * GetStoreId retrieves the Store ID set in the OpenFGAClient.
-	 * @return string
-	 */
-	GetStoreId() (string, error)
 }
 
 func (client *OpenFgaClient) SetAuthorizationModelId(authorizationModelId string) error {
@@ -1153,8 +1131,7 @@ type SdkClientReadChangesRequestInterface interface {
 }
 
 type ClientReadChangesRequest struct {
-	Type      string    `json:"type,omitempty"`
-	StartTime time.Time `json:"start_time,omitempty"`
+	Type string `json:"type,omitempty"`
 }
 
 type ClientReadChangesOptions struct {
@@ -1405,6 +1382,9 @@ func (o ClientWriteRequestWriteResponse) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["tuple_key"] = o.TupleKey
 	toSerialize["status"] = o.Status
+	if o.HttpResponse != nil {
+		toSerialize["http_response"] = o.HttpResponse
+	}
 	if o.Error != nil {
 		toSerialize["error"] = o.Error
 	}
@@ -1422,6 +1402,9 @@ func (o ClientWriteRequestDeleteResponse) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["tuple_key"] = o.TupleKey
 	toSerialize["status"] = o.Status
+	if o.HttpResponse != nil {
+		toSerialize["http_response"] = o.HttpResponse
+	}
 	if o.Error != nil {
 		toSerialize["error"] = o.Error
 	}
