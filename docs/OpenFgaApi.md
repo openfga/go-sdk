@@ -1131,7 +1131,7 @@ No authorization required
 
 ## ReadChanges
 
-> ReadChangesResponse ReadChanges(ctx).Type_(type_).PageSize(pageSize).ContinuationToken(continuationToken).Execute()
+> ReadChangesResponse ReadChanges(ctx).Type_(type_).PageSize(pageSize).ContinuationToken(continuationToken).StartTime(startTime).Execute()
 
 Return a list of all the tuple changes
 
@@ -1146,6 +1146,7 @@ import (
     "context"
     "fmt"
     "os"
+    "time"
     openfga "github.com/openfga/go-sdk"
 )
 
@@ -1154,6 +1155,7 @@ func main() {
     type_ := "type__example" // string |  (optional)
     pageSize := int32(56) // int32 |  (optional)
     continuationToken := "continuationToken_example" // string |  (optional)
+    startTime := time.Now() // time.Time | Start date and time of changes to read. Format: ISO 8601 timestamp (e.g., 2022-01-01T00:00:00Z) If a continuation_token is provided along side start_time, the continuation_token will take precedence over start_time. (optional)
 
     configuration, err := openfga.NewConfiguration(openfga.Configuration{
         ApiUrl:         os.Getenv("FGA_API_URL"), // required, e.g. https://api.fga.example
@@ -1166,7 +1168,7 @@ func main() {
 
     apiClient := openfga.NewAPIClient(configuration)
 
-    resp, r, err := apiClient.OpenFgaApi.ReadChanges(context.Background()).Type_(type_).PageSize(pageSize).ContinuationToken(continuationToken).Execute()
+    resp, r, err := apiClient.OpenFgaApi.ReadChanges(context.Background()).Type_(type_).PageSize(pageSize).ContinuationToken(continuationToken).StartTime(startTime).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `OpenFgaApi.ReadChanges``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -1207,6 +1209,7 @@ Name | Type | Description  | Notes
 **type_** | **string** |  | 
 **pageSize** | **int32** |  | 
 **continuationToken** | **string** |  | 
+**startTime** | **time.Time** | Start date and time of changes to read. Format: ISO 8601 timestamp (e.g., 2022-01-01T00:00:00Z) If a continuation_token is provided along side start_time, the continuation_token will take precedence over start_time. | 
 
 ### Return type
 

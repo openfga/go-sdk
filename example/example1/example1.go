@@ -181,7 +181,7 @@ func mainInner() error {
 			{
 				User:     "user:anne",
 				Relation: "writer",
-				Object:   "document:roadmap",
+				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 				Condition: &openfga.RelationshipCondition{
 					Name:    "ViewCountLessThan200",
 					Context: &map[string]interface{}{"Name": "Roadmap", "Type": "document"},
@@ -223,7 +223,7 @@ func mainInner() error {
 	failingCheckResponse, err := fgaClient.Check(ctx).Body(client.ClientCheckRequest{
 		User:     "user:anne",
 		Relation: "viewer",
-		Object:   "document:roadmap",
+		Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 	}).Execute()
 	if err != nil {
 		fmt.Printf("Failed due to: %w\n", err.Error())
@@ -236,7 +236,7 @@ func mainInner() error {
 	checkResponse, err := fgaClient.Check(ctx).Body(client.ClientCheckRequest{
 		User:     "user:anne",
 		Relation: "viewer",
-		Object:   "document:roadmap",
+		Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 		Context:  &map[string]interface{}{"ViewCount": 100},
 	}).Execute()
 	if err != nil {
@@ -257,7 +257,7 @@ func mainInner() error {
 	fmt.Println("Listing relations user has with object")
 	listRelationsResponse, err := fgaClient.ListRelations(ctx).Body(client.ClientListRelationsRequest{
 		User:      "user:anne",
-		Object:    "document:roadmap",
+		Object:    "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 		Relations: []string{"viewer"},
 	}).Execute()
 	fmt.Printf("Response: Relations = %v\n", listRelationsResponse.Relations)
@@ -287,7 +287,7 @@ func mainInner() error {
 		{
 			User:        "user:anne",
 			Relation:    "viewer",
-			Object:      "document:roadmap",
+			Object:      "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 			Expectation: false,
 		},
 	}).Execute()

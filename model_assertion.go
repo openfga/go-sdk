@@ -20,8 +20,11 @@ import (
 
 // Assertion struct for Assertion
 type Assertion struct {
-	TupleKey    AssertionTupleKey `json:"tuple_key"yaml:"tuple_key"`
-	Expectation bool              `json:"expectation"yaml:"expectation"`
+	TupleKey         AssertionTupleKey `json:"tuple_key"yaml:"tuple_key"`
+	Expectation      bool              `json:"expectation"yaml:"expectation"`
+	ContextualTuples *[]TupleKey       `json:"contextual_tuples,omitempty"yaml:"contextual_tuples,omitempty"`
+	// Additional request context that will be used to evaluate any ABAC conditions encountered in the query evaluation.
+	Context *map[string]interface{} `json:"context,omitempty"yaml:"context,omitempty"`
 }
 
 // NewAssertion instantiates a new Assertion object
@@ -91,10 +94,80 @@ func (o *Assertion) SetExpectation(v bool) {
 	o.Expectation = v
 }
 
+// GetContextualTuples returns the ContextualTuples field value if set, zero value otherwise.
+func (o *Assertion) GetContextualTuples() []TupleKey {
+	if o == nil || o.ContextualTuples == nil {
+		var ret []TupleKey
+		return ret
+	}
+	return *o.ContextualTuples
+}
+
+// GetContextualTuplesOk returns a tuple with the ContextualTuples field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *Assertion) GetContextualTuplesOk() (*[]TupleKey, bool) {
+	if o == nil || o.ContextualTuples == nil {
+		return nil, false
+	}
+	return o.ContextualTuples, true
+}
+
+// HasContextualTuples returns a boolean if a field has been set.
+func (o *Assertion) HasContextualTuples() bool {
+	if o != nil && o.ContextualTuples != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetContextualTuples gets a reference to the given []TupleKey and assigns it to the ContextualTuples field.
+func (o *Assertion) SetContextualTuples(v []TupleKey) {
+	o.ContextualTuples = &v
+}
+
+// GetContext returns the Context field value if set, zero value otherwise.
+func (o *Assertion) GetContext() map[string]interface{} {
+	if o == nil || o.Context == nil {
+		var ret map[string]interface{}
+		return ret
+	}
+	return *o.Context
+}
+
+// GetContextOk returns a tuple with the Context field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *Assertion) GetContextOk() (*map[string]interface{}, bool) {
+	if o == nil || o.Context == nil {
+		return nil, false
+	}
+	return o.Context, true
+}
+
+// HasContext returns a boolean if a field has been set.
+func (o *Assertion) HasContext() bool {
+	if o != nil && o.Context != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetContext gets a reference to the given map[string]interface{} and assigns it to the Context field.
+func (o *Assertion) SetContext(v map[string]interface{}) {
+	o.Context = &v
+}
+
 func (o Assertion) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["tuple_key"] = o.TupleKey
 	toSerialize["expectation"] = o.Expectation
+	if o.ContextualTuples != nil {
+		toSerialize["contextual_tuples"] = o.ContextualTuples
+	}
+	if o.Context != nil {
+		toSerialize["context"] = o.Context
+	}
 	var b bytes.Buffer
 	enc := json.NewEncoder(&b)
 	enc.SetEscapeHTML(false)
