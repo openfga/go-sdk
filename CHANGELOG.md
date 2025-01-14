@@ -3,7 +3,7 @@
 ## [Unreleased](https://github.com/openfga/go-sdk/compare/v0.6.3...HEAD)
 
 - feat: add support for `start_time` parameter in `ReadChanges` endpoint (#158)
-- fix: reduced the default retry behavior from 15 retries to 3 as requested in issue #417 (#158)
+- feat: change default retry policy to `3` from `15` - thanks @ovindu-a (#158)
 
 ## v0.6.3
 
