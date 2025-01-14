@@ -52,7 +52,7 @@ type Configuration struct {
 // DefaultRetryParams returns the default retry parameters
 func DefaultRetryParams() *RetryParams {
 	return &RetryParams{
-		MaxRetry:    15,
+		MaxRetry:    3,
 		MinWaitInMs: 100,
 	}
 }
