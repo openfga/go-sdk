@@ -7,8 +7,6 @@
 
 * `INTERNAL_ERROR` (value: `"internal_error"`)
 
-* `CANCELLED` (value: `"cancelled"`)
-
 * `DEADLINE_EXCEEDED` (value: `"deadline_exceeded"`)
 
 * `ALREADY_EXISTS` (value: `"already_exists"`)
