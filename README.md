@@ -102,7 +102,7 @@ to update `go.mod` and `go.sum` if you are using them.
 
 We strongly recommend you initialize the `OpenFgaClient` only once and then re-use it throughout your app, otherwise you will incur the cost of having to re-initialize multiple times or at every request, the cost of reduced connection pooling and re-use, and would be particularly costly in the client credentials flow, as that flow will be preformed on every request.
 
-> The `openfgaClient` will by default retry API requests up to 15 times on 429 and 5xx errors.
+> The `openfgaClient` will by default retry API requests up to 3 times on 429 and 5xx errors.
 
 #### No Credentials
 
@@ -439,6 +439,7 @@ options := ClientReadChangesOptions{
     ContinuationToken: openfga.PtrString("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="),
     // You can rely on the store id set in the configuration or override it for this specific request
     StoreId: openfga.PtrString("01FQH7V8BEG3GPQW93KTRFR8JB"), 
+    StartTime: openfga.PtrString("2022-01-01T00:00:00Z"),
 }
 data, err := fgaClient.ReadChanges(context.Background()).Body(body).Options(options).Execute()
 
@@ -899,7 +900,7 @@ data, err := fgaClient.WriteAssertions(context.Background()).
 
 ### Retries
 
-If a network request fails with a 429 or 5xx error from the server, the SDK will automatically retry the request up to 15 times with a minimum wait time of 100 milliseconds between each attempt.
+If a network request fails with a 429 or 5xx error from the server, the SDK will automatically retry the request up to 3 times with a minimum wait time of 100 milliseconds between each attempt.
 
 To customize this behavior, create an `openfga.RetryParams` struct and assign values to the `MaxRetry` and `MinWaitInMs` fields. `MaxRetry` determines the maximum number of retries (up to 15), while `MinWaitInMs` sets the minimum wait time between retries in milliseconds.
 
@@ -959,6 +960,7 @@ Class | Method | HTTP request | Description
  - [Any](docs/Any.md)
  - [Assertion](docs/Assertion.md)
  - [AssertionTupleKey](docs/AssertionTupleKey.md)
+ - [AuthErrorCode](docs/AuthErrorCode.md)
  - [AuthorizationModel](docs/AuthorizationModel.md)
  - [CheckRequest](docs/CheckRequest.md)
  - [CheckRequestTupleKey](docs/CheckRequestTupleKey.md)
@@ -977,6 +979,7 @@ Class | Method | HTTP request | Description
  - [ExpandRequestTupleKey](docs/ExpandRequestTupleKey.md)
  - [ExpandResponse](docs/ExpandResponse.md)
  - [FgaObject](docs/FgaObject.md)
+ - [ForbiddenResponse](docs/ForbiddenResponse.md)
  - [GetStoreResponse](docs/GetStoreResponse.md)
  - [InternalErrorCode](docs/InternalErrorCode.md)
  - [InternalErrorMessageResponse](docs/InternalErrorMessageResponse.md)

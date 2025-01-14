@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/jarcoal/httpmock"
 	"github.com/openfga/go-sdk"
@@ -1049,8 +1050,13 @@ func TestOpenFgaClient(t *testing.T) {
 				return resp, nil
 			},
 		)
+		startTime, err := time.Parse(time.RFC3339, "2022-01-01T00:00:00Z")
+		if err != nil {
+			t.Fatalf("Failed to parse startTime: %v", err)
+		}
 		body := ClientReadChangesRequest{
-			Type: "document",
+			Type:      "document",
+			StartTime: startTime,
 		}
 		options := ClientReadChangesOptions{ContinuationToken: openfga.PtrString("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="), PageSize: openfga.PtrInt32(25)}
 		got, err := fgaClient.ReadChanges(context.Background()).Body(body).Options(options).Execute()

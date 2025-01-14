@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"math"
 	_nethttp "net/http"
+	"time"
 
 	fgaSdk "github.com/openfga/go-sdk"
 	"github.com/openfga/go-sdk/credentials"
@@ -444,17 +445,20 @@ type SdkClient interface {
 	 */
 	SetAuthorizationModelId(authorizationModelId string) error
 
+
 	/*
 	 * GetAuthorizationModelId retrieves the Authorization Model ID for an OpenFGAClient.
 	 * @return string
 	 */
 	GetAuthorizationModelId() (string, error)
 
+
 	/*
 	 * SetStoreId allows setting the Store ID for an OpenFGAClient.
 	 * @param string storeId - The Store ID to set.
 	 */
 	SetStoreId(storeId string) error
+
 
 	/*
 	 * GetStoreId retrieves the Store ID set in the OpenFGAClient.
@@ -1155,7 +1159,8 @@ type SdkClientReadChangesRequestInterface interface {
 }
 
 type ClientReadChangesRequest struct {
-	Type string `json:"type,omitempty"`
+	Type      string    `json:"type,omitempty"`
+	StartTime time.Time `json:"start_time,omitempty"`
 }
 
 type ClientReadChangesOptions struct {

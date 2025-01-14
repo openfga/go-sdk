@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/jarcoal/httpmock"
 	"github.com/openfga/go-sdk/credentials"
@@ -794,9 +795,11 @@ func TestOpenFgaApi(t *testing.T) {
 				return resp, nil
 			},
 		)
+		startTime, err := time.Parse(time.RFC3339, "2022-01-01T00:00:00Z")
 		got, response, err := apiClient.OpenFgaApi.ReadChanges(context.Background(), "01GXSB9YR785C4FYS3C0RTG7B2").
 			Type_("repo").
 			PageSize(25).
+			StartTime(startTime).
 			ContinuationToken("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ==").
 			Execute()
 		if err != nil {

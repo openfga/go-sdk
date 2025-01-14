@@ -40,6 +40,7 @@ type OpenFgaApi interface {
 	A `contextual_tuples` object may also be included in the body of the request. This object contains one field `tuple_keys`, which is an array of tuple keys. Each of these tuples may have an associated `condition`.
 	You may also provide an `authorization_model_id` in the body. This will be used to assert that the input `tuple_key` is valid for the model specified. If not specified, the assertion will be made against the latest authorization model ID. It is strongly recommended to specify authorization model id for better performance.
 	You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly.
+	By default, the Check API caches results for a short time to optimize performance. You may specify a value of `HIGHER_CONSISTENCY` for the optional `consistency` parameter in the body to inform the server that higher conisistency is preferred at the expense of increased latency. Consideration should be given to the increased latency if requesting higher consistency.
 	The response will return whether the relationship exists in the field `allowed`.
 
 	Some exceptions apply, but in general, if a Check API responds with `{allowed: true}`, then you can expect the equivalent ListObjects query to return the object, and viceversa.
@@ -139,6 +140,18 @@ type OpenFgaApi interface {
 	}
 	```
 	will return `{ "allowed": true }`, even though a specific user of the userset `group:finance#member` does not have the `reader` relationship with the given object.
+	### Requesting higher consistency
+	By default, the Check API caches results for a short time to optimize performance. You may request higher consistency to inform the server that higher consistency should be preferred at the expense of increased latency. Care should be taken when requesting higher consistency due to the increased latency.
+	```json
+	{
+	  "tuple_key": {
+	     "user": "group:finance#member",
+	     "relation": "reader",
+	     "object": "document:2021-budget"
+	  },
+	  "consistency": "HIGHER_CONSISTENCY"
+	}
+	```
 
 		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 		 * @param storeId
@@ -265,6 +278,7 @@ type OpenFgaApi interface {
 	An `authorization_model_id` may be specified in the body. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance.
 	You may also specify `contextual_tuples` that will be treated as regular tuples. Each of these tuples may have an associated `condition`.
 	You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly.
+	By default, the Check API caches results for a short time to optimize performance. You may specify a value of `HIGHER_CONSISTENCY` for the optional `consistency` parameter in the body to inform the server that higher conisistency is preferred at the expense of increased latency. Consideration should be given to the increased latency if requesting higher consistency.
 	The response will contain the related objects in an array in the "objects" field of the response and they will be strings in the object format `<type>:<id>` (e.g. "document:roadmap").
 	The number of objects in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_OBJECTS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_OBJECTS_MAX_RESULTS, whichever is hit first.
 	The objects given will not be sorted, and therefore two identical calls can give a given different set of objects.
@@ -304,7 +318,7 @@ type OpenFgaApi interface {
 	You may also specify `contextual_tuples` that will be treated as regular tuples. Each of these tuples may have an associated `condition`.
 	You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly.
 	The response will contain the related users in an array in the "users" field of the response. These results may include specific objects, usersets
-	or type-bound public access. Each of these types of results is encoded in its own type and not represented as a string.In cases where a type-bound public acces result is returned (e.g. `user:*`), it cannot be inferred that all subjects
+	or type-bound public access. Each of these types of results is encoded in its own type and not represented as a string.In cases where a type-bound public access result is returned (e.g. `user:*`), it cannot be inferred that all subjects
 	of that type have a relation to the object; it is possible that negations exist and checks should still be queried
 	on individual subjects to ensure access to that document.The number of users in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_USERS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_USERS_MAX_RESULTS, whichever is hit first.
 	The returned users will not be sorted, and therefore two identical calls may yield different sets of users.
@@ -435,7 +449,7 @@ type OpenFgaApi interface {
 
 	/*
 	 * ReadAssertions Read assertions for an authorization model ID
-	 * The ReadAssertions API will return, for a given authorization model id, all the assertions stored for it. An assertion is an object that contains a tuple key, and the expectation of whether a call to the Check API of that tuple key will return true or false.
+	 * The ReadAssertions API will return, for a given authorization model id, all the assertions stored for it.
 	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	 * @param storeId
 	 * @param authorizationModelId
@@ -629,7 +643,7 @@ type OpenFgaApi interface {
 
 	/*
 	 * WriteAssertions Upsert assertions for an authorization model ID
-	 * The WriteAssertions API will upsert new assertions for an authorization model id, or overwrite the existing ones. An assertion is an object that contains a tuple key, and the expectation of whether a call to the Check API of that tuple key will return true or false.
+	 * The WriteAssertions API will upsert new assertions for an authorization model id, or overwrite the existing ones. An assertion is an object that contains a tuple key, the expectation of whether a call to the Check API of that tuple key will return true or false, and optionally a list of contextual tuples.
 	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	 * @param storeId
 	 * @param authorizationModelId
@@ -728,6 +742,7 @@ To arrive at a result, the API uses: an authorization model, explicit tuples wri
 A `contextual_tuples` object may also be included in the body of the request. This object contains one field `tuple_keys`, which is an array of tuple keys. Each of these tuples may have an associated `condition`.
 You may also provide an `authorization_model_id` in the body. This will be used to assert that the input `tuple_key` is valid for the model specified. If not specified, the assertion will be made against the latest authorization model ID. It is strongly recommended to specify authorization model id for better performance.
 You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly.
+By default, the Check API caches results for a short time to optimize performance. You may specify a value of `HIGHER_CONSISTENCY` for the optional `consistency` parameter in the body to inform the server that higher conisistency is preferred at the expense of increased latency. Consideration should be given to the increased latency if requesting higher consistency.
 The response will return whether the relationship exists in the field `allowed`.
 
 Some exceptions apply, but in general, if a Check API responds with `{allowed: true}`, then you can expect the equivalent ListObjects query to return the object, and viceversa.
@@ -845,6 +860,20 @@ the following query
 
 ```
 will return `{ "allowed": true }`, even though a specific user of the userset `group:finance#member` does not have the `reader` relationship with the given object.
+### Requesting higher consistency
+By default, the Check API caches results for a short time to optimize performance. You may request higher consistency to inform the server that higher consistency should be preferred at the expense of increased latency. Care should be taken when requesting higher consistency due to the increased latency.
+```json
+
+	{
+	  "tuple_key": {
+	     "user": "group:finance#member",
+	     "relation": "reader",
+	     "object": "document:2021-budget"
+	  },
+	  "consistency": "HIGHER_CONSISTENCY"
+	}
+
+```
 
   - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @param storeId
@@ -2290,6 +2319,7 @@ func (r ApiListObjectsRequest) Execute() (ListObjectsResponse, *_nethttp.Respons
 An `authorization_model_id` may be specified in the body. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance.
 You may also specify `contextual_tuples` that will be treated as regular tuples. Each of these tuples may have an associated `condition`.
 You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly.
+By default, the Check API caches results for a short time to optimize performance. You may specify a value of `HIGHER_CONSISTENCY` for the optional `consistency` parameter in the body to inform the server that higher conisistency is preferred at the expense of increased latency. Consideration should be given to the increased latency if requesting higher consistency.
 The response will contain the related objects in an array in the "objects" field of the response and they will be strings in the object format `<type>:<id>` (e.g. "document:roadmap").
 The number of objects in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_OBJECTS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_OBJECTS_MAX_RESULTS, whichever is hit first.
 The objects given will not be sorted, and therefore two identical calls can give a given different set of objects.
@@ -2867,7 +2897,7 @@ An `authorization_model_id` may be specified in the body. If it is not specified
 You may also specify `contextual_tuples` that will be treated as regular tuples. Each of these tuples may have an associated `condition`.
 You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly.
 The response will contain the related users in an array in the "users" field of the response. These results may include specific objects, usersets
-or type-bound public access. Each of these types of results is encoded in its own type and not represented as a string.In cases where a type-bound public acces result is returned (e.g. `user:*`), it cannot be inferred that all subjects
+or type-bound public access. Each of these types of results is encoded in its own type and not represented as a string.In cases where a type-bound public access result is returned (e.g. `user:*`), it cannot be inferred that all subjects
 of that type have a relation to the object; it is possible that negations exist and checks should still be queried
 on individual subjects to ensure access to that document.The number of users in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_USERS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_USERS_MAX_RESULTS, whichever is hit first.
 The returned users will not be sorted, and therefore two identical calls may yield different sets of users.
@@ -3550,7 +3580,7 @@ func (r ApiReadAssertionsRequest) Execute() (ReadAssertionsResponse, *_nethttp.R
 
 /*
  * ReadAssertions Read assertions for an authorization model ID
- * The ReadAssertions API will return, for a given authorization model id, all the assertions stored for it. An assertion is an object that contains a tuple key, and the expectation of whether a call to the Check API of that tuple key will return true or false.
+ * The ReadAssertions API will return, for a given authorization model id, all the assertions stored for it.
  * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @param storeId
  * @param authorizationModelId
@@ -4489,6 +4519,7 @@ type ApiReadChangesRequest struct {
 	type_             *string
 	pageSize          *int32
 	continuationToken *string
+	startTime         *time.Time
 }
 
 func (r ApiReadChangesRequest) Type_(type_ string) ApiReadChangesRequest {
@@ -4501,6 +4532,10 @@ func (r ApiReadChangesRequest) PageSize(pageSize int32) ApiReadChangesRequest {
 }
 func (r ApiReadChangesRequest) ContinuationToken(continuationToken string) ApiReadChangesRequest {
 	r.continuationToken = &continuationToken
+	return r
+}
+func (r ApiReadChangesRequest) StartTime(startTime time.Time) ApiReadChangesRequest {
+	r.startTime = &startTime
 	return r
 }
 
@@ -4570,6 +4605,9 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 		}
 		if r.continuationToken != nil {
 			localVarQueryParams.Add("continuation_token", parameterToString(*r.continuationToken, ""))
+		}
+		if r.startTime != nil {
+			localVarQueryParams.Add("start_time", parameterToString(*r.startTime, ""))
 		}
 		// to determine the Content-Type header
 		localVarHTTPContentTypes := []string{}
@@ -5136,7 +5174,7 @@ func (r ApiWriteAssertionsRequest) Execute() (*_nethttp.Response, error) {
 
 /*
  * WriteAssertions Upsert assertions for an authorization model ID
- * The WriteAssertions API will upsert new assertions for an authorization model id, or overwrite the existing ones. An assertion is an object that contains a tuple key, and the expectation of whether a call to the Check API of that tuple key will return true or false.
+ * The WriteAssertions API will upsert new assertions for an authorization model id, or overwrite the existing ones. An assertion is an object that contains a tuple key, the expectation of whether a call to the Check API of that tuple key will return true or false, and optionally a list of contextual tuples.
  * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @param storeId
  * @param authorizationModelId

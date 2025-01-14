@@ -24,7 +24,6 @@ type InternalErrorCode string
 const (
 	INTERNALERRORCODE_NO_INTERNAL_ERROR   InternalErrorCode = "no_internal_error"
 	INTERNALERRORCODE_INTERNAL_ERROR      InternalErrorCode = "internal_error"
-	INTERNALERRORCODE_CANCELLED           InternalErrorCode = "cancelled"
 	INTERNALERRORCODE_DEADLINE_EXCEEDED   InternalErrorCode = "deadline_exceeded"
 	INTERNALERRORCODE_ALREADY_EXISTS      InternalErrorCode = "already_exists"
 	INTERNALERRORCODE_RESOURCE_EXHAUSTED  InternalErrorCode = "resource_exhausted"
@@ -38,7 +37,6 @@ const (
 var allowedInternalErrorCodeEnumValues = []InternalErrorCode{
 	"no_internal_error",
 	"internal_error",
-	"cancelled",
 	"deadline_exceeded",
 	"already_exists",
 	"resource_exhausted",
