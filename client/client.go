@@ -444,16 +444,22 @@ type SdkClient interface {
 	 * @param string authorizationModelId - The Authorization Model ID to set.
 	 */
 	SetAuthorizationModelId(authorizationModelId string) error
+
+
 	/*
 	 * GetAuthorizationModelId retrieves the Authorization Model ID for an OpenFGAClient.
 	 * @return string
 	 */
 	GetAuthorizationModelId() (string, error)
+
+
 	/*
 	 * SetStoreId allows setting the Store ID for an OpenFGAClient.
 	 * @param string storeId - The Store ID to set.
 	 */
 	SetStoreId(storeId string) error
+
+
 	/*
 	 * GetStoreId retrieves the Store ID set in the OpenFGAClient.
 	 * @return string
