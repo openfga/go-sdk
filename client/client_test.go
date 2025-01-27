@@ -1492,6 +1492,38 @@ func TestOpenFgaClient(t *testing.T) {
 				t.Fatalf("%v", err)
 			}
 		}
+
+		// store can be overridden
+		storeOverrideOptions := ClientWriteOptions{
+			AuthorizationModelId: openfga.PtrString(authModelId),
+			Transaction: &TransactionOptions{
+				Disable:             true,
+				MaxParallelRequests: 5,
+				MaxPerChunk:         1,
+			},
+			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+		}
+		httpmock.Reset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		data, err = fgaClient.Write(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
+		if err != nil {
+			t.Fatalf("%v", data)
+		}
+
+		for index := 0; index < len(data.Writes); index++ {
+			response := data.Writes[index]
+			if response.Error != nil {
+				t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
+			}
+		}
 	})
 
 	t.Run("Write with invalid auth", func(t *testing.T) {
