@@ -4,6 +4,11 @@
 
 - feat: add support for `start_time` parameter in `ReadChanges` endpoint (#158)
 - feat: change default retry policy to `3` from `15` - thanks @ovindu-a (#158)
+- docs: replace readable names with uuid (#146) - thanks @sccalabr 
+- fix: support marshaling client.ClientWriteResponse (#145) - thanks @Fedot-Compot
+- fix: update client interface with store and model getter/setter (#155)
+- fix: api client should set default telemetry if not specified (#160) 
+- fix: Do not ignore request level storeId in non-transactional write (#162)
 
 ## v0.6.3
 
