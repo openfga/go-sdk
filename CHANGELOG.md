@@ -1,9 +1,12 @@
 # Changelog
 
-## [Unreleased](https://github.com/openfga/go-sdk/compare/v0.6.3...HEAD)
+## v0.6.4
+
+### [0.6.4](https://github.com/openfga/go-sdk/compare/v0.6.3...v0.6.4) (2025-01-29)
 
 - feat: add support for `start_time` parameter in `ReadChanges` endpoint (#158)
-- feat: change default retry policy to `3` from `15` - thanks @ovindu-a (#158)
+- fix: correctly set request level storeId in non-transactional write (#162)
+- fix: api client should set default telemetry if not specified (#160)
 - docs: replace readable names with uuid (#146) - thanks @sccalabr 
 - fix: support marshaling client.ClientWriteResponse (#145) - thanks @Fedot-Compot
 - fix: update client interface with store and model getter/setter (#155)
@@ -18,7 +21,7 @@
 
 ## v0.6.2
 
-### [0.6.2](https://github.com/openfga/go-sdk/compare/v0.6.1...v0.6.2) (2024-10-21)
+### [0.6.2](https://github.com/openfga/go-sdkk/compare/v0.6.1...v0.6.2) (2024-10-21)
 
 - fix: fix batch check consistency (#131)
 - fix: fix data race on TelemetryInstances (#136) - thanks @Kryvchun!
