@@ -433,13 +433,13 @@ Reads the list of historical relationship tuple writes and deletes.
 ```golang
 body := ClientReadChangesRequest{
     Type: "document",
+    StartTime: openfga.PtrString("2022-01-01T00:00:00Z"),
 }
 options := ClientReadChangesOptions{
     PageSize: openfga.PtrInt32(10),
     ContinuationToken: openfga.PtrString("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="),
     // You can rely on the store id set in the configuration or override it for this specific request
     StoreId: openfga.PtrString("01FQH7V8BEG3GPQW93KTRFR8JB"), 
-    StartTime: openfga.PtrString("2022-01-01T00:00:00Z"),
 }
 data, err := fgaClient.ReadChanges(context.Background()).Body(body).Options(options).Execute()
 
