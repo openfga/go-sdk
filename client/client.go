@@ -1230,8 +1230,11 @@ func (client *OpenFgaClient) ReadChangesExecute(request SdkClientReadChangesRequ
 		req = req.ContinuationToken(*continuationToken)
 	}
 	requestBody := request.GetBody()
-	if requestBody != nil {
+	if requestBody != nil &&  requestBody.Type != "" {
 		req = req.Type_(requestBody.Type)
+	}
+	if requestBody != nil &&  !requestBody.StartTime.IsZero() {
+		req = req.StartTime(requestBody.StartTime)
 	}
 
 	data, _, err := req.Execute()
