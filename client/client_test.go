@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/jarcoal/httpmock"
-	"github.com/openfga/go-sdk"
+	openfga "github.com/openfga/go-sdk"
 	. "github.com/openfga/go-sdk/client"
 )
 
@@ -3002,7 +3002,7 @@ func TestOpenFgaClient(t *testing.T) {
 		modelId := "01GAHCE4YVKPQEKZQHT2R89MQV"
 		test := TestDefinition{
 			Name:           "ReadAssertions",
-			JsonResponse:   fmt.Sprintf(`{"assertions":[{"tuple_key":{"user":"user:anna","relation":"can_view","object":"document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"},"expectation":true}],"authorization_model_id":"%s"}`, modelId),
+			JsonResponse:   fmt.Sprintf(`{"assertions":[{"tuple_key":{"user":"user:anna","relation":"can_view","object":"document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"},"expectation":true}],"authorization_model_id":"%s","context":{"context":"value"},"contextual_tuples":[{"object":"document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a","relation":"can_view","user":"user:81684243-9356-4421-8fbf-a4f8d36aa31b"}]}`, modelId),
 			ResponseStatus: http.StatusOK,
 			Method:         http.MethodGet,
 			RequestPath:    "assertions",
@@ -3111,6 +3111,16 @@ func TestOpenFgaClient(t *testing.T) {
 				Relation:    "can_view",
 				Object:      "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 				Expectation: true,
+				Context: &map[string]interface{}{
+					"context": "value",
+				},
+				ContextualTuples: []ClientContextualTupleKey{
+					{
+						User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+						Relation: "can_view",
+						Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+					},
+				},
 			},
 		}
 		options := ClientWriteAssertionsOptions{
