@@ -250,6 +250,7 @@ func mainInner() error {
 		User:     "user:anne",
 		Relation: "viewer",
 		Type:     "document",
+		Context:  &map[string]interface{}{"ViewCount": 100},
 	}).Execute()
 	fmt.Printf("Response: Objects = %v\n", listObjectsResponse.Objects)
 
@@ -283,6 +284,14 @@ func mainInner() error {
 			Relation:    "writer",
 			Object:      "document:budget",
 			Expectation: true,
+			Context:     &map[string]interface{}{"Name": "Roadmap", "Type": "document"},
+			ContextualTuples: []client.ClientContextualTupleKey{
+				{
+					User:     "user:carl",
+					Relation: "writer",
+					Object:   "document:budget",
+				},
+			},
 		},
 		{
 			User:        "user:anne",
@@ -302,7 +311,7 @@ func mainInner() error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Assertions: %v\n", assertions)
+	fmt.Printf("Assertions: %v\n", assertions.GetAssertions())
 
 	// DeleteStore
 	fmt.Println("Deleting Current Store")
