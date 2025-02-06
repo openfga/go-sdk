@@ -5,8 +5,6 @@
 .github/ISSUE_TEMPLATE/config.yaml
 .github/ISSUE_TEMPLATE/feature_request.yaml
 .github/dependabot.yaml
-.github/workflows/main.yaml
-.github/workflows/semgrep.yaml
 .gitignore
 CHANGELOG.md
 CONTRIBUTING.md
@@ -15,6 +13,7 @@ NOTICE.txt
 README.md
 VERSION.txt
 api_client.go
+api_client_test.go
 api_open_fga.go
 api_open_fga_test.go
 client/client.go

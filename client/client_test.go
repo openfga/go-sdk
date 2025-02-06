@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/jarcoal/httpmock"
-	openfga "github.com/openfga/go-sdk"
+	"github.com/openfga/go-sdk"
 	. "github.com/openfga/go-sdk/client"
 )
 

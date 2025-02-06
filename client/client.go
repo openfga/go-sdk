@@ -444,19 +444,16 @@ type SdkClient interface {
 	 * @param string authorizationModelId - The Authorization Model ID to set.
 	 */
 	SetAuthorizationModelId(authorizationModelId string) error
-
 	/*
 	 * GetAuthorizationModelId retrieves the Authorization Model ID for an OpenFGAClient.
 	 * @return string
 	 */
 	GetAuthorizationModelId() (string, error)
-
 	/*
 	 * SetStoreId allows setting the Store ID for an OpenFGAClient.
 	 * @param string storeId - The Store ID to set.
 	 */
 	SetStoreId(storeId string) error
-
 	/*
 	 * GetStoreId retrieves the Store ID set in the OpenFGAClient.
 	 * @return string
@@ -1230,10 +1227,10 @@ func (client *OpenFgaClient) ReadChangesExecute(request SdkClientReadChangesRequ
 		req = req.ContinuationToken(*continuationToken)
 	}
 	requestBody := request.GetBody()
-	if requestBody != nil &&  requestBody.Type != "" {
+	if requestBody != nil && requestBody.Type != "" {
 		req = req.Type_(requestBody.Type)
 	}
-	if requestBody != nil &&  !requestBody.StartTime.IsZero() {
+	if requestBody != nil && !requestBody.StartTime.IsZero() {
 		req = req.StartTime(requestBody.StartTime)
 	}
 
@@ -2701,15 +2698,12 @@ func (clientAssertion ClientAssertion) ToAssertion() fgaSdk.Assertion {
 		},
 		Expectation: clientAssertion.Expectation,
 	}
-
 	if clientAssertion.Context != nil {
 		assertion.Context = clientAssertion.Context
 	}
-
 	if clientAssertion.ContextualTuples != nil {
 		assertion.ContextualTuples = &clientAssertion.ContextualTuples
 	}
-
 	return assertion
 }
 
