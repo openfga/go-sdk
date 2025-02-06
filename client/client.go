@@ -2682,16 +2682,18 @@ type SdkClientWriteAssertionsRequestInterface interface {
 }
 
 type ClientAssertion struct {
-	User        string `json:"user,omitempty"`
-	Relation    string `json:"relation,omitempty"`
-	Object      string `json:"object,omitempty"`
-	Expectation bool   `json:"expectation,omitempty"`
+	User             string                     `json:"user,omitempty"`
+	Relation         string                     `json:"relation,omitempty"`
+	Object           string                     `json:"object,omitempty"`
+	Expectation      bool                       `json:"expectation,omitempty"`
+	Context          *map[string]interface{}    `json:"context,omitempty"`
+	ContextualTuples []ClientContextualTupleKey `json:"contextual_tuples,omitempty"`
 }
 
 type ClientWriteAssertionsRequest = []ClientAssertion
 
 func (clientAssertion ClientAssertion) ToAssertion() fgaSdk.Assertion {
-	return fgaSdk.Assertion{
+	assertion := fgaSdk.Assertion{
 		TupleKey: fgaSdk.AssertionTupleKey{
 			User:     clientAssertion.User,
 			Relation: clientAssertion.Relation,
@@ -2699,6 +2701,16 @@ func (clientAssertion ClientAssertion) ToAssertion() fgaSdk.Assertion {
 		},
 		Expectation: clientAssertion.Expectation,
 	}
+
+	if clientAssertion.Context != nil {
+		assertion.Context = clientAssertion.Context
+	}
+
+	if clientAssertion.ContextualTuples != nil {
+		assertion.ContextualTuples = &clientAssertion.ContextualTuples
+	}
+
+	return assertion
 }
 
 type ClientWriteAssertionsOptions struct {

@@ -889,6 +889,16 @@ requestBody := ClientWriteAssertionsRequest{
         Relation:    "can_view",
         Object:      "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
         Expectation: true,
+        Context: &map[string]interface{}{
+            "context": "value",
+        },
+        ContextualTuples: []ClientContextualTupleKey{
+            {
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "can_view",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            },
+        },
     },
 }
 data, err := fgaClient.WriteAssertions(context.Background()).
