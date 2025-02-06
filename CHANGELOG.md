@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.6.5
+
+### [0.6.5](https://github.com/openfga/go-sdk/compare/v0.6.4...v0.6.5) (2025-02-06)
+
+- feat: support assertions with context and contextual tuples (#169)
+- fix: populate start_time in request (#166)
+
 ## v0.6.4
 
 ### [0.6.4](https://github.com/openfga/go-sdk/compare/v0.6.3...v0.6.4) (2025-01-29)
