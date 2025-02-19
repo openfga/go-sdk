@@ -18,62 +18,61 @@ import (
 	"encoding/json"
 )
 
-// ExpandRequest struct for ExpandRequest
-type ExpandRequest struct {
-	TupleKey             ExpandRequestTupleKey  `json:"tuple_key"yaml:"tuple_key"`
+// BatchCheckRequest struct for BatchCheckRequest
+type BatchCheckRequest struct {
+	Checks               []BatchCheckItem       `json:"checks"yaml:"checks"`
 	AuthorizationModelId *string                `json:"authorization_model_id,omitempty"yaml:"authorization_model_id,omitempty"`
 	Consistency          *ConsistencyPreference `json:"consistency,omitempty"yaml:"consistency,omitempty"`
-	ContextualTuples     *ContextualTupleKeys   `json:"contextual_tuples,omitempty"yaml:"contextual_tuples,omitempty"`
 }
 
-// NewExpandRequest instantiates a new ExpandRequest object
+// NewBatchCheckRequest instantiates a new BatchCheckRequest object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewExpandRequest(tupleKey ExpandRequestTupleKey) *ExpandRequest {
-	this := ExpandRequest{}
-	this.TupleKey = tupleKey
+func NewBatchCheckRequest(checks []BatchCheckItem) *BatchCheckRequest {
+	this := BatchCheckRequest{}
+	this.Checks = checks
 	var consistency ConsistencyPreference = CONSISTENCYPREFERENCE_UNSPECIFIED
 	this.Consistency = &consistency
 	return &this
 }
 
-// NewExpandRequestWithDefaults instantiates a new ExpandRequest object
+// NewBatchCheckRequestWithDefaults instantiates a new BatchCheckRequest object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewExpandRequestWithDefaults() *ExpandRequest {
-	this := ExpandRequest{}
+func NewBatchCheckRequestWithDefaults() *BatchCheckRequest {
+	this := BatchCheckRequest{}
 	var consistency ConsistencyPreference = CONSISTENCYPREFERENCE_UNSPECIFIED
 	this.Consistency = &consistency
 	return &this
 }
 
-// GetTupleKey returns the TupleKey field value
-func (o *ExpandRequest) GetTupleKey() ExpandRequestTupleKey {
+// GetChecks returns the Checks field value
+func (o *BatchCheckRequest) GetChecks() []BatchCheckItem {
 	if o == nil {
-		var ret ExpandRequestTupleKey
+		var ret []BatchCheckItem
 		return ret
 	}
 
-	return o.TupleKey
+	return o.Checks
 }
 
-// GetTupleKeyOk returns a tuple with the TupleKey field value
+// GetChecksOk returns a tuple with the Checks field value
 // and a boolean to check if the value has been set.
-func (o *ExpandRequest) GetTupleKeyOk() (*ExpandRequestTupleKey, bool) {
+func (o *BatchCheckRequest) GetChecksOk() (*[]BatchCheckItem, bool) {
 	if o == nil {
 		return nil, false
 	}
-	return &o.TupleKey, true
+	return &o.Checks, true
 }
 
-// SetTupleKey sets field value
-func (o *ExpandRequest) SetTupleKey(v ExpandRequestTupleKey) {
-	o.TupleKey = v
+// SetChecks sets field value
+func (o *BatchCheckRequest) SetChecks(v []BatchCheckItem) {
+	o.Checks = v
 }
 
 // GetAuthorizationModelId returns the AuthorizationModelId field value if set, zero value otherwise.
-func (o *ExpandRequest) GetAuthorizationModelId() string {
+func (o *BatchCheckRequest) GetAuthorizationModelId() string {
 	if o == nil || o.AuthorizationModelId == nil {
 		var ret string
 		return ret
@@ -83,7 +82,7 @@ func (o *ExpandRequest) GetAuthorizationModelId() string {
 
 // GetAuthorizationModelIdOk returns a tuple with the AuthorizationModelId field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *ExpandRequest) GetAuthorizationModelIdOk() (*string, bool) {
+func (o *BatchCheckRequest) GetAuthorizationModelIdOk() (*string, bool) {
 	if o == nil || o.AuthorizationModelId == nil {
 		return nil, false
 	}
@@ -91,7 +90,7 @@ func (o *ExpandRequest) GetAuthorizationModelIdOk() (*string, bool) {
 }
 
 // HasAuthorizationModelId returns a boolean if a field has been set.
-func (o *ExpandRequest) HasAuthorizationModelId() bool {
+func (o *BatchCheckRequest) HasAuthorizationModelId() bool {
 	if o != nil && o.AuthorizationModelId != nil {
 		return true
 	}
@@ -100,12 +99,12 @@ func (o *ExpandRequest) HasAuthorizationModelId() bool {
 }
 
 // SetAuthorizationModelId gets a reference to the given string and assigns it to the AuthorizationModelId field.
-func (o *ExpandRequest) SetAuthorizationModelId(v string) {
+func (o *BatchCheckRequest) SetAuthorizationModelId(v string) {
 	o.AuthorizationModelId = &v
 }
 
 // GetConsistency returns the Consistency field value if set, zero value otherwise.
-func (o *ExpandRequest) GetConsistency() ConsistencyPreference {
+func (o *BatchCheckRequest) GetConsistency() ConsistencyPreference {
 	if o == nil || o.Consistency == nil {
 		var ret ConsistencyPreference
 		return ret
@@ -115,7 +114,7 @@ func (o *ExpandRequest) GetConsistency() ConsistencyPreference {
 
 // GetConsistencyOk returns a tuple with the Consistency field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *ExpandRequest) GetConsistencyOk() (*ConsistencyPreference, bool) {
+func (o *BatchCheckRequest) GetConsistencyOk() (*ConsistencyPreference, bool) {
 	if o == nil || o.Consistency == nil {
 		return nil, false
 	}
@@ -123,7 +122,7 @@ func (o *ExpandRequest) GetConsistencyOk() (*ConsistencyPreference, bool) {
 }
 
 // HasConsistency returns a boolean if a field has been set.
-func (o *ExpandRequest) HasConsistency() bool {
+func (o *BatchCheckRequest) HasConsistency() bool {
 	if o != nil && o.Consistency != nil {
 		return true
 	}
@@ -132,53 +131,18 @@ func (o *ExpandRequest) HasConsistency() bool {
 }
 
 // SetConsistency gets a reference to the given ConsistencyPreference and assigns it to the Consistency field.
-func (o *ExpandRequest) SetConsistency(v ConsistencyPreference) {
+func (o *BatchCheckRequest) SetConsistency(v ConsistencyPreference) {
 	o.Consistency = &v
 }
 
-// GetContextualTuples returns the ContextualTuples field value if set, zero value otherwise.
-func (o *ExpandRequest) GetContextualTuples() ContextualTupleKeys {
-	if o == nil || o.ContextualTuples == nil {
-		var ret ContextualTupleKeys
-		return ret
-	}
-	return *o.ContextualTuples
-}
-
-// GetContextualTuplesOk returns a tuple with the ContextualTuples field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *ExpandRequest) GetContextualTuplesOk() (*ContextualTupleKeys, bool) {
-	if o == nil || o.ContextualTuples == nil {
-		return nil, false
-	}
-	return o.ContextualTuples, true
-}
-
-// HasContextualTuples returns a boolean if a field has been set.
-func (o *ExpandRequest) HasContextualTuples() bool {
-	if o != nil && o.ContextualTuples != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetContextualTuples gets a reference to the given ContextualTupleKeys and assigns it to the ContextualTuples field.
-func (o *ExpandRequest) SetContextualTuples(v ContextualTupleKeys) {
-	o.ContextualTuples = &v
-}
-
-func (o ExpandRequest) MarshalJSON() ([]byte, error) {
+func (o BatchCheckRequest) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	toSerialize["tuple_key"] = o.TupleKey
+	toSerialize["checks"] = o.Checks
 	if o.AuthorizationModelId != nil {
 		toSerialize["authorization_model_id"] = o.AuthorizationModelId
 	}
 	if o.Consistency != nil {
 		toSerialize["consistency"] = o.Consistency
-	}
-	if o.ContextualTuples != nil {
-		toSerialize["contextual_tuples"] = o.ContextualTuples
 	}
 	var b bytes.Buffer
 	enc := json.NewEncoder(&b)
@@ -190,38 +154,38 @@ func (o ExpandRequest) MarshalJSON() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-type NullableExpandRequest struct {
-	value *ExpandRequest
+type NullableBatchCheckRequest struct {
+	value *BatchCheckRequest
 	isSet bool
 }
 
-func (v NullableExpandRequest) Get() *ExpandRequest {
+func (v NullableBatchCheckRequest) Get() *BatchCheckRequest {
 	return v.value
 }
 
-func (v *NullableExpandRequest) Set(val *ExpandRequest) {
+func (v *NullableBatchCheckRequest) Set(val *BatchCheckRequest) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableExpandRequest) IsSet() bool {
+func (v NullableBatchCheckRequest) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableExpandRequest) Unset() {
+func (v *NullableBatchCheckRequest) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableExpandRequest(val *ExpandRequest) *NullableExpandRequest {
-	return &NullableExpandRequest{value: val, isSet: true}
+func NewNullableBatchCheckRequest(val *BatchCheckRequest) *NullableBatchCheckRequest {
+	return &NullableBatchCheckRequest{value: val, isSet: true}
 }
 
-func (v NullableExpandRequest) MarshalJSON() ([]byte, error) {
+func (v NullableBatchCheckRequest) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableExpandRequest) UnmarshalJSON(src []byte) error {
+func (v *NullableBatchCheckRequest) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
