@@ -2045,7 +2045,7 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 	})
 
-	t.Run("BatchCheck", func(t *testing.T) {
+	t.Run("ClientBatchCheck", func(t *testing.T) {
 		test := TestDefinition{
 			Name:           "Check",
 			JsonResponse:   `{"allowed":true, "resolution":""}`,
@@ -2053,7 +2053,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Method:         http.MethodPost,
 			RequestPath:    "check",
 		}
-		requestBody := ClientBatchCheckBody{{
+		requestBody := ClientBatchCheckClientBody{{
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "viewer",
 			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
@@ -2083,7 +2083,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
 
-		options := ClientBatchCheckOptions{
+		options := ClientBatchCheckClientOptions{
 			AuthorizationModelId: openfga.PtrString(authModelId),
 			MaxParallelRequests:  openfga.PtrInt32(5),
 		}
@@ -2105,7 +2105,7 @@ func TestOpenFgaClient(t *testing.T) {
 			},
 		)
 
-		got, err := fgaClient.BatchCheck(context.Background()).Body(requestBody).Options(options).Execute()
+		got, err := fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Options(options).Execute()
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
@@ -2136,28 +2136,28 @@ func TestOpenFgaClient(t *testing.T) {
 				t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
 			}
 		}
-		// BatchCheck without options should work
-		_, err = fgaClient.BatchCheck(context.Background()).Body(requestBody).Execute()
+		// ClientBatchCheck without options should work
+		_, err = fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Execute()
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
 
 		httpmock.ZeroCallCounters()
-		// BatchCheck with invalid auth model ID should fail
-		badOptions := ClientBatchCheckOptions{
+		// ClientBatchCheck with invalid auth model ID should fail
+		badOptions := ClientBatchCheckClientOptions{
 			AuthorizationModelId: openfga.PtrString("INVALID"),
 			MaxParallelRequests:  openfga.PtrInt32(5),
 		}
-		_, err = fgaClient.BatchCheck(context.Background()).Body(requestBody).Options(badOptions).Execute()
+		_, err = fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Options(badOptions).Execute()
 		if err == nil {
 			t.Fatalf("Expect error with invalid auth model id but there is none")
 		}
 		// invalid store ID should fail
-		badStoreOptions := ClientBatchCheckOptions{
+		badStoreOptions := ClientBatchCheckClientOptions{
 			StoreId:             openfga.PtrString("INVALID"),
 			MaxParallelRequests: openfga.PtrInt32(5),
 		}
-		_, err = fgaClient.BatchCheck(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
+		_, err = fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
 		if err == nil {
 			t.Fatalf("Expect error with invalid auth model id but there is none")
 		}
@@ -2172,14 +2172,14 @@ func TestOpenFgaClient(t *testing.T) {
 				return httpmock.NewStringResponse(http.StatusUnauthorized, ""), nil
 			},
 		)
-		// BatchCheck with invalid auth should fail
-		_, err = fgaClient.BatchCheck(context.Background()).Body(requestBody).Options(options).Execute()
+		// ClientBatchCheck with invalid auth should fail
+		_, err = fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Options(options).Execute()
 		if err == nil {
 			t.Fatalf("Expect error with invalid auth but there is none")
 		}
 
 		// store should be overridden
-		storeOverrideOptions := ClientBatchCheckOptions{
+		storeOverrideOptions := ClientBatchCheckClientOptions{
 			StoreId:             openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
 			MaxParallelRequests: openfga.PtrInt32(5),
 		}
@@ -2193,13 +2193,13 @@ func TestOpenFgaClient(t *testing.T) {
 			},
 		)
 
-		_, err = fgaClient.BatchCheck(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
+		_, err = fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
 	})
 
-	t.Run("BatchCheckWithConsistency", func(t *testing.T) {
+	t.Run("ClientBatchCheckWithConsistency", func(t *testing.T) {
 		test := TestDefinition{
 			Name:           "Check",
 			JsonResponse:   `{"allowed":true, "resolution":""}`,
@@ -2207,7 +2207,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Method:         http.MethodPost,
 			RequestPath:    "check",
 		}
-		requestBody := ClientBatchCheckBody{{
+		requestBody := ClientBatchCheckClientBody{{
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "viewer",
 			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
@@ -2237,7 +2237,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
 
-		options := ClientBatchCheckOptions{
+		options := ClientBatchCheckClientOptions{
 			AuthorizationModelId: openfga.PtrString(authModelId),
 			MaxParallelRequests:  openfga.PtrInt32(5),
 			Consistency:          openfga.CONSISTENCYPREFERENCE_HIGHER_CONSISTENCY.Ptr(),
@@ -2261,7 +2261,7 @@ func TestOpenFgaClient(t *testing.T) {
 			},
 		)
 
-		checks, err := fgaClient.BatchCheck(context.Background()).Body(requestBody).Options(options).Execute()
+		checks, err := fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Options(options).Execute()
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
