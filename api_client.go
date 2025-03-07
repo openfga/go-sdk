@@ -31,6 +31,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/openfga/go-sdk/internal/utils/retryutils"
 	"github.com/openfga/go-sdk/telemetry"
 )
 
@@ -74,7 +75,7 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 		} else {
 			cfg.Credentials.Context = context.Background()
 			telemetry.Bind(cfg.Credentials.Context, telemetry.Get(telemetry.TelemetryFactoryParameters{Configuration: cfg.Telemetry}))
-			var httpClient, headers = cfg.Credentials.GetHttpClientAndHeaderOverrides()
+			var httpClient, headers = cfg.Credentials.GetHttpClientAndHeaderOverrides(retryutils.GetRetryParamsOrDefault(cfg.RetryParams))
 			if len(headers) > 0 {
 				for idx := range headers {
 					cfg.AddDefaultHeader(headers[idx].Key, headers[idx].Value)

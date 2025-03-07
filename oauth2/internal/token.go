@@ -20,12 +20,9 @@ import (
 	"sync"
 	"time"
 
-	internalutils "github.com/openfga/go-sdk/internal/utils"
+	"github.com/openfga/go-sdk/internal/utils/retryutils"
 	"github.com/openfga/go-sdk/telemetry"
 )
-
-const cMaxRetry = 3
-const cMinWaitInMs = 50
 
 // Token represents the credentials used to authorize
 // the requests to access protected resources on the OAuth 2.0
@@ -189,7 +186,7 @@ func cloneURLValues(v url.Values) url.Values {
 	return v2
 }
 
-func RetrieveToken(ctx context.Context, clientID, clientSecret, tokenURL string, v url.Values, authStyle AuthStyle) (*Token, error) {
+func RetrieveToken(ctx context.Context, clientID, clientSecret, tokenURL string, v url.Values, authStyle AuthStyle, maxRetry, minWaitInMs int) (*Token, error) {
 	needsAuthStyleProbe := authStyle == 0
 	if needsAuthStyleProbe {
 		if style, ok := lookupAuthStyle(tokenURL); ok {
@@ -203,7 +200,7 @@ func RetrieveToken(ctx context.Context, clientID, clientSecret, tokenURL string,
 	if err != nil {
 		return nil, err
 	}
-	token, err := doTokenRoundTrip(ctx, req)
+	token, err := doTokenRoundTrip(ctx, req, maxRetry, minWaitInMs)
 	if err != nil && needsAuthStyleProbe {
 		// If we get an error, assume the server wants the
 		// clientID & clientSecret in a different form.
@@ -219,7 +216,7 @@ func RetrieveToken(ctx context.Context, clientID, clientSecret, tokenURL string,
 		// So just try both ways.
 		authStyle = AuthStyleInParams // the second way we'll try
 		req, _ = newTokenRequest(tokenURL, clientID, clientSecret, v, authStyle)
-		token, err = doTokenRoundTrip(ctx, req)
+		token, err = doTokenRoundTrip(ctx, req, maxRetry, minWaitInMs)
 	}
 	if needsAuthStyleProbe && err == nil {
 		setAuthStyle(tokenURL, authStyle)
@@ -288,11 +285,11 @@ func singleTokenRoundTrip(ctx context.Context, req *http.Request) (*Token, error
 	return token, nil
 }
 
-func doTokenRoundTrip(ctx context.Context, req *http.Request) (*Token, error) {
+func doTokenRoundTrip(ctx context.Context, req *http.Request, maxRetry, minWaitInMs int) (*Token, error) {
 	var token *Token
 	var err error
 
-	for i := 0; i < cMaxRetry; i++ {
+	for i := 0; i <= maxRetry; i++ {
 
 		token, err = singleTokenRoundTrip(ctx, req)
 		if err == nil {
@@ -308,8 +305,11 @@ func doTokenRoundTrip(ctx context.Context, req *http.Request) (*Token, error) {
 		// We do not want to retry any other error
 		if rErr, ok := err.(*RetrieveError); ok {
 			statusCode := rErr.Response.StatusCode
-			if statusCode == http.StatusTooManyRequests || (statusCode >= http.StatusInternalServerError && statusCode <= 599) {
-				time.Sleep(time.Duration(internalutils.RandomTime(i, cMinWaitInMs)) * time.Millisecond)
+			if statusCode == http.StatusTooManyRequests || (statusCode >= http.StatusInternalServerError && statusCode != http.StatusNotImplemented) {
+				timeToWait := retryutils.GetTimeToWait(i, maxRetry, minWaitInMs, rErr.Response.Header, "TokenExchange")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+				}
 				continue
 			}
 		}

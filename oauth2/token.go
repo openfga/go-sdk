@@ -7,12 +7,14 @@ package oauth2
 import (
 	"context"
 	"fmt"
-	"github.com/openfga/go-sdk/oauth2/internal"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/openfga/go-sdk/internal/utils/retryutils"
+	"github.com/openfga/go-sdk/oauth2/internal"
 )
 
 // expiryDelta determines how earlier a token should be considered
@@ -153,7 +155,12 @@ func tokenFromInternal(t *internal.Token) *Token {
 // This token is then mapped from *internal.Token into an *oauth2.Token which is returned along
 // with an error..
 func retrieveToken(ctx context.Context, c *Config, v url.Values) (*Token, error) {
-	tk, err := internal.RetrieveToken(ctx, c.ClientID, c.ClientSecret, c.Endpoint.TokenURL, v, internal.AuthStyle(c.Endpoint.AuthStyle))
+	retryParams, err := retryutils.NewRetryParams(c.RetryParams)
+	if err != nil {
+		return nil, err
+	}
+
+	tk, err := internal.RetrieveToken(ctx, c.ClientID, c.ClientSecret, c.Endpoint.TokenURL, v, internal.AuthStyle(c.Endpoint.AuthStyle), retryParams.MaxRetry, retryParams.MinWaitInMs)
 	if err != nil {
 		if rErr, ok := err.(*internal.RetrieveError); ok {
 			return nil, (*RetrieveError)(rErr)

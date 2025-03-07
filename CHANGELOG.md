@@ -1,5 +1,13 @@
 # Changelog
 
+## [Unreleased](https://github.com/openfga/java-sdk/compare/v0.6.5...HEAD)
+
+- feat: fix and improve retries and rate limit handling. (#176)
+  The SDK now retries on network errors and the default retry handling has been fixed
+  for both the calls to the OpenFGA API and the API Token Issuer for those using ClientCredentials
+  The SDK now also respects the rate limit headers (`Retry-After`) returned by the server and will retry the request after the specified time.
+  If the header is not sent or on network errors, it will fall back to exponential backoff.
+
 ## v0.6.5
 
 ### [0.6.5](https://github.com/openfga/go-sdk/compare/v0.6.4...v0.6.5) (2025-02-06)
