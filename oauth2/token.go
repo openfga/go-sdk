@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/openfga/go-sdk/internal/utils/retryutils"
 	"github.com/openfga/go-sdk/oauth2/internal"
 )
 
@@ -155,12 +154,7 @@ func tokenFromInternal(t *internal.Token) *Token {
 // This token is then mapped from *internal.Token into an *oauth2.Token which is returned along
 // with an error..
 func retrieveToken(ctx context.Context, c *Config, v url.Values) (*Token, error) {
-	retryParams, err := retryutils.NewRetryParams(c.RetryParams)
-	if err != nil {
-		return nil, err
-	}
-
-	tk, err := internal.RetrieveToken(ctx, c.ClientID, c.ClientSecret, c.Endpoint.TokenURL, v, internal.AuthStyle(c.Endpoint.AuthStyle), retryParams.MaxRetry, retryParams.MinWaitInMs)
+	tk, err := internal.RetrieveToken(ctx, c.ClientID, c.ClientSecret, c.Endpoint.TokenURL, v, internal.AuthStyle(c.Endpoint.AuthStyle), c.RequestConfig)
 	if err != nil {
 		if rErr, ok := err.(*internal.RetrieveError); ok {
 			return nil, (*RetrieveError)(rErr)

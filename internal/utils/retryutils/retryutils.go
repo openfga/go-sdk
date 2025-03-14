@@ -45,8 +45,8 @@ func randomTime(loopCount int, minWaitInMs int) time.Duration {
 	return time.Duration(_rand.Intn(maxTimeToWait-minTimeToWait+1)+minTimeToWait) * time.Millisecond
 }
 
-// parseRetryAfterHeadersValue parses the Retry-After header value to time.Duration
-func parseRetryAfterHeaderValue(headers http.Header, headerName string) time.Duration {
+// ParseRetryAfterHeaderValue parses the Retry-After header value to time.Duration
+func ParseRetryAfterHeaderValue(headers http.Header, headerName string) time.Duration {
 	retryAfter := headers.Get(headerName)
 	if retryAfter == "" {
 		return 0
@@ -69,19 +69,19 @@ func parseRetryAfterHeaderValue(headers http.Header, headerName string) time.Dur
 // starts with Retry-After, then X-RateLimit-Reset, then X-Rate-Limit-Reset
 func parseRetryHeaderValue(headers http.Header) time.Duration {
 	// if retryAfter is greater than 0 and less than the max backoff time, return retryAfter
-	timeToWait := parseRetryAfterHeaderValue(headers, RetryAfterHeaderName)
+	timeToWait := ParseRetryAfterHeaderValue(headers, RetryAfterHeaderName)
 	if timeToWait > 0 && timeToWait < RetryHeaderMaxAllowableDurationInSec*time.Second {
 		return timeToWait
 	}
 
 	// if X-Rate-Limit-Reset is greater than 0 and less than the max backoff time, return retryAfter
-	timeToWait = parseRetryAfterHeaderValue(headers, RateLimitResetHeaderName)
+	timeToWait = ParseRetryAfterHeaderValue(headers, RateLimitResetHeaderName)
 	if timeToWait > 0 && timeToWait < RetryHeaderMaxAllowableDurationInSec*time.Second {
 		return timeToWait
 	}
 
 	// if X-RateLimit-Reset is greater than 0 and less than the max backoff time, return retryAfter
-	timeToWait = parseRetryAfterHeaderValue(headers, RateLimitResetAltHeaderName)
+	timeToWait = ParseRetryAfterHeaderValue(headers, RateLimitResetAltHeaderName)
 	if timeToWait > 0 && timeToWait < RetryHeaderMaxAllowableDurationInSec*time.Second {
 		return timeToWait
 	}
