@@ -15,6 +15,8 @@ import (
 	"testing"
 
 	"github.com/jarcoal/httpmock"
+
+	"github.com/openfga/go-sdk/internal/utils/retryutils"
 )
 
 const (
@@ -22,6 +24,14 @@ const (
 	testMinWaitInMs = 20
 	testURL         = "https://auth.fga.example"
 )
+
+var testTokenRequestConfig = RequestConfig{
+	RetryParams: retryutils.RetryParams{
+		MaxRetry:    testMaxRetry,
+		MinWaitInMs: testMinWaitInMs,
+	},
+	Debug: false,
+}
 
 func TestRetrieveToken_InParams(t *testing.T) {
 	ResetAuthCache()
@@ -37,7 +47,12 @@ func TestRetrieveToken_InParams(t *testing.T) {
 		io.WriteString(w, `{"access_token": "ACCESS_TOKEN", "token_type": "bearer"}`)
 	}))
 	defer ts.Close()
-	_, err := RetrieveToken(context.Background(), clientID, "", ts.URL, url.Values{}, AuthStyleInParams, 1, testMinWaitInMs)
+	_, err := RetrieveToken(context.Background(), clientID, "", ts.URL, url.Values{}, AuthStyleInParams, RequestConfig{
+		RetryParams: retryutils.RetryParams{
+			MaxRetry:    1,
+			MinWaitInMs: testMinWaitInMs,
+		},
+	})
 	if err != nil {
 		t.Errorf("RetrieveToken = %v; want no error", err)
 	}
@@ -53,7 +68,7 @@ func TestRetrieveTokenWithContexts(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	_, err := RetrieveToken(context.Background(), clientID, "", ts.URL, url.Values{}, AuthStyleInParams, testMaxRetry, testMinWaitInMs)
+	_, err := RetrieveToken(context.Background(), clientID, "", ts.URL, url.Values{}, AuthStyleInParams, testTokenRequestConfig)
 	if err != nil {
 		t.Errorf("RetrieveToken (with background context) = %v; want no error", err)
 	}
@@ -66,7 +81,7 @@ func TestRetrieveTokenWithContexts(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	_, err = RetrieveToken(ctx, clientID, "", cancellingts.URL, url.Values{}, AuthStyleInParams, testMaxRetry, testMinWaitInMs)
+	_, err = RetrieveToken(ctx, clientID, "", cancellingts.URL, url.Values{}, AuthStyleInParams, testTokenRequestConfig)
 	close(retrieved)
 	if err == nil {
 		t.Errorf("RetrieveToken (with cancelled context) = nil; want error")
@@ -96,7 +111,12 @@ func TestRetrieveTokenWithContextsRetry(t *testing.T) {
 		firstMock.Then(firstMock).Then(firstMock).Then(secondMock),
 	)
 
-	_, err := RetrieveToken(context.Background(), clientID, "", testURL, url.Values{}, AuthStyleInParams, 3, testMinWaitInMs)
+	_, err := RetrieveToken(context.Background(), clientID, "", testURL, url.Values{}, AuthStyleInParams, RequestConfig{
+		RetryParams: retryutils.RetryParams{
+			MaxRetry:    3,
+			MinWaitInMs: testMinWaitInMs,
+		},
+	})
 	if err != nil {
 		t.Errorf("RetrieveToken (with background context) = %v; want no error", err)
 	}
@@ -125,7 +145,12 @@ func TestRetrieveTokenWithContextsRetryMaxExceeded(t *testing.T) {
 		firstMock.Then(firstMock).Then(firstMock).Then(secondMock),
 	)
 
-	_, err := RetrieveToken(context.Background(), clientID, "", testURL, url.Values{}, AuthStyleInParams, 2, testMinWaitInMs)
+	_, err := RetrieveToken(context.Background(), clientID, "", testURL, url.Values{}, AuthStyleInParams, RequestConfig{
+		RetryParams: retryutils.RetryParams{
+			MaxRetry:    2,
+			MinWaitInMs: testMinWaitInMs,
+		},
+	})
 	if err == nil {
 		t.Errorf("RetrieveToken (with background context); expected error after exceeding max retries, got none")
 	}
@@ -148,7 +173,7 @@ func TestRetrieveTokenWithContextsFailure(t *testing.T) {
 		firstMock,
 	)
 
-	_, err := RetrieveToken(context.Background(), clientID, "", testURL, url.Values{}, AuthStyleInParams, testMaxRetry, testMinWaitInMs)
+	_, err := RetrieveToken(context.Background(), clientID, "", testURL, url.Values{}, AuthStyleInParams, testTokenRequestConfig)
 	if err == nil {
 		t.Errorf("Expect error to be returned when oauth server fails consistently")
 	}
@@ -168,7 +193,7 @@ func TestRetrieveTokenWithUnauthorizedErrors(t *testing.T) {
 	)
 
 	// Set AuthStyleInParams to avoid making a discovery request
-	_, err := RetrieveToken(context.Background(), clientID, "", testURL, url.Values{}, AuthStyleInParams, testMaxRetry, testMinWaitInMs)
+	_, err := RetrieveToken(context.Background(), clientID, "", testURL, url.Values{}, AuthStyleInParams, testTokenRequestConfig)
 	if err == nil {
 		t.Errorf("Expect error to be returned when oauth server fails consistently")
 	}
@@ -202,7 +227,7 @@ func TestRetrieveTokenWithServerErrorRetries(t *testing.T) {
 	)
 
 	// Set AuthStyleInParams to avoid making a discovery request
-	_, err := RetrieveToken(context.Background(), clientID, "", testURL, url.Values{}, AuthStyleInParams, testMaxRetry, testMinWaitInMs)
+	_, err := RetrieveToken(context.Background(), clientID, "", testURL, url.Values{}, AuthStyleInParams, testTokenRequestConfig)
 	if err != nil {
 		t.Errorf("RetrieveToken (with background context) = %v; want no error", err)
 	}
@@ -222,7 +247,7 @@ func TestRetrieveTokenWithServerErrorEventuallyErrors(t *testing.T) {
 	)
 
 	// Set AuthStyleInParams to avoid making a discovery request
-	_, err := RetrieveToken(context.Background(), clientID, "", testURL, url.Values{}, AuthStyleInParams, testMaxRetry, testMinWaitInMs)
+	_, err := RetrieveToken(context.Background(), clientID, "", testURL, url.Values{}, AuthStyleInParams, testTokenRequestConfig)
 	if err == nil {
 		t.Errorf("Expect error to be returned when oauth server fails consistently")
 	}

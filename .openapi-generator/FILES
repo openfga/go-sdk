@@ -104,6 +104,7 @@ docs/WriteRequest.md
 docs/WriteRequestDeletes.md
 docs/WriteRequestWrites.md
 docs/opentelemetry.md
+errors.go
 example/Makefile
 example/README.md
 example/example1/example1.go

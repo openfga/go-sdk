@@ -100,16 +100,21 @@ func (c *Credentials) GetApiTokenHeader() *HeaderParams {
 // GetHttpClientAndHeaderOverrides
 // The main export the client uses to get a configuration with the necessary
 // httpClient and header overrides based on the chosen credential method
-func (c *Credentials) GetHttpClientAndHeaderOverrides(retryParams retryutils.RetryParams) (*http.Client, []*HeaderParams) {
+func (c *Credentials) GetHttpClientAndHeaderOverrides(retryParams retryutils.RetryParams, debug bool) (*http.Client, []*HeaderParams) {
 	var headers []*HeaderParams
 	var client = http.DefaultClient
 	switch c.Method {
 	case CredentialsMethodClientCredentials:
+		requestConfig := clientcredentials.RequestConfig{
+			RetryParams: retryParams,
+			Debug:       debug,
+		}
+		_ = requestConfig.New(requestConfig)
 		ccConfig := clientcredentials.Config{
-			ClientID:     c.Config.ClientCredentialsClientId,
-			ClientSecret: c.Config.ClientCredentialsClientSecret,
-			TokenURL:     c.Config.ClientCredentialsApiTokenIssuer,
-			RetryParams:  retryParams,
+			ClientID:      c.Config.ClientCredentialsClientId,
+			ClientSecret:  c.Config.ClientCredentialsClientSecret,
+			TokenURL:      c.Config.ClientCredentialsApiTokenIssuer,
+			RequestConfig: requestConfig,
 		}
 		if c.Config.ClientCredentialsApiAudience != "" {
 			ccConfig.EndpointParams = map[string][]string{

@@ -7,6 +7,8 @@
   for both the calls to the OpenFGA API and the API Token Issuer for those using ClientCredentials
   The SDK now also respects the rate limit headers (`Retry-After`) returned by the server and will retry the request after the specified time.
   If the header is not sent or on network errors, it will fall back to exponential backoff.
+- feat: retry on network errors when calling the token issuer (#182)
+- chore: log retry attempts when debug mode is enabled (#182)
 
 ## v0.6.5
 

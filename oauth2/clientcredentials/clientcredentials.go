@@ -20,10 +20,11 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/openfga/go-sdk/internal/utils/retryutils"
 	"github.com/openfga/go-sdk/oauth2"
 	"github.com/openfga/go-sdk/oauth2/internal"
 )
+
+type RequestConfig = internal.RequestConfig
 
 // Config describes a 2-legged OAuth2 flow, with both the
 // client application information and the server's endpoint URLs.
@@ -49,7 +50,7 @@ type Config struct {
 	// auto-detect.
 	AuthStyle oauth2.AuthStyle
 
-	RetryParams retryutils.RetryParams
+	RequestConfig internal.RequestConfig
 }
 
 // Token uses client credentials to retrieve a token.
@@ -106,8 +107,8 @@ func (c *tokenSource) Token() (*oauth2.Token, error) {
 		v[k] = p
 	}
 
-	retryParams := c.conf.RetryParams
-	tk, err := internal.RetrieveToken(c.ctx, c.conf.ClientID, c.conf.ClientSecret, c.conf.TokenURL, v, internal.AuthStyle(c.conf.AuthStyle), retryParams.MaxRetry, retryParams.MinWaitInMs)
+	config := *c.conf
+	tk, err := internal.RetrieveToken(c.ctx, c.conf.ClientID, c.conf.ClientSecret, c.conf.TokenURL, v, internal.AuthStyle(c.conf.AuthStyle), config.RequestConfig)
 	if err != nil {
 		if rErr, ok := err.(*internal.RetrieveError); ok {
 			return nil, (*oauth2.RetrieveError)(rErr)
