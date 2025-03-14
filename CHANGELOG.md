@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased](https://github.com/openfga/java-sdk/compare/v0.6.5...HEAD)
+## [Unreleased](https://github.com/openfga/go-sdk/compare/v0.6.5...HEAD)
 
 - feat: fix and improve retries and rate limit handling. (#176)
   The SDK now retries on network errors and the default retry handling has been fixed
