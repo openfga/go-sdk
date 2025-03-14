@@ -20,11 +20,12 @@ import (
 	_nethttp "net/http"
 	"time"
 
+	"golang.org/x/sync/errgroup"
+
 	fgaSdk "github.com/openfga/go-sdk"
 	"github.com/openfga/go-sdk/credentials"
 	internalutils "github.com/openfga/go-sdk/internal/utils"
 	"github.com/openfga/go-sdk/telemetry"
-	"golang.org/x/sync/errgroup"
 )
 
 var (

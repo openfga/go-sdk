@@ -14,20 +14,20 @@ package openfga
 
 import (
 	"bytes"
-	_context "context"
-	_ioutil "io/ioutil"
-	_nethttp "net/http"
-	_neturl "net/url"
+	"context"
+	"io"
+	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
-	internalutils "github.com/openfga/go-sdk/internal/utils"
-	telemetry "github.com/openfga/go-sdk/telemetry"
+	"github.com/openfga/go-sdk/internal/utils/retryutils"
+	"github.com/openfga/go-sdk/telemetry"
 )
 
 // Linger please
 var (
-	_ _context.Context
+	_ context.Context
 )
 
 type OpenFgaApi interface {
@@ -153,45 +153,45 @@ type OpenFgaApi interface {
 	}
 	```
 
-		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 		 * @param storeId
 		 * @return ApiCheckRequest
 	*/
-	Check(ctx _context.Context, storeId string) ApiCheckRequest
+	Check(ctx context.Context, storeId string) ApiCheckRequest
 
 	/*
 	 * CheckExecute executes the request
 	 * @return CheckResponse
 	 */
-	CheckExecute(r ApiCheckRequest) (CheckResponse, *_nethttp.Response, error)
+	CheckExecute(r ApiCheckRequest) (CheckResponse, *http.Response, error)
 
 	/*
 	 * CreateStore Create a store
 	 * Create a unique OpenFGA store which will be used to store authorization models and relationship tuples.
-	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	 * @return ApiCreateStoreRequest
 	 */
-	CreateStore(ctx _context.Context) ApiCreateStoreRequest
+	CreateStore(ctx context.Context) ApiCreateStoreRequest
 
 	/*
 	 * CreateStoreExecute executes the request
 	 * @return CreateStoreResponse
 	 */
-	CreateStoreExecute(r ApiCreateStoreRequest) (CreateStoreResponse, *_nethttp.Response, error)
+	CreateStoreExecute(r ApiCreateStoreRequest) (CreateStoreResponse, *http.Response, error)
 
 	/*
 	 * DeleteStore Delete a store
 	 * Delete an OpenFGA store. This does not delete the data associated with the store, like tuples or authorization models.
-	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	 * @param storeId
 	 * @return ApiDeleteStoreRequest
 	 */
-	DeleteStore(ctx _context.Context, storeId string) ApiDeleteStoreRequest
+	DeleteStore(ctx context.Context, storeId string) ApiDeleteStoreRequest
 
 	/*
 	 * DeleteStoreExecute executes the request
 	 */
-	DeleteStoreExecute(r ApiDeleteStoreRequest) (*_nethttp.Response, error)
+	DeleteStoreExecute(r ApiDeleteStoreRequest) (*http.Response, error)
 
 	/*
 		 * Expand Expand all relationships in userset tree format, and following userset rewrite rules.  Useful to reason about and debug a certain relationship
@@ -244,32 +244,32 @@ type OpenFgaApi interface {
 	}
 	```
 	The caller can then call expand API for the `writer` relationship for the `document:2021-budget`.
-		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 		 * @param storeId
 		 * @return ApiExpandRequest
 	*/
-	Expand(ctx _context.Context, storeId string) ApiExpandRequest
+	Expand(ctx context.Context, storeId string) ApiExpandRequest
 
 	/*
 	 * ExpandExecute executes the request
 	 * @return ExpandResponse
 	 */
-	ExpandExecute(r ApiExpandRequest) (ExpandResponse, *_nethttp.Response, error)
+	ExpandExecute(r ApiExpandRequest) (ExpandResponse, *http.Response, error)
 
 	/*
 	 * GetStore Get a store
 	 * Returns an OpenFGA store by its identifier
-	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	 * @param storeId
 	 * @return ApiGetStoreRequest
 	 */
-	GetStore(ctx _context.Context, storeId string) ApiGetStoreRequest
+	GetStore(ctx context.Context, storeId string) ApiGetStoreRequest
 
 	/*
 	 * GetStoreExecute executes the request
 	 * @return GetStoreResponse
 	 */
-	GetStoreExecute(r ApiGetStoreRequest) (GetStoreResponse, *_nethttp.Response, error)
+	GetStoreExecute(r ApiGetStoreRequest) (GetStoreResponse, *http.Response, error)
 
 	/*
 		 * ListObjects List all objects of the given type that the user has a relation with
@@ -282,33 +282,33 @@ type OpenFgaApi interface {
 	The response will contain the related objects in an array in the "objects" field of the response and they will be strings in the object format `<type>:<id>` (e.g. "document:roadmap").
 	The number of objects in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_OBJECTS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_OBJECTS_MAX_RESULTS, whichever is hit first.
 	The objects given will not be sorted, and therefore two identical calls can give a given different set of objects.
-		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 		 * @param storeId
 		 * @return ApiListObjectsRequest
 	*/
-	ListObjects(ctx _context.Context, storeId string) ApiListObjectsRequest
+	ListObjects(ctx context.Context, storeId string) ApiListObjectsRequest
 
 	/*
 	 * ListObjectsExecute executes the request
 	 * @return ListObjectsResponse
 	 */
-	ListObjectsExecute(r ApiListObjectsRequest) (ListObjectsResponse, *_nethttp.Response, error)
+	ListObjectsExecute(r ApiListObjectsRequest) (ListObjectsResponse, *http.Response, error)
 
 	/*
 		 * ListStores List all stores
 		 * Returns a paginated list of OpenFGA stores and a continuation token to get additional stores.
 	The continuation token will be empty if there are no more stores.
 
-		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 		 * @return ApiListStoresRequest
 	*/
-	ListStores(ctx _context.Context) ApiListStoresRequest
+	ListStores(ctx context.Context) ApiListStoresRequest
 
 	/*
 	 * ListStoresExecute executes the request
 	 * @return ListStoresResponse
 	 */
-	ListStoresExecute(r ApiListStoresRequest) (ListStoresResponse, *_nethttp.Response, error)
+	ListStoresExecute(r ApiListStoresRequest) (ListStoresResponse, *http.Response, error)
 
 	/*
 		 * ListUsers List the users matching the provided filter who have a certain relation to a particular type.
@@ -322,17 +322,17 @@ type OpenFgaApi interface {
 	of that type have a relation to the object; it is possible that negations exist and checks should still be queried
 	on individual subjects to ensure access to that document.The number of users in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_USERS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_USERS_MAX_RESULTS, whichever is hit first.
 	The returned users will not be sorted, and therefore two identical calls may yield different sets of users.
-		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 		 * @param storeId
 		 * @return ApiListUsersRequest
 	*/
-	ListUsers(ctx _context.Context, storeId string) ApiListUsersRequest
+	ListUsers(ctx context.Context, storeId string) ApiListUsersRequest
 
 	/*
 	 * ListUsersExecute executes the request
 	 * @return ListUsersResponse
 	 */
-	ListUsersExecute(r ApiListUsersRequest) (ListUsersResponse, *_nethttp.Response, error)
+	ListUsersExecute(r ApiListUsersRequest) (ListUsersResponse, *http.Response, error)
 
 	/*
 		 * Read Get tuples from the store that matches a query, without following userset rewrite rules
@@ -435,33 +435,33 @@ type OpenFgaApi interface {
 	```
 	This means that `document:2021-budget` has 1 `reader` (`user:bob`) and 1 `writer` (`user:anne`).
 
-		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 		 * @param storeId
 		 * @return ApiReadRequest
 	*/
-	Read(ctx _context.Context, storeId string) ApiReadRequest
+	Read(ctx context.Context, storeId string) ApiReadRequest
 
 	/*
 	 * ReadExecute executes the request
 	 * @return ReadResponse
 	 */
-	ReadExecute(r ApiReadRequest) (ReadResponse, *_nethttp.Response, error)
+	ReadExecute(r ApiReadRequest) (ReadResponse, *http.Response, error)
 
 	/*
 	 * ReadAssertions Read assertions for an authorization model ID
 	 * The ReadAssertions API will return, for a given authorization model id, all the assertions stored for it.
-	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	 * @param storeId
 	 * @param authorizationModelId
 	 * @return ApiReadAssertionsRequest
 	 */
-	ReadAssertions(ctx _context.Context, storeId string, authorizationModelId string) ApiReadAssertionsRequest
+	ReadAssertions(ctx context.Context, storeId string, authorizationModelId string) ApiReadAssertionsRequest
 
 	/*
 	 * ReadAssertionsExecute executes the request
 	 * @return ReadAssertionsResponse
 	 */
-	ReadAssertionsExecute(r ApiReadAssertionsRequest) (ReadAssertionsResponse, *_nethttp.Response, error)
+	ReadAssertionsExecute(r ApiReadAssertionsRequest) (ReadAssertionsResponse, *http.Response, error)
 
 	/*
 		 * ReadAuthorizationModel Return a particular version of an authorization model
@@ -506,18 +506,18 @@ type OpenFgaApi interface {
 	}
 	```
 	In the above example, there are 2 types (`user` and `document`). The `document` type has 2 relations (`writer` and `reader`).
-		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 		 * @param storeId
 		 * @param id
 		 * @return ApiReadAuthorizationModelRequest
 	*/
-	ReadAuthorizationModel(ctx _context.Context, storeId string, id string) ApiReadAuthorizationModelRequest
+	ReadAuthorizationModel(ctx context.Context, storeId string, id string) ApiReadAuthorizationModelRequest
 
 	/*
 	 * ReadAuthorizationModelExecute executes the request
 	 * @return ReadAuthorizationModelResponse
 	 */
-	ReadAuthorizationModelExecute(r ApiReadAuthorizationModelRequest) (ReadAuthorizationModelResponse, *_nethttp.Response, error)
+	ReadAuthorizationModelExecute(r ApiReadAuthorizationModelRequest) (ReadAuthorizationModelResponse, *http.Response, error)
 
 	/*
 		 * ReadAuthorizationModels Return all the authorization models for a particular store
@@ -558,17 +558,17 @@ type OpenFgaApi interface {
 	}
 	```
 
-		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 		 * @param storeId
 		 * @return ApiReadAuthorizationModelsRequest
 	*/
-	ReadAuthorizationModels(ctx _context.Context, storeId string) ApiReadAuthorizationModelsRequest
+	ReadAuthorizationModels(ctx context.Context, storeId string) ApiReadAuthorizationModelsRequest
 
 	/*
 	 * ReadAuthorizationModelsExecute executes the request
 	 * @return ReadAuthorizationModelsResponse
 	 */
-	ReadAuthorizationModelsExecute(r ApiReadAuthorizationModelsRequest) (ReadAuthorizationModelsResponse, *_nethttp.Response, error)
+	ReadAuthorizationModelsExecute(r ApiReadAuthorizationModelsRequest) (ReadAuthorizationModelsResponse, *http.Response, error)
 
 	/*
 		 * ReadChanges Return a list of all the tuple changes
@@ -577,17 +577,17 @@ type OpenFgaApi interface {
 	When reading a write tuple change, if it was conditioned, the condition will be returned.
 	When reading a delete tuple change, the condition will NOT be returned regardless of whether it was originally conditioned or not.
 
-		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 		 * @param storeId
 		 * @return ApiReadChangesRequest
 	*/
-	ReadChanges(ctx _context.Context, storeId string) ApiReadChangesRequest
+	ReadChanges(ctx context.Context, storeId string) ApiReadChangesRequest
 
 	/*
 	 * ReadChangesExecute executes the request
 	 * @return ReadChangesResponse
 	 */
-	ReadChangesExecute(r ApiReadChangesRequest) (ReadChangesResponse, *_nethttp.Response, error)
+	ReadChangesExecute(r ApiReadChangesRequest) (ReadChangesResponse, *http.Response, error)
 
 	/*
 		 * Write Add or delete tuples from the store
@@ -629,32 +629,32 @@ type OpenFgaApi interface {
 	}
 	```
 
-		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 		 * @param storeId
 		 * @return ApiWriteRequest
 	*/
-	Write(ctx _context.Context, storeId string) ApiWriteRequest
+	Write(ctx context.Context, storeId string) ApiWriteRequest
 
 	/*
 	 * WriteExecute executes the request
 	 * @return map[string]interface{}
 	 */
-	WriteExecute(r ApiWriteRequest) (map[string]interface{}, *_nethttp.Response, error)
+	WriteExecute(r ApiWriteRequest) (map[string]interface{}, *http.Response, error)
 
 	/*
 	 * WriteAssertions Upsert assertions for an authorization model ID
 	 * The WriteAssertions API will upsert new assertions for an authorization model id, or overwrite the existing ones. An assertion is an object that contains a tuple key, the expectation of whether a call to the Check API of that tuple key will return true or false, and optionally a list of contextual tuples.
-	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	 * @param storeId
 	 * @param authorizationModelId
 	 * @return ApiWriteAssertionsRequest
 	 */
-	WriteAssertions(ctx _context.Context, storeId string, authorizationModelId string) ApiWriteAssertionsRequest
+	WriteAssertions(ctx context.Context, storeId string, authorizationModelId string) ApiWriteAssertionsRequest
 
 	/*
 	 * WriteAssertionsExecute executes the request
 	 */
-	WriteAssertionsExecute(r ApiWriteAssertionsRequest) (*_nethttp.Response, error)
+	WriteAssertionsExecute(r ApiWriteAssertionsRequest) (*http.Response, error)
 
 	/*
 		 * WriteAuthorizationModel Create a new authorization model
@@ -701,24 +701,24 @@ type OpenFgaApi interface {
 	{"authorization_model_id": "01G50QVV17PECNVAHX1GG4Y5NC"}
 	```
 
-		 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 		 * @param storeId
 		 * @return ApiWriteAuthorizationModelRequest
 	*/
-	WriteAuthorizationModel(ctx _context.Context, storeId string) ApiWriteAuthorizationModelRequest
+	WriteAuthorizationModel(ctx context.Context, storeId string) ApiWriteAuthorizationModelRequest
 
 	/*
 	 * WriteAuthorizationModelExecute executes the request
 	 * @return WriteAuthorizationModelResponse
 	 */
-	WriteAuthorizationModelExecute(r ApiWriteAuthorizationModelRequest) (WriteAuthorizationModelResponse, *_nethttp.Response, error)
+	WriteAuthorizationModelExecute(r ApiWriteAuthorizationModelRequest) (WriteAuthorizationModelResponse, *http.Response, error)
 }
 
 // OpenFgaApiService OpenFgaApi service
 type OpenFgaApiService service
 
 type ApiCheckRequest struct {
-	ctx        _context.Context
+	ctx        context.Context
 	ApiService OpenFgaApi
 	storeId    string
 	body       *CheckRequest
@@ -729,7 +729,7 @@ func (r ApiCheckRequest) Body(body CheckRequest) ApiCheckRequest {
 	return r
 }
 
-func (r ApiCheckRequest) Execute() (CheckResponse, *_nethttp.Response, error) {
+func (r ApiCheckRequest) Execute() (CheckResponse, *http.Response, error) {
 	return r.ApiService.CheckExecute(r)
 }
 
@@ -875,11 +875,11 @@ By default, the Check API caches results for a short time to optimize performanc
 
 ```
 
-  - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @param storeId
   - @return ApiCheckRequest
 */
-func (a *OpenFgaApiService) Check(ctx _context.Context, storeId string) ApiCheckRequest {
+func (a *OpenFgaApiService) Check(ctx context.Context, storeId string) ApiCheckRequest {
 	return ApiCheckRequest{
 		ApiService: a,
 		ctx:        ctx,
@@ -891,22 +891,13 @@ func (a *OpenFgaApiService) Check(ctx _context.Context, storeId string) ApiCheck
  * Execute executes the request
  * @return CheckResponse
  */
-func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_nethttp.Response, error) {
-	var maxRetry int
-	var minWaitInMs int
-	var requestStarted time.Time = time.Now()
+func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *http.Response, error) {
+	var requestStarted = time.Now()
 
-	if a.RetryParams != nil {
-		maxRetry = a.RetryParams.MinWaitInMs
-		minWaitInMs = a.RetryParams.MinWaitInMs
-	} else {
-		maxRetry = 0
-		minWaitInMs = 0
-	}
-
-	for i := 0; i < maxRetry+1; i++ {
+	retryParams := a.client.cfg.RetryParams
+	for i := 0; i < retryParams.MaxRetry+1; i++ {
 		var (
-			localVarHTTPMethod  = _nethttp.MethodPost
+			localVarHTTPMethod  = http.MethodPost
 			localVarPostBody    interface{}
 			localVarReturnValue CheckResponse
 		)
@@ -916,10 +907,10 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 			return localVarReturnValue, nil, reportError("storeId is required and must be specified")
 		}
 
-		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(parameterToString(r.storeId, "")), -1)
+		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")), -1)
 
 		localVarHeaderParams := make(map[string]string)
-		localVarQueryParams := _neturl.Values{}
+		localVarQueryParams := url.Values{}
 		if r.body == nil {
 			return localVarReturnValue, nil, reportError("body is required and must be specified")
 		}
@@ -950,19 +941,33 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 
 		localVarHTTPResponse, err := a.client.callAPI(req)
 		if err != nil || localVarHTTPResponse == nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, "Check")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		localVarBody, err := _ioutil.ReadAll(localVarHTTPResponse.Body)
+		localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 		localVarHTTPResponse.Body.Close()
-		localVarHTTPResponse.Body = _ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+		localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 		if err != nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "Check")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
+		if localVarHTTPResponse.StatusCode >= http.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
+			if localVarHTTPResponse.StatusCode == http.StatusBadRequest || localVarHTTPResponse.StatusCode == http.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -988,7 +993,7 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
+			if localVarHTTPResponse.StatusCode == http.StatusUnauthorized || localVarHTTPResponse.StatusCode == http.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -1003,7 +1008,7 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
+			if localVarHTTPResponse.StatusCode == http.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -1029,10 +1034,13 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
-				if i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode == http.StatusTooManyRequests {
+				if i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "Check")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
@@ -1051,10 +1059,13 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
-				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode >= http.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != http.StatusNotImplemented && i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "Check")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				newErr := FgaApiInternalError{
 					body:               localVarBody,
@@ -1144,7 +1155,7 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *_ne
 }
 
 type ApiCreateStoreRequest struct {
-	ctx        _context.Context
+	ctx        context.Context
 	ApiService OpenFgaApi
 	body       *CreateStoreRequest
 }
@@ -1154,17 +1165,17 @@ func (r ApiCreateStoreRequest) Body(body CreateStoreRequest) ApiCreateStoreReque
 	return r
 }
 
-func (r ApiCreateStoreRequest) Execute() (CreateStoreResponse, *_nethttp.Response, error) {
+func (r ApiCreateStoreRequest) Execute() (CreateStoreResponse, *http.Response, error) {
 	return r.ApiService.CreateStoreExecute(r)
 }
 
 /*
  * CreateStore Create a store
  * Create a unique OpenFGA store which will be used to store authorization models and relationship tuples.
- * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return ApiCreateStoreRequest
  */
-func (a *OpenFgaApiService) CreateStore(ctx _context.Context) ApiCreateStoreRequest {
+func (a *OpenFgaApiService) CreateStore(ctx context.Context) ApiCreateStoreRequest {
 	return ApiCreateStoreRequest{
 		ApiService: a,
 		ctx:        ctx,
@@ -1175,22 +1186,13 @@ func (a *OpenFgaApiService) CreateStore(ctx _context.Context) ApiCreateStoreRequ
  * Execute executes the request
  * @return CreateStoreResponse
  */
-func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateStoreResponse, *_nethttp.Response, error) {
-	var maxRetry int
-	var minWaitInMs int
-	var requestStarted time.Time = time.Now()
+func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateStoreResponse, *http.Response, error) {
+	var requestStarted = time.Now()
 
-	if a.RetryParams != nil {
-		maxRetry = a.RetryParams.MinWaitInMs
-		minWaitInMs = a.RetryParams.MinWaitInMs
-	} else {
-		maxRetry = 0
-		minWaitInMs = 0
-	}
-
-	for i := 0; i < maxRetry+1; i++ {
+	retryParams := a.client.cfg.RetryParams
+	for i := 0; i < retryParams.MaxRetry+1; i++ {
 		var (
-			localVarHTTPMethod  = _nethttp.MethodPost
+			localVarHTTPMethod  = http.MethodPost
 			localVarPostBody    interface{}
 			localVarReturnValue CreateStoreResponse
 		)
@@ -1198,7 +1200,7 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 		localVarPath := "/stores"
 
 		localVarHeaderParams := make(map[string]string)
-		localVarQueryParams := _neturl.Values{}
+		localVarQueryParams := url.Values{}
 		if r.body == nil {
 			return localVarReturnValue, nil, reportError("body is required and must be specified")
 		}
@@ -1229,19 +1231,33 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 
 		localVarHTTPResponse, err := a.client.callAPI(req)
 		if err != nil || localVarHTTPResponse == nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, "CreateStore")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		localVarBody, err := _ioutil.ReadAll(localVarHTTPResponse.Body)
+		localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 		localVarHTTPResponse.Body.Close()
-		localVarHTTPResponse.Body = _ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+		localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 		if err != nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "CreateStore")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
+		if localVarHTTPResponse.StatusCode >= http.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
+			if localVarHTTPResponse.StatusCode == http.StatusBadRequest || localVarHTTPResponse.StatusCode == http.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					endpointCategory:   "CreateStore",
@@ -1266,7 +1282,7 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
+			if localVarHTTPResponse.StatusCode == http.StatusUnauthorized || localVarHTTPResponse.StatusCode == http.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body:               localVarBody,
 					endpointCategory:   "CreateStore",
@@ -1280,7 +1296,7 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
+			if localVarHTTPResponse.StatusCode == http.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					endpointCategory:   "CreateStore",
@@ -1305,10 +1321,13 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
-				if i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode == http.StatusTooManyRequests {
+				if i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "CreateStore")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
@@ -1326,10 +1345,13 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
-				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode >= http.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != http.StatusNotImplemented && i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "CreateStore")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				newErr := FgaApiInternalError{
 					body:               localVarBody,
@@ -1416,23 +1438,23 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 }
 
 type ApiDeleteStoreRequest struct {
-	ctx        _context.Context
+	ctx        context.Context
 	ApiService OpenFgaApi
 	storeId    string
 }
 
-func (r ApiDeleteStoreRequest) Execute() (*_nethttp.Response, error) {
+func (r ApiDeleteStoreRequest) Execute() (*http.Response, error) {
 	return r.ApiService.DeleteStoreExecute(r)
 }
 
 /*
  * DeleteStore Delete a store
  * Delete an OpenFGA store. This does not delete the data associated with the store, like tuples or authorization models.
- * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @param storeId
  * @return ApiDeleteStoreRequest
  */
-func (a *OpenFgaApiService) DeleteStore(ctx _context.Context, storeId string) ApiDeleteStoreRequest {
+func (a *OpenFgaApiService) DeleteStore(ctx context.Context, storeId string) ApiDeleteStoreRequest {
 	return ApiDeleteStoreRequest{
 		ApiService: a,
 		ctx:        ctx,
@@ -1443,22 +1465,13 @@ func (a *OpenFgaApiService) DeleteStore(ctx _context.Context, storeId string) Ap
 /*
  * Execute executes the request
  */
-func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_nethttp.Response, error) {
-	var maxRetry int
-	var minWaitInMs int
-	var requestStarted time.Time = time.Now()
+func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*http.Response, error) {
+	var requestStarted = time.Now()
 
-	if a.RetryParams != nil {
-		maxRetry = a.RetryParams.MinWaitInMs
-		minWaitInMs = a.RetryParams.MinWaitInMs
-	} else {
-		maxRetry = 0
-		minWaitInMs = 0
-	}
-
-	for i := 0; i < maxRetry+1; i++ {
+	retryParams := a.client.cfg.RetryParams
+	for i := 0; i < retryParams.MaxRetry+1; i++ {
 		var (
-			localVarHTTPMethod = _nethttp.MethodDelete
+			localVarHTTPMethod = http.MethodDelete
 			localVarPostBody   interface{}
 		)
 
@@ -1467,10 +1480,10 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 			return nil, reportError("storeId is required and must be specified")
 		}
 
-		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(parameterToString(r.storeId, "")), -1)
+		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")), -1)
 
 		localVarHeaderParams := make(map[string]string)
-		localVarQueryParams := _neturl.Values{}
+		localVarQueryParams := url.Values{}
 
 		// to determine the Content-Type header
 		localVarHTTPContentTypes := []string{}
@@ -1496,19 +1509,33 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 
 		localVarHTTPResponse, err := a.client.callAPI(req)
 		if err != nil || localVarHTTPResponse == nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, "DeleteStore")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarHTTPResponse, err
 		}
 
-		localVarBody, err := _ioutil.ReadAll(localVarHTTPResponse.Body)
+		localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 		localVarHTTPResponse.Body.Close()
-		localVarHTTPResponse.Body = _ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+		localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 		if err != nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "DeleteStore")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
+		if localVarHTTPResponse.StatusCode >= http.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
+			if localVarHTTPResponse.StatusCode == http.StatusBadRequest || localVarHTTPResponse.StatusCode == http.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -1534,7 +1561,7 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 				return localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
+			if localVarHTTPResponse.StatusCode == http.StatusUnauthorized || localVarHTTPResponse.StatusCode == http.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -1549,7 +1576,7 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 				return localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
+			if localVarHTTPResponse.StatusCode == http.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -1575,10 +1602,13 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 				return localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
-				if i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode == http.StatusTooManyRequests {
+				if i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "DeleteStore")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
@@ -1597,10 +1627,13 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 				return localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
-				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode >= http.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != http.StatusNotImplemented && i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "DeleteStore")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				newErr := FgaApiInternalError{
 					body:               localVarBody,
@@ -1680,7 +1713,7 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*_netht
 }
 
 type ApiExpandRequest struct {
-	ctx        _context.Context
+	ctx        context.Context
 	ApiService OpenFgaApi
 	storeId    string
 	body       *ExpandRequest
@@ -1691,7 +1724,7 @@ func (r ApiExpandRequest) Body(body ExpandRequest) ApiExpandRequest {
 	return r
 }
 
-func (r ApiExpandRequest) Execute() (ExpandResponse, *_nethttp.Response, error) {
+func (r ApiExpandRequest) Execute() (ExpandResponse, *http.Response, error) {
 	return r.ApiService.ExpandExecute(r)
 }
 
@@ -1751,11 +1784,11 @@ OpenFGA's response will be a userset tree of the users and usersets that have re
 
 ```
 The caller can then call expand API for the `writer` relationship for the `document:2021-budget`.
-  - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @param storeId
   - @return ApiExpandRequest
 */
-func (a *OpenFgaApiService) Expand(ctx _context.Context, storeId string) ApiExpandRequest {
+func (a *OpenFgaApiService) Expand(ctx context.Context, storeId string) ApiExpandRequest {
 	return ApiExpandRequest{
 		ApiService: a,
 		ctx:        ctx,
@@ -1767,22 +1800,13 @@ func (a *OpenFgaApiService) Expand(ctx _context.Context, storeId string) ApiExpa
  * Execute executes the request
  * @return ExpandResponse
  */
-func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *_nethttp.Response, error) {
-	var maxRetry int
-	var minWaitInMs int
-	var requestStarted time.Time = time.Now()
+func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *http.Response, error) {
+	var requestStarted = time.Now()
 
-	if a.RetryParams != nil {
-		maxRetry = a.RetryParams.MinWaitInMs
-		minWaitInMs = a.RetryParams.MinWaitInMs
-	} else {
-		maxRetry = 0
-		minWaitInMs = 0
-	}
-
-	for i := 0; i < maxRetry+1; i++ {
+	retryParams := a.client.cfg.RetryParams
+	for i := 0; i < retryParams.MaxRetry+1; i++ {
 		var (
-			localVarHTTPMethod  = _nethttp.MethodPost
+			localVarHTTPMethod  = http.MethodPost
 			localVarPostBody    interface{}
 			localVarReturnValue ExpandResponse
 		)
@@ -1792,10 +1816,10 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 			return localVarReturnValue, nil, reportError("storeId is required and must be specified")
 		}
 
-		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(parameterToString(r.storeId, "")), -1)
+		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")), -1)
 
 		localVarHeaderParams := make(map[string]string)
-		localVarQueryParams := _neturl.Values{}
+		localVarQueryParams := url.Values{}
 		if r.body == nil {
 			return localVarReturnValue, nil, reportError("body is required and must be specified")
 		}
@@ -1826,19 +1850,33 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 
 		localVarHTTPResponse, err := a.client.callAPI(req)
 		if err != nil || localVarHTTPResponse == nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, "Expand")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		localVarBody, err := _ioutil.ReadAll(localVarHTTPResponse.Body)
+		localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 		localVarHTTPResponse.Body.Close()
-		localVarHTTPResponse.Body = _ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+		localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 		if err != nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "Expand")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
+		if localVarHTTPResponse.StatusCode >= http.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
+			if localVarHTTPResponse.StatusCode == http.StatusBadRequest || localVarHTTPResponse.StatusCode == http.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -1864,7 +1902,7 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
+			if localVarHTTPResponse.StatusCode == http.StatusUnauthorized || localVarHTTPResponse.StatusCode == http.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -1879,7 +1917,7 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
+			if localVarHTTPResponse.StatusCode == http.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -1905,10 +1943,13 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
-				if i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode == http.StatusTooManyRequests {
+				if i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "Expand")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
@@ -1927,10 +1968,13 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
-				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode >= http.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != http.StatusNotImplemented && i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "Expand")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				newErr := FgaApiInternalError{
 					body:               localVarBody,
@@ -2020,23 +2064,23 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 }
 
 type ApiGetStoreRequest struct {
-	ctx        _context.Context
+	ctx        context.Context
 	ApiService OpenFgaApi
 	storeId    string
 }
 
-func (r ApiGetStoreRequest) Execute() (GetStoreResponse, *_nethttp.Response, error) {
+func (r ApiGetStoreRequest) Execute() (GetStoreResponse, *http.Response, error) {
 	return r.ApiService.GetStoreExecute(r)
 }
 
 /*
  * GetStore Get a store
  * Returns an OpenFGA store by its identifier
- * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @param storeId
  * @return ApiGetStoreRequest
  */
-func (a *OpenFgaApiService) GetStore(ctx _context.Context, storeId string) ApiGetStoreRequest {
+func (a *OpenFgaApiService) GetStore(ctx context.Context, storeId string) ApiGetStoreRequest {
 	return ApiGetStoreRequest{
 		ApiService: a,
 		ctx:        ctx,
@@ -2048,22 +2092,13 @@ func (a *OpenFgaApiService) GetStore(ctx _context.Context, storeId string) ApiGe
  * Execute executes the request
  * @return GetStoreResponse
  */
-func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreResponse, *_nethttp.Response, error) {
-	var maxRetry int
-	var minWaitInMs int
-	var requestStarted time.Time = time.Now()
+func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreResponse, *http.Response, error) {
+	var requestStarted = time.Now()
 
-	if a.RetryParams != nil {
-		maxRetry = a.RetryParams.MinWaitInMs
-		minWaitInMs = a.RetryParams.MinWaitInMs
-	} else {
-		maxRetry = 0
-		minWaitInMs = 0
-	}
-
-	for i := 0; i < maxRetry+1; i++ {
+	retryParams := a.client.cfg.RetryParams
+	for i := 0; i < retryParams.MaxRetry+1; i++ {
 		var (
-			localVarHTTPMethod  = _nethttp.MethodGet
+			localVarHTTPMethod  = http.MethodGet
 			localVarPostBody    interface{}
 			localVarReturnValue GetStoreResponse
 		)
@@ -2073,10 +2108,10 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 			return localVarReturnValue, nil, reportError("storeId is required and must be specified")
 		}
 
-		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(parameterToString(r.storeId, "")), -1)
+		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")), -1)
 
 		localVarHeaderParams := make(map[string]string)
-		localVarQueryParams := _neturl.Values{}
+		localVarQueryParams := url.Values{}
 
 		// to determine the Content-Type header
 		localVarHTTPContentTypes := []string{}
@@ -2102,19 +2137,33 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 
 		localVarHTTPResponse, err := a.client.callAPI(req)
 		if err != nil || localVarHTTPResponse == nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, "GetStore")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		localVarBody, err := _ioutil.ReadAll(localVarHTTPResponse.Body)
+		localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 		localVarHTTPResponse.Body.Close()
-		localVarHTTPResponse.Body = _ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+		localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 		if err != nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "GetStore")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
+		if localVarHTTPResponse.StatusCode >= http.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
+			if localVarHTTPResponse.StatusCode == http.StatusBadRequest || localVarHTTPResponse.StatusCode == http.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -2140,7 +2189,7 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
+			if localVarHTTPResponse.StatusCode == http.StatusUnauthorized || localVarHTTPResponse.StatusCode == http.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -2155,7 +2204,7 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
+			if localVarHTTPResponse.StatusCode == http.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -2181,10 +2230,13 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
-				if i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode == http.StatusTooManyRequests {
+				if i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "GetStore")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
@@ -2203,10 +2255,13 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
-				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode >= http.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != http.StatusNotImplemented && i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "GetStore")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				newErr := FgaApiInternalError{
 					body:               localVarBody,
@@ -2296,7 +2351,7 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 }
 
 type ApiListObjectsRequest struct {
-	ctx        _context.Context
+	ctx        context.Context
 	ApiService OpenFgaApi
 	storeId    string
 	body       *ListObjectsRequest
@@ -2307,7 +2362,7 @@ func (r ApiListObjectsRequest) Body(body ListObjectsRequest) ApiListObjectsReque
 	return r
 }
 
-func (r ApiListObjectsRequest) Execute() (ListObjectsResponse, *_nethttp.Response, error) {
+func (r ApiListObjectsRequest) Execute() (ListObjectsResponse, *http.Response, error) {
 	return r.ApiService.ListObjectsExecute(r)
 }
 
@@ -2323,11 +2378,11 @@ By default, the Check API caches results for a short time to optimize performanc
 The response will contain the related objects in an array in the "objects" field of the response and they will be strings in the object format `<type>:<id>` (e.g. "document:roadmap").
 The number of objects in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_OBJECTS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_OBJECTS_MAX_RESULTS, whichever is hit first.
 The objects given will not be sorted, and therefore two identical calls can give a given different set of objects.
-  - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @param storeId
   - @return ApiListObjectsRequest
 */
-func (a *OpenFgaApiService) ListObjects(ctx _context.Context, storeId string) ApiListObjectsRequest {
+func (a *OpenFgaApiService) ListObjects(ctx context.Context, storeId string) ApiListObjectsRequest {
 	return ApiListObjectsRequest{
 		ApiService: a,
 		ctx:        ctx,
@@ -2339,22 +2394,13 @@ func (a *OpenFgaApiService) ListObjects(ctx _context.Context, storeId string) Ap
  * Execute executes the request
  * @return ListObjectsResponse
  */
-func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObjectsResponse, *_nethttp.Response, error) {
-	var maxRetry int
-	var minWaitInMs int
-	var requestStarted time.Time = time.Now()
+func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObjectsResponse, *http.Response, error) {
+	var requestStarted = time.Now()
 
-	if a.RetryParams != nil {
-		maxRetry = a.RetryParams.MinWaitInMs
-		minWaitInMs = a.RetryParams.MinWaitInMs
-	} else {
-		maxRetry = 0
-		minWaitInMs = 0
-	}
-
-	for i := 0; i < maxRetry+1; i++ {
+	retryParams := a.client.cfg.RetryParams
+	for i := 0; i < retryParams.MaxRetry+1; i++ {
 		var (
-			localVarHTTPMethod  = _nethttp.MethodPost
+			localVarHTTPMethod  = http.MethodPost
 			localVarPostBody    interface{}
 			localVarReturnValue ListObjectsResponse
 		)
@@ -2364,10 +2410,10 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 			return localVarReturnValue, nil, reportError("storeId is required and must be specified")
 		}
 
-		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(parameterToString(r.storeId, "")), -1)
+		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")), -1)
 
 		localVarHeaderParams := make(map[string]string)
-		localVarQueryParams := _neturl.Values{}
+		localVarQueryParams := url.Values{}
 		if r.body == nil {
 			return localVarReturnValue, nil, reportError("body is required and must be specified")
 		}
@@ -2398,19 +2444,33 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 
 		localVarHTTPResponse, err := a.client.callAPI(req)
 		if err != nil || localVarHTTPResponse == nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, "ListObjects")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		localVarBody, err := _ioutil.ReadAll(localVarHTTPResponse.Body)
+		localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 		localVarHTTPResponse.Body.Close()
-		localVarHTTPResponse.Body = _ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+		localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 		if err != nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "ListObjects")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
+		if localVarHTTPResponse.StatusCode >= http.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
+			if localVarHTTPResponse.StatusCode == http.StatusBadRequest || localVarHTTPResponse.StatusCode == http.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -2436,7 +2496,7 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
+			if localVarHTTPResponse.StatusCode == http.StatusUnauthorized || localVarHTTPResponse.StatusCode == http.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -2451,7 +2511,7 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
+			if localVarHTTPResponse.StatusCode == http.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -2477,10 +2537,13 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
-				if i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode == http.StatusTooManyRequests {
+				if i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "ListObjects")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
@@ -2499,10 +2562,13 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
-				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode >= http.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != http.StatusNotImplemented && i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "ListObjects")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				newErr := FgaApiInternalError{
 					body:               localVarBody,
@@ -2592,7 +2658,7 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 }
 
 type ApiListStoresRequest struct {
-	ctx               _context.Context
+	ctx               context.Context
 	ApiService        OpenFgaApi
 	pageSize          *int32
 	continuationToken *string
@@ -2607,7 +2673,7 @@ func (r ApiListStoresRequest) ContinuationToken(continuationToken string) ApiLis
 	return r
 }
 
-func (r ApiListStoresRequest) Execute() (ListStoresResponse, *_nethttp.Response, error) {
+func (r ApiListStoresRequest) Execute() (ListStoresResponse, *http.Response, error) {
 	return r.ApiService.ListStoresExecute(r)
 }
 
@@ -2617,10 +2683,10 @@ func (r ApiListStoresRequest) Execute() (ListStoresResponse, *_nethttp.Response,
 
 The continuation token will be empty if there are no more stores.
 
-  - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @return ApiListStoresRequest
 */
-func (a *OpenFgaApiService) ListStores(ctx _context.Context) ApiListStoresRequest {
+func (a *OpenFgaApiService) ListStores(ctx context.Context) ApiListStoresRequest {
 	return ApiListStoresRequest{
 		ApiService: a,
 		ctx:        ctx,
@@ -2631,22 +2697,13 @@ func (a *OpenFgaApiService) ListStores(ctx _context.Context) ApiListStoresReques
  * Execute executes the request
  * @return ListStoresResponse
  */
-func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStoresResponse, *_nethttp.Response, error) {
-	var maxRetry int
-	var minWaitInMs int
-	var requestStarted time.Time = time.Now()
+func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStoresResponse, *http.Response, error) {
+	var requestStarted = time.Now()
 
-	if a.RetryParams != nil {
-		maxRetry = a.RetryParams.MinWaitInMs
-		minWaitInMs = a.RetryParams.MinWaitInMs
-	} else {
-		maxRetry = 0
-		minWaitInMs = 0
-	}
-
-	for i := 0; i < maxRetry+1; i++ {
+	retryParams := a.client.cfg.RetryParams
+	for i := 0; i < retryParams.MaxRetry+1; i++ {
 		var (
-			localVarHTTPMethod  = _nethttp.MethodGet
+			localVarHTTPMethod  = http.MethodGet
 			localVarPostBody    interface{}
 			localVarReturnValue ListStoresResponse
 		)
@@ -2654,7 +2711,7 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 		localVarPath := "/stores"
 
 		localVarHeaderParams := make(map[string]string)
-		localVarQueryParams := _neturl.Values{}
+		localVarQueryParams := url.Values{}
 
 		if r.pageSize != nil {
 			localVarQueryParams.Add("page_size", parameterToString(*r.pageSize, ""))
@@ -2686,19 +2743,33 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 
 		localVarHTTPResponse, err := a.client.callAPI(req)
 		if err != nil || localVarHTTPResponse == nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, "ListStores")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		localVarBody, err := _ioutil.ReadAll(localVarHTTPResponse.Body)
+		localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 		localVarHTTPResponse.Body.Close()
-		localVarHTTPResponse.Body = _ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+		localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 		if err != nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "ListStores")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
+		if localVarHTTPResponse.StatusCode >= http.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
+			if localVarHTTPResponse.StatusCode == http.StatusBadRequest || localVarHTTPResponse.StatusCode == http.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					endpointCategory:   "ListStores",
@@ -2723,7 +2794,7 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
+			if localVarHTTPResponse.StatusCode == http.StatusUnauthorized || localVarHTTPResponse.StatusCode == http.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body:               localVarBody,
 					endpointCategory:   "ListStores",
@@ -2737,7 +2808,7 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
+			if localVarHTTPResponse.StatusCode == http.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					endpointCategory:   "ListStores",
@@ -2762,10 +2833,13 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
-				if i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode == http.StatusTooManyRequests {
+				if i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "ListStores")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
@@ -2783,10 +2857,13 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
-				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode >= http.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != http.StatusNotImplemented && i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "ListStores")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				newErr := FgaApiInternalError{
 					body:               localVarBody,
@@ -2873,7 +2950,7 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 }
 
 type ApiListUsersRequest struct {
-	ctx        _context.Context
+	ctx        context.Context
 	ApiService OpenFgaApi
 	storeId    string
 	body       *ListUsersRequest
@@ -2884,7 +2961,7 @@ func (r ApiListUsersRequest) Body(body ListUsersRequest) ApiListUsersRequest {
 	return r
 }
 
-func (r ApiListUsersRequest) Execute() (ListUsersResponse, *_nethttp.Response, error) {
+func (r ApiListUsersRequest) Execute() (ListUsersResponse, *http.Response, error) {
 	return r.ApiService.ListUsersExecute(r)
 }
 
@@ -2901,11 +2978,11 @@ or type-bound public access. Each of these types of results is encoded in its ow
 of that type have a relation to the object; it is possible that negations exist and checks should still be queried
 on individual subjects to ensure access to that document.The number of users in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_USERS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_USERS_MAX_RESULTS, whichever is hit first.
 The returned users will not be sorted, and therefore two identical calls may yield different sets of users.
-  - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @param storeId
   - @return ApiListUsersRequest
 */
-func (a *OpenFgaApiService) ListUsers(ctx _context.Context, storeId string) ApiListUsersRequest {
+func (a *OpenFgaApiService) ListUsers(ctx context.Context, storeId string) ApiListUsersRequest {
 	return ApiListUsersRequest{
 		ApiService: a,
 		ctx:        ctx,
@@ -2917,22 +2994,13 @@ func (a *OpenFgaApiService) ListUsers(ctx _context.Context, storeId string) ApiL
  * Execute executes the request
  * @return ListUsersResponse
  */
-func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersResponse, *_nethttp.Response, error) {
-	var maxRetry int
-	var minWaitInMs int
-	var requestStarted time.Time = time.Now()
+func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersResponse, *http.Response, error) {
+	var requestStarted = time.Now()
 
-	if a.RetryParams != nil {
-		maxRetry = a.RetryParams.MinWaitInMs
-		minWaitInMs = a.RetryParams.MinWaitInMs
-	} else {
-		maxRetry = 0
-		minWaitInMs = 0
-	}
-
-	for i := 0; i < maxRetry+1; i++ {
+	retryParams := a.client.cfg.RetryParams
+	for i := 0; i < retryParams.MaxRetry+1; i++ {
 		var (
-			localVarHTTPMethod  = _nethttp.MethodPost
+			localVarHTTPMethod  = http.MethodPost
 			localVarPostBody    interface{}
 			localVarReturnValue ListUsersResponse
 		)
@@ -2942,10 +3010,10 @@ func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersRe
 			return localVarReturnValue, nil, reportError("storeId is required and must be specified")
 		}
 
-		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(parameterToString(r.storeId, "")), -1)
+		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")), -1)
 
 		localVarHeaderParams := make(map[string]string)
-		localVarQueryParams := _neturl.Values{}
+		localVarQueryParams := url.Values{}
 		if r.body == nil {
 			return localVarReturnValue, nil, reportError("body is required and must be specified")
 		}
@@ -2976,19 +3044,33 @@ func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersRe
 
 		localVarHTTPResponse, err := a.client.callAPI(req)
 		if err != nil || localVarHTTPResponse == nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, "ListUsers")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		localVarBody, err := _ioutil.ReadAll(localVarHTTPResponse.Body)
+		localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 		localVarHTTPResponse.Body.Close()
-		localVarHTTPResponse.Body = _ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+		localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 		if err != nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "ListUsers")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
+		if localVarHTTPResponse.StatusCode >= http.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
+			if localVarHTTPResponse.StatusCode == http.StatusBadRequest || localVarHTTPResponse.StatusCode == http.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -3014,7 +3096,7 @@ func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersRe
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
+			if localVarHTTPResponse.StatusCode == http.StatusUnauthorized || localVarHTTPResponse.StatusCode == http.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -3029,7 +3111,7 @@ func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersRe
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
+			if localVarHTTPResponse.StatusCode == http.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -3055,10 +3137,13 @@ func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersRe
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
-				if i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode == http.StatusTooManyRequests {
+				if i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "ListUsers")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
@@ -3077,10 +3162,13 @@ func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersRe
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
-				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode >= http.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != http.StatusNotImplemented && i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "ListUsers")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				newErr := FgaApiInternalError{
 					body:               localVarBody,
@@ -3170,7 +3258,7 @@ func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersRe
 }
 
 type ApiReadRequest struct {
-	ctx        _context.Context
+	ctx        context.Context
 	ApiService OpenFgaApi
 	storeId    string
 	body       *ReadRequest
@@ -3181,7 +3269,7 @@ func (r ApiReadRequest) Body(body ReadRequest) ApiReadRequest {
 	return r
 }
 
-func (r ApiReadRequest) Execute() (ReadResponse, *_nethttp.Response, error) {
+func (r ApiReadRequest) Execute() (ReadResponse, *http.Response, error) {
 	return r.ApiService.ReadExecute(r)
 }
 
@@ -3299,11 +3387,11 @@ The API will return something like
 ```
 This means that `document:2021-budget` has 1 `reader` (`user:bob`) and 1 `writer` (`user:anne`).
 
-  - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @param storeId
   - @return ApiReadRequest
 */
-func (a *OpenFgaApiService) Read(ctx _context.Context, storeId string) ApiReadRequest {
+func (a *OpenFgaApiService) Read(ctx context.Context, storeId string) ApiReadRequest {
 	return ApiReadRequest{
 		ApiService: a,
 		ctx:        ctx,
@@ -3315,22 +3403,13 @@ func (a *OpenFgaApiService) Read(ctx _context.Context, storeId string) ApiReadRe
  * Execute executes the request
  * @return ReadResponse
  */
-func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_nethttp.Response, error) {
-	var maxRetry int
-	var minWaitInMs int
-	var requestStarted time.Time = time.Now()
+func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *http.Response, error) {
+	var requestStarted = time.Now()
 
-	if a.RetryParams != nil {
-		maxRetry = a.RetryParams.MinWaitInMs
-		minWaitInMs = a.RetryParams.MinWaitInMs
-	} else {
-		maxRetry = 0
-		minWaitInMs = 0
-	}
-
-	for i := 0; i < maxRetry+1; i++ {
+	retryParams := a.client.cfg.RetryParams
+	for i := 0; i < retryParams.MaxRetry+1; i++ {
 		var (
-			localVarHTTPMethod  = _nethttp.MethodPost
+			localVarHTTPMethod  = http.MethodPost
 			localVarPostBody    interface{}
 			localVarReturnValue ReadResponse
 		)
@@ -3340,10 +3419,10 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 			return localVarReturnValue, nil, reportError("storeId is required and must be specified")
 		}
 
-		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(parameterToString(r.storeId, "")), -1)
+		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")), -1)
 
 		localVarHeaderParams := make(map[string]string)
-		localVarQueryParams := _neturl.Values{}
+		localVarQueryParams := url.Values{}
 		if r.body == nil {
 			return localVarReturnValue, nil, reportError("body is required and must be specified")
 		}
@@ -3374,19 +3453,33 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 
 		localVarHTTPResponse, err := a.client.callAPI(req)
 		if err != nil || localVarHTTPResponse == nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, "Read")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		localVarBody, err := _ioutil.ReadAll(localVarHTTPResponse.Body)
+		localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 		localVarHTTPResponse.Body.Close()
-		localVarHTTPResponse.Body = _ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+		localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 		if err != nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "Read")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
+		if localVarHTTPResponse.StatusCode >= http.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
+			if localVarHTTPResponse.StatusCode == http.StatusBadRequest || localVarHTTPResponse.StatusCode == http.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -3412,7 +3505,7 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
+			if localVarHTTPResponse.StatusCode == http.StatusUnauthorized || localVarHTTPResponse.StatusCode == http.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -3427,7 +3520,7 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
+			if localVarHTTPResponse.StatusCode == http.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -3453,10 +3546,13 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
-				if i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode == http.StatusTooManyRequests {
+				if i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "Read")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
@@ -3475,10 +3571,13 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
-				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode >= http.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != http.StatusNotImplemented && i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "Read")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				newErr := FgaApiInternalError{
 					body:               localVarBody,
@@ -3568,25 +3667,25 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *_netht
 }
 
 type ApiReadAssertionsRequest struct {
-	ctx                  _context.Context
+	ctx                  context.Context
 	ApiService           OpenFgaApi
 	storeId              string
 	authorizationModelId string
 }
 
-func (r ApiReadAssertionsRequest) Execute() (ReadAssertionsResponse, *_nethttp.Response, error) {
+func (r ApiReadAssertionsRequest) Execute() (ReadAssertionsResponse, *http.Response, error) {
 	return r.ApiService.ReadAssertionsExecute(r)
 }
 
 /*
  * ReadAssertions Read assertions for an authorization model ID
  * The ReadAssertions API will return, for a given authorization model id, all the assertions stored for it.
- * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @param storeId
  * @param authorizationModelId
  * @return ApiReadAssertionsRequest
  */
-func (a *OpenFgaApiService) ReadAssertions(ctx _context.Context, storeId string, authorizationModelId string) ApiReadAssertionsRequest {
+func (a *OpenFgaApiService) ReadAssertions(ctx context.Context, storeId string, authorizationModelId string) ApiReadAssertionsRequest {
 	return ApiReadAssertionsRequest{
 		ApiService:           a,
 		ctx:                  ctx,
@@ -3599,22 +3698,13 @@ func (a *OpenFgaApiService) ReadAssertions(ctx _context.Context, storeId string,
  * Execute executes the request
  * @return ReadAssertionsResponse
  */
-func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (ReadAssertionsResponse, *_nethttp.Response, error) {
-	var maxRetry int
-	var minWaitInMs int
-	var requestStarted time.Time = time.Now()
+func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (ReadAssertionsResponse, *http.Response, error) {
+	var requestStarted = time.Now()
 
-	if a.RetryParams != nil {
-		maxRetry = a.RetryParams.MinWaitInMs
-		minWaitInMs = a.RetryParams.MinWaitInMs
-	} else {
-		maxRetry = 0
-		minWaitInMs = 0
-	}
-
-	for i := 0; i < maxRetry+1; i++ {
+	retryParams := a.client.cfg.RetryParams
+	for i := 0; i < retryParams.MaxRetry+1; i++ {
 		var (
-			localVarHTTPMethod  = _nethttp.MethodGet
+			localVarHTTPMethod  = http.MethodGet
 			localVarPostBody    interface{}
 			localVarReturnValue ReadAssertionsResponse
 		)
@@ -3624,15 +3714,15 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 			return localVarReturnValue, nil, reportError("storeId is required and must be specified")
 		}
 
-		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(parameterToString(r.storeId, "")), -1)
+		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")), -1)
 		if r.authorizationModelId == "" {
 			return localVarReturnValue, nil, reportError("authorizationModelId is required and must be specified")
 		}
 
-		localVarPath = strings.Replace(localVarPath, "{"+"authorization_model_id"+"}", _neturl.PathEscape(parameterToString(r.authorizationModelId, "")), -1)
+		localVarPath = strings.Replace(localVarPath, "{"+"authorization_model_id"+"}", url.PathEscape(parameterToString(r.authorizationModelId, "")), -1)
 
 		localVarHeaderParams := make(map[string]string)
-		localVarQueryParams := _neturl.Values{}
+		localVarQueryParams := url.Values{}
 
 		// to determine the Content-Type header
 		localVarHTTPContentTypes := []string{}
@@ -3658,19 +3748,33 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 
 		localVarHTTPResponse, err := a.client.callAPI(req)
 		if err != nil || localVarHTTPResponse == nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, "ReadAssertions")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		localVarBody, err := _ioutil.ReadAll(localVarHTTPResponse.Body)
+		localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 		localVarHTTPResponse.Body.Close()
-		localVarHTTPResponse.Body = _ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+		localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 		if err != nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "ReadAssertions")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
+		if localVarHTTPResponse.StatusCode >= http.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
+			if localVarHTTPResponse.StatusCode == http.StatusBadRequest || localVarHTTPResponse.StatusCode == http.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -3696,7 +3800,7 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
+			if localVarHTTPResponse.StatusCode == http.StatusUnauthorized || localVarHTTPResponse.StatusCode == http.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -3711,7 +3815,7 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
+			if localVarHTTPResponse.StatusCode == http.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -3737,10 +3841,13 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
-				if i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode == http.StatusTooManyRequests {
+				if i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "ReadAssertions")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
@@ -3759,10 +3866,13 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
-				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode >= http.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != http.StatusNotImplemented && i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "ReadAssertions")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				newErr := FgaApiInternalError{
 					body:               localVarBody,
@@ -3852,13 +3962,13 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 }
 
 type ApiReadAuthorizationModelRequest struct {
-	ctx        _context.Context
+	ctx        context.Context
 	ApiService OpenFgaApi
 	storeId    string
 	id         string
 }
 
-func (r ApiReadAuthorizationModelRequest) Execute() (ReadAuthorizationModelResponse, *_nethttp.Response, error) {
+func (r ApiReadAuthorizationModelRequest) Execute() (ReadAuthorizationModelResponse, *http.Response, error) {
 	return r.ApiService.ReadAuthorizationModelExecute(r)
 }
 
@@ -3908,12 +4018,12 @@ To retrieve the authorization model with ID `01G5JAVJ41T49E9TT3SKVS7X1J` for the
 
 ```
 In the above example, there are 2 types (`user` and `document`). The `document` type has 2 relations (`writer` and `reader`).
-  - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @param storeId
   - @param id
   - @return ApiReadAuthorizationModelRequest
 */
-func (a *OpenFgaApiService) ReadAuthorizationModel(ctx _context.Context, storeId string, id string) ApiReadAuthorizationModelRequest {
+func (a *OpenFgaApiService) ReadAuthorizationModel(ctx context.Context, storeId string, id string) ApiReadAuthorizationModelRequest {
 	return ApiReadAuthorizationModelRequest{
 		ApiService: a,
 		ctx:        ctx,
@@ -3926,22 +4036,13 @@ func (a *OpenFgaApiService) ReadAuthorizationModel(ctx _context.Context, storeId
  * Execute executes the request
  * @return ReadAuthorizationModelResponse
  */
-func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorizationModelRequest) (ReadAuthorizationModelResponse, *_nethttp.Response, error) {
-	var maxRetry int
-	var minWaitInMs int
-	var requestStarted time.Time = time.Now()
+func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorizationModelRequest) (ReadAuthorizationModelResponse, *http.Response, error) {
+	var requestStarted = time.Now()
 
-	if a.RetryParams != nil {
-		maxRetry = a.RetryParams.MinWaitInMs
-		minWaitInMs = a.RetryParams.MinWaitInMs
-	} else {
-		maxRetry = 0
-		minWaitInMs = 0
-	}
-
-	for i := 0; i < maxRetry+1; i++ {
+	retryParams := a.client.cfg.RetryParams
+	for i := 0; i < retryParams.MaxRetry+1; i++ {
 		var (
-			localVarHTTPMethod  = _nethttp.MethodGet
+			localVarHTTPMethod  = http.MethodGet
 			localVarPostBody    interface{}
 			localVarReturnValue ReadAuthorizationModelResponse
 		)
@@ -3951,15 +4052,15 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 			return localVarReturnValue, nil, reportError("storeId is required and must be specified")
 		}
 
-		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(parameterToString(r.storeId, "")), -1)
+		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")), -1)
 		if r.id == "" {
 			return localVarReturnValue, nil, reportError("id is required and must be specified")
 		}
 
-		localVarPath = strings.Replace(localVarPath, "{"+"id"+"}", _neturl.PathEscape(parameterToString(r.id, "")), -1)
+		localVarPath = strings.Replace(localVarPath, "{"+"id"+"}", url.PathEscape(parameterToString(r.id, "")), -1)
 
 		localVarHeaderParams := make(map[string]string)
-		localVarQueryParams := _neturl.Values{}
+		localVarQueryParams := url.Values{}
 
 		// to determine the Content-Type header
 		localVarHTTPContentTypes := []string{}
@@ -3985,19 +4086,33 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 
 		localVarHTTPResponse, err := a.client.callAPI(req)
 		if err != nil || localVarHTTPResponse == nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, "ReadAuthorizationModel")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		localVarBody, err := _ioutil.ReadAll(localVarHTTPResponse.Body)
+		localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 		localVarHTTPResponse.Body.Close()
-		localVarHTTPResponse.Body = _ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+		localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 		if err != nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "ReadAuthorizationModel")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
+		if localVarHTTPResponse.StatusCode >= http.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
+			if localVarHTTPResponse.StatusCode == http.StatusBadRequest || localVarHTTPResponse.StatusCode == http.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -4023,7 +4138,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
+			if localVarHTTPResponse.StatusCode == http.StatusUnauthorized || localVarHTTPResponse.StatusCode == http.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -4038,7 +4153,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
+			if localVarHTTPResponse.StatusCode == http.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -4064,10 +4179,13 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
-				if i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode == http.StatusTooManyRequests {
+				if i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "ReadAuthorizationModel")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
@@ -4086,10 +4204,13 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
-				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode >= http.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != http.StatusNotImplemented && i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "ReadAuthorizationModel")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				newErr := FgaApiInternalError{
 					body:               localVarBody,
@@ -4179,7 +4300,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 }
 
 type ApiReadAuthorizationModelsRequest struct {
-	ctx               _context.Context
+	ctx               context.Context
 	ApiService        OpenFgaApi
 	storeId           string
 	pageSize          *int32
@@ -4195,7 +4316,7 @@ func (r ApiReadAuthorizationModelsRequest) ContinuationToken(continuationToken s
 	return r
 }
 
-func (r ApiReadAuthorizationModelsRequest) Execute() (ReadAuthorizationModelsResponse, *_nethttp.Response, error) {
+func (r ApiReadAuthorizationModelsRequest) Execute() (ReadAuthorizationModelsResponse, *http.Response, error) {
 	return r.ApiService.ReadAuthorizationModelsExecute(r)
 }
 
@@ -4243,11 +4364,11 @@ If there are no more authorization models available, the `continuation_token` fi
 
 ```
 
-  - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @param storeId
   - @return ApiReadAuthorizationModelsRequest
 */
-func (a *OpenFgaApiService) ReadAuthorizationModels(ctx _context.Context, storeId string) ApiReadAuthorizationModelsRequest {
+func (a *OpenFgaApiService) ReadAuthorizationModels(ctx context.Context, storeId string) ApiReadAuthorizationModelsRequest {
 	return ApiReadAuthorizationModelsRequest{
 		ApiService: a,
 		ctx:        ctx,
@@ -4259,22 +4380,13 @@ func (a *OpenFgaApiService) ReadAuthorizationModels(ctx _context.Context, storeI
  * Execute executes the request
  * @return ReadAuthorizationModelsResponse
  */
-func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizationModelsRequest) (ReadAuthorizationModelsResponse, *_nethttp.Response, error) {
-	var maxRetry int
-	var minWaitInMs int
-	var requestStarted time.Time = time.Now()
+func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizationModelsRequest) (ReadAuthorizationModelsResponse, *http.Response, error) {
+	var requestStarted = time.Now()
 
-	if a.RetryParams != nil {
-		maxRetry = a.RetryParams.MinWaitInMs
-		minWaitInMs = a.RetryParams.MinWaitInMs
-	} else {
-		maxRetry = 0
-		minWaitInMs = 0
-	}
-
-	for i := 0; i < maxRetry+1; i++ {
+	retryParams := a.client.cfg.RetryParams
+	for i := 0; i < retryParams.MaxRetry+1; i++ {
 		var (
-			localVarHTTPMethod  = _nethttp.MethodGet
+			localVarHTTPMethod  = http.MethodGet
 			localVarPostBody    interface{}
 			localVarReturnValue ReadAuthorizationModelsResponse
 		)
@@ -4284,10 +4396,10 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 			return localVarReturnValue, nil, reportError("storeId is required and must be specified")
 		}
 
-		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(parameterToString(r.storeId, "")), -1)
+		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")), -1)
 
 		localVarHeaderParams := make(map[string]string)
-		localVarQueryParams := _neturl.Values{}
+		localVarQueryParams := url.Values{}
 
 		if r.pageSize != nil {
 			localVarQueryParams.Add("page_size", parameterToString(*r.pageSize, ""))
@@ -4319,19 +4431,33 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 
 		localVarHTTPResponse, err := a.client.callAPI(req)
 		if err != nil || localVarHTTPResponse == nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, "ReadAuthorizationModels")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		localVarBody, err := _ioutil.ReadAll(localVarHTTPResponse.Body)
+		localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 		localVarHTTPResponse.Body.Close()
-		localVarHTTPResponse.Body = _ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+		localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 		if err != nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "ReadAuthorizationModels")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
+		if localVarHTTPResponse.StatusCode >= http.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
+			if localVarHTTPResponse.StatusCode == http.StatusBadRequest || localVarHTTPResponse.StatusCode == http.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -4357,7 +4483,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
+			if localVarHTTPResponse.StatusCode == http.StatusUnauthorized || localVarHTTPResponse.StatusCode == http.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -4372,7 +4498,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
+			if localVarHTTPResponse.StatusCode == http.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -4398,10 +4524,13 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
-				if i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode == http.StatusTooManyRequests {
+				if i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "ReadAuthorizationModels")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
@@ -4420,10 +4549,13 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
-				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode >= http.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != http.StatusNotImplemented && i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "ReadAuthorizationModels")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				newErr := FgaApiInternalError{
 					body:               localVarBody,
@@ -4513,7 +4645,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 }
 
 type ApiReadChangesRequest struct {
-	ctx               _context.Context
+	ctx               context.Context
 	ApiService        OpenFgaApi
 	storeId           string
 	type_             *string
@@ -4539,7 +4671,7 @@ func (r ApiReadChangesRequest) StartTime(startTime time.Time) ApiReadChangesRequ
 	return r
 }
 
-func (r ApiReadChangesRequest) Execute() (ReadChangesResponse, *_nethttp.Response, error) {
+func (r ApiReadChangesRequest) Execute() (ReadChangesResponse, *http.Response, error) {
 	return r.ApiService.ReadChangesExecute(r)
 }
 
@@ -4551,11 +4683,11 @@ You can use the `type` parameter to only get the list of tuple changes that affe
 When reading a write tuple change, if it was conditioned, the condition will be returned.
 When reading a delete tuple change, the condition will NOT be returned regardless of whether it was originally conditioned or not.
 
-  - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @param storeId
   - @return ApiReadChangesRequest
 */
-func (a *OpenFgaApiService) ReadChanges(ctx _context.Context, storeId string) ApiReadChangesRequest {
+func (a *OpenFgaApiService) ReadChanges(ctx context.Context, storeId string) ApiReadChangesRequest {
 	return ApiReadChangesRequest{
 		ApiService: a,
 		ctx:        ctx,
@@ -4567,22 +4699,13 @@ func (a *OpenFgaApiService) ReadChanges(ctx _context.Context, storeId string) Ap
  * Execute executes the request
  * @return ReadChangesResponse
  */
-func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadChangesResponse, *_nethttp.Response, error) {
-	var maxRetry int
-	var minWaitInMs int
-	var requestStarted time.Time = time.Now()
+func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadChangesResponse, *http.Response, error) {
+	var requestStarted = time.Now()
 
-	if a.RetryParams != nil {
-		maxRetry = a.RetryParams.MinWaitInMs
-		minWaitInMs = a.RetryParams.MinWaitInMs
-	} else {
-		maxRetry = 0
-		minWaitInMs = 0
-	}
-
-	for i := 0; i < maxRetry+1; i++ {
+	retryParams := a.client.cfg.RetryParams
+	for i := 0; i < retryParams.MaxRetry+1; i++ {
 		var (
-			localVarHTTPMethod  = _nethttp.MethodGet
+			localVarHTTPMethod  = http.MethodGet
 			localVarPostBody    interface{}
 			localVarReturnValue ReadChangesResponse
 		)
@@ -4592,10 +4715,10 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 			return localVarReturnValue, nil, reportError("storeId is required and must be specified")
 		}
 
-		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(parameterToString(r.storeId, "")), -1)
+		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")), -1)
 
 		localVarHeaderParams := make(map[string]string)
-		localVarQueryParams := _neturl.Values{}
+		localVarQueryParams := url.Values{}
 
 		if r.type_ != nil {
 			localVarQueryParams.Add("type", parameterToString(*r.type_, ""))
@@ -4633,19 +4756,33 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 
 		localVarHTTPResponse, err := a.client.callAPI(req)
 		if err != nil || localVarHTTPResponse == nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, "ReadChanges")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		localVarBody, err := _ioutil.ReadAll(localVarHTTPResponse.Body)
+		localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 		localVarHTTPResponse.Body.Close()
-		localVarHTTPResponse.Body = _ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+		localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 		if err != nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "ReadChanges")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
+		if localVarHTTPResponse.StatusCode >= http.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
+			if localVarHTTPResponse.StatusCode == http.StatusBadRequest || localVarHTTPResponse.StatusCode == http.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -4671,7 +4808,7 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
+			if localVarHTTPResponse.StatusCode == http.StatusUnauthorized || localVarHTTPResponse.StatusCode == http.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -4686,7 +4823,7 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
+			if localVarHTTPResponse.StatusCode == http.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -4712,10 +4849,13 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
-				if i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode == http.StatusTooManyRequests {
+				if i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "ReadChanges")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
@@ -4734,10 +4874,13 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
-				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode >= http.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != http.StatusNotImplemented && i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "ReadChanges")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				newErr := FgaApiInternalError{
 					body:               localVarBody,
@@ -4827,7 +4970,7 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 }
 
 type ApiWriteRequest struct {
-	ctx        _context.Context
+	ctx        context.Context
 	ApiService OpenFgaApi
 	storeId    string
 	body       *WriteRequest
@@ -4838,7 +4981,7 @@ func (r ApiWriteRequest) Body(body WriteRequest) ApiWriteRequest {
 	return r
 }
 
-func (r ApiWriteRequest) Execute() (map[string]interface{}, *_nethttp.Response, error) {
+func (r ApiWriteRequest) Execute() (map[string]interface{}, *http.Response, error) {
 	return r.ApiService.WriteExecute(r)
 }
 
@@ -4887,11 +5030,11 @@ To remove `user:bob` as a `reader` for `document:2021-budget`, call write API wi
 
 ```
 
-  - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @param storeId
   - @return ApiWriteRequest
 */
-func (a *OpenFgaApiService) Write(ctx _context.Context, storeId string) ApiWriteRequest {
+func (a *OpenFgaApiService) Write(ctx context.Context, storeId string) ApiWriteRequest {
 	return ApiWriteRequest{
 		ApiService: a,
 		ctx:        ctx,
@@ -4903,22 +5046,13 @@ func (a *OpenFgaApiService) Write(ctx _context.Context, storeId string) ApiWrite
  * Execute executes the request
  * @return map[string]interface{}
  */
-func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interface{}, *_nethttp.Response, error) {
-	var maxRetry int
-	var minWaitInMs int
-	var requestStarted time.Time = time.Now()
+func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interface{}, *http.Response, error) {
+	var requestStarted = time.Now()
 
-	if a.RetryParams != nil {
-		maxRetry = a.RetryParams.MinWaitInMs
-		minWaitInMs = a.RetryParams.MinWaitInMs
-	} else {
-		maxRetry = 0
-		minWaitInMs = 0
-	}
-
-	for i := 0; i < maxRetry+1; i++ {
+	retryParams := a.client.cfg.RetryParams
+	for i := 0; i < retryParams.MaxRetry+1; i++ {
 		var (
-			localVarHTTPMethod  = _nethttp.MethodPost
+			localVarHTTPMethod  = http.MethodPost
 			localVarPostBody    interface{}
 			localVarReturnValue map[string]interface{}
 		)
@@ -4928,10 +5062,10 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 			return localVarReturnValue, nil, reportError("storeId is required and must be specified")
 		}
 
-		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(parameterToString(r.storeId, "")), -1)
+		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")), -1)
 
 		localVarHeaderParams := make(map[string]string)
-		localVarQueryParams := _neturl.Values{}
+		localVarQueryParams := url.Values{}
 		if r.body == nil {
 			return localVarReturnValue, nil, reportError("body is required and must be specified")
 		}
@@ -4962,19 +5096,33 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 
 		localVarHTTPResponse, err := a.client.callAPI(req)
 		if err != nil || localVarHTTPResponse == nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, "Write")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		localVarBody, err := _ioutil.ReadAll(localVarHTTPResponse.Body)
+		localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 		localVarHTTPResponse.Body.Close()
-		localVarHTTPResponse.Body = _ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+		localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 		if err != nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "Write")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
+		if localVarHTTPResponse.StatusCode >= http.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
+			if localVarHTTPResponse.StatusCode == http.StatusBadRequest || localVarHTTPResponse.StatusCode == http.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -5000,7 +5148,7 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
+			if localVarHTTPResponse.StatusCode == http.StatusUnauthorized || localVarHTTPResponse.StatusCode == http.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -5015,7 +5163,7 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
+			if localVarHTTPResponse.StatusCode == http.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -5041,10 +5189,13 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
-				if i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode == http.StatusTooManyRequests {
+				if i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "Write")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
@@ -5063,10 +5214,13 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
-				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode >= http.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != http.StatusNotImplemented && i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "Write")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				newErr := FgaApiInternalError{
 					body:               localVarBody,
@@ -5156,7 +5310,7 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 }
 
 type ApiWriteAssertionsRequest struct {
-	ctx                  _context.Context
+	ctx                  context.Context
 	ApiService           OpenFgaApi
 	storeId              string
 	authorizationModelId string
@@ -5168,19 +5322,19 @@ func (r ApiWriteAssertionsRequest) Body(body WriteAssertionsRequest) ApiWriteAss
 	return r
 }
 
-func (r ApiWriteAssertionsRequest) Execute() (*_nethttp.Response, error) {
+func (r ApiWriteAssertionsRequest) Execute() (*http.Response, error) {
 	return r.ApiService.WriteAssertionsExecute(r)
 }
 
 /*
  * WriteAssertions Upsert assertions for an authorization model ID
  * The WriteAssertions API will upsert new assertions for an authorization model id, or overwrite the existing ones. An assertion is an object that contains a tuple key, the expectation of whether a call to the Check API of that tuple key will return true or false, and optionally a list of contextual tuples.
- * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @param storeId
  * @param authorizationModelId
  * @return ApiWriteAssertionsRequest
  */
-func (a *OpenFgaApiService) WriteAssertions(ctx _context.Context, storeId string, authorizationModelId string) ApiWriteAssertionsRequest {
+func (a *OpenFgaApiService) WriteAssertions(ctx context.Context, storeId string, authorizationModelId string) ApiWriteAssertionsRequest {
 	return ApiWriteAssertionsRequest{
 		ApiService:           a,
 		ctx:                  ctx,
@@ -5192,22 +5346,13 @@ func (a *OpenFgaApiService) WriteAssertions(ctx _context.Context, storeId string
 /*
  * Execute executes the request
  */
-func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) (*_nethttp.Response, error) {
-	var maxRetry int
-	var minWaitInMs int
-	var requestStarted time.Time = time.Now()
+func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) (*http.Response, error) {
+	var requestStarted = time.Now()
 
-	if a.RetryParams != nil {
-		maxRetry = a.RetryParams.MinWaitInMs
-		minWaitInMs = a.RetryParams.MinWaitInMs
-	} else {
-		maxRetry = 0
-		minWaitInMs = 0
-	}
-
-	for i := 0; i < maxRetry+1; i++ {
+	retryParams := a.client.cfg.RetryParams
+	for i := 0; i < retryParams.MaxRetry+1; i++ {
 		var (
-			localVarHTTPMethod = _nethttp.MethodPut
+			localVarHTTPMethod = http.MethodPut
 			localVarPostBody   interface{}
 		)
 
@@ -5216,15 +5361,15 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 			return nil, reportError("storeId is required and must be specified")
 		}
 
-		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(parameterToString(r.storeId, "")), -1)
+		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")), -1)
 		if r.authorizationModelId == "" {
 			return nil, reportError("authorizationModelId is required and must be specified")
 		}
 
-		localVarPath = strings.Replace(localVarPath, "{"+"authorization_model_id"+"}", _neturl.PathEscape(parameterToString(r.authorizationModelId, "")), -1)
+		localVarPath = strings.Replace(localVarPath, "{"+"authorization_model_id"+"}", url.PathEscape(parameterToString(r.authorizationModelId, "")), -1)
 
 		localVarHeaderParams := make(map[string]string)
-		localVarQueryParams := _neturl.Values{}
+		localVarQueryParams := url.Values{}
 		if r.body == nil {
 			return nil, reportError("body is required and must be specified")
 		}
@@ -5255,19 +5400,33 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 
 		localVarHTTPResponse, err := a.client.callAPI(req)
 		if err != nil || localVarHTTPResponse == nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, "WriteAssertions")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarHTTPResponse, err
 		}
 
-		localVarBody, err := _ioutil.ReadAll(localVarHTTPResponse.Body)
+		localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 		localVarHTTPResponse.Body.Close()
-		localVarHTTPResponse.Body = _ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+		localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 		if err != nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "WriteAssertions")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
+		if localVarHTTPResponse.StatusCode >= http.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
+			if localVarHTTPResponse.StatusCode == http.StatusBadRequest || localVarHTTPResponse.StatusCode == http.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -5293,7 +5452,7 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 				return localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
+			if localVarHTTPResponse.StatusCode == http.StatusUnauthorized || localVarHTTPResponse.StatusCode == http.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -5308,7 +5467,7 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 				return localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
+			if localVarHTTPResponse.StatusCode == http.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -5334,10 +5493,13 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 				return localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
-				if i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode == http.StatusTooManyRequests {
+				if i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "WriteAssertions")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
@@ -5356,10 +5518,13 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 				return localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
-				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode >= http.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != http.StatusNotImplemented && i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "WriteAssertions")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				newErr := FgaApiInternalError{
 					body:               localVarBody,
@@ -5439,7 +5604,7 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 }
 
 type ApiWriteAuthorizationModelRequest struct {
-	ctx        _context.Context
+	ctx        context.Context
 	ApiService OpenFgaApi
 	storeId    string
 	body       *WriteAuthorizationModelRequest
@@ -5450,7 +5615,7 @@ func (r ApiWriteAuthorizationModelRequest) Body(body WriteAuthorizationModelRequ
 	return r
 }
 
-func (r ApiWriteAuthorizationModelRequest) Execute() (WriteAuthorizationModelResponse, *_nethttp.Response, error) {
+func (r ApiWriteAuthorizationModelRequest) Execute() (WriteAuthorizationModelResponse, *http.Response, error) {
 	return r.ApiService.WriteAuthorizationModelExecute(r)
 }
 
@@ -5502,11 +5667,11 @@ OpenFGA's response will include the version id for this authorization model, whi
 {"authorization_model_id": "01G50QVV17PECNVAHX1GG4Y5NC"}
 ```
 
-  - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @param storeId
   - @return ApiWriteAuthorizationModelRequest
 */
-func (a *OpenFgaApiService) WriteAuthorizationModel(ctx _context.Context, storeId string) ApiWriteAuthorizationModelRequest {
+func (a *OpenFgaApiService) WriteAuthorizationModel(ctx context.Context, storeId string) ApiWriteAuthorizationModelRequest {
 	return ApiWriteAuthorizationModelRequest{
 		ApiService: a,
 		ctx:        ctx,
@@ -5518,22 +5683,13 @@ func (a *OpenFgaApiService) WriteAuthorizationModel(ctx _context.Context, storeI
  * Execute executes the request
  * @return WriteAuthorizationModelResponse
  */
-func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizationModelRequest) (WriteAuthorizationModelResponse, *_nethttp.Response, error) {
-	var maxRetry int
-	var minWaitInMs int
-	var requestStarted time.Time = time.Now()
+func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizationModelRequest) (WriteAuthorizationModelResponse, *http.Response, error) {
+	var requestStarted = time.Now()
 
-	if a.RetryParams != nil {
-		maxRetry = a.RetryParams.MinWaitInMs
-		minWaitInMs = a.RetryParams.MinWaitInMs
-	} else {
-		maxRetry = 0
-		minWaitInMs = 0
-	}
-
-	for i := 0; i < maxRetry+1; i++ {
+	retryParams := a.client.cfg.RetryParams
+	for i := 0; i < retryParams.MaxRetry+1; i++ {
 		var (
-			localVarHTTPMethod  = _nethttp.MethodPost
+			localVarHTTPMethod  = http.MethodPost
 			localVarPostBody    interface{}
 			localVarReturnValue WriteAuthorizationModelResponse
 		)
@@ -5543,10 +5699,10 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 			return localVarReturnValue, nil, reportError("storeId is required and must be specified")
 		}
 
-		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", _neturl.PathEscape(parameterToString(r.storeId, "")), -1)
+		localVarPath = strings.Replace(localVarPath, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")), -1)
 
 		localVarHeaderParams := make(map[string]string)
-		localVarQueryParams := _neturl.Values{}
+		localVarQueryParams := url.Values{}
 		if r.body == nil {
 			return localVarReturnValue, nil, reportError("body is required and must be specified")
 		}
@@ -5577,19 +5733,33 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 
 		localVarHTTPResponse, err := a.client.callAPI(req)
 		if err != nil || localVarHTTPResponse == nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, "WriteAuthorizationModel")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		localVarBody, err := _ioutil.ReadAll(localVarHTTPResponse.Body)
+		localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 		localVarHTTPResponse.Body.Close()
-		localVarHTTPResponse.Body = _ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+		localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 		if err != nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "WriteAuthorizationModel")
+				if timeToWait > 0 {
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
 			return localVarReturnValue, localVarHTTPResponse, err
 		}
 
-		if localVarHTTPResponse.StatusCode >= _nethttp.StatusMultipleChoices {
+		if localVarHTTPResponse.StatusCode >= http.StatusMultipleChoices {
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusBadRequest || localVarHTTPResponse.StatusCode == _nethttp.StatusUnprocessableEntity {
+			if localVarHTTPResponse.StatusCode == http.StatusBadRequest || localVarHTTPResponse.StatusCode == http.StatusUnprocessableEntity {
 				newErr := FgaApiValidationError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -5615,7 +5785,7 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusUnauthorized || localVarHTTPResponse.StatusCode == _nethttp.StatusForbidden {
+			if localVarHTTPResponse.StatusCode == http.StatusUnauthorized || localVarHTTPResponse.StatusCode == http.StatusForbidden {
 				newErr := FgaApiAuthenticationError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -5630,7 +5800,7 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusNotFound {
+			if localVarHTTPResponse.StatusCode == http.StatusNotFound {
 				newErr := FgaApiNotFoundError{
 					body:               localVarBody,
 					storeId:            r.storeId,
@@ -5656,10 +5826,13 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode == _nethttp.StatusTooManyRequests {
-				if i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode == http.StatusTooManyRequests {
+				if i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "WriteAuthorizationModel")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				// maximum number of retry reached
 				newErr := FgaApiRateLimitExceededError{
@@ -5678,10 +5851,13 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 
-			if localVarHTTPResponse.StatusCode >= _nethttp.StatusInternalServerError {
-				if localVarHTTPResponse.StatusCode != _nethttp.StatusNotImplemented && i < maxRetry {
-					time.Sleep(time.Duration(internalutils.RandomTime(i, minWaitInMs)) * time.Millisecond)
-					continue
+			if localVarHTTPResponse.StatusCode >= http.StatusInternalServerError {
+				if localVarHTTPResponse.StatusCode != http.StatusNotImplemented && i < retryParams.MaxRetry {
+					timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, localVarHTTPResponse.Header, "WriteAuthorizationModel")
+					if timeToWait > 0 {
+						time.Sleep(timeToWait)
+						continue
+					}
 				}
 				newErr := FgaApiInternalError{
 					body:               localVarBody,
