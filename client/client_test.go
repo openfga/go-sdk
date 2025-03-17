@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/jarcoal/httpmock"
+
 	"github.com/openfga/go-sdk"
 	. "github.com/openfga/go-sdk/client"
 )
@@ -1430,6 +1431,132 @@ func TestOpenFgaClient(t *testing.T) {
 				Disable:             true,
 				MaxParallelRequests: 5,
 				MaxPerChunk:         1,
+			},
+		}
+
+		var expectedResponse map[string]interface{}
+		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+
+		data, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		if len(data.Writes) != 2 {
+			t.Fatalf("OpenFgaClient.%v() - expected %v Writes, got %v", test.Name, 2, len(data.Writes))
+		}
+
+		if len(data.Deletes) != 1 {
+			t.Fatalf("OpenFgaClient.%v() - expected %v Deletes, got %v", test.Name, 1, len(data.Deletes))
+		}
+
+		for index := 0; index < len(data.Writes); index++ {
+			response := data.Writes[index]
+			if response.Error != nil {
+				t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
+			}
+			if response.HttpResponse.StatusCode != test.ResponseStatus {
+				t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
+			}
+
+			_, err := response.MarshalJSON()
+			if err != nil {
+				t.Fatalf("%v", err)
+			}
+		}
+
+		for index := 0; index < len(data.Deletes); index++ {
+			response := data.Deletes[index]
+			if response.Error != nil {
+				t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
+			}
+			if response.HttpResponse.StatusCode != test.ResponseStatus {
+				t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
+			}
+
+			_, err := response.MarshalJSON()
+			if err != nil {
+				t.Fatalf("%v", err)
+			}
+		}
+
+		// store can be overridden
+		storeOverrideOptions := ClientWriteOptions{
+			AuthorizationModelId: openfga.PtrString(authModelId),
+			Transaction: &TransactionOptions{
+				Disable:             true,
+				MaxParallelRequests: 5,
+				MaxPerChunk:         1,
+			},
+			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+		}
+		httpmock.Reset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		data, err = fgaClient.Write(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
+		if err != nil {
+			t.Fatalf("%v", data)
+		}
+
+		for index := 0; index < len(data.Writes); index++ {
+			response := data.Writes[index]
+			if response.Error != nil {
+				t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
+			}
+		}
+	})
+
+	t.Run("WriteNonTransaction only some options set", func(t *testing.T) {
+		test := TestDefinition{
+			Name:           "Write",
+			JsonResponse:   `{}`,
+			ResponseStatus: http.StatusOK,
+			Method:         http.MethodPost,
+			RequestPath:    "write",
+		}
+		requestBody := ClientWriteRequest{
+			Writes: []ClientTupleKey{{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "viewer",
+				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+			}, {
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "viewer",
+				Object:   "document:budget",
+			}},
+			Deletes: []ClientTupleKeyWithoutCondition{{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "viewer",
+				Object:   "document:planning",
+			}},
+		}
+		const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
+		options := ClientWriteOptions{
+			AuthorizationModelId: openfga.PtrString(authModelId),
+			Transaction: &TransactionOptions{
+				Disable:     true,
+				MaxPerChunk: 1,
 			},
 		}
 

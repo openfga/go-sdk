@@ -1496,15 +1496,8 @@ func (request *SdkClientWriteRequest) GetBody() *ClientWriteRequest {
 }
 
 func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface) (*ClientWriteResponse, error) {
-	var maxPerChunk = int32(1) // 1 has to be the default otherwise the chunks will be sent in transactions
-	if request.GetOptions() != nil && request.GetOptions().Transaction != nil {
-		maxPerChunk = request.GetOptions().Transaction.MaxPerChunk
-	}
-	var maxParallelReqs = DEFAULT_MAX_METHOD_PARALLEL_REQS
-	if request.GetOptions() != nil && request.GetOptions().Transaction != nil {
-		maxParallelReqs = request.GetOptions().Transaction.MaxParallelRequests
-	}
-
+	options := request.GetOptions()
+	transactionOptionsSet := options != nil && options.Transaction != nil
 	response := ClientWriteResponse{
 		Writes:  []ClientWriteRequestWriteResponse{},
 		Deletes: []ClientWriteRequestDeleteResponse{},
@@ -1522,7 +1515,7 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 
 	// Unless explicitly disabled, transaction mode is enabled
 	// In transaction mode, the client will send the request to the server as is
-	if request.GetOptions() == nil || request.GetOptions().Transaction == nil || !request.GetOptions().Transaction.Disable {
+	if !transactionOptionsSet || !options.Transaction.Disable {
 		writeRequest := fgaSdk.WriteRequest{
 			AuthorizationModelId: authorizationModelId,
 		}
@@ -1572,6 +1565,16 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 		}
 
 		return &response, err
+	}
+
+	maxPerChunk := int32(1) // 1 has to be the default otherwise the chunks will be sent in transactions
+	if options.Transaction.MaxPerChunk > 0 {
+		maxPerChunk = options.Transaction.MaxPerChunk
+	}
+
+	maxParallelReqs := DEFAULT_MAX_METHOD_PARALLEL_REQS
+	if options.Transaction.MaxParallelRequests > 0 {
+		maxParallelReqs = options.Transaction.MaxParallelRequests
 	}
 
 	// If the transaction mode is disabled:
