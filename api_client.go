@@ -75,7 +75,7 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 		} else {
 			cfg.Credentials.Context = context.Background()
 			telemetry.Bind(cfg.Credentials.Context, telemetry.Get(telemetry.TelemetryFactoryParameters{Configuration: cfg.Telemetry}))
-			var httpClient, headers = cfg.Credentials.GetHttpClientAndHeaderOverrides(retryutils.GetRetryParamsOrDefault(cfg.RetryParams))
+			var httpClient, headers = cfg.Credentials.GetHttpClientAndHeaderOverrides(retryutils.GetRetryParamsOrDefault(cfg.RetryParams), cfg.Debug)
 			if len(headers) > 0 {
 				for idx := range headers {
 					cfg.AddDefaultHeader(headers[idx].Key, headers[idx].Value)
@@ -192,6 +192,10 @@ func (c *APIClient) callAPI(request *http.Request) (*http.Response, error) {
 
 	resp, err := c.cfg.HTTPClient.Do(request)
 	if err != nil {
+		if resp != nil && resp.Request == nil {
+			resp.Request = request
+		}
+
 		return resp, err
 	}
 
@@ -202,6 +206,11 @@ func (c *APIClient) callAPI(request *http.Request) (*http.Response, error) {
 		}
 		log.Printf("\n%s\n", string(dump))
 	}
+
+	if resp.Request == nil {
+		resp.Request = request
+	}
+
 	return resp, err
 }
 
@@ -317,6 +326,69 @@ func (c *APIClient) decode(v interface{}, b []byte, contentType string) (err err
 	return errors.New("undefined response type")
 }
 
+func (c *APIClient) handleAPIError(httpResponse *http.Response, responseBody []byte, requestBody interface{}, operationName string, storeId string) error {
+	switch httpResponse.StatusCode {
+	case http.StatusBadRequest, http.StatusUnprocessableEntity:
+		err := NewFgaApiValidationError(operationName, requestBody, httpResponse, responseBody, storeId)
+		var v ValidationErrorMessageResponse
+		errBody := c.decode(&v, responseBody, httpResponse.Header.Get("Content-Type"))
+		if errBody != nil {
+			err.modelDecodeError = err
+			return err
+		}
+		err.model = v
+		err.responseCode = v.GetCode()
+		err.error += " with error code " + string(v.GetCode()) + " error message: " + v.GetMessage()
+		return err
+
+	case http.StatusUnauthorized, http.StatusForbidden:
+		return NewFgaApiAuthenticationError(operationName, requestBody, httpResponse, responseBody, storeId)
+
+	case http.StatusNotFound:
+		err := NewFgaApiNotFoundError(operationName, requestBody, httpResponse, responseBody, storeId)
+		var v PathUnknownErrorMessageResponse
+		errBody := c.decode(&v, responseBody, httpResponse.Header.Get("Content-Type"))
+		if errBody != nil {
+			err.modelDecodeError = err
+			return err
+		}
+		err.model = v
+		err.responseCode = v.GetCode()
+		err.error += " with error code " + string(v.GetCode()) + " error message: " + v.GetMessage()
+		return err
+
+	case http.StatusTooManyRequests:
+		return NewFgaApiRateLimitExceededError(operationName, requestBody, httpResponse, responseBody, storeId)
+
+	default:
+		if httpResponse.StatusCode >= http.StatusInternalServerError {
+			err := NewFgaApiInternalError(operationName, requestBody, httpResponse, responseBody, storeId)
+			var v InternalErrorMessageResponse
+			errBody := c.decode(&v, responseBody, httpResponse.Header.Get("Content-Type"))
+			if errBody != nil {
+				err.modelDecodeError = err
+				return err
+			}
+			err.model = v
+			err.responseCode = v.GetCode()
+			err.error += " with error code " + string(v.GetCode()) + " error message: " + v.GetMessage()
+			return err
+		}
+
+		err := NewFgaApiError(operationName, requestBody, httpResponse, responseBody, storeId)
+		var v ErrorResponse
+		errBody := c.decode(&v, responseBody, httpResponse.Header.Get("Content-Type"))
+		if errBody != nil {
+			err.modelDecodeError = err
+			return err
+		}
+		err.model = v
+		err.responseCode = v.Code
+		err.error += " with error code " + string(v.Code) + " error message: " + v.Message
+		return err
+	}
+}
+
 // Prevent trying to import "fmt"
 func reportError(format string, a ...interface{}) error {
 	return fmt.Errorf(format, a...)
@@ -428,500 +500,4 @@ func CacheExpires(r *http.Response) time.Time {
 
 func strlen(s string) int {
 	return utf8.RuneCountInString(s)
-}
-
-// GenericOpenAPIError Provides access to the body, error and model on returned errors.
-type GenericOpenAPIError struct {
-	body  []byte
-	error string
-	model interface{}
-}
-
-// Error returns non-empty string if there was an error.
-func (e GenericOpenAPIError) Error() string {
-	return e.error
-}
-
-// Body returns the raw bytes of the response
-func (e GenericOpenAPIError) Body() []byte {
-	return e.body
-}
-
-// Model returns the unpacked model of the error
-func (e GenericOpenAPIError) Model() interface{} {
-	return e.model
-}
-
-// FgaApiAuthenticationError is raised when API has errors due to invalid authentication
-type FgaApiAuthenticationError struct {
-	body  []byte
-	error string
-	model interface{}
-
-	storeId            string
-	endpointCategory   string
-	modelDecodeError   error
-	responseStatusCode int
-	responseHeader     http.Header
-	requestId          string
-	responseCode       string
-}
-
-// Error returns non-empty string if there was an error.
-func (e FgaApiAuthenticationError) Error() string {
-	return e.error
-}
-
-// Body returns the raw bytes of the response
-func (e FgaApiAuthenticationError) Body() []byte {
-	return e.body
-}
-
-// Model returns the unpacked model of the error
-func (e FgaApiAuthenticationError) Model() interface{} {
-	return e.model
-}
-
-// StoreId returns the store ID for the API that causes the error
-func (e FgaApiAuthenticationError) StoreId() string {
-	return e.storeId
-}
-
-// EndpointCategory returns the original API category
-func (e FgaApiAuthenticationError) EndpointCategory() string {
-	return e.endpointCategory
-}
-
-// ModelDecodeError returns any error when decoding the unpacked model of the error
-func (e FgaApiAuthenticationError) ModelDecodeError() error {
-	return e.modelDecodeError
-}
-
-// ResponseStatusCode returns the original API response status HTTP code
-func (e FgaApiAuthenticationError) ResponseStatusCode() int {
-	return e.responseStatusCode
-}
-
-// ResponseHeader returns the original API response header
-func (e FgaApiAuthenticationError) ResponseHeader() http.Header {
-	return e.responseHeader
-}
-
-// RequestId returns the FGA request ID associated with the response
-func (e FgaApiAuthenticationError) RequestId() string {
-	return e.requestId
-}
-
-// ResponseCode returns response code
-func (e FgaApiAuthenticationError) ResponseCode() string {
-	return e.responseCode
-}
-
-// FgaApiError will be returned if there are errors in the API
-
-type FgaApiError struct {
-	body  []byte
-	error string
-	model interface{}
-
-	storeId            string
-	endpointCategory   string
-	requestBody        interface{}
-	requestMethod      string
-	modelDecodeError   error
-	responseStatusCode int
-	responseHeader     http.Header
-	requestId          string
-	responseCode       string
-}
-
-// Error returns non-empty string if there was an error.
-func (e FgaApiError) Error() string {
-	return e.error
-}
-
-// Body returns the raw bytes of the response
-func (e FgaApiError) Body() []byte {
-	return e.body
-}
-
-// Model returns the unpacked model of the error
-func (e FgaApiError) Model() interface{} {
-	return e.model
-}
-
-// StoreId returns the store ID for the API that causes the error
-func (e FgaApiError) StoreId() string {
-	return e.storeId
-}
-
-// RequestBody returns the original request body
-func (e FgaApiError) RequestBody() interface{} {
-	return e.requestBody
-}
-
-// RequestMethod returns the method calling the API
-func (e FgaApiError) RequestMethod() string {
-	return e.requestMethod
-}
-
-// EndpointCategory returns the original API category
-func (e FgaApiError) EndpointCategory() string {
-	return e.endpointCategory
-}
-
-// ModelDecodeError returns any error when decoding the unpacked model of the error
-func (e FgaApiError) ModelDecodeError() error {
-	return e.modelDecodeError
-}
-
-// ResponseStatusCode returns the original API response HTTP status code
-func (e FgaApiError) ResponseStatusCode() int {
-	return e.responseStatusCode
-}
-
-// ResponseHeader returns the original API response header
-func (e FgaApiError) ResponseHeader() http.Header {
-	return e.responseHeader
-}
-
-// RequestId returns the FGA request ID associated with the response
-func (e FgaApiError) RequestId() string {
-	return e.requestId
-}
-
-// ResponseCode returns response code
-func (e FgaApiError) ResponseCode() string {
-	return e.responseCode
-}
-
-// FgaApiValidationError will be returned if there are errors in the API's parameters
-
-type FgaApiValidationError struct {
-	body  []byte
-	error string
-	model interface{}
-
-	storeId            string
-	endpointCategory   string
-	requestBody        interface{}
-	requestMethod      string
-	modelDecodeError   error
-	responseStatusCode int
-	responseHeader     http.Header
-	requestId          string
-	responseCode       ErrorCode
-}
-
-// Error returns non-empty string if there was an error.
-func (e FgaApiValidationError) Error() string {
-	return e.error
-}
-
-// Body returns the raw bytes of the response
-func (e FgaApiValidationError) Body() []byte {
-	return e.body
-}
-
-// Model returns the unpacked model of the error
-func (e FgaApiValidationError) Model() interface{} {
-	return e.model
-}
-
-// StoreId returns the store ID for the API that causes the error
-func (e FgaApiValidationError) StoreId() string {
-	return e.storeId
-}
-
-// RequestBody returns the original request body
-func (e FgaApiValidationError) RequestBody() interface{} {
-	return e.requestBody
-}
-
-// RequestMethod returns the method calling the API
-func (e FgaApiValidationError) RequestMethod() string {
-	return e.requestMethod
-}
-
-// EndpointCategory returns the original API category
-func (e FgaApiValidationError) EndpointCategory() string {
-	return e.endpointCategory
-}
-
-// ModelDecodeError returns any error when decoding the unpacked model of the error
-func (e FgaApiValidationError) ModelDecodeError() error {
-	return e.modelDecodeError
-}
-
-// ResponseStatusCode returns the original API response HTTP status code
-func (e FgaApiValidationError) ResponseStatusCode() int {
-	return e.responseStatusCode
-}
-
-// ResponseHeader returns the original API response header
-func (e FgaApiValidationError) ResponseHeader() http.Header {
-	return e.responseHeader
-}
-
-// RequestId returns the FGA request ID associated with the response
-func (e FgaApiValidationError) RequestId() string {
-	return e.requestId
-}
-
-// ResponseCode returns response code
-func (e FgaApiValidationError) ResponseCode() ErrorCode {
-	return e.responseCode
-}
-
-// FgaApiNotFoundError will be returned if the endpoint cannot be found
-
-type FgaApiNotFoundError struct {
-	body  []byte
-	error string
-	model interface{}
-
-	storeId            string
-	endpointCategory   string
-	requestBody        interface{}
-	requestMethod      string
-	modelDecodeError   error
-	responseStatusCode int
-	responseHeader     http.Header
-	requestId          string
-	responseCode       NotFoundErrorCode
-}
-
-// Error returns non-empty string if there was an error.
-func (e FgaApiNotFoundError) Error() string {
-	return e.error
-}
-
-// Body returns the raw bytes of the response
-func (e FgaApiNotFoundError) Body() []byte {
-	return e.body
-}
-
-// Model returns the unpacked model of the error
-func (e FgaApiNotFoundError) Model() interface{} {
-	return e.model
-}
-
-// StoreId returns the store ID for the API that causes the error
-func (e FgaApiNotFoundError) StoreId() string {
-	return e.storeId
-}
-
-// RequestBody returns the original request body
-func (e FgaApiNotFoundError) RequestBody() interface{} {
-	return e.requestBody
-}
-
-// RequestMethod returns the method calling the API
-func (e FgaApiNotFoundError) RequestMethod() string {
-	return e.requestMethod
-}
-
-// EndpointCategory returns the original API category
-func (e FgaApiNotFoundError) EndpointCategory() string {
-	return e.endpointCategory
-}
-
-// ModelDecodeError returns any error when decoding the unpacked model of the error
-func (e FgaApiNotFoundError) ModelDecodeError() error {
-	return e.modelDecodeError
-}
-
-// ResponseStatusCode returns the original API response HTTP status code
-func (e FgaApiNotFoundError) ResponseStatusCode() int {
-	return e.responseStatusCode
-}
-
-// ResponseHeader returns the original API response header
-func (e FgaApiNotFoundError) ResponseHeader() http.Header {
-	return e.responseHeader
-}
-
-// RequestId returns the FGA request ID associated with the response
-func (e FgaApiNotFoundError) RequestId() string {
-	return e.requestId
-}
-
-// ResponseCode returns response code
-func (e FgaApiNotFoundError) ResponseCode() NotFoundErrorCode {
-	return e.responseCode
-}
-
-// FgaApiInternalError will be returned if there are internal errors in OpenFGA
-
-type FgaApiInternalError struct {
-	body  []byte
-	error string
-	model interface{}
-
-	storeId            string
-	endpointCategory   string
-	requestBody        interface{}
-	requestMethod      string
-	modelDecodeError   error
-	responseStatusCode int
-	responseHeader     http.Header
-	requestId          string
-	responseCode       InternalErrorCode
-}
-
-// Error returns non-empty string if there was an error.
-func (e FgaApiInternalError) Error() string {
-	return e.error
-}
-
-// Body returns the raw bytes of the response
-func (e FgaApiInternalError) Body() []byte {
-	return e.body
-}
-
-// Model returns the unpacked model of the error
-func (e FgaApiInternalError) Model() interface{} {
-	return e.model
-}
-
-// StoreId returns the store ID for the API that causes the error
-func (e FgaApiInternalError) StoreId() string {
-	return e.storeId
-}
-
-// RequestBody returns the original request body
-func (e FgaApiInternalError) RequestBody() interface{} {
-	return e.requestBody
-}
-
-// RequestMethod returns the method calling the API
-func (e FgaApiInternalError) RequestMethod() string {
-	return e.requestMethod
-}
-
-// EndpointCategory returns the original API category
-func (e FgaApiInternalError) EndpointCategory() string {
-	return e.endpointCategory
-}
-
-// ModelDecodeError returns any error when decoding the unpacked model of the error
-func (e FgaApiInternalError) ModelDecodeError() error {
-	return e.modelDecodeError
-}
-
-// ResponseStatusCode returns the original API response HTTP status code
-func (e FgaApiInternalError) ResponseStatusCode() int {
-	return e.responseStatusCode
-}
-
-// ResponseHeader returns the original API response header
-func (e FgaApiInternalError) ResponseHeader() http.Header {
-	return e.responseHeader
-}
-
-// RequestId returns the FGA request ID associated with the response
-func (e FgaApiInternalError) RequestId() string {
-	return e.requestId
-}
-
-// ResponseCode returns response code
-func (e FgaApiInternalError) ResponseCode() InternalErrorCode {
-	return e.responseCode
-}
-
-// FgaApiRateLimitExceededError will be returned if error happens because the API's rate limit has been exceeded (429 HTTP response)
-
-type FgaApiRateLimitExceededError struct {
-	body  []byte
-	error string
-	model interface{}
-
-	storeId            string
-	endpointCategory   string
-	requestBody        interface{}
-	requestMethod      string
-	modelDecodeError   error
-	responseStatusCode int
-	responseHeader     http.Header
-	requestId          string
-	responseCode       string
-
-	rateLimit           int
-	rateUnit            string
-	rateLimitResetEpoch string
-}
-
-// Error returns non-empty string if there was an error.
-func (e FgaApiRateLimitExceededError) Error() string {
-	return e.error
-}
-
-// Body returns the raw bytes of the response
-func (e FgaApiRateLimitExceededError) Body() []byte {
-	return e.body
-}
-
-// Model returns the unpacked model of the error
-func (e FgaApiRateLimitExceededError) Model() interface{} {
-	return e.model
-}
-
-// StoreId returns the store ID for the API that causes the error
-func (e FgaApiRateLimitExceededError) StoreId() string {
-	return e.storeId
-}
-
-// RequestBody returns the original request body
-func (e FgaApiRateLimitExceededError) RequestBody() interface{} {
-	return e.requestBody
-}
-
-// RequestMethod returns the method calling the API
-func (e FgaApiRateLimitExceededError) RequestMethod() string {
-	return e.requestMethod
-}
-
-// RateLimit returns the limit for the API
-func (e FgaApiRateLimitExceededError) RateLimit() int {
-	return e.rateLimit
-}
-
-// RateUnit returns the unit used for rate limit
-func (e FgaApiRateLimitExceededError) RateUnit() string {
-	return e.rateUnit
-}
-
-// RateLimitResetEpoch returns the unit used for rate limit
-func (e FgaApiRateLimitExceededError) RateLimitResetEpoch() string {
-	return e.rateLimitResetEpoch
-}
-
-// EndpointCategory returns the original API category
-func (e FgaApiRateLimitExceededError) EndpointCategory() string {
-	return e.endpointCategory
-}
-
-// ModelDecodeError returns any error when decoding the unpacked model of the error
-func (e FgaApiRateLimitExceededError) ModelDecodeError() error {
-	return e.modelDecodeError
-}
-
-// ResponseStatusCode returns the original API response HTTP status code
-func (e FgaApiRateLimitExceededError) ResponseStatusCode() int {
-	return e.responseStatusCode
-}
-
-// ResponseHeader returns the original API response header
-func (e FgaApiRateLimitExceededError) ResponseHeader() http.Header {
-	return e.responseHeader
-}
-
-// RequestId returns the FGA request ID associated with the response
-func (e FgaApiRateLimitExceededError) RequestId() string {
-	return e.requestId
-}
-
-// ResponseCode returns response code
-func (e FgaApiRateLimitExceededError) ResponseCode() string {
-	return e.responseCode
 }

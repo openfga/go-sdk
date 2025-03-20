@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"math"
 	"mime"
 	"net/http"
@@ -23,6 +24,24 @@ import (
 	"github.com/openfga/go-sdk/internal/utils/retryutils"
 	"github.com/openfga/go-sdk/telemetry"
 )
+
+type RequestConfig struct {
+	RetryParams retryutils.RetryParams
+
+	Debug bool
+}
+
+func (rc *RequestConfig) New(config RequestConfig) error {
+	retryParams, err := retryutils.NewRetryParams(&config.RetryParams)
+	if err != nil {
+		return err
+	}
+
+	rc.RetryParams = *retryParams
+	rc.Debug = config.Debug
+
+	return nil
+}
 
 // Token represents the credentials used to authorize
 // the requests to access protected resources on the OAuth 2.0
@@ -186,7 +205,7 @@ func cloneURLValues(v url.Values) url.Values {
 	return v2
 }
 
-func RetrieveToken(ctx context.Context, clientID, clientSecret, tokenURL string, v url.Values, authStyle AuthStyle, maxRetry, minWaitInMs int) (*Token, error) {
+func RetrieveToken(ctx context.Context, clientID, clientSecret, tokenURL string, v url.Values, authStyle AuthStyle, config RequestConfig) (*Token, error) {
 	needsAuthStyleProbe := authStyle == 0
 	if needsAuthStyleProbe {
 		if style, ok := lookupAuthStyle(tokenURL); ok {
@@ -200,7 +219,7 @@ func RetrieveToken(ctx context.Context, clientID, clientSecret, tokenURL string,
 	if err != nil {
 		return nil, err
 	}
-	token, err := doTokenRoundTrip(ctx, req, maxRetry, minWaitInMs)
+	token, err := doTokenRoundTrip(ctx, req, config)
 	if err != nil && needsAuthStyleProbe {
 		// If we get an error, assume the server wants the
 		// clientID & clientSecret in a different form.
@@ -216,7 +235,7 @@ func RetrieveToken(ctx context.Context, clientID, clientSecret, tokenURL string,
 		// So just try both ways.
 		authStyle = AuthStyleInParams // the second way we'll try
 		req, _ = newTokenRequest(tokenURL, clientID, clientSecret, v, authStyle)
-		token, err = doTokenRoundTrip(ctx, req, maxRetry, minWaitInMs)
+		token, err = doTokenRoundTrip(ctx, req, config)
 	}
 	if needsAuthStyleProbe && err == nil {
 		setAuthStyle(tokenURL, authStyle)
@@ -285,12 +304,16 @@ func singleTokenRoundTrip(ctx context.Context, req *http.Request) (*Token, error
 	return token, nil
 }
 
-func doTokenRoundTrip(ctx context.Context, req *http.Request, maxRetry, minWaitInMs int) (*Token, error) {
+func doTokenRoundTrip(ctx context.Context, req *http.Request, config RequestConfig) (*Token, error) {
+	const operationName = "TokenExchange"
 	var token *Token
 	var err error
 
-	for i := 0; i <= maxRetry; i++ {
+	maxRetry := config.RetryParams.MaxRetry
+	minWaitInMs := config.RetryParams.MinWaitInMs
+	debug := config.Debug
 
+	for i := 0; i <= maxRetry; i++ {
 		token, err = singleTokenRoundTrip(ctx, req)
 		if err == nil {
 			if otel := telemetry.Extract(ctx); otel != nil {
@@ -302,21 +325,38 @@ func doTokenRoundTrip(ctx context.Context, req *http.Request, maxRetry, minWaitI
 		}
 
 		// If this was a request error, then check if it was a 429 or 5xx error and retry.
+		// if this is a network error, then retry.
 		// We do not want to retry any other error
-		if rErr, ok := err.(*RetrieveError); ok {
+		shouldRetry := true
+		responseHeaders := http.Header{}
+		var rErr *RetrieveError
+		errorStyle := "network"
+		if errors.As(err, &rErr) {
 			statusCode := rErr.Response.StatusCode
 			if statusCode == http.StatusTooManyRequests || (statusCode >= http.StatusInternalServerError && statusCode != http.StatusNotImplemented) {
-				timeToWait := retryutils.GetTimeToWait(i, maxRetry, minWaitInMs, rErr.Response.Header, "TokenExchange")
-				if timeToWait > 0 {
-					time.Sleep(timeToWait)
+				shouldRetry = true
+				responseHeaders = rErr.Response.Header
+				errorStyle = "api"
+			} else {
+				shouldRetry = false
+			}
+		}
+
+		if shouldRetry {
+			timeToWait := retryutils.GetTimeToWait(i, maxRetry, minWaitInMs, responseHeaders, operationName)
+			if timeToWait > 0 {
+				if debug {
+					log.Printf("\nWaiting %v to retry %v (%v %v) due to %s error (error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, errorStyle, err, i)
 				}
+
+				time.Sleep(timeToWait)
 				continue
 			}
 		}
 
-		return nil, err
-
+		break
 	}
+
 	return nil, err
 }
 

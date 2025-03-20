@@ -17,7 +17,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/openfga/go-sdk/internal/utils/retryutils"
 	"github.com/openfga/go-sdk/oauth2/internal"
 )
 
@@ -59,7 +58,7 @@ type Config struct {
 	// Scope specifies optional requested permissions.
 	Scopes []string
 
-	RetryParams *retryutils.RetryParams
+	RequestConfig internal.RequestConfig
 }
 
 // A TokenSource is anything that can return a token.
