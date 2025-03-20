@@ -305,9 +305,9 @@ func singleTokenRoundTrip(ctx context.Context, req *http.Request) (*Token, error
 }
 
 func doTokenRoundTrip(ctx context.Context, req *http.Request, config RequestConfig) (*Token, error) {
+	const operationName = "TokenExchange"
 	var token *Token
 	var err error
-	var operationName = "TokenExchange"
 
 	maxRetry := config.RetryParams.MaxRetry
 	minWaitInMs := config.RetryParams.MinWaitInMs
