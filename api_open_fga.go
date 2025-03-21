@@ -950,7 +950,7 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *htt
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -967,7 +967,7 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *htt
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -991,7 +991,7 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *htt
 
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -1123,7 +1123,7 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -1140,7 +1140,7 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -1164,7 +1164,7 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -1290,7 +1290,7 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*http.R
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -1307,7 +1307,7 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*http.R
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -1331,7 +1331,7 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*http.R
 
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -1515,7 +1515,7 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -1532,7 +1532,7 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -1556,7 +1556,7 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -1685,7 +1685,7 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -1702,7 +1702,7 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -1726,7 +1726,7 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -1875,7 +1875,7 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -1892,7 +1892,7 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -1916,7 +1916,7 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -2057,7 +2057,7 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -2074,7 +2074,7 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -2098,7 +2098,7 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -2247,7 +2247,7 @@ func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersRe
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -2264,7 +2264,7 @@ func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersRe
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -2288,7 +2288,7 @@ func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersRe
 
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -2539,7 +2539,7 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *http.R
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -2556,7 +2556,7 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *http.R
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -2580,7 +2580,7 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *http.R
 
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -2717,7 +2717,7 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -2734,7 +2734,7 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -2758,7 +2758,7 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -2938,7 +2938,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -2955,7 +2955,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -2979,7 +2979,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -3166,7 +3166,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -3183,7 +3183,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -3207,7 +3207,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -3374,7 +3374,7 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -3391,7 +3391,7 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -3415,7 +3415,7 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -3597,7 +3597,7 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -3614,7 +3614,7 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -3638,7 +3638,7 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -3784,7 +3784,7 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -3801,7 +3801,7 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -3825,7 +3825,7 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -4001,7 +4001,7 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -4018,7 +4018,7 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
@@ -4042,7 +4042,7 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i)
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
 					}
 					time.Sleep(timeToWait)
 					continue
