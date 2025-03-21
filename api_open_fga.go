@@ -936,13 +936,14 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *htt
 	}
 	// body params
 	requestBody = r.body
-	req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-	if err != nil {
-		return returnValue, nil, err
-	}
 
 	retryParams := a.client.cfg.RetryParams
 	for i := 0; i < retryParams.MaxRetry+1; i++ {
+		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
+		if err != nil {
+			return returnValue, nil, err
+		}
+
 		httpResponse, err := a.client.callAPI(req)
 		if err != nil || httpResponse == nil {
 			if i < retryParams.MaxRetry {
@@ -1108,13 +1109,14 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 	}
 	// body params
 	requestBody = r.body
-	req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-	if err != nil {
-		return returnValue, nil, err
-	}
 
 	retryParams := a.client.cfg.RetryParams
 	for i := 0; i < retryParams.MaxRetry+1; i++ {
+		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
+		if err != nil {
+			return returnValue, nil, err
+		}
+
 		httpResponse, err := a.client.callAPI(req)
 		if err != nil || httpResponse == nil {
 			if i < retryParams.MaxRetry {
@@ -1274,13 +1276,14 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*http.R
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
-	req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-	if err != nil {
-		return nil, err
-	}
 
 	retryParams := a.client.cfg.RetryParams
 	for i := 0; i < retryParams.MaxRetry+1; i++ {
+		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
+		if err != nil {
+			return nil, err
+		}
+
 		httpResponse, err := a.client.callAPI(req)
 		if err != nil || httpResponse == nil {
 			if i < retryParams.MaxRetry {
@@ -1498,13 +1501,14 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 	}
 	// body params
 	requestBody = r.body
-	req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-	if err != nil {
-		return returnValue, nil, err
-	}
 
 	retryParams := a.client.cfg.RetryParams
 	for i := 0; i < retryParams.MaxRetry+1; i++ {
+		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
+		if err != nil {
+			return returnValue, nil, err
+		}
+
 		httpResponse, err := a.client.callAPI(req)
 		if err != nil || httpResponse == nil {
 			if i < retryParams.MaxRetry {
@@ -1667,13 +1671,14 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
-	req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-	if err != nil {
-		return returnValue, nil, err
-	}
 
 	retryParams := a.client.cfg.RetryParams
 	for i := 0; i < retryParams.MaxRetry+1; i++ {
+		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
+		if err != nil {
+			return returnValue, nil, err
+		}
+
 		httpResponse, err := a.client.callAPI(req)
 		if err != nil || httpResponse == nil {
 			if i < retryParams.MaxRetry {
@@ -1856,13 +1861,14 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 	}
 	// body params
 	requestBody = r.body
-	req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-	if err != nil {
-		return returnValue, nil, err
-	}
 
 	retryParams := a.client.cfg.RetryParams
 	for i := 0; i < retryParams.MaxRetry+1; i++ {
+		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
+		if err != nil {
+			return returnValue, nil, err
+		}
+
 		httpResponse, err := a.client.callAPI(req)
 		if err != nil || httpResponse == nil {
 			if i < retryParams.MaxRetry {
@@ -2037,13 +2043,14 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
-	req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-	if err != nil {
-		return returnValue, nil, err
-	}
 
 	retryParams := a.client.cfg.RetryParams
 	for i := 0; i < retryParams.MaxRetry+1; i++ {
+		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
+		if err != nil {
+			return returnValue, nil, err
+		}
+
 		httpResponse, err := a.client.callAPI(req)
 		if err != nil || httpResponse == nil {
 			if i < retryParams.MaxRetry {
@@ -2226,13 +2233,14 @@ func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersRe
 	}
 	// body params
 	requestBody = r.body
-	req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-	if err != nil {
-		return returnValue, nil, err
-	}
 
 	retryParams := a.client.cfg.RetryParams
 	for i := 0; i < retryParams.MaxRetry+1; i++ {
+		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
+		if err != nil {
+			return returnValue, nil, err
+		}
+
 		httpResponse, err := a.client.callAPI(req)
 		if err != nil || httpResponse == nil {
 			if i < retryParams.MaxRetry {
@@ -2517,13 +2525,14 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *http.R
 	}
 	// body params
 	requestBody = r.body
-	req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-	if err != nil {
-		return returnValue, nil, err
-	}
 
 	retryParams := a.client.cfg.RetryParams
 	for i := 0; i < retryParams.MaxRetry+1; i++ {
+		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
+		if err != nil {
+			return returnValue, nil, err
+		}
+
 		httpResponse, err := a.client.callAPI(req)
 		if err != nil || httpResponse == nil {
 			if i < retryParams.MaxRetry {
@@ -2694,13 +2703,14 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
-	req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-	if err != nil {
-		return returnValue, nil, err
-	}
 
 	retryParams := a.client.cfg.RetryParams
 	for i := 0; i < retryParams.MaxRetry+1; i++ {
+		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
+		if err != nil {
+			return returnValue, nil, err
+		}
+
 		httpResponse, err := a.client.callAPI(req)
 		if err != nil || httpResponse == nil {
 			if i < retryParams.MaxRetry {
@@ -2914,13 +2924,14 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
-	req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-	if err != nil {
-		return returnValue, nil, err
-	}
 
 	retryParams := a.client.cfg.RetryParams
 	for i := 0; i < retryParams.MaxRetry+1; i++ {
+		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
+		if err != nil {
+			return returnValue, nil, err
+		}
+
 		httpResponse, err := a.client.callAPI(req)
 		if err != nil || httpResponse == nil {
 			if i < retryParams.MaxRetry {
@@ -3141,13 +3152,14 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
-	req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-	if err != nil {
-		return returnValue, nil, err
-	}
 
 	retryParams := a.client.cfg.RetryParams
 	for i := 0; i < retryParams.MaxRetry+1; i++ {
+		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
+		if err != nil {
+			return returnValue, nil, err
+		}
+
 		httpResponse, err := a.client.callAPI(req)
 		if err != nil || httpResponse == nil {
 			if i < retryParams.MaxRetry {
@@ -3348,13 +3360,14 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
-	req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-	if err != nil {
-		return returnValue, nil, err
-	}
 
 	retryParams := a.client.cfg.RetryParams
 	for i := 0; i < retryParams.MaxRetry+1; i++ {
+		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
+		if err != nil {
+			return returnValue, nil, err
+		}
+
 		httpResponse, err := a.client.callAPI(req)
 		if err != nil || httpResponse == nil {
 			if i < retryParams.MaxRetry {
@@ -3570,13 +3583,14 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 	}
 	// body params
 	requestBody = r.body
-	req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-	if err != nil {
-		return returnValue, nil, err
-	}
 
 	retryParams := a.client.cfg.RetryParams
 	for i := 0; i < retryParams.MaxRetry+1; i++ {
+		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
+		if err != nil {
+			return returnValue, nil, err
+		}
+
 		httpResponse, err := a.client.callAPI(req)
 		if err != nil || httpResponse == nil {
 			if i < retryParams.MaxRetry {
@@ -3756,13 +3770,14 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 	}
 	// body params
 	requestBody = r.body
-	req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-	if err != nil {
-		return nil, err
-	}
 
 	retryParams := a.client.cfg.RetryParams
 	for i := 0; i < retryParams.MaxRetry+1; i++ {
+		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
+		if err != nil {
+			return nil, err
+		}
+
 		httpResponse, err := a.client.callAPI(req)
 		if err != nil || httpResponse == nil {
 			if i < retryParams.MaxRetry {
@@ -3972,13 +3987,14 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 	}
 	// body params
 	requestBody = r.body
-	req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-	if err != nil {
-		return returnValue, nil, err
-	}
 
 	retryParams := a.client.cfg.RetryParams
 	for i := 0; i < retryParams.MaxRetry+1; i++ {
+		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
+		if err != nil {
+			return returnValue, nil, err
+		}
+
 		httpResponse, err := a.client.callAPI(req)
 		if err != nil || httpResponse == nil {
 			if i < retryParams.MaxRetry {
