@@ -10,39 +10,41 @@ import (
 )
 
 const (
-	ATTR_FGA_CLIENT_REQUEST_CLIENT_ID = "fga-client.request.client_id"
-	ATTR_FGA_CLIENT_REQUEST_METHOD    = "fga-client.request.method"
-	ATTR_FGA_CLIENT_REQUEST_MODEL_ID  = "fga-client.request.model_id"
-	ATTR_FGA_CLIENT_REQUEST_STORE_ID  = "fga-client.request.store_id"
-	ATTR_FGA_CLIENT_RESPONSE_MODEL_ID = "fga-client.response.model_id"
-	ATTR_FGA_CLIENT_USER              = "fga-client.user"
-	ATTR_HTTP_CLIENT_REQUEST_DURATION = "http.client.request.duration"
-	ATTR_HTTP_HOST                    = "http.host"
-	ATTR_HTTP_REQUEST_METHOD          = "http.request.method"
-	ATTR_HTTP_REQUEST_RESEND_COUNT    = "http.request.resend_count"
-	ATTR_HTTP_RESPONSE_STATUS_CODE    = "http.response.status_code"
-	ATTR_HTTP_SERVER_REQUEST_DURATION = "http.server.request.duration"
-	ATTR_URL_SCHEME                   = "url.scheme"
-	ATTR_URL_FULL                     = "url.full"
-	ATTR_USER_AGENT_ORIGINAL          = "user_agent.original"
+	ATTR_FGA_CLIENT_REQUEST_CLIENT_ID        = "fga-client.request.client_id"
+	ATTR_FGA_CLIENT_REQUEST_METHOD           = "fga-client.request.method"
+	ATTR_FGA_CLIENT_REQUEST_MODEL_ID         = "fga-client.request.model_id"
+	ATTR_FGA_CLIENT_REQUEST_STORE_ID         = "fga-client.request.store_id"
+	ATTR_FGA_CLIENT_REQUEST_BATCH_CHECK_SIZE = "fga-client.request.batch_check_size"
+	ATTR_FGA_CLIENT_RESPONSE_MODEL_ID        = "fga-client.response.model_id"
+	ATTR_FGA_CLIENT_USER                     = "fga-client.user"
+	ATTR_HTTP_CLIENT_REQUEST_DURATION        = "http.client.request.duration"
+	ATTR_HTTP_HOST                           = "http.host"
+	ATTR_HTTP_REQUEST_METHOD                 = "http.request.method"
+	ATTR_HTTP_REQUEST_RESEND_COUNT           = "http.request.resend_count"
+	ATTR_HTTP_RESPONSE_STATUS_CODE           = "http.response.status_code"
+	ATTR_HTTP_SERVER_REQUEST_DURATION        = "http.server.request.duration"
+	ATTR_URL_SCHEME                          = "url.scheme"
+	ATTR_URL_FULL                            = "url.full"
+	ATTR_USER_AGENT_ORIGINAL                 = "user_agent.original"
 )
 
 var (
-	FGAClientRequestClientID  = &Attribute{Name: ATTR_FGA_CLIENT_REQUEST_CLIENT_ID}
-	FGAClientRequestMethod    = &Attribute{Name: ATTR_FGA_CLIENT_REQUEST_METHOD}
-	FGAClientRequestModelID   = &Attribute{Name: ATTR_FGA_CLIENT_REQUEST_MODEL_ID}
-	FGAClientRequestStoreID   = &Attribute{Name: ATTR_FGA_CLIENT_REQUEST_STORE_ID}
-	FGAClientResponseModelID  = &Attribute{Name: ATTR_FGA_CLIENT_RESPONSE_MODEL_ID}
-	FGAClientUser             = &Attribute{Name: ATTR_FGA_CLIENT_USER}
-	HTTPClientRequestDuration = &Attribute{Name: ATTR_HTTP_CLIENT_REQUEST_DURATION}
-	HTTPHost                  = &Attribute{Name: ATTR_HTTP_HOST}
-	HTTPRequestMethod         = &Attribute{Name: ATTR_HTTP_REQUEST_METHOD}
-	HTTPRequestResendCount    = &Attribute{Name: ATTR_HTTP_REQUEST_RESEND_COUNT}
-	HTTPResponseStatusCode    = &Attribute{Name: ATTR_HTTP_RESPONSE_STATUS_CODE}
-	HTTPServerRequestDuration = &Attribute{Name: ATTR_HTTP_SERVER_REQUEST_DURATION}
-	URLScheme                 = &Attribute{Name: ATTR_URL_SCHEME}
-	URLFull                   = &Attribute{Name: ATTR_URL_FULL}
-	UserAgent                 = &Attribute{Name: ATTR_USER_AGENT_ORIGINAL}
+	FGAClientRequestClientID       = &Attribute{Name: ATTR_FGA_CLIENT_REQUEST_CLIENT_ID}
+	FGAClientRequestMethod         = &Attribute{Name: ATTR_FGA_CLIENT_REQUEST_METHOD}
+	FGAClientRequestModelID        = &Attribute{Name: ATTR_FGA_CLIENT_REQUEST_MODEL_ID}
+	FGAClientRequestStoreID        = &Attribute{Name: ATTR_FGA_CLIENT_REQUEST_STORE_ID}
+	FGAClientRequestBatchCheckSize = &Attribute{Name: ATTR_FGA_CLIENT_REQUEST_BATCH_CHECK_SIZE}
+	FGAClientResponseModelID       = &Attribute{Name: ATTR_FGA_CLIENT_RESPONSE_MODEL_ID}
+	FGAClientUser                  = &Attribute{Name: ATTR_FGA_CLIENT_USER}
+	HTTPClientRequestDuration      = &Attribute{Name: ATTR_HTTP_CLIENT_REQUEST_DURATION}
+	HTTPHost                       = &Attribute{Name: ATTR_HTTP_HOST}
+	HTTPRequestMethod              = &Attribute{Name: ATTR_HTTP_REQUEST_METHOD}
+	HTTPRequestResendCount         = &Attribute{Name: ATTR_HTTP_REQUEST_RESEND_COUNT}
+	HTTPResponseStatusCode         = &Attribute{Name: ATTR_HTTP_RESPONSE_STATUS_CODE}
+	HTTPServerRequestDuration      = &Attribute{Name: ATTR_HTTP_SERVER_REQUEST_DURATION}
+	URLScheme                      = &Attribute{Name: ATTR_URL_SCHEME}
+	URLFull                        = &Attribute{Name: ATTR_URL_FULL}
+	UserAgent                      = &Attribute{Name: ATTR_USER_AGENT_ORIGINAL}
 )
 
 func (m *Metrics) PrepareAttributes(metric MetricInterface, attrs map[*Attribute]string, config *MetricsConfiguration) (attribute.Set, error) {
@@ -98,6 +100,10 @@ func (m *Metrics) PrepareAttributes(metric MetricInterface, attrs map[*Attribute
 			}
 		case FGAClientRequestStoreID:
 			if allowed.ATTR_FGA_CLIENT_REQUEST_STORE_ID == nil || !allowed.ATTR_FGA_CLIENT_REQUEST_STORE_ID.Enabled {
+				continue
+			}
+		case FGAClientRequestBatchCheckSize:
+			if allowed.ATTR_FGA_CLIENT_REQUEST_BATCH_CHECK_SIZE == nil || !allowed.ATTR_FGA_CLIENT_REQUEST_BATCH_CHECK_SIZE.Enabled {
 				continue
 			}
 		case FGAClientResponseModelID:
@@ -173,6 +179,13 @@ func (m *Metrics) AttributesFromRequest(req *http.Request, params map[string]int
 		requestType := fmt.Sprintf("%T", body)
 
 		switch requestType {
+		case "*openfga.BatchCheckRequest":
+			if req, ok := body.(interface{ GetChecks() []interface{} }); ok {
+				checks := req.GetChecks()
+				if len(checks) > 0 {
+					request[FGAClientRequestBatchCheckSize] = fmt.Sprintf("%d", len(checks))
+				}
+			}
 		case "*openfga.CheckRequest":
 			if req, ok := body.(CheckRequestInterface); ok {
 				if tupleKey := req.GetTupleKey(); tupleKey != nil {

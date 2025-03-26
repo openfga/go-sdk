@@ -21,7 +21,9 @@ import (
 	"time"
 
 	"github.com/jarcoal/httpmock"
+
 	"github.com/openfga/go-sdk/credentials"
+	"github.com/openfga/go-sdk/internal/utils/retryutils"
 )
 
 type TestDefinition struct {
@@ -58,6 +60,126 @@ func TestOpenFgaApiConfiguration(t *testing.T) {
 
 		if err == nil {
 			t.Fatalf("Expected an error when ApiHost is invalid (scheme is part of the host)")
+		}
+	})
+
+	t.Run("RetryParams should be valid", func(t *testing.T) {
+		tests := []struct {
+			retryParams   *RetryParams
+			expectedError bool
+		}{
+			{
+				retryParams: &RetryParams{
+					MaxRetry:    1,
+					MinWaitInMs: 0,
+				},
+				expectedError: true,
+			},
+			{
+				retryParams: &RetryParams{
+					MaxRetry:    100,
+					MinWaitInMs: 1,
+				},
+				expectedError: true,
+			},
+			{
+				retryParams: &RetryParams{
+					MaxRetry:    -1,
+					MinWaitInMs: 1,
+				},
+				expectedError: true,
+			},
+			{
+				retryParams: &RetryParams{
+					MaxRetry:    1,
+					MinWaitInMs: -1,
+				},
+				expectedError: true,
+			},
+			{
+				retryParams: &RetryParams{
+					MaxRetry:    1,
+					MinWaitInMs: -1,
+				},
+				expectedError: true,
+			},
+			{
+				retryParams: &RetryParams{
+					MaxRetry:    1,
+					MinWaitInMs: 1,
+				},
+				expectedError: false,
+			},
+			{
+				retryParams: &RetryParams{
+					MaxRetry:    0,
+					MinWaitInMs: 1,
+				},
+				expectedError: false,
+			},
+		}
+
+		for _, test := range tests {
+			t.Run(fmt.Sprintf("RetryParams: %v", *test.retryParams), func(t *testing.T) {
+				config, err := NewConfiguration(Configuration{
+					ApiUrl:      "https://api.fga.example",
+					RetryParams: test.retryParams,
+				})
+
+				if test.expectedError && err == nil {
+					t.Fatalf("Expected an error when RetryParams are invalid, got none")
+				}
+
+				if !test.expectedError && err != nil {
+					t.Fatalf("Unexpected error: %v", err)
+				}
+
+				if !test.expectedError {
+					if config.RetryParams == nil {
+						t.Fatalf("Expected RetryParams on the config to be non-nil")
+					}
+
+					appliedRetryParams := *config.RetryParams
+					if appliedRetryParams.MaxRetry != test.retryParams.MaxRetry {
+						t.Fatalf("Expected MaxRetry to be %v, got %v", test.retryParams.MaxRetry, appliedRetryParams.MaxRetry)
+					}
+
+					if appliedRetryParams.MinWaitInMs != test.retryParams.MinWaitInMs {
+						t.Fatalf("Expected MinWaitInMs to be %v, got %v", test.retryParams.MinWaitInMs, appliedRetryParams.MinWaitInMs)
+					}
+
+					appliedRetryParams = config.GetRetryParams()
+					if appliedRetryParams.MaxRetry != test.retryParams.MaxRetry {
+						t.Fatalf("Expected MaxRetry to be %v, got %v", test.retryParams.MaxRetry, appliedRetryParams.MaxRetry)
+					}
+
+					if appliedRetryParams.MinWaitInMs != test.retryParams.MinWaitInMs {
+						t.Fatalf("Expected MinWaitInMs to be %v, got %v", test.retryParams.MinWaitInMs, appliedRetryParams.MinWaitInMs)
+					}
+				}
+			})
+		}
+	})
+
+	t.Run("RetryParams is default if not set", func(t *testing.T) {
+		config, err := NewConfiguration(Configuration{
+			ApiUrl: "https://api.fga.example",
+		})
+		if err != nil {
+			t.Fatalf("Unexpected error: %v", err)
+		}
+		if config.RetryParams == nil {
+			t.Fatalf("Expected RetryParams on the config to be non-nil")
+		}
+
+		appliedRetryParams := config.GetRetryParams()
+		defaultParams := retryutils.GetRetryParamsOrDefault(nil)
+		if appliedRetryParams.MaxRetry != defaultParams.MaxRetry {
+			t.Fatalf("Expected MaxRetry to be %v, got %v", defaultParams.MaxRetry, appliedRetryParams.MaxRetry)
+		}
+
+		if appliedRetryParams.MinWaitInMs != defaultParams.MinWaitInMs {
+			t.Fatalf("Expected MinWaitInMs to be %v, got %v", defaultParams.MinWaitInMs, appliedRetryParams.MinWaitInMs)
 		}
 	})
 
@@ -795,7 +917,7 @@ func TestOpenFgaApi(t *testing.T) {
 				return resp, nil
 			},
 		)
-		startTime, err := time.Parse(time.RFC3339, "2022-01-01T00:00:00Z")
+		startTime, _ := time.Parse(time.RFC3339, "2022-01-01T00:00:00Z")
 		got, response, err := apiClient.OpenFgaApi.ReadChanges(context.Background(), "01GXSB9YR785C4FYS3C0RTG7B2").
 			Type_("repo").
 			PageSize(25).
@@ -1256,7 +1378,7 @@ func TestOpenFgaApi(t *testing.T) {
 		updatedConfiguration, err := NewConfiguration(Configuration{
 			ApiHost: "api.fga.example",
 			RetryParams: &RetryParams{
-				MaxRetry:    2,
+				MaxRetry:    3,
 				MinWaitInMs: 5,
 			},
 		})
@@ -1267,6 +1389,55 @@ func TestOpenFgaApi(t *testing.T) {
 		updatedApiClient := NewAPIClient(updatedConfiguration)
 
 		got, response, err := updatedApiClient.OpenFgaApi.Check(context.Background(), "01GXSB9YR785C4FYS3C0RTG7B2").Body(requestBody).Execute()
+
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		if response.StatusCode != test.ResponseStatus {
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
+		}
+
+		responseJson, err := got.MarshalJSON()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		if *got.Allowed != *expectedResponse.Allowed {
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
+		}
+	})
+
+	t.Run("Check with initial 429 but eventually resolved with default config", func(t *testing.T) {
+		test := TestDefinition{
+			Name:           "Check",
+			JsonResponse:   `{"allowed":true, "resolution":""}`,
+			ResponseStatus: 200,
+			Method:         "POST",
+			RequestPath:    "check",
+		}
+		requestBody := CheckRequest{
+			TupleKey: CheckRequestTupleKey{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "viewer",
+				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+			},
+		}
+
+		var expectedResponse CheckResponse
+		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+		firstMock := httpmock.NewStringResponder(429, "")
+		secondMock, _ := httpmock.NewJsonResponder(200, expectedResponse)
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", configuration.ApiUrl, "01GXSB9YR785C4FYS3C0RTG7B2", test.RequestPath),
+			firstMock.Then(secondMock),
+		)
+
+		got, response, err := apiClient.OpenFgaApi.Check(context.Background(), "01GXSB9YR785C4FYS3C0RTG7B2").Body(requestBody).Execute()
 
 		if err != nil {
 			t.Fatalf("%v", err)

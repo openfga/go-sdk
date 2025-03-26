@@ -20,8 +20,8 @@ import (
 
 // ForbiddenResponse struct for ForbiddenResponse
 type ForbiddenResponse struct {
-	Code    *AuthErrorCode `json:"code,omitempty"yaml:"code,omitempty"`
-	Message *string        `json:"message,omitempty"yaml:"message,omitempty"`
+	Code    *AuthErrorCode `json:"code,omitempty" yaml:"code,omitempty"`
+	Message *string        `json:"message,omitempty" yaml:"message,omitempty"`
 }
 
 // NewForbiddenResponse instantiates a new ForbiddenResponse object
@@ -30,7 +30,7 @@ type ForbiddenResponse struct {
 // will change when the set of required properties is changed
 func NewForbiddenResponse() *ForbiddenResponse {
 	this := ForbiddenResponse{}
-	var code AuthErrorCode = AUTHERRORCODE_NO_AUTH_ERROR
+	var code = AUTHERRORCODE_NO_AUTH_ERROR
 	this.Code = &code
 	return &this
 }
@@ -40,7 +40,7 @@ func NewForbiddenResponse() *ForbiddenResponse {
 // but it doesn't guarantee that properties required by API are set
 func NewForbiddenResponseWithDefaults() *ForbiddenResponse {
 	this := ForbiddenResponse{}
-	var code AuthErrorCode = AUTHERRORCODE_NO_AUTH_ERROR
+	var code = AUTHERRORCODE_NO_AUTH_ERROR
 	this.Code = &code
 	return &this
 }

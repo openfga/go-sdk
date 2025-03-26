@@ -20,10 +20,10 @@ import (
 
 // TupleKey struct for TupleKey
 type TupleKey struct {
-	User      string                 `json:"user"yaml:"user"`
-	Relation  string                 `json:"relation"yaml:"relation"`
-	Object    string                 `json:"object"yaml:"object"`
-	Condition *RelationshipCondition `json:"condition,omitempty"yaml:"condition,omitempty"`
+	User      string                 `json:"user" yaml:"user"`
+	Relation  string                 `json:"relation" yaml:"relation"`
+	Object    string                 `json:"object" yaml:"object"`
+	Condition *RelationshipCondition `json:"condition,omitempty" yaml:"condition,omitempty"`
 }
 
 // NewTupleKey instantiates a new TupleKey object

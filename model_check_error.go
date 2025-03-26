@@ -20,9 +20,9 @@ import (
 
 // CheckError struct for CheckError
 type CheckError struct {
-	InputError    *ErrorCode         `json:"inputError,omitempty"yaml:"inputError,omitempty"`
-	InternalError *InternalErrorCode `json:"internalError,omitempty"yaml:"internalError,omitempty"`
-	Message       *string            `json:"message,omitempty"yaml:"message,omitempty"`
+	InputError    *ErrorCode         `json:"input_error,omitempty" yaml:"input_error,omitempty"`
+	InternalError *InternalErrorCode `json:"internal_error,omitempty" yaml:"internal_error,omitempty"`
+	Message       *string            `json:"message,omitempty" yaml:"message,omitempty"`
 }
 
 // NewCheckError instantiates a new CheckError object
@@ -31,9 +31,9 @@ type CheckError struct {
 // will change when the set of required properties is changed
 func NewCheckError() *CheckError {
 	this := CheckError{}
-	var inputError ErrorCode = ERRORCODE_NO_ERROR
+	var inputError = ERRORCODE_NO_ERROR
 	this.InputError = &inputError
-	var internalError InternalErrorCode = INTERNALERRORCODE_NO_INTERNAL_ERROR
+	var internalError = INTERNALERRORCODE_NO_INTERNAL_ERROR
 	this.InternalError = &internalError
 	return &this
 }
@@ -43,9 +43,9 @@ func NewCheckError() *CheckError {
 // but it doesn't guarantee that properties required by API are set
 func NewCheckErrorWithDefaults() *CheckError {
 	this := CheckError{}
-	var inputError ErrorCode = ERRORCODE_NO_ERROR
+	var inputError = ERRORCODE_NO_ERROR
 	this.InputError = &inputError
-	var internalError InternalErrorCode = INTERNALERRORCODE_NO_INTERNAL_ERROR
+	var internalError = INTERNALERRORCODE_NO_INTERNAL_ERROR
 	this.InternalError = &internalError
 	return &this
 }
@@ -149,10 +149,10 @@ func (o *CheckError) SetMessage(v string) {
 func (o CheckError) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.InputError != nil {
-		toSerialize["inputError"] = o.InputError
+		toSerialize["input_error"] = o.InputError
 	}
 	if o.InternalError != nil {
-		toSerialize["internalError"] = o.InternalError
+		toSerialize["internal_error"] = o.InternalError
 	}
 	if o.Message != nil {
 		toSerialize["message"] = o.Message

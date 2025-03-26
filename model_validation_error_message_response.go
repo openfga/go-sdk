@@ -20,8 +20,8 @@ import (
 
 // ValidationErrorMessageResponse struct for ValidationErrorMessageResponse
 type ValidationErrorMessageResponse struct {
-	Code    *ErrorCode `json:"code,omitempty"yaml:"code,omitempty"`
-	Message *string    `json:"message,omitempty"yaml:"message,omitempty"`
+	Code    *ErrorCode `json:"code,omitempty" yaml:"code,omitempty"`
+	Message *string    `json:"message,omitempty" yaml:"message,omitempty"`
 }
 
 // NewValidationErrorMessageResponse instantiates a new ValidationErrorMessageResponse object
@@ -30,7 +30,7 @@ type ValidationErrorMessageResponse struct {
 // will change when the set of required properties is changed
 func NewValidationErrorMessageResponse() *ValidationErrorMessageResponse {
 	this := ValidationErrorMessageResponse{}
-	var code ErrorCode = ERRORCODE_NO_ERROR
+	var code = ERRORCODE_NO_ERROR
 	this.Code = &code
 	return &this
 }
@@ -40,7 +40,7 @@ func NewValidationErrorMessageResponse() *ValidationErrorMessageResponse {
 // but it doesn't guarantee that properties required by API are set
 func NewValidationErrorMessageResponseWithDefaults() *ValidationErrorMessageResponse {
 	this := ValidationErrorMessageResponse{}
-	var code ErrorCode = ERRORCODE_NO_ERROR
+	var code = ERRORCODE_NO_ERROR
 	this.Code = &code
 	return &this
 }

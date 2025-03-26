@@ -16,6 +16,7 @@ import (
 	"net/http"
 
 	"github.com/openfga/go-sdk/credentials"
+	"github.com/openfga/go-sdk/internal/utils/retryutils"
 	"github.com/openfga/go-sdk/telemetry"
 )
 
@@ -25,11 +26,8 @@ const (
 	defaultUserAgent = "openfga-sdk go/0.6.5"
 )
 
-// RetryParams configures configuration for retry in case of HTTP too many request
-type RetryParams struct {
-	MaxRetry    int `json:"maxRetry,omitempty"`
-	MinWaitInMs int `json:"minWaitInMs,omitempty"`
-}
+// RetryParams provides configuration for retries in case of server errors
+type RetryParams = retryutils.RetryParams
 
 // Configuration stores the configuration of the API client
 type Configuration struct {
@@ -47,14 +45,6 @@ type Configuration struct {
 	HTTPClient     *http.Client
 	RetryParams    *RetryParams
 	Telemetry      *telemetry.Configuration `json:"telemetry,omitempty"`
-}
-
-// DefaultRetryParams returns the default retry parameters
-func DefaultRetryParams() *RetryParams {
-	return &RetryParams{
-		MaxRetry:    3,
-		MinWaitInMs: 100,
-	}
 }
 
 func GetSdkUserAgent() string {
@@ -98,13 +88,22 @@ func NewConfiguration(config Configuration) (*Configuration, error) {
 		cfg.Telemetry = telemetry.DefaultTelemetryConfiguration()
 	}
 
-	err := cfg.ValidateConfig()
-
+	retryParams, err := retryutils.NewRetryParams(cfg.RetryParams)
 	if err != nil {
+		return nil, err
+	}
+	cfg.RetryParams = retryParams
+
+	if err := cfg.ValidateConfig(); err != nil {
 		return nil, err
 	}
 
 	return cfg, nil
+}
+
+// GetRetryParams
+func (c *Configuration) GetRetryParams() RetryParams {
+	return retryutils.GetRetryParamsOrDefault(c.RetryParams)
 }
 
 // AddDefaultHeader adds a new HTTP header to the default header in the request
@@ -128,8 +127,8 @@ func (c *Configuration) ValidateConfig() error {
 		}
 	}
 
-	if c.RetryParams != nil && c.RetryParams.MaxRetry > 15 {
-		return reportError("Configuration.RetryParams.MaxRetry exceeds maximum allowed limit of 15")
+	if err := c.RetryParams.Validate(); err != nil {
+		return err
 	}
 
 	return nil

@@ -20,11 +20,12 @@ import (
 	_nethttp "net/http"
 	"time"
 
+	"golang.org/x/sync/errgroup"
+
 	fgaSdk "github.com/openfga/go-sdk"
 	"github.com/openfga/go-sdk/credentials"
 	internalutils "github.com/openfga/go-sdk/internal/utils"
 	"github.com/openfga/go-sdk/telemetry"
-	"golang.org/x/sync/errgroup"
 )
 
 var (
@@ -1541,15 +1542,8 @@ func (request *SdkClientWriteRequest) GetBody() *ClientWriteRequest {
 }
 
 func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface) (*ClientWriteResponse, error) {
-	var maxPerChunk = int32(1) // 1 has to be the default otherwise the chunks will be sent in transactions
-	if request.GetOptions() != nil && request.GetOptions().Transaction != nil {
-		maxPerChunk = request.GetOptions().Transaction.MaxPerChunk
-	}
-	var maxParallelReqs = DEFAULT_MAX_METHOD_PARALLEL_REQS
-	if request.GetOptions() != nil && request.GetOptions().Transaction != nil {
-		maxParallelReqs = request.GetOptions().Transaction.MaxParallelRequests
-	}
-
+	options := request.GetOptions()
+	transactionOptionsSet := options != nil && options.Transaction != nil
 	response := ClientWriteResponse{
 		Writes:  []ClientWriteRequestWriteResponse{},
 		Deletes: []ClientWriteRequestDeleteResponse{},
@@ -1567,18 +1561,18 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 
 	// Unless explicitly disabled, transaction mode is enabled
 	// In transaction mode, the client will send the request to the server as is
-	if request.GetOptions() == nil || request.GetOptions().Transaction == nil || !request.GetOptions().Transaction.Disable {
+	if !transactionOptionsSet || !options.Transaction.Disable {
 		writeRequest := fgaSdk.WriteRequest{
 			AuthorizationModelId: authorizationModelId,
 		}
-		if request.GetBody().Writes != nil && len(request.GetBody().Writes) > 0 {
+		if len(request.GetBody().Writes) > 0 {
 			writes := fgaSdk.WriteRequestWrites{}
 			for index := 0; index < len(request.GetBody().Writes); index++ {
 				writes.TupleKeys = append(writes.TupleKeys, (request.GetBody().Writes)[index])
 			}
 			writeRequest.Writes = &writes
 		}
-		if request.GetBody().Deletes != nil && len(request.GetBody().Deletes) > 0 {
+		if len(request.GetBody().Deletes) > 0 {
 			deletes := fgaSdk.WriteRequestDeletes{}
 			for index := 0; index < len(request.GetBody().Deletes); index++ {
 				deletes.TupleKeys = append(deletes.TupleKeys, (request.GetBody().Deletes)[index])
@@ -1617,6 +1611,16 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 		}
 
 		return &response, err
+	}
+
+	maxPerChunk := int32(1) // 1 has to be the default otherwise the chunks will be sent in transactions
+	if options.Transaction.MaxPerChunk > 0 {
+		maxPerChunk = options.Transaction.MaxPerChunk
+	}
+
+	maxParallelReqs := DEFAULT_MAX_METHOD_PARALLEL_REQS
+	if options.Transaction.MaxParallelRequests > 0 {
+		maxParallelReqs = options.Transaction.MaxParallelRequests
 	}
 
 	// If the transaction mode is disabled:
@@ -1713,15 +1717,11 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 	}
 
 	for _, writeResponse := range writeResponses {
-		for _, writeSingleResponse := range writeResponse.Writes {
-			response.Writes = append(response.Writes, writeSingleResponse)
-		}
+		response.Writes = append(response.Writes, writeResponse.Writes...)
 	}
 
 	for _, deleteResponse := range deleteResponses {
-		for _, deleteSingleResponse := range deleteResponse.Deletes {
-			response.Deletes = append(response.Deletes, deleteSingleResponse)
-		}
+		response.Deletes = append(response.Deletes, deleteResponse.Deletes...)
 	}
 
 	return &response, nil
@@ -2189,7 +2189,7 @@ func (client *OpenFgaClient) BatchCheckExecute(request SdkClientBatchCheckReques
 	ctx := request.GetContext()
 	body := request.GetBody()
 	options := request.GetOptions()
-	
+
 	if body == nil || len(body.Checks) == 0 {
 		return nil, FgaRequiredParamError{param: "checks"}
 	}
@@ -2197,17 +2197,17 @@ func (client *OpenFgaClient) BatchCheckExecute(request SdkClientBatchCheckReques
 	if options == nil {
 		options = &BatchCheckOptions{}
 	}
-	
+
 	maxParallelRequests := int32(10)
 	if options.MaxParallelRequests != nil {
 		maxParallelRequests = *options.MaxParallelRequests
 	}
-	
+
 	maxBatchSize := int32(50)
 	if options.MaxBatchSize != nil {
 		maxBatchSize = *options.MaxBatchSize
 	}
-	
+
 	_, err := client.getStoreId(options.StoreId)
 	if err != nil {
 		return nil, err
@@ -2219,30 +2219,30 @@ func (client *OpenFgaClient) BatchCheckExecute(request SdkClientBatchCheckReques
 	}
 
 	chunks := chunkClientBatchCheckItems(body.Checks, int(maxBatchSize))
-	
+
 	resultChan := make(chan *fgaSdk.BatchCheckResponse)
 	errorChan := make(chan error)
-	
+
 	var wg errgroup.Group
 	wg.SetLimit(int(maxParallelRequests))
-	
+
 	for _, chunk := range chunks {
 		chunkCopy := chunk
-		
+
 		wg.Go(func() error {
 			batchCheckRequest := createBatchCheckRequest(chunkCopy, authorizationModelId, options.Consistency)
-			
+
 			response, err := client.SingleBatchCheck(ctx, batchCheckRequest, options)
 			if err != nil {
 				errorChan <- err
 				return err
 			}
-			
+
 			resultChan <- response
 			return nil
 		})
 	}
-	
+
 	go func() {
 		err := wg.Wait()
 		if err != nil {
@@ -2251,12 +2251,12 @@ func (client *OpenFgaClient) BatchCheckExecute(request SdkClientBatchCheckReques
 		close(resultChan)
 		close(errorChan)
 	}()
-	
+
 	var results []*fgaSdk.BatchCheckResponse
 	for response := range resultChan {
 		results = append(results, response)
 	}
-	
+
 	select {
 	case err := <-errorChan:
 		if err != nil {
@@ -2265,18 +2265,18 @@ func (client *OpenFgaClient) BatchCheckExecute(request SdkClientBatchCheckReques
 	default:
 		// No error
 	}
-	
+
 	combinedResult := make(map[string]fgaSdk.BatchCheckSingleResult)
-	
+
 	for _, response := range results {
 		for correlationID, result := range response.GetResult() {
 			combinedResult[correlationID] = result
 		}
 	}
-	
+
 	combinedResponse := fgaSdk.NewBatchCheckResponse()
 	combinedResponse.SetResult(combinedResult)
-	
+
 	return combinedResponse, nil
 }
 
@@ -2292,18 +2292,19 @@ func (client *OpenFgaClient) SingleBatchCheck(ctx _context.Context, body fgaSdk.
 	if err != nil {
 		return nil, err
 	}
-	
+
+	requestID := fmt.Sprintf("%d", time.Now().UnixNano())
+
+	client.APIClient.GetConfig().AddDefaultHeader("X-OpenFGA-Client-Bulk-Request-Id", requestID)
+
 	req := client.OpenFgaApi.BatchCheck(ctx, *storeId)
 	req = req.Body(body)
-	
-	requestID := fmt.Sprintf("%d", time.Now().UnixNano())
-	client.APIClient.GetConfig().AddDefaultHeader("X-Fga-Client-Bulk-Request-Id", requestID)
-	
+
 	response, _, err := req.Execute()
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return &response, nil
 }
 
@@ -2317,9 +2318,9 @@ func chunkClientBatchCheckItems(items []ClientBatchCheckItem, chunkSize int) [][
 	if len(items) == 0 {
 		return [][]ClientBatchCheckItem{}
 	}
-	
+
 	chunks := make([][]ClientBatchCheckItem, 0, (len(items)+chunkSize-1)/chunkSize)
-	
+
 	for i := 0; i < len(items); i += chunkSize {
 		end := i + chunkSize
 		if end > len(items) {
@@ -2327,7 +2328,7 @@ func chunkClientBatchCheckItems(items []ClientBatchCheckItem, chunkSize int) [][
 		}
 		chunks = append(chunks, items[i:end])
 	}
-	
+
 	return chunks
 }
 
@@ -2340,50 +2341,48 @@ func chunkClientBatchCheckItems(items []ClientBatchCheckItem, chunkSize int) [][
  */
 func createBatchCheckRequest(items []ClientBatchCheckItem, authorizationModelId *string, consistency *fgaSdk.ConsistencyPreference) fgaSdk.BatchCheckRequest {
 	batchCheckItems := make([]fgaSdk.BatchCheckItem, 0, len(items))
-	
+
 	for _, item := range items {
 		tupleKey := fgaSdk.CheckRequestTupleKey{
 			User:     item.User,
 			Relation: item.Relation,
 			Object:   item.Object,
 		}
-		
+
 		batchCheckItem := fgaSdk.BatchCheckItem{
 			TupleKey:      tupleKey,
 			CorrelationId: item.CorrelationId,
 		}
-		
+
 		if len(item.ContextualTuples) > 0 {
 			contextualTuples := &fgaSdk.ContextualTupleKeys{
 				TupleKeys: []fgaSdk.TupleKey{},
 			}
-			
-			for _, tuple := range item.ContextualTuples {
-				contextualTuples.TupleKeys = append(contextualTuples.TupleKeys, tuple)
-			}
-			
+
+			contextualTuples.TupleKeys = append(contextualTuples.TupleKeys, item.ContextualTuples...)
+
 			batchCheckItem.ContextualTuples = contextualTuples
 		}
-		
+
 		if item.Context != nil {
 			batchCheckItem.Context = item.Context
 		}
-		
+
 		batchCheckItems = append(batchCheckItems, batchCheckItem)
 	}
-	
+
 	batchCheckRequest := fgaSdk.BatchCheckRequest{
 		Checks: batchCheckItems,
 	}
-	
+
 	if authorizationModelId != nil && *authorizationModelId != "" {
 		batchCheckRequest.AuthorizationModelId = authorizationModelId
 	}
-	
+
 	if consistency != nil {
 		batchCheckRequest.Consistency = consistency
 	}
-	
+
 	return batchCheckRequest
 }
 
@@ -2784,12 +2783,12 @@ type SdkClientListUsersRequestInterface interface {
 }
 
 type ClientListUsersRequest struct {
-	Object           fgaSdk.FgaObject           `json:"object"yaml:"object"`
-	Relation         string                     `json:"relation"yaml:"relation"`
-	UserFilters      []fgaSdk.UserTypeFilter    `json:"user_filters"yaml:"user_filters"`
+	Object           fgaSdk.FgaObject           `json:"object" yaml:"object"`
+	Relation         string                     `json:"relation" yaml:"relation"`
+	UserFilters      []fgaSdk.UserTypeFilter    `json:"user_filters" yaml:"user_filters"`
 	ContextualTuples []ClientContextualTupleKey `json:"contextual_tuples,omitempty"`
 	// Additional request context that will be used to evaluate any ABAC conditions encountered in the query evaluation.
-	Context *map[string]interface{} `json:"context,omitempty"yaml:"context,omitempty"`
+	Context *map[string]interface{} `json:"context,omitempty" yaml:"context,omitempty"`
 }
 
 type ClientListUsersOptions struct {

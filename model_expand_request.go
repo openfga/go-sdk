@@ -20,10 +20,10 @@ import (
 
 // ExpandRequest struct for ExpandRequest
 type ExpandRequest struct {
-	TupleKey             ExpandRequestTupleKey  `json:"tuple_key"yaml:"tuple_key"`
-	AuthorizationModelId *string                `json:"authorization_model_id,omitempty"yaml:"authorization_model_id,omitempty"`
-	Consistency          *ConsistencyPreference `json:"consistency,omitempty"yaml:"consistency,omitempty"`
-	ContextualTuples     *ContextualTupleKeys   `json:"contextual_tuples,omitempty"yaml:"contextual_tuples,omitempty"`
+	TupleKey             ExpandRequestTupleKey  `json:"tuple_key" yaml:"tuple_key"`
+	AuthorizationModelId *string                `json:"authorization_model_id,omitempty" yaml:"authorization_model_id,omitempty"`
+	Consistency          *ConsistencyPreference `json:"consistency,omitempty" yaml:"consistency,omitempty"`
+	ContextualTuples     *ContextualTupleKeys   `json:"contextual_tuples,omitempty" yaml:"contextual_tuples,omitempty"`
 }
 
 // NewExpandRequest instantiates a new ExpandRequest object
@@ -33,7 +33,7 @@ type ExpandRequest struct {
 func NewExpandRequest(tupleKey ExpandRequestTupleKey) *ExpandRequest {
 	this := ExpandRequest{}
 	this.TupleKey = tupleKey
-	var consistency ConsistencyPreference = CONSISTENCYPREFERENCE_UNSPECIFIED
+	var consistency = CONSISTENCYPREFERENCE_UNSPECIFIED
 	this.Consistency = &consistency
 	return &this
 }
@@ -43,7 +43,7 @@ func NewExpandRequest(tupleKey ExpandRequestTupleKey) *ExpandRequest {
 // but it doesn't guarantee that properties required by API are set
 func NewExpandRequestWithDefaults() *ExpandRequest {
 	this := ExpandRequest{}
-	var consistency ConsistencyPreference = CONSISTENCYPREFERENCE_UNSPECIFIED
+	var consistency = CONSISTENCYPREFERENCE_UNSPECIFIED
 	this.Consistency = &consistency
 	return &this
 }

@@ -12,11 +12,12 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"github.com/openfga/go-sdk/oauth2/internal"
 	"net/http"
 	"net/url"
 	"strings"
 	"sync"
+
+	"github.com/openfga/go-sdk/oauth2/internal"
 )
 
 // NoContext is the default context you should supply if not using
@@ -56,6 +57,8 @@ type Config struct {
 
 	// Scope specifies optional requested permissions.
 	Scopes []string
+
+	RequestConfig internal.RequestConfig
 }
 
 // A TokenSource is anything that can return a token.

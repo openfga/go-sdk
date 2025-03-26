@@ -20,9 +20,9 @@ import (
 
 // WriteAuthorizationModelRequest struct for WriteAuthorizationModelRequest
 type WriteAuthorizationModelRequest struct {
-	TypeDefinitions []TypeDefinition      `json:"type_definitions"yaml:"type_definitions"`
-	SchemaVersion   string                `json:"schema_version"yaml:"schema_version"`
-	Conditions      *map[string]Condition `json:"conditions,omitempty"yaml:"conditions,omitempty"`
+	TypeDefinitions []TypeDefinition      `json:"type_definitions" yaml:"type_definitions"`
+	SchemaVersion   string                `json:"schema_version" yaml:"schema_version"`
+	Conditions      *map[string]Condition `json:"conditions,omitempty" yaml:"conditions,omitempty"`
 }
 
 // NewWriteAuthorizationModelRequest instantiates a new WriteAuthorizationModelRequest object

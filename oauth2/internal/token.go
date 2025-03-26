@@ -10,7 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
+	"log"
 	"math"
 	"mime"
 	"net/http"
@@ -20,12 +20,27 @@ import (
 	"sync"
 	"time"
 
-	internalutils "github.com/openfga/go-sdk/internal/utils"
+	"github.com/openfga/go-sdk/internal/utils/retryutils"
 	"github.com/openfga/go-sdk/telemetry"
 )
 
-const cMaxRetry = 3
-const cMinWaitInMs = 50
+type RequestConfig struct {
+	RetryParams retryutils.RetryParams
+
+	Debug bool
+}
+
+func (rc *RequestConfig) New(config RequestConfig) error {
+	retryParams, err := retryutils.NewRetryParams(&config.RetryParams)
+	if err != nil {
+		return err
+	}
+
+	rc.RetryParams = *retryParams
+	rc.Debug = config.Debug
+
+	return nil
+}
 
 // Token represents the credentials used to authorize
 // the requests to access protected resources on the OAuth 2.0
@@ -189,7 +204,7 @@ func cloneURLValues(v url.Values) url.Values {
 	return v2
 }
 
-func RetrieveToken(ctx context.Context, clientID, clientSecret, tokenURL string, v url.Values, authStyle AuthStyle) (*Token, error) {
+func RetrieveToken(ctx context.Context, clientID, clientSecret, tokenURL string, v url.Values, authStyle AuthStyle, config RequestConfig) (*Token, error) {
 	needsAuthStyleProbe := authStyle == 0
 	if needsAuthStyleProbe {
 		if style, ok := lookupAuthStyle(tokenURL); ok {
@@ -203,7 +218,7 @@ func RetrieveToken(ctx context.Context, clientID, clientSecret, tokenURL string,
 	if err != nil {
 		return nil, err
 	}
-	token, err := doTokenRoundTrip(ctx, req)
+	token, err := doTokenRoundTrip(ctx, req, config)
 	if err != nil && needsAuthStyleProbe {
 		// If we get an error, assume the server wants the
 		// clientID & clientSecret in a different form.
@@ -219,7 +234,7 @@ func RetrieveToken(ctx context.Context, clientID, clientSecret, tokenURL string,
 		// So just try both ways.
 		authStyle = AuthStyleInParams // the second way we'll try
 		req, _ = newTokenRequest(tokenURL, clientID, clientSecret, v, authStyle)
-		token, err = doTokenRoundTrip(ctx, req)
+		token, err = doTokenRoundTrip(ctx, req, config)
 	}
 	if needsAuthStyleProbe && err == nil {
 		setAuthStyle(tokenURL, authStyle)
@@ -237,8 +252,8 @@ func singleTokenRoundTrip(ctx context.Context, req *http.Request) (*Token, error
 	if err != nil {
 		return nil, err
 	}
-	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1<<20))
-	r.Body.Close()
+	body, err := io.ReadAll(io.LimitReader(r.Body, 1<<20))
+	_ = r.Body.Close()
 	if err != nil {
 		return nil, fmt.Errorf("oauth2: cannot fetch token: %v", err)
 	}
@@ -280,7 +295,7 @@ func singleTokenRoundTrip(ctx context.Context, req *http.Request) (*Token, error
 			Expiry:       tj.expiry(),
 			Raw:          make(map[string]interface{}),
 		}
-		json.Unmarshal(body, &token.Raw) // no error checks for optional fields
+		_ = json.Unmarshal(body, &token.Raw) // no error checks for optional fields
 	}
 	if token.AccessToken == "" {
 		return nil, errors.New("oauth2: server response missing access_token")
@@ -288,35 +303,59 @@ func singleTokenRoundTrip(ctx context.Context, req *http.Request) (*Token, error
 	return token, nil
 }
 
-func doTokenRoundTrip(ctx context.Context, req *http.Request) (*Token, error) {
+func doTokenRoundTrip(ctx context.Context, req *http.Request, config RequestConfig) (*Token, error) {
+	const operationName = "TokenExchange"
 	var token *Token
 	var err error
 
-	for i := 0; i < cMaxRetry; i++ {
+	maxRetry := config.RetryParams.MaxRetry
+	minWaitInMs := config.RetryParams.MinWaitInMs
+	debug := config.Debug
 
+	for i := 0; i <= maxRetry; i++ {
 		token, err = singleTokenRoundTrip(ctx, req)
 		if err == nil {
 			if otel := telemetry.Extract(ctx); otel != nil {
 				attrs := make(map[*telemetry.Attribute]string)
 				attrs[telemetry.HTTPRequestResendCount] = strconv.Itoa(i)
-				otel.Metrics.CredentialsRequest(1, attrs)
+				_, _ = otel.Metrics.CredentialsRequest(1, attrs)
 			}
 			return token, err
 		}
 
 		// If this was a request error, then check if it was a 429 or 5xx error and retry.
+		// if this is a network error, then retry.
 		// We do not want to retry any other error
-		if rErr, ok := err.(*RetrieveError); ok {
+		shouldRetry := true
+		responseHeaders := http.Header{}
+		var rErr *RetrieveError
+		errorStyle := "network"
+		if errors.As(err, &rErr) {
 			statusCode := rErr.Response.StatusCode
-			if statusCode == http.StatusTooManyRequests || (statusCode >= http.StatusInternalServerError && statusCode <= 599) {
-				time.Sleep(time.Duration(internalutils.RandomTime(i, cMinWaitInMs)) * time.Millisecond)
+			if statusCode == http.StatusTooManyRequests || (statusCode >= http.StatusInternalServerError && statusCode != http.StatusNotImplemented) {
+				shouldRetry = true
+				responseHeaders = rErr.Response.Header
+				errorStyle = "api"
+			} else {
+				shouldRetry = false
+			}
+		}
+
+		if shouldRetry {
+			timeToWait := retryutils.GetTimeToWait(i, maxRetry, minWaitInMs, responseHeaders, operationName)
+			if timeToWait > 0 {
+				if debug {
+					log.Printf("\nWaiting %v to retry %v (%v %v) due to %s error (error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, errorStyle, err, i)
+				}
+
+				time.Sleep(timeToWait)
 				continue
 			}
 		}
 
-		return nil, err
-
+		break
 	}
+
 	return nil, err
 }
 

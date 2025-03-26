@@ -20,8 +20,8 @@ import (
 
 // UserTypeFilter struct for UserTypeFilter
 type UserTypeFilter struct {
-	Type     string  `json:"type"yaml:"type"`
-	Relation *string `json:"relation,omitempty"yaml:"relation,omitempty"`
+	Type     string  `json:"type" yaml:"type"`
+	Relation *string `json:"relation,omitempty" yaml:"relation,omitempty"`
 }
 
 // NewUserTypeFilter instantiates a new UserTypeFilter object
