@@ -22,6 +22,8 @@ import (
 
 	"github.com/jarcoal/httpmock"
 
+	"github.com/openfga/go-sdk"
+
 	. "github.com/openfga/go-sdk/client"
 )
 

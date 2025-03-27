@@ -25,6 +25,7 @@ docs/AbortedMessageResponse.md
 docs/Any.md
 docs/Assertion.md
 docs/AssertionTupleKey.md
+docs/AuthErrorCode.md
 docs/AuthorizationModel.md
 docs/CheckRequest.md
 docs/CheckRequestTupleKey.md
@@ -43,6 +44,7 @@ docs/ExpandRequest.md
 docs/ExpandRequestTupleKey.md
 docs/ExpandResponse.md
 docs/FgaObject.md
+docs/ForbiddenResponse.md
 docs/GetStoreResponse.md
 docs/InternalErrorCode.md
 docs/InternalErrorMessageResponse.md
@@ -102,6 +104,7 @@ docs/WriteRequest.md
 docs/WriteRequestDeletes.md
 docs/WriteRequestWrites.md
 docs/opentelemetry.md
+errors.go
 example/Makefile
 example/README.md
 example/example1/example1.go
@@ -111,13 +114,17 @@ example/opentelemetry/main.go
 git_push.sh
 go.mod
 go.sum
-internal/utils/randomtime.go
+internal/utils/retryutils/retryparams.go
+internal/utils/retryutils/retryparams_test.go
+internal/utils/retryutils/retryutils.go
+internal/utils/retryutils/retryutils_test.go
 internal/utils/ulid.go
 internal/utils/ulid_test.go
 model_aborted_message_response.go
 model_any.go
 model_assertion.go
 model_assertion_tuple_key.go
+model_auth_error_code.go
 model_authorization_model.go
 model_check_request.go
 model_check_request_tuple_key.go
@@ -136,6 +143,7 @@ model_expand_request.go
 model_expand_request_tuple_key.go
 model_expand_response.go
 model_fga_object.go
+model_forbidden_response.go
 model_get_store_response.go
 model_internal_error_code.go
 model_internal_error_message_response.go

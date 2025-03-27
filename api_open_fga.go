@@ -420,6 +420,7 @@ type OpenFgaApi interface {
 	}
 	```
 
+
 		 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 		 * @param storeId
 		 * @return ApiExpandRequest
@@ -1319,6 +1320,7 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *htt
 
 	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
 
+
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	if r.body == nil {
@@ -1362,6 +1364,25 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *htt
 					}
 					time.Sleep(timeToWait)
 					continue
+
+				}
+			}
+			return returnValue, httpResponse, err
+		}
+
+		responseBody, err := io.ReadAll(httpResponse.Body)
+		httpResponse.Body.Close()
+		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
+		if err != nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
+				if timeToWait > 0 {
+					if a.client.cfg.Debug {
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
+					}
+					time.Sleep(timeToWait)
+					continue
+
 				}
 			}
 			return returnValue, httpResponse, err
@@ -1396,6 +1417,7 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *htt
 				case errors.As(err, &fgaApiInternalError):
 					timeToWait = err.(FgaApiInternalError).GetTimeToWait(i, *retryParams)
 				}
+
 
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
@@ -1554,6 +1576,7 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 					continue
 				}
 			}
+
 			return returnValue, httpResponse, err
 		}
 
@@ -1578,6 +1601,7 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 					continue
 				}
 			}
+
 
 			return returnValue, httpResponse, err
 		}
@@ -1692,6 +1716,7 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*http.R
 			return nil, err
 		}
 
+
 		httpResponse, err := a.client.callAPI(req)
 		if err != nil || httpResponse == nil {
 			if i < retryParams.MaxRetry {
@@ -1723,6 +1748,7 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*http.R
 			}
 			return httpResponse, err
 		}
+
 
 		if httpResponse.StatusCode >= http.StatusMultipleChoices {
 			err := a.client.handleAPIError(httpResponse, responseBody, requestBody, operationName, r.storeId)
@@ -1974,6 +2000,7 @@ which gives
 
 ```
 
+
   - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @param storeId
   - @return ApiExpandRequest
@@ -2007,6 +2034,7 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 	}
 
 	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
+
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
@@ -2052,9 +2080,11 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 					time.Sleep(timeToWait)
 					continue
 				}
+
 			}
 			return returnValue, httpResponse, err
 		}
+
 
 		responseBody, err := io.ReadAll(httpResponse.Body)
 		_ = httpResponse.Body.Close()
@@ -2085,6 +2115,7 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 				case errors.As(err, &fgaApiInternalError):
 					timeToWait = err.(FgaApiInternalError).GetTimeToWait(i, *retryParams)
 				}
+
 
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
@@ -2198,6 +2229,7 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 	// to determine the Accept header
 	localVarHTTPHeaderAccepts := []string{"application/json"}
 
+
 	// set Accept header
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
 	if localVarHTTPHeaderAccept != "" {
@@ -2242,6 +2274,7 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 			}
 			return returnValue, httpResponse, err
 		}
+
 
 		if httpResponse.StatusCode >= http.StatusMultipleChoices {
 			err := a.client.handleAPIError(httpResponse, responseBody, requestBody, operationName, r.storeId)
@@ -2446,6 +2479,7 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 					timeToWait = err.(FgaApiInternalError).GetTimeToWait(i, *retryParams)
 				}
 
+
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
 						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
@@ -2593,10 +2627,12 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 					}
 					time.Sleep(timeToWait)
 					continue
+
 				}
 			}
 			return returnValue, httpResponse, err
 		}
+
 
 		responseBody, err := io.ReadAll(httpResponse.Body)
 		_ = httpResponse.Body.Close()
@@ -2614,6 +2650,7 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 			}
 			return returnValue, httpResponse, err
 		}
+
 
 		if httpResponse.StatusCode >= http.StatusMultipleChoices {
 			err := a.client.handleAPIError(httpResponse, responseBody, requestBody, operationName, "")
@@ -2740,6 +2777,7 @@ func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersRe
 
 	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
 
+
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	if r.body == nil {
@@ -2817,6 +2855,7 @@ func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersRe
 				case errors.As(err, &fgaApiInternalError):
 					timeToWait = err.(FgaApiInternalError).GetTimeToWait(i, *retryParams)
 				}
+
 
 				if timeToWait > 0 {
 					if a.client.cfg.Debug {
@@ -3032,6 +3071,7 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *http.R
 
 	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
 
+
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	if r.body == nil {
@@ -3096,6 +3136,7 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *http.R
 			}
 			return returnValue, httpResponse, err
 		}
+
 
 		if httpResponse.StatusCode >= http.StatusMultipleChoices {
 			err := a.client.handleAPIError(httpResponse, responseBody, requestBody, operationName, r.storeId)
@@ -3260,6 +3301,7 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 
 		responseBody, err := io.ReadAll(httpResponse.Body)
 		_ = httpResponse.Body.Close()
+
 		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
 		if err != nil {
 			if i < retryParams.MaxRetry {
@@ -3430,11 +3472,13 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 	}
 
 	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
+
 	if r.id == "" {
 		return returnValue, nil, reportError("id is required and must be specified")
 	}
 
 	path = strings.ReplaceAll(path, "{"+"id"+"}", url.PathEscape(parameterToString(r.id, "")))
+
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
@@ -3474,6 +3518,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 					}
 					time.Sleep(timeToWait)
 					continue
+
 				}
 			}
 			return returnValue, httpResponse, err
@@ -3495,6 +3540,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 			}
 			return returnValue, httpResponse, err
 		}
+
 
 		if httpResponse.StatusCode >= http.StatusMultipleChoices {
 			err := a.client.handleAPIError(httpResponse, responseBody, requestBody, operationName, r.storeId)
@@ -3702,6 +3748,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 					}
 					time.Sleep(timeToWait)
 					continue
+
 				}
 			}
 			return returnValue, httpResponse, err
@@ -3723,6 +3770,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 			}
 			return returnValue, httpResponse, err
 		}
+
 
 		if httpResponse.StatusCode >= http.StatusMultipleChoices {
 			err := a.client.handleAPIError(httpResponse, responseBody, requestBody, operationName, r.storeId)
@@ -3910,6 +3958,7 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 					}
 					time.Sleep(timeToWait)
 					continue
+
 				}
 			}
 			return returnValue, httpResponse, err
@@ -3931,6 +3980,7 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 			}
 			return returnValue, httpResponse, err
 		}
+
 
 		if httpResponse.StatusCode >= http.StatusMultipleChoices {
 			err := a.client.handleAPIError(httpResponse, responseBody, requestBody, operationName, r.storeId)
@@ -4090,6 +4140,7 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 
 	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
 
+
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	if r.body == nil {
@@ -4133,6 +4184,7 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 					}
 					time.Sleep(timeToWait)
 					continue
+
 				}
 			}
 			return returnValue, httpResponse, err
@@ -4320,6 +4372,7 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 					}
 					time.Sleep(timeToWait)
 					continue
+
 				}
 			}
 			return httpResponse, err
@@ -4494,6 +4547,7 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 
 	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
 
+
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	if r.body == nil {
@@ -4537,6 +4591,7 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 					}
 					time.Sleep(timeToWait)
 					continue
+
 				}
 			}
 			return returnValue, httpResponse, err
@@ -4558,6 +4613,7 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 			}
 			return returnValue, httpResponse, err
 		}
+
 
 		if httpResponse.StatusCode >= http.StatusMultipleChoices {
 			err := a.client.handleAPIError(httpResponse, responseBody, requestBody, operationName, r.storeId)
