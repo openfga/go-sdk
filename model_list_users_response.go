@@ -20,7 +20,7 @@ import (
 
 // ListUsersResponse struct for ListUsersResponse
 type ListUsersResponse struct {
-	Users []User `json:"users"yaml:"users"`
+	Users []User `json:"users" yaml:"users"`
 }
 
 // NewListUsersResponse instantiates a new ListUsersResponse object

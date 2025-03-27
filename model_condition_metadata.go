@@ -20,8 +20,8 @@ import (
 
 // ConditionMetadata struct for ConditionMetadata
 type ConditionMetadata struct {
-	Module     *string     `json:"module,omitempty"yaml:"module,omitempty"`
-	SourceInfo *SourceInfo `json:"source_info,omitempty"yaml:"source_info,omitempty"`
+	Module     *string     `json:"module,omitempty" yaml:"module,omitempty"`
+	SourceInfo *SourceInfo `json:"source_info,omitempty" yaml:"source_info,omitempty"`
 }
 
 // NewConditionMetadata instantiates a new ConditionMetadata object

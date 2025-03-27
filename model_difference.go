@@ -20,8 +20,8 @@ import (
 
 // Difference struct for Difference
 type Difference struct {
-	Base     Userset `json:"base"yaml:"base"`
-	Subtract Userset `json:"subtract"yaml:"subtract"`
+	Base     Userset `json:"base" yaml:"base"`
+	Subtract Userset `json:"subtract" yaml:"subtract"`
 }
 
 // NewDifference instantiates a new Difference object

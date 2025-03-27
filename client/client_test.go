@@ -376,7 +376,9 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 
 		storeId := got1.Id
-		fgaClient.SetStoreId(storeId)
+		if err := fgaClient.SetStoreId(storeId); err != nil {
+			_ = err
+		}
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
@@ -2172,7 +2174,7 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 	})
 
-	t.Run("BatchCheck", func(t *testing.T) {
+	t.Run("ClientBatchCheck", func(t *testing.T) {
 		test := TestDefinition{
 			Name:           "Check",
 			JsonResponse:   `{"allowed":true, "resolution":""}`,
@@ -2180,7 +2182,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Method:         http.MethodPost,
 			RequestPath:    "check",
 		}
-		requestBody := ClientBatchCheckBody{{
+		requestBody := ClientBatchCheckClientBody{{
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "viewer",
 			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
@@ -2210,7 +2212,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
 
-		options := ClientBatchCheckOptions{
+		options := ClientBatchCheckClientOptions{
 			AuthorizationModelId: openfga.PtrString(authModelId),
 			MaxParallelRequests:  openfga.PtrInt32(5),
 		}
@@ -2232,7 +2234,7 @@ func TestOpenFgaClient(t *testing.T) {
 			},
 		)
 
-		got, err := fgaClient.BatchCheck(context.Background()).Body(requestBody).Options(options).Execute()
+		got, err := fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Options(options).Execute()
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
@@ -2263,28 +2265,28 @@ func TestOpenFgaClient(t *testing.T) {
 				t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
 			}
 		}
-		// BatchCheck without options should work
-		_, err = fgaClient.BatchCheck(context.Background()).Body(requestBody).Execute()
+		// ClientBatchCheck without options should work
+		_, err = fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Execute()
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
 
 		httpmock.ZeroCallCounters()
-		// BatchCheck with invalid auth model ID should fail
-		badOptions := ClientBatchCheckOptions{
+		// ClientBatchCheck with invalid auth model ID should fail
+		badOptions := ClientBatchCheckClientOptions{
 			AuthorizationModelId: openfga.PtrString("INVALID"),
 			MaxParallelRequests:  openfga.PtrInt32(5),
 		}
-		_, err = fgaClient.BatchCheck(context.Background()).Body(requestBody).Options(badOptions).Execute()
+		_, err = fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Options(badOptions).Execute()
 		if err == nil {
 			t.Fatalf("Expect error with invalid auth model id but there is none")
 		}
 		// invalid store ID should fail
-		badStoreOptions := ClientBatchCheckOptions{
+		badStoreOptions := ClientBatchCheckClientOptions{
 			StoreId:             openfga.PtrString("INVALID"),
 			MaxParallelRequests: openfga.PtrInt32(5),
 		}
-		_, err = fgaClient.BatchCheck(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
+		_, err = fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
 		if err == nil {
 			t.Fatalf("Expect error with invalid auth model id but there is none")
 		}
@@ -2299,14 +2301,14 @@ func TestOpenFgaClient(t *testing.T) {
 				return httpmock.NewStringResponse(http.StatusUnauthorized, ""), nil
 			},
 		)
-		// BatchCheck with invalid auth should fail
-		_, err = fgaClient.BatchCheck(context.Background()).Body(requestBody).Options(options).Execute()
+		// ClientBatchCheck with invalid auth should fail
+		_, err = fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Options(options).Execute()
 		if err == nil {
 			t.Fatalf("Expect error with invalid auth but there is none")
 		}
 
 		// store should be overridden
-		storeOverrideOptions := ClientBatchCheckOptions{
+		storeOverrideOptions := ClientBatchCheckClientOptions{
 			StoreId:             openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
 			MaxParallelRequests: openfga.PtrInt32(5),
 		}
@@ -2320,13 +2322,13 @@ func TestOpenFgaClient(t *testing.T) {
 			},
 		)
 
-		_, err = fgaClient.BatchCheck(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
+		_, err = fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
 	})
 
-	t.Run("BatchCheckWithConsistency", func(t *testing.T) {
+	t.Run("ClientBatchCheckWithConsistency", func(t *testing.T) {
 		test := TestDefinition{
 			Name:           "Check",
 			JsonResponse:   `{"allowed":true, "resolution":""}`,
@@ -2334,7 +2336,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Method:         http.MethodPost,
 			RequestPath:    "check",
 		}
-		requestBody := ClientBatchCheckBody{{
+		requestBody := ClientBatchCheckClientBody{{
 			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation: "viewer",
 			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
@@ -2364,7 +2366,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
 
-		options := ClientBatchCheckOptions{
+		options := ClientBatchCheckClientOptions{
 			AuthorizationModelId: openfga.PtrString(authModelId),
 			MaxParallelRequests:  openfga.PtrInt32(5),
 			Consistency:          openfga.CONSISTENCYPREFERENCE_HIGHER_CONSISTENCY.Ptr(),
@@ -2388,7 +2390,7 @@ func TestOpenFgaClient(t *testing.T) {
 			},
 		)
 
-		checks, err := fgaClient.BatchCheck(context.Background()).Body(requestBody).Options(options).Execute()
+		checks, err := fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Options(options).Execute()
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
@@ -2397,6 +2399,135 @@ func TestOpenFgaClient(t *testing.T) {
 			if check.Error != nil {
 				t.Fatalf("a check failed %v", check.Error)
 			}
+		}
+	})
+
+	t.Run("BatchCheck", func(t *testing.T) {
+		test := TestDefinition{
+			Name:           "BatchCheck",
+			JsonResponse:   `{"result":{"test1":{"allowed":true},"test2":{"allowed":false}}}`,
+			ResponseStatus: http.StatusOK,
+			Method:         http.MethodPost,
+			RequestPath:    "batch-check",
+		}
+
+		requestBody := ClientBatchCheckRequest{
+			Checks: []ClientBatchCheckItem{
+				{
+					User:          "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+					Relation:      "viewer",
+					Object:        "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+					CorrelationId: "test1",
+					ContextualTuples: []ClientContextualTupleKey{
+						{
+							User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+							Relation: "editor",
+							Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+						},
+					},
+				},
+				{
+					User:          "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+					Relation:      "admin",
+					Object:        "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+					CorrelationId: "test2",
+				},
+			},
+		}
+
+		options := BatchCheckOptions{
+			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			MaxParallelRequests:  openfga.PtrInt32(5),
+			MaxBatchSize:         openfga.PtrInt32(10),
+		}
+
+		var expectedResponse openfga.BatchCheckResponse
+		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+
+		ctxMain, cancelMain := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancelMain()
+		got, err := fgaClient.BatchCheck(ctxMain).Body(requestBody).Options(options).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		if httpmock.GetTotalCallCount() != 1 {
+			t.Fatalf("OpenFgaClient.%v() - wanted %v call to /batch-check, got %v", test.Name, 1, httpmock.GetTotalCallCount())
+		}
+
+		if len(got.GetResult()) != len(requestBody.Checks) {
+			t.Fatalf("OpenFgaClient.%v() - Response Length = %v, want %v", test.Name, len(got.GetResult()), len(requestBody.Checks))
+		}
+
+		// BatchCheck without options should work
+		httpmock.ZeroCallCounters()
+		ctxNoOpts, cancelNoOpts := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancelNoOpts()
+		_, err = fgaClient.BatchCheck(ctxNoOpts).Body(requestBody).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		httpmock.ZeroCallCounters()
+		// BatchCheck with invalid auth model ID should fail
+		badOptions := BatchCheckOptions{
+			AuthorizationModelId: openfga.PtrString("INVALID"),
+			MaxParallelRequests:  openfga.PtrInt32(5),
+		}
+		ctxBad, cancelBad := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancelBad()
+		_, err = fgaClient.BatchCheck(ctxBad).Body(requestBody).Options(badOptions).Execute()
+		if err == nil {
+			t.Fatalf("Expect error with invalid auth model id but there is none")
+		}
+
+		// Invalid store ID should fail
+		badStoreOptions := BatchCheckOptions{
+			StoreId:             openfga.PtrString("INVALID"),
+			MaxParallelRequests: openfga.PtrInt32(5),
+		}
+		ctxStore, cancelStore := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancelStore()
+		_, err = fgaClient.BatchCheck(ctxStore).Body(requestBody).Options(badStoreOptions).Execute()
+		if err == nil {
+			t.Fatalf("Expect error with invalid store id but there is none")
+		}
+
+		// Store should be overridden
+		storeOverrideOptions := BatchCheckOptions{
+			StoreId:             openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+			MaxParallelRequests: openfga.PtrInt32(5),
+		}
+
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+
+		ctxOverride, cancelOverride := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancelOverride()
+		_, err = fgaClient.BatchCheck(ctxOverride).Body(requestBody).Options(storeOverrideOptions).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
 		}
 	})
 
@@ -2978,7 +3109,7 @@ func TestOpenFgaClient(t *testing.T) {
 			},
 		)
 
-		got, err := fgaClient.ListUsers(context.Background()).
+		got, _ := fgaClient.ListUsers(context.Background()).
 			Body(requestBody).
 			Options(options).
 			Execute()

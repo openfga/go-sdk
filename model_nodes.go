@@ -20,7 +20,7 @@ import (
 
 // Nodes struct for Nodes
 type Nodes struct {
-	Nodes []Node `json:"nodes"yaml:"nodes"`
+	Nodes []Node `json:"nodes" yaml:"nodes"`
 }
 
 // NewNodes instantiates a new Nodes object

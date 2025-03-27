@@ -20,11 +20,11 @@ import (
 
 // RelationReference RelationReference represents a relation of a particular object type (e.g. 'document#viewer').
 type RelationReference struct {
-	Type     string                  `json:"type"yaml:"type"`
-	Relation *string                 `json:"relation,omitempty"yaml:"relation,omitempty"`
-	Wildcard *map[string]interface{} `json:"wildcard,omitempty"yaml:"wildcard,omitempty"`
+	Type     string                  `json:"type" yaml:"type"`
+	Relation *string                 `json:"relation,omitempty" yaml:"relation,omitempty"`
+	Wildcard *map[string]interface{} `json:"wildcard,omitempty" yaml:"wildcard,omitempty"`
 	// The name of a condition that is enforced over the allowed relation.
-	Condition *string `json:"condition,omitempty"yaml:"condition,omitempty"`
+	Condition *string `json:"condition,omitempty" yaml:"condition,omitempty"`
 }
 
 // NewRelationReference instantiates a new RelationReference object

@@ -21,9 +21,9 @@ import (
 
 // TupleChange struct for TupleChange
 type TupleChange struct {
-	TupleKey  TupleKey       `json:"tuple_key"yaml:"tuple_key"`
-	Operation TupleOperation `json:"operation"yaml:"operation"`
-	Timestamp time.Time      `json:"timestamp"yaml:"timestamp"`
+	TupleKey  TupleKey       `json:"tuple_key" yaml:"tuple_key"`
+	Operation TupleOperation `json:"operation" yaml:"operation"`
+	Timestamp time.Time      `json:"timestamp" yaml:"timestamp"`
 }
 
 // NewTupleChange instantiates a new TupleChange object
@@ -43,7 +43,7 @@ func NewTupleChange(tupleKey TupleKey, operation TupleOperation, timestamp time.
 // but it doesn't guarantee that properties required by API are set
 func NewTupleChangeWithDefaults() *TupleChange {
 	this := TupleChange{}
-	var operation TupleOperation = TUPLEOPERATION_WRITE
+	var operation = TUPLEOPERATION_WRITE
 	this.Operation = operation
 	return &this
 }

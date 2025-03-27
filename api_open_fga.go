@@ -997,7 +997,7 @@ func (a *OpenFgaApiService) BatchCheckExecute(r ApiBatchCheckRequest) (BatchChec
 		return returnValue, nil, reportError("storeId is required and must be specified")
 	}
 
-	path = strings.Replace(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")), -1)
+	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
@@ -1048,7 +1048,7 @@ func (a *OpenFgaApiService) BatchCheckExecute(r ApiBatchCheckRequest) (BatchChec
 		}
 
 		responseBody, err := io.ReadAll(httpResponse.Body)
-		httpResponse.Body.Close()
+		_ = httpResponse.Body.Close()
 		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
 		if err != nil {
 			if i < retryParams.MaxRetry {
@@ -1113,11 +1113,11 @@ func (a *OpenFgaApiService) BatchCheckExecute(r ApiBatchCheckRequest) (BatchChec
 		)
 
 		if requestDuration > 0 {
-			metrics.RequestDuration(requestDuration, attrs)
+			_, _ = metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			metrics.QueryDuration(queryDuration, attrs)
+			_, _ = metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return returnValue, httpResponse, nil
@@ -1317,7 +1317,7 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *htt
 		return returnValue, nil, reportError("storeId is required and must be specified")
 	}
 
-	path = strings.Replace(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")), -1)
+	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
@@ -1368,7 +1368,7 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *htt
 		}
 
 		responseBody, err := io.ReadAll(httpResponse.Body)
-		httpResponse.Body.Close()
+		_ = httpResponse.Body.Close()
 		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
 		if err != nil {
 			if i < retryParams.MaxRetry {
@@ -1433,11 +1433,11 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *htt
 		)
 
 		if requestDuration > 0 {
-			metrics.RequestDuration(requestDuration, attrs)
+			_, _ = metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			metrics.QueryDuration(queryDuration, attrs)
+			_, _ = metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return returnValue, httpResponse, nil
@@ -1541,7 +1541,7 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 		}
 
 		responseBody, err := io.ReadAll(httpResponse.Body)
-		httpResponse.Body.Close()
+		_ = httpResponse.Body.Close()
 		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
 		if err != nil {
 			if i < retryParams.MaxRetry {
@@ -1605,11 +1605,11 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 		)
 
 		if requestDuration > 0 {
-			metrics.RequestDuration(requestDuration, attrs)
+			_, _ = metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			metrics.QueryDuration(queryDuration, attrs)
+			_, _ = metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return returnValue, httpResponse, nil
@@ -1662,7 +1662,7 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*http.R
 		return nil, reportError("storeId is required and must be specified")
 	}
 
-	path = strings.Replace(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")), -1)
+	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
@@ -1708,7 +1708,7 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*http.R
 		}
 
 		responseBody, err := io.ReadAll(httpResponse.Body)
-		httpResponse.Body.Close()
+		_ = httpResponse.Body.Close()
 		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
 		if err != nil {
 			if i < retryParams.MaxRetry {
@@ -1764,11 +1764,11 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*http.R
 		)
 
 		if requestDuration > 0 {
-			metrics.RequestDuration(requestDuration, attrs)
+			_, _ = metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			metrics.QueryDuration(queryDuration, attrs)
+			_, _ = metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return httpResponse, nil
@@ -2006,7 +2006,7 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 		return returnValue, nil, reportError("storeId is required and must be specified")
 	}
 
-	path = strings.Replace(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")), -1)
+	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
@@ -2057,7 +2057,7 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 		}
 
 		responseBody, err := io.ReadAll(httpResponse.Body)
-		httpResponse.Body.Close()
+		_ = httpResponse.Body.Close()
 		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
 		if err != nil {
 			if i < retryParams.MaxRetry {
@@ -2122,11 +2122,11 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 		)
 
 		if requestDuration > 0 {
-			metrics.RequestDuration(requestDuration, attrs)
+			_, _ = metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			metrics.QueryDuration(queryDuration, attrs)
+			_, _ = metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return returnValue, httpResponse, nil
@@ -2181,7 +2181,7 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 		return returnValue, nil, reportError("storeId is required and must be specified")
 	}
 
-	path = strings.Replace(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")), -1)
+	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
@@ -2227,7 +2227,7 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 		}
 
 		responseBody, err := io.ReadAll(httpResponse.Body)
-		httpResponse.Body.Close()
+		_ = httpResponse.Body.Close()
 		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
 		if err != nil {
 			if i < retryParams.MaxRetry {
@@ -2292,11 +2292,11 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 		)
 
 		if requestDuration > 0 {
-			metrics.RequestDuration(requestDuration, attrs)
+			_, _ = metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			metrics.QueryDuration(queryDuration, attrs)
+			_, _ = metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return returnValue, httpResponse, nil
@@ -2366,7 +2366,7 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 		return returnValue, nil, reportError("storeId is required and must be specified")
 	}
 
-	path = strings.Replace(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")), -1)
+	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
@@ -2417,7 +2417,7 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 		}
 
 		responseBody, err := io.ReadAll(httpResponse.Body)
-		httpResponse.Body.Close()
+		_ = httpResponse.Body.Close()
 		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
 		if err != nil {
 			if i < retryParams.MaxRetry {
@@ -2482,11 +2482,11 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 		)
 
 		if requestDuration > 0 {
-			metrics.RequestDuration(requestDuration, attrs)
+			_, _ = metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			metrics.QueryDuration(queryDuration, attrs)
+			_, _ = metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return returnValue, httpResponse, nil
@@ -2599,7 +2599,7 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 		}
 
 		responseBody, err := io.ReadAll(httpResponse.Body)
-		httpResponse.Body.Close()
+		_ = httpResponse.Body.Close()
 		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
 		if err != nil {
 			if i < retryParams.MaxRetry {
@@ -2663,11 +2663,11 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 		)
 
 		if requestDuration > 0 {
-			metrics.RequestDuration(requestDuration, attrs)
+			_, _ = metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			metrics.QueryDuration(queryDuration, attrs)
+			_, _ = metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return returnValue, httpResponse, nil
@@ -2738,7 +2738,7 @@ func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersRe
 		return returnValue, nil, reportError("storeId is required and must be specified")
 	}
 
-	path = strings.Replace(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")), -1)
+	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
@@ -2789,7 +2789,7 @@ func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersRe
 		}
 
 		responseBody, err := io.ReadAll(httpResponse.Body)
-		httpResponse.Body.Close()
+		_ = httpResponse.Body.Close()
 		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
 		if err != nil {
 			if i < retryParams.MaxRetry {
@@ -2854,11 +2854,11 @@ func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersRe
 		)
 
 		if requestDuration > 0 {
-			metrics.RequestDuration(requestDuration, attrs)
+			_, _ = metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			metrics.QueryDuration(queryDuration, attrs)
+			_, _ = metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return returnValue, httpResponse, nil
@@ -3030,7 +3030,7 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *http.R
 		return returnValue, nil, reportError("storeId is required and must be specified")
 	}
 
-	path = strings.Replace(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")), -1)
+	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
@@ -3081,7 +3081,7 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *http.R
 		}
 
 		responseBody, err := io.ReadAll(httpResponse.Body)
-		httpResponse.Body.Close()
+		_ = httpResponse.Body.Close()
 		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
 		if err != nil {
 			if i < retryParams.MaxRetry {
@@ -3146,11 +3146,11 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *http.R
 		)
 
 		if requestDuration > 0 {
-			metrics.RequestDuration(requestDuration, attrs)
+			_, _ = metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			metrics.QueryDuration(queryDuration, attrs)
+			_, _ = metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return returnValue, httpResponse, nil
@@ -3208,12 +3208,12 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 		return returnValue, nil, reportError("storeId is required and must be specified")
 	}
 
-	path = strings.Replace(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")), -1)
+	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
 	if r.authorizationModelId == "" {
 		return returnValue, nil, reportError("authorizationModelId is required and must be specified")
 	}
 
-	path = strings.Replace(path, "{"+"authorization_model_id"+"}", url.PathEscape(parameterToString(r.authorizationModelId, "")), -1)
+	path = strings.ReplaceAll(path, "{"+"authorization_model_id"+"}", url.PathEscape(parameterToString(r.authorizationModelId, "")))
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
@@ -3259,7 +3259,7 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 		}
 
 		responseBody, err := io.ReadAll(httpResponse.Body)
-		httpResponse.Body.Close()
+		_ = httpResponse.Body.Close()
 		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
 		if err != nil {
 			if i < retryParams.MaxRetry {
@@ -3324,11 +3324,11 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 		)
 
 		if requestDuration > 0 {
-			metrics.RequestDuration(requestDuration, attrs)
+			_, _ = metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			metrics.QueryDuration(queryDuration, attrs)
+			_, _ = metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return returnValue, httpResponse, nil
@@ -3429,12 +3429,12 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 		return returnValue, nil, reportError("storeId is required and must be specified")
 	}
 
-	path = strings.Replace(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")), -1)
+	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
 	if r.id == "" {
 		return returnValue, nil, reportError("id is required and must be specified")
 	}
 
-	path = strings.Replace(path, "{"+"id"+"}", url.PathEscape(parameterToString(r.id, "")), -1)
+	path = strings.ReplaceAll(path, "{"+"id"+"}", url.PathEscape(parameterToString(r.id, "")))
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
@@ -3480,7 +3480,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 		}
 
 		responseBody, err := io.ReadAll(httpResponse.Body)
-		httpResponse.Body.Close()
+		_ = httpResponse.Body.Close()
 		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
 		if err != nil {
 			if i < retryParams.MaxRetry {
@@ -3545,11 +3545,11 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 		)
 
 		if requestDuration > 0 {
-			metrics.RequestDuration(requestDuration, attrs)
+			_, _ = metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			metrics.QueryDuration(queryDuration, attrs)
+			_, _ = metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return returnValue, httpResponse, nil
@@ -3656,7 +3656,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 		return returnValue, nil, reportError("storeId is required and must be specified")
 	}
 
-	path = strings.Replace(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")), -1)
+	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
@@ -3708,7 +3708,7 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 		}
 
 		responseBody, err := io.ReadAll(httpResponse.Body)
-		httpResponse.Body.Close()
+		_ = httpResponse.Body.Close()
 		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
 		if err != nil {
 			if i < retryParams.MaxRetry {
@@ -3773,11 +3773,11 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 		)
 
 		if requestDuration > 0 {
-			metrics.RequestDuration(requestDuration, attrs)
+			_, _ = metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			metrics.QueryDuration(queryDuration, attrs)
+			_, _ = metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return returnValue, httpResponse, nil
@@ -3858,7 +3858,7 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 		return returnValue, nil, reportError("storeId is required and must be specified")
 	}
 
-	path = strings.Replace(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")), -1)
+	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
@@ -3916,7 +3916,7 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 		}
 
 		responseBody, err := io.ReadAll(httpResponse.Body)
-		httpResponse.Body.Close()
+		_ = httpResponse.Body.Close()
 		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
 		if err != nil {
 			if i < retryParams.MaxRetry {
@@ -3981,11 +3981,11 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 		)
 
 		if requestDuration > 0 {
-			metrics.RequestDuration(requestDuration, attrs)
+			_, _ = metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			metrics.QueryDuration(queryDuration, attrs)
+			_, _ = metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return returnValue, httpResponse, nil
@@ -4088,7 +4088,7 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 		return returnValue, nil, reportError("storeId is required and must be specified")
 	}
 
-	path = strings.Replace(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")), -1)
+	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
@@ -4139,7 +4139,7 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 		}
 
 		responseBody, err := io.ReadAll(httpResponse.Body)
-		httpResponse.Body.Close()
+		_ = httpResponse.Body.Close()
 		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
 		if err != nil {
 			if i < retryParams.MaxRetry {
@@ -4204,11 +4204,11 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 		)
 
 		if requestDuration > 0 {
-			metrics.RequestDuration(requestDuration, attrs)
+			_, _ = metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			metrics.QueryDuration(queryDuration, attrs)
+			_, _ = metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return returnValue, httpResponse, nil
@@ -4270,12 +4270,12 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 		return nil, reportError("storeId is required and must be specified")
 	}
 
-	path = strings.Replace(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")), -1)
+	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
 	if r.authorizationModelId == "" {
 		return nil, reportError("authorizationModelId is required and must be specified")
 	}
 
-	path = strings.Replace(path, "{"+"authorization_model_id"+"}", url.PathEscape(parameterToString(r.authorizationModelId, "")), -1)
+	path = strings.ReplaceAll(path, "{"+"authorization_model_id"+"}", url.PathEscape(parameterToString(r.authorizationModelId, "")))
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
@@ -4326,7 +4326,7 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 		}
 
 		responseBody, err := io.ReadAll(httpResponse.Body)
-		httpResponse.Body.Close()
+		_ = httpResponse.Body.Close()
 		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
 		if err != nil {
 			if i < retryParams.MaxRetry {
@@ -4382,11 +4382,11 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 		)
 
 		if requestDuration > 0 {
-			metrics.RequestDuration(requestDuration, attrs)
+			_, _ = metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			metrics.QueryDuration(queryDuration, attrs)
+			_, _ = metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return httpResponse, nil
@@ -4492,7 +4492,7 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 		return returnValue, nil, reportError("storeId is required and must be specified")
 	}
 
-	path = strings.Replace(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")), -1)
+	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
@@ -4543,7 +4543,7 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 		}
 
 		responseBody, err := io.ReadAll(httpResponse.Body)
-		httpResponse.Body.Close()
+		_ = httpResponse.Body.Close()
 		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
 		if err != nil {
 			if i < retryParams.MaxRetry {
@@ -4608,11 +4608,11 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 		)
 
 		if requestDuration > 0 {
-			metrics.RequestDuration(requestDuration, attrs)
+			_, _ = metrics.RequestDuration(requestDuration, attrs)
 		}
 
 		if queryDuration > 0 {
-			metrics.QueryDuration(queryDuration, attrs)
+			_, _ = metrics.QueryDuration(queryDuration, attrs)
 		}
 
 		return returnValue, httpResponse, nil

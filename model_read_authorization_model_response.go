@@ -20,7 +20,7 @@ import (
 
 // ReadAuthorizationModelResponse struct for ReadAuthorizationModelResponse
 type ReadAuthorizationModelResponse struct {
-	AuthorizationModel *AuthorizationModel `json:"authorization_model,omitempty"yaml:"authorization_model,omitempty"`
+	AuthorizationModel *AuthorizationModel `json:"authorization_model,omitempty" yaml:"authorization_model,omitempty"`
 }
 
 // NewReadAuthorizationModelResponse instantiates a new ReadAuthorizationModelResponse object

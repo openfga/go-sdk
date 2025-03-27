@@ -20,8 +20,8 @@ import (
 
 // ReadAssertionsResponse struct for ReadAssertionsResponse
 type ReadAssertionsResponse struct {
-	AuthorizationModelId string       `json:"authorization_model_id"yaml:"authorization_model_id"`
-	Assertions           *[]Assertion `json:"assertions,omitempty"yaml:"assertions,omitempty"`
+	AuthorizationModelId string       `json:"authorization_model_id" yaml:"authorization_model_id"`
+	Assertions           *[]Assertion `json:"assertions,omitempty" yaml:"assertions,omitempty"`
 }
 
 // NewReadAssertionsResponse instantiates a new ReadAssertionsResponse object

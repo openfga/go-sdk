@@ -20,11 +20,11 @@ import (
 
 // BatchCheckItem struct for BatchCheckItem
 type BatchCheckItem struct {
-	TupleKey         CheckRequestTupleKey    `json:"tuple_key"yaml:"tuple_key"`
-	ContextualTuples *ContextualTupleKeys    `json:"contextual_tuples,omitempty"yaml:"contextual_tuples,omitempty"`
-	Context          *map[string]interface{} `json:"context,omitempty"yaml:"context,omitempty"`
+	TupleKey         CheckRequestTupleKey    `json:"tuple_key" yaml:"tuple_key"`
+	ContextualTuples *ContextualTupleKeys    `json:"contextual_tuples,omitempty" yaml:"contextual_tuples,omitempty"`
+	Context          *map[string]interface{} `json:"context,omitempty" yaml:"context,omitempty"`
 	// correlation_id must be a string containing only letters, numbers, or hyphens, with length ≤ 36 characters.
-	CorrelationId string `json:"correlation_id"yaml:"correlation_id"`
+	CorrelationId string `json:"correlation_id" yaml:"correlation_id"`
 }
 
 // NewBatchCheckItem instantiates a new BatchCheckItem object

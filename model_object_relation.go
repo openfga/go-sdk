@@ -20,8 +20,8 @@ import (
 
 // ObjectRelation struct for ObjectRelation
 type ObjectRelation struct {
-	Object   *string `json:"object,omitempty"yaml:"object,omitempty"`
-	Relation *string `json:"relation,omitempty"yaml:"relation,omitempty"`
+	Object   *string `json:"object,omitempty" yaml:"object,omitempty"`
+	Relation *string `json:"relation,omitempty" yaml:"relation,omitempty"`
 }
 
 // NewObjectRelation instantiates a new ObjectRelation object
