@@ -3530,8 +3530,9 @@ func TestOpenFgaClient(t *testing.T) {
 			t.Fatalf("BatchCheck error: %v", err)
 		}
 
-		if callCount <= 1 {
-			t.Errorf("Expected multiple API calls with MaxBatchSize=1, got %d", callCount)
+		expectedCallCount := len(items) // With MaxBatchSize=1, we expect one call per item
+		if callCount != expectedCallCount {
+			t.Errorf("Expected exactly %d API calls with MaxBatchSize=1, got %d", expectedCallCount, callCount)
 		}
 	})
 }
