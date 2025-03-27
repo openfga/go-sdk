@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"math"
 	_nethttp "net/http"
+	"sync"
 	"time"
 
 	"golang.org/x/sync/errgroup"
@@ -74,7 +75,8 @@ func newClientConfiguration(cfg *fgaSdk.Configuration) ClientConfiguration {
 type OpenFgaClient struct {
 	config ClientConfiguration
 	SdkClient
-	fgaSdk.APIClient
+	*fgaSdk.APIClient
+	headerMutex sync.RWMutex
 }
 
 func NewSdkClient(cfg *ClientConfiguration) (*OpenFgaClient, error) {
@@ -113,7 +115,7 @@ func NewSdkClient(cfg *ClientConfiguration) (*OpenFgaClient, error) {
 
 	return &OpenFgaClient{
 		config:    clientConfig,
-		APIClient: *apiClient,
+		APIClient: apiClient,
 	}, nil
 }
 
@@ -1102,7 +1104,7 @@ func (client *OpenFgaClient) ReadAuthorizationModel(ctx _context.Context) SdkCli
 // / ReadLatestAuthorizationModel
 type SdkClientReadLatestAuthorizationModelRequest struct {
 	ctx    _context.Context
-	Client OpenFgaClient
+	Client *OpenFgaClient
 
 	options *ClientReadLatestAuthorizationModelOptions
 }
@@ -1122,7 +1124,7 @@ type ClientReadLatestAuthorizationModelOptions struct {
 
 func (client *OpenFgaClient) ReadLatestAuthorizationModel(ctx _context.Context) SdkClientReadLatestAuthorizationModelRequestInterface {
 	return &SdkClientReadLatestAuthorizationModelRequest{
-		Client: *client,
+		Client: client,
 		ctx:    ctx,
 	}
 }
@@ -2294,13 +2296,22 @@ func (client *OpenFgaClient) singleBatchCheck(ctx _context.Context, body fgaSdk.
 	}
 
 	requestID := fmt.Sprintf("%d", time.Now().UnixNano())
+	headerName := "X-OpenFGA-Client-Bulk-Request-Id"
 
-	client.APIClient.GetConfig().AddDefaultHeader("X-OpenFGA-Client-Bulk-Request-Id", requestID)
+	// Create a mutex-protected copy of headers to avoid race conditions
+	client.headerMutex.Lock()
+	client.APIClient.GetConfig().AddDefaultHeader(headerName, requestID)
 
 	req := client.OpenFgaApi.BatchCheck(ctx, *storeId)
 	req = req.Body(body)
 
 	response, _, err := req.Execute()
+
+	// Remove the header after use to clean up
+	client.APIClient.GetConfig().DefaultHeaders[headerName] = ""
+	delete(client.APIClient.GetConfig().DefaultHeaders, headerName)
+	client.headerMutex.Unlock()
+
 	if err != nil {
 		return nil, err
 	}
