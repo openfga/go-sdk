@@ -20,7 +20,7 @@ import (
 
 // Usersets struct for Usersets
 type Usersets struct {
-	Child []Userset `json:"child" yaml:"child"`
+	Child []Userset `json:"child"yaml:"child"`
 }
 
 // NewUsersets instantiates a new Usersets object

@@ -20,9 +20,9 @@ import (
 
 // ReadResponse struct for ReadResponse
 type ReadResponse struct {
-	Tuples []Tuple `json:"tuples" yaml:"tuples"`
+	Tuples []Tuple `json:"tuples"yaml:"tuples"`
 	// The continuation token will be empty if there are no more tuples.
-	ContinuationToken string `json:"continuation_token" yaml:"continuation_token"`
+	ContinuationToken string `json:"continuation_token"yaml:"continuation_token"`
 }
 
 // NewReadResponse instantiates a new ReadResponse object

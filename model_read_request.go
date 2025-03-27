@@ -20,10 +20,10 @@ import (
 
 // ReadRequest struct for ReadRequest
 type ReadRequest struct {
-	TupleKey          *ReadRequestTupleKey   `json:"tuple_key,omitempty" yaml:"tuple_key,omitempty"`
-	PageSize          *int32                 `json:"page_size,omitempty" yaml:"page_size,omitempty"`
-	ContinuationToken *string                `json:"continuation_token,omitempty" yaml:"continuation_token,omitempty"`
-	Consistency       *ConsistencyPreference `json:"consistency,omitempty" yaml:"consistency,omitempty"`
+	TupleKey          *ReadRequestTupleKey   `json:"tuple_key,omitempty"yaml:"tuple_key,omitempty"`
+	PageSize          *int32                 `json:"page_size,omitempty"yaml:"page_size,omitempty"`
+	ContinuationToken *string                `json:"continuation_token,omitempty"yaml:"continuation_token,omitempty"`
+	Consistency       *ConsistencyPreference `json:"consistency,omitempty"yaml:"consistency,omitempty"`
 }
 
 // NewReadRequest instantiates a new ReadRequest object
@@ -32,7 +32,7 @@ type ReadRequest struct {
 // will change when the set of required properties is changed
 func NewReadRequest() *ReadRequest {
 	this := ReadRequest{}
-	var consistency = CONSISTENCYPREFERENCE_UNSPECIFIED
+	var consistency ConsistencyPreference = CONSISTENCYPREFERENCE_UNSPECIFIED
 	this.Consistency = &consistency
 	return &this
 }
@@ -42,7 +42,7 @@ func NewReadRequest() *ReadRequest {
 // but it doesn't guarantee that properties required by API are set
 func NewReadRequestWithDefaults() *ReadRequest {
 	this := ReadRequest{}
-	var consistency = CONSISTENCYPREFERENCE_UNSPECIFIED
+	var consistency ConsistencyPreference = CONSISTENCYPREFERENCE_UNSPECIFIED
 	this.Consistency = &consistency
 	return &this
 }

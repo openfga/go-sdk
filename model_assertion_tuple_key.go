@@ -20,9 +20,9 @@ import (
 
 // AssertionTupleKey struct for AssertionTupleKey
 type AssertionTupleKey struct {
-	Object   string `json:"object" yaml:"object"`
-	Relation string `json:"relation" yaml:"relation"`
-	User     string `json:"user" yaml:"user"`
+	Object   string `json:"object"yaml:"object"`
+	Relation string `json:"relation"yaml:"relation"`
+	User     string `json:"user"yaml:"user"`
 }
 
 // NewAssertionTupleKey instantiates a new AssertionTupleKey object

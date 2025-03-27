@@ -21,9 +21,9 @@ import (
 // RelationshipCondition struct for RelationshipCondition
 type RelationshipCondition struct {
 	// A reference (by name) of the relationship condition defined in the authorization model.
-	Name string `json:"name" yaml:"name"`
+	Name string `json:"name"yaml:"name"`
 	// Additional context/data to persist along with the condition. The keys must match the parameters defined by the condition, and the value types must match the parameter type definitions.
-	Context *map[string]interface{} `json:"context,omitempty" yaml:"context,omitempty"`
+	Context *map[string]interface{} `json:"context,omitempty"yaml:"context,omitempty"`
 }
 
 // NewRelationshipCondition instantiates a new RelationshipCondition object

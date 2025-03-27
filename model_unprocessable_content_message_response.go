@@ -20,8 +20,8 @@ import (
 
 // UnprocessableContentMessageResponse struct for UnprocessableContentMessageResponse
 type UnprocessableContentMessageResponse struct {
-	Code    *UnprocessableContentErrorCode `json:"code,omitempty" yaml:"code,omitempty"`
-	Message *string                        `json:"message,omitempty" yaml:"message,omitempty"`
+	Code    *UnprocessableContentErrorCode `json:"code,omitempty"yaml:"code,omitempty"`
+	Message *string                        `json:"message,omitempty"yaml:"message,omitempty"`
 }
 
 // NewUnprocessableContentMessageResponse instantiates a new UnprocessableContentMessageResponse object
@@ -30,7 +30,7 @@ type UnprocessableContentMessageResponse struct {
 // will change when the set of required properties is changed
 func NewUnprocessableContentMessageResponse() *UnprocessableContentMessageResponse {
 	this := UnprocessableContentMessageResponse{}
-	var code = UNPROCESSABLECONTENTERRORCODE_NO_THROTTLED_ERROR_CODE
+	var code UnprocessableContentErrorCode = UNPROCESSABLECONTENTERRORCODE_NO_THROTTLED_ERROR_CODE
 	this.Code = &code
 	return &this
 }
@@ -40,7 +40,7 @@ func NewUnprocessableContentMessageResponse() *UnprocessableContentMessageRespon
 // but it doesn't guarantee that properties required by API are set
 func NewUnprocessableContentMessageResponseWithDefaults() *UnprocessableContentMessageResponse {
 	this := UnprocessableContentMessageResponse{}
-	var code = UNPROCESSABLECONTENTERRORCODE_NO_THROTTLED_ERROR_CODE
+	var code UnprocessableContentErrorCode = UNPROCESSABLECONTENTERRORCODE_NO_THROTTLED_ERROR_CODE
 	this.Code = &code
 	return &this
 }

@@ -20,7 +20,7 @@ import (
 
 // ListObjectsResponse struct for ListObjectsResponse
 type ListObjectsResponse struct {
-	Objects []string `json:"objects" yaml:"objects"`
+	Objects []string `json:"objects"yaml:"objects"`
 }
 
 // NewListObjectsResponse instantiates a new ListObjectsResponse object

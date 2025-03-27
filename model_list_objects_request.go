@@ -20,14 +20,14 @@ import (
 
 // ListObjectsRequest struct for ListObjectsRequest
 type ListObjectsRequest struct {
-	AuthorizationModelId *string              `json:"authorization_model_id,omitempty" yaml:"authorization_model_id,omitempty"`
-	Type                 string               `json:"type" yaml:"type"`
-	Relation             string               `json:"relation" yaml:"relation"`
-	User                 string               `json:"user" yaml:"user"`
-	ContextualTuples     *ContextualTupleKeys `json:"contextual_tuples,omitempty" yaml:"contextual_tuples,omitempty"`
+	AuthorizationModelId *string              `json:"authorization_model_id,omitempty"yaml:"authorization_model_id,omitempty"`
+	Type                 string               `json:"type"yaml:"type"`
+	Relation             string               `json:"relation"yaml:"relation"`
+	User                 string               `json:"user"yaml:"user"`
+	ContextualTuples     *ContextualTupleKeys `json:"contextual_tuples,omitempty"yaml:"contextual_tuples,omitempty"`
 	// Additional request context that will be used to evaluate any ABAC conditions encountered in the query evaluation.
-	Context     *map[string]interface{} `json:"context,omitempty" yaml:"context,omitempty"`
-	Consistency *ConsistencyPreference  `json:"consistency,omitempty" yaml:"consistency,omitempty"`
+	Context     *map[string]interface{} `json:"context,omitempty"yaml:"context,omitempty"`
+	Consistency *ConsistencyPreference  `json:"consistency,omitempty"yaml:"consistency,omitempty"`
 }
 
 // NewListObjectsRequest instantiates a new ListObjectsRequest object
@@ -39,7 +39,7 @@ func NewListObjectsRequest(type_ string, relation string, user string) *ListObje
 	this.Type = type_
 	this.Relation = relation
 	this.User = user
-	var consistency = CONSISTENCYPREFERENCE_UNSPECIFIED
+	var consistency ConsistencyPreference = CONSISTENCYPREFERENCE_UNSPECIFIED
 	this.Consistency = &consistency
 	return &this
 }
@@ -49,7 +49,7 @@ func NewListObjectsRequest(type_ string, relation string, user string) *ListObje
 // but it doesn't guarantee that properties required by API are set
 func NewListObjectsRequestWithDefaults() *ListObjectsRequest {
 	this := ListObjectsRequest{}
-	var consistency = CONSISTENCYPREFERENCE_UNSPECIFIED
+	var consistency ConsistencyPreference = CONSISTENCYPREFERENCE_UNSPECIFIED
 	this.Consistency = &consistency
 	return &this
 }

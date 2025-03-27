@@ -20,9 +20,9 @@ import (
 
 // RelationMetadata struct for RelationMetadata
 type RelationMetadata struct {
-	DirectlyRelatedUserTypes *[]RelationReference `json:"directly_related_user_types,omitempty" yaml:"directly_related_user_types,omitempty"`
-	Module                   *string              `json:"module,omitempty" yaml:"module,omitempty"`
-	SourceInfo               *SourceInfo          `json:"source_info,omitempty" yaml:"source_info,omitempty"`
+	DirectlyRelatedUserTypes *[]RelationReference `json:"directly_related_user_types,omitempty"yaml:"directly_related_user_types,omitempty"`
+	Module                   *string              `json:"module,omitempty"yaml:"module,omitempty"`
+	SourceInfo               *SourceInfo          `json:"source_info,omitempty"yaml:"source_info,omitempty"`
 }
 
 // NewRelationMetadata instantiates a new RelationMetadata object

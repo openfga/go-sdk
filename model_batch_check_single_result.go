@@ -20,8 +20,8 @@ import (
 
 // BatchCheckSingleResult struct for BatchCheckSingleResult
 type BatchCheckSingleResult struct {
-	Allowed *bool       `json:"allowed,omitempty" yaml:"allowed,omitempty"`
-	Error   *CheckError `json:"error,omitempty" yaml:"error,omitempty"`
+	Allowed *bool       `json:"allowed,omitempty"yaml:"allowed,omitempty"`
+	Error   *CheckError `json:"error,omitempty"yaml:"error,omitempty"`
 }
 
 // NewBatchCheckSingleResult instantiates a new BatchCheckSingleResult object

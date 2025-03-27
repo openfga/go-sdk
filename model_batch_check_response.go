@@ -21,7 +21,7 @@ import (
 // BatchCheckResponse struct for BatchCheckResponse
 type BatchCheckResponse struct {
 	// map keys are the correlation_id values from the BatchCheckItems in the request
-	Result *map[string]BatchCheckSingleResult `json:"result,omitempty" yaml:"result,omitempty"`
+	Result *map[string]BatchCheckSingleResult `json:"result,omitempty"yaml:"result,omitempty"`
 }
 
 // NewBatchCheckResponse instantiates a new BatchCheckResponse object

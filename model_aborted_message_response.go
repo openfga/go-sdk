@@ -20,8 +20,8 @@ import (
 
 // AbortedMessageResponse struct for AbortedMessageResponse
 type AbortedMessageResponse struct {
-	Code    *string `json:"code,omitempty" yaml:"code,omitempty"`
-	Message *string `json:"message,omitempty" yaml:"message,omitempty"`
+	Code    *string `json:"code,omitempty"yaml:"code,omitempty"`
+	Message *string `json:"message,omitempty"yaml:"message,omitempty"`
 }
 
 // NewAbortedMessageResponse instantiates a new AbortedMessageResponse object

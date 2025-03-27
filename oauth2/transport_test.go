@@ -107,7 +107,7 @@ func TestTransportTokenSource(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_ = res.Body.Close()
+	res.Body.Close()
 }
 
 // Test for case-sensitive token types, per https://github.com/golang/oauth2/issues/113
@@ -143,7 +143,7 @@ func TestTransportTokenSourceTypes(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		_ = res.Body.Close()
+		res.Body.Close()
 	}
 }
 

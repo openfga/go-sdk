@@ -20,8 +20,8 @@ import (
 
 // ConditionParamTypeRef struct for ConditionParamTypeRef
 type ConditionParamTypeRef struct {
-	TypeName     TypeName                 `json:"type_name" yaml:"type_name"`
-	GenericTypes *[]ConditionParamTypeRef `json:"generic_types,omitempty" yaml:"generic_types,omitempty"`
+	TypeName     TypeName                 `json:"type_name"yaml:"type_name"`
+	GenericTypes *[]ConditionParamTypeRef `json:"generic_types,omitempty"yaml:"generic_types,omitempty"`
 }
 
 // NewConditionParamTypeRef instantiates a new ConditionParamTypeRef object
@@ -39,7 +39,7 @@ func NewConditionParamTypeRef(typeName TypeName) *ConditionParamTypeRef {
 // but it doesn't guarantee that properties required by API are set
 func NewConditionParamTypeRefWithDefaults() *ConditionParamTypeRef {
 	this := ConditionParamTypeRef{}
-	var typeName = TYPENAME_UNSPECIFIED
+	var typeName TypeName = TYPENAME_UNSPECIFIED
 	this.TypeName = typeName
 	return &this
 }

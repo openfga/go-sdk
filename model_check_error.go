@@ -20,9 +20,9 @@ import (
 
 // CheckError struct for CheckError
 type CheckError struct {
-	InputError    *ErrorCode         `json:"input_error,omitempty" yaml:"input_error,omitempty"`
-	InternalError *InternalErrorCode `json:"internal_error,omitempty" yaml:"internal_error,omitempty"`
-	Message       *string            `json:"message,omitempty" yaml:"message,omitempty"`
+	InputError    *ErrorCode         `json:"input_error,omitempty"yaml:"input_error,omitempty"`
+	InternalError *InternalErrorCode `json:"internal_error,omitempty"yaml:"internal_error,omitempty"`
+	Message       *string            `json:"message,omitempty"yaml:"message,omitempty"`
 }
 
 // NewCheckError instantiates a new CheckError object
@@ -31,9 +31,9 @@ type CheckError struct {
 // will change when the set of required properties is changed
 func NewCheckError() *CheckError {
 	this := CheckError{}
-	var inputError = ERRORCODE_NO_ERROR
+	var inputError ErrorCode = ERRORCODE_NO_ERROR
 	this.InputError = &inputError
-	var internalError = INTERNALERRORCODE_NO_INTERNAL_ERROR
+	var internalError InternalErrorCode = INTERNALERRORCODE_NO_INTERNAL_ERROR
 	this.InternalError = &internalError
 	return &this
 }
@@ -43,9 +43,9 @@ func NewCheckError() *CheckError {
 // but it doesn't guarantee that properties required by API are set
 func NewCheckErrorWithDefaults() *CheckError {
 	this := CheckError{}
-	var inputError = ERRORCODE_NO_ERROR
+	var inputError ErrorCode = ERRORCODE_NO_ERROR
 	this.InputError = &inputError
-	var internalError = INTERNALERRORCODE_NO_INTERNAL_ERROR
+	var internalError InternalErrorCode = INTERNALERRORCODE_NO_INTERNAL_ERROR
 	this.InternalError = &internalError
 	return &this
 }

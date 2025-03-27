@@ -20,14 +20,14 @@ import (
 
 // CheckRequest struct for CheckRequest
 type CheckRequest struct {
-	TupleKey             CheckRequestTupleKey `json:"tuple_key" yaml:"tuple_key"`
-	ContextualTuples     *ContextualTupleKeys `json:"contextual_tuples,omitempty" yaml:"contextual_tuples,omitempty"`
-	AuthorizationModelId *string              `json:"authorization_model_id,omitempty" yaml:"authorization_model_id,omitempty"`
+	TupleKey             CheckRequestTupleKey `json:"tuple_key"yaml:"tuple_key"`
+	ContextualTuples     *ContextualTupleKeys `json:"contextual_tuples,omitempty"yaml:"contextual_tuples,omitempty"`
+	AuthorizationModelId *string              `json:"authorization_model_id,omitempty"yaml:"authorization_model_id,omitempty"`
 	// Defaults to false. Making it true has performance implications.
-	Trace *bool `json:"trace,omitempty" yaml:"trace,omitempty"`
+	Trace *bool `json:"trace,omitempty"yaml:"trace,omitempty"`
 	// Additional request context that will be used to evaluate any ABAC conditions encountered in the query evaluation.
-	Context     *map[string]interface{} `json:"context,omitempty" yaml:"context,omitempty"`
-	Consistency *ConsistencyPreference  `json:"consistency,omitempty" yaml:"consistency,omitempty"`
+	Context     *map[string]interface{} `json:"context,omitempty"yaml:"context,omitempty"`
+	Consistency *ConsistencyPreference  `json:"consistency,omitempty"yaml:"consistency,omitempty"`
 }
 
 // NewCheckRequest instantiates a new CheckRequest object
@@ -37,7 +37,7 @@ type CheckRequest struct {
 func NewCheckRequest(tupleKey CheckRequestTupleKey) *CheckRequest {
 	this := CheckRequest{}
 	this.TupleKey = tupleKey
-	var consistency = CONSISTENCYPREFERENCE_UNSPECIFIED
+	var consistency ConsistencyPreference = CONSISTENCYPREFERENCE_UNSPECIFIED
 	this.Consistency = &consistency
 	return &this
 }
@@ -47,7 +47,7 @@ func NewCheckRequest(tupleKey CheckRequestTupleKey) *CheckRequest {
 // but it doesn't guarantee that properties required by API are set
 func NewCheckRequestWithDefaults() *CheckRequest {
 	this := CheckRequest{}
-	var consistency = CONSISTENCYPREFERENCE_UNSPECIFIED
+	var consistency ConsistencyPreference = CONSISTENCYPREFERENCE_UNSPECIFIED
 	this.Consistency = &consistency
 	return &this
 }

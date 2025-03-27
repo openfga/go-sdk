@@ -20,9 +20,9 @@ import (
 
 // ReadRequestTupleKey struct for ReadRequestTupleKey
 type ReadRequestTupleKey struct {
-	User     *string `json:"user,omitempty" yaml:"user,omitempty"`
-	Relation *string `json:"relation,omitempty" yaml:"relation,omitempty"`
-	Object   *string `json:"object,omitempty" yaml:"object,omitempty"`
+	User     *string `json:"user,omitempty"yaml:"user,omitempty"`
+	Relation *string `json:"relation,omitempty"yaml:"relation,omitempty"`
+	Object   *string `json:"object,omitempty"yaml:"object,omitempty"`
 }
 
 // NewReadRequestTupleKey instantiates a new ReadRequestTupleKey object

@@ -20,9 +20,9 @@ import (
 
 // TypeDefinition struct for TypeDefinition
 type TypeDefinition struct {
-	Type      string              `json:"type" yaml:"type"`
-	Relations *map[string]Userset `json:"relations,omitempty" yaml:"relations,omitempty"`
-	Metadata  *Metadata           `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	Type      string              `json:"type"yaml:"type"`
+	Relations *map[string]Userset `json:"relations,omitempty"yaml:"relations,omitempty"`
+	Metadata  *Metadata           `json:"metadata,omitempty"yaml:"metadata,omitempty"`
 }
 
 // NewTypeDefinition instantiates a new TypeDefinition object

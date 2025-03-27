@@ -20,7 +20,7 @@ import (
 
 // WriteRequestDeletes struct for WriteRequestDeletes
 type WriteRequestDeletes struct {
-	TupleKeys []TupleKeyWithoutCondition `json:"tuple_keys" yaml:"tuple_keys"`
+	TupleKeys []TupleKeyWithoutCondition `json:"tuple_keys"yaml:"tuple_keys"`
 }
 
 // NewWriteRequestDeletes instantiates a new WriteRequestDeletes object

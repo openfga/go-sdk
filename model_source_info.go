@@ -20,7 +20,7 @@ import (
 
 // SourceInfo struct for SourceInfo
 type SourceInfo struct {
-	File *string `json:"file,omitempty" yaml:"file,omitempty"`
+	File *string `json:"file,omitempty"yaml:"file,omitempty"`
 }
 
 // NewSourceInfo instantiates a new SourceInfo object

@@ -20,9 +20,9 @@ import (
 
 // ReadChangesResponse struct for ReadChangesResponse
 type ReadChangesResponse struct {
-	Changes []TupleChange `json:"changes" yaml:"changes"`
+	Changes []TupleChange `json:"changes"yaml:"changes"`
 	// The continuation token will be identical if there are no new changes.
-	ContinuationToken *string `json:"continuation_token,omitempty" yaml:"continuation_token,omitempty"`
+	ContinuationToken *string `json:"continuation_token,omitempty"yaml:"continuation_token,omitempty"`
 }
 
 // NewReadChangesResponse instantiates a new ReadChangesResponse object

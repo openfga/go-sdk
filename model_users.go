@@ -20,7 +20,7 @@ import (
 
 // Users struct for Users
 type Users struct {
-	Users []string `json:"users" yaml:"users"`
+	Users []string `json:"users"yaml:"users"`
 }
 
 // NewUsers instantiates a new Users object

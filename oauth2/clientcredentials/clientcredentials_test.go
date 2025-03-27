@@ -8,6 +8,7 @@ import (
 	"context"
 	"github.com/openfga/go-sdk/oauth2/internal"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -36,9 +37,9 @@ func TestTokenSourceGrantTypeOverride(t *testing.T) {
 	wantGrantType := "password"
 	var gotGrantType string
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		body, err := io.ReadAll(r.Body)
+		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			t.Errorf("io.ReadAll(r.Body) == %v, %v, want _, <nil>", body, err)
+			t.Errorf("ioutil.ReadAll(r.Body) == %v, %v, want _, <nil>", body, err)
 		}
 		if err := r.Body.Close(); err != nil {
 			t.Errorf("r.Body.Close() == %v, want <nil>", err)
@@ -49,7 +50,7 @@ func TestTokenSourceGrantTypeOverride(t *testing.T) {
 		}
 		gotGrantType = values.Get("grant_type")
 		w.Header().Set("Content-Type", "application/x-www-form-urlencoded")
-		_, _ = w.Write([]byte("access_token=90d64460d14870c08c81352a05dedd3465940a7c&token_type=bearer"))
+		w.Write([]byte("access_token=90d64460d14870c08c81352a05dedd3465940a7c&token_type=bearer"))
 	}))
 	config := &Config{
 		ClientID:     "CLIENT_ID",
@@ -81,11 +82,9 @@ func TestTokenRequest(t *testing.T) {
 		if got, want := r.Header.Get("Content-Type"), "application/x-www-form-urlencoded"; got != want {
 			t.Errorf("Content-Type header = %q; want %q", got, want)
 		}
-		body, err := io.ReadAll(r.Body)
+		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			_ = r.Body.Close()
-			t.Errorf("failed reading request body: %s", err)
-			return
+			r.Body.Close()
 		}
 		if err != nil {
 			t.Errorf("failed reading request body: %s.", err)
@@ -94,7 +93,7 @@ func TestTokenRequest(t *testing.T) {
 			t.Errorf("payload = %q; want %q", string(body), "grant_type=client_credentials&scope=scope1+scope2")
 		}
 		w.Header().Set("Content-Type", "application/x-www-form-urlencoded")
-		_, _ = w.Write([]byte("access_token=90d64460d14870c08c81352a05dedd3465940a7c&token_type=bearer"))
+		w.Write([]byte("access_token=90d64460d14870c08c81352a05dedd3465940a7c&token_type=bearer"))
 	}))
 	defer ts.Close()
 	conf := newConf(ts.URL)
@@ -126,16 +125,16 @@ func TestTokenRefreshRequest(t *testing.T) {
 		if got, want := headerContentType, "application/x-www-form-urlencoded"; got != want {
 			t.Errorf("Content-Type = %q; want %q", got, want)
 		}
-		body, _ := io.ReadAll(r.Body)
+		body, _ := ioutil.ReadAll(r.Body)
 		const want = "audience=audience1&grant_type=client_credentials&scope=scope1+scope2"
 		if string(body) != want {
 			t.Errorf("Unexpected refresh token payload.\n got: %s\nwant: %s\n", body, want)
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = io.WriteString(w, `{"access_token": "foo", "refresh_token": "bar"}`)
+		io.WriteString(w, `{"access_token": "foo", "refresh_token": "bar"}`)
 	}))
 	defer ts.Close()
 	conf := newConf(ts.URL)
 	c := conf.Client(context.Background())
-	_, _ = c.Get(ts.URL + "/somethingelse")
+	c.Get(ts.URL + "/somethingelse")
 }

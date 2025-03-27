@@ -20,11 +20,11 @@ import (
 
 // Assertion struct for Assertion
 type Assertion struct {
-	TupleKey         AssertionTupleKey `json:"tuple_key" yaml:"tuple_key"`
-	Expectation      bool              `json:"expectation" yaml:"expectation"`
-	ContextualTuples *[]TupleKey       `json:"contextual_tuples,omitempty" yaml:"contextual_tuples,omitempty"`
+	TupleKey         AssertionTupleKey `json:"tuple_key"yaml:"tuple_key"`
+	Expectation      bool              `json:"expectation"yaml:"expectation"`
+	ContextualTuples *[]TupleKey       `json:"contextual_tuples,omitempty"yaml:"contextual_tuples,omitempty"`
 	// Additional request context that will be used to evaluate any ABAC conditions encountered in the query evaluation.
-	Context *map[string]interface{} `json:"context,omitempty" yaml:"context,omitempty"`
+	Context *map[string]interface{} `json:"context,omitempty"yaml:"context,omitempty"`
 }
 
 // NewAssertion instantiates a new Assertion object

@@ -20,9 +20,9 @@ import (
 
 // BatchCheckRequest struct for BatchCheckRequest
 type BatchCheckRequest struct {
-	Checks               []BatchCheckItem       `json:"checks" yaml:"checks"`
-	AuthorizationModelId *string                `json:"authorization_model_id,omitempty" yaml:"authorization_model_id,omitempty"`
-	Consistency          *ConsistencyPreference `json:"consistency,omitempty" yaml:"consistency,omitempty"`
+	Checks               []BatchCheckItem       `json:"checks"yaml:"checks"`
+	AuthorizationModelId *string                `json:"authorization_model_id,omitempty"yaml:"authorization_model_id,omitempty"`
+	Consistency          *ConsistencyPreference `json:"consistency,omitempty"yaml:"consistency,omitempty"`
 }
 
 // NewBatchCheckRequest instantiates a new BatchCheckRequest object
@@ -32,7 +32,7 @@ type BatchCheckRequest struct {
 func NewBatchCheckRequest(checks []BatchCheckItem) *BatchCheckRequest {
 	this := BatchCheckRequest{}
 	this.Checks = checks
-	var consistency = CONSISTENCYPREFERENCE_UNSPECIFIED
+	var consistency ConsistencyPreference = CONSISTENCYPREFERENCE_UNSPECIFIED
 	this.Consistency = &consistency
 	return &this
 }
@@ -42,7 +42,7 @@ func NewBatchCheckRequest(checks []BatchCheckItem) *BatchCheckRequest {
 // but it doesn't guarantee that properties required by API are set
 func NewBatchCheckRequestWithDefaults() *BatchCheckRequest {
 	this := BatchCheckRequest{}
-	var consistency = CONSISTENCYPREFERENCE_UNSPECIFIED
+	var consistency ConsistencyPreference = CONSISTENCYPREFERENCE_UNSPECIFIED
 	this.Consistency = &consistency
 	return &this
 }

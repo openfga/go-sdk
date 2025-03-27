@@ -20,7 +20,7 @@ import (
 
 // Any struct for Any
 type Any struct {
-	Type *string `json:"@type,omitempty" yaml:"@type,omitempty"`
+	Type *string `json:"@type,omitempty"yaml:"@type,omitempty"`
 }
 
 // NewAny instantiates a new Any object

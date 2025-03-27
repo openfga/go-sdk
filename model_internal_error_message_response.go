@@ -20,8 +20,8 @@ import (
 
 // InternalErrorMessageResponse struct for InternalErrorMessageResponse
 type InternalErrorMessageResponse struct {
-	Code    *InternalErrorCode `json:"code,omitempty" yaml:"code,omitempty"`
-	Message *string            `json:"message,omitempty" yaml:"message,omitempty"`
+	Code    *InternalErrorCode `json:"code,omitempty"yaml:"code,omitempty"`
+	Message *string            `json:"message,omitempty"yaml:"message,omitempty"`
 }
 
 // NewInternalErrorMessageResponse instantiates a new InternalErrorMessageResponse object
@@ -30,7 +30,7 @@ type InternalErrorMessageResponse struct {
 // will change when the set of required properties is changed
 func NewInternalErrorMessageResponse() *InternalErrorMessageResponse {
 	this := InternalErrorMessageResponse{}
-	var code = INTERNALERRORCODE_NO_INTERNAL_ERROR
+	var code InternalErrorCode = INTERNALERRORCODE_NO_INTERNAL_ERROR
 	this.Code = &code
 	return &this
 }
@@ -40,7 +40,7 @@ func NewInternalErrorMessageResponse() *InternalErrorMessageResponse {
 // but it doesn't guarantee that properties required by API are set
 func NewInternalErrorMessageResponseWithDefaults() *InternalErrorMessageResponse {
 	this := InternalErrorMessageResponse{}
-	var code = INTERNALERRORCODE_NO_INTERNAL_ERROR
+	var code InternalErrorCode = INTERNALERRORCODE_NO_INTERNAL_ERROR
 	this.Code = &code
 	return &this
 }

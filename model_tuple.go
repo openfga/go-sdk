@@ -21,8 +21,8 @@ import (
 
 // Tuple struct for Tuple
 type Tuple struct {
-	Key       TupleKey  `json:"key" yaml:"key"`
-	Timestamp time.Time `json:"timestamp" yaml:"timestamp"`
+	Key       TupleKey  `json:"key"yaml:"key"`
+	Timestamp time.Time `json:"timestamp"yaml:"timestamp"`
 }
 
 // NewTuple instantiates a new Tuple object

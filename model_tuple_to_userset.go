@@ -20,8 +20,8 @@ import (
 
 // TupleToUserset struct for TupleToUserset
 type TupleToUserset struct {
-	Tupleset        ObjectRelation `json:"tupleset" yaml:"tupleset"`
-	ComputedUserset ObjectRelation `json:"computedUserset" yaml:"computedUserset"`
+	Tupleset        ObjectRelation `json:"tupleset"yaml:"tupleset"`
+	ComputedUserset ObjectRelation `json:"computedUserset"yaml:"computedUserset"`
 }
 
 // NewTupleToUserset instantiates a new TupleToUserset object

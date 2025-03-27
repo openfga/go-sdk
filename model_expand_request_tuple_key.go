@@ -20,8 +20,8 @@ import (
 
 // ExpandRequestTupleKey struct for ExpandRequestTupleKey
 type ExpandRequestTupleKey struct {
-	Relation string `json:"relation" yaml:"relation"`
-	Object   string `json:"object" yaml:"object"`
+	Relation string `json:"relation"yaml:"relation"`
+	Object   string `json:"object"yaml:"object"`
 }
 
 // NewExpandRequestTupleKey instantiates a new ExpandRequestTupleKey object
