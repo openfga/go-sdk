@@ -35,6 +35,10 @@ var (
 type OpenFgaApi interface {
 
 	/*
+			 * BatchCheck Send a list of `check` operations in a single request
+			 * The `BatchCheck` API functions nearly identically to `Check`, but instead of checking a single user-object relationship BatchCheck accepts a list of relationships to check and returns a map containing `BatchCheckItem` response for each check it received.
+
+		An associated `correlation_id` is required for each check in the batch. This ID is used to correlate a check to the appropriate response. It is a string consisting of only alphanumeric characters or hyphens with a maximum length of 36 characters. This `correlation_id` is used to map the result of each check to the item which was checked, so it must be unique for each item in the batch. We recommend using a UUID or ULID as the `correlation_id`, but you can use whatever unique identifier you need as long  as it matches this regex pattern: `^[\w\d-]{1,36}$`
 
 		For more details on how `Check` functions, see the docs for `/check`.
 
