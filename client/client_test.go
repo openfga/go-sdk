@@ -3323,6 +3323,86 @@ func TestOpenFgaClient(t *testing.T) {
 			t.Fatalf("%v", err)
 		}
 	})
+
+	t.Run("BatchCheckMaxBatchSize", func(t *testing.T) {
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+
+		fgaClient, err := NewSdkClient(&ClientConfiguration{
+			ApiUrl:  "https://api.fga.example",
+			StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
+		})
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		result := map[string]openfga.BatchCheckSingleResult{
+			"test1": {Allowed: openfga.PtrBool(true)},
+		}
+		response := openfga.BatchCheckResponse{
+			Result: &result,
+		}
+
+		callCount := 0
+
+		httpmock.RegisterResponder(
+			http.MethodPost,
+			fmt.Sprintf("%s/stores/%s/batch-check", fgaClient.GetConfig().ApiUrl, "01GXSB9YR785C4FYS3C0RTG7B2"),
+			func(req *http.Request) (*http.Response, error) {
+				callCount++
+				resp, err := httpmock.NewJsonResponse(http.StatusOK, response)
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, err.Error()), nil
+				}
+				return resp, nil
+			},
+		)
+
+		items := []ClientBatchCheckItem{
+			{
+				User:          "user:1",
+				Relation:      "viewer",
+				Object:        "document:1",
+				CorrelationId: "test1",
+			},
+			{
+				User:          "user:2",
+				Relation:      "viewer",
+				Object:        "document:2",
+				CorrelationId: "test2",
+			},
+			{
+				User:          "user:3",
+				Relation:      "viewer",
+				Object:        "document:3",
+				CorrelationId: "test3",
+			},
+		}
+
+		requestBody := ClientBatchCheckRequest{
+			Checks: items,
+		}
+
+		options := BatchCheckOptions{
+			MaxBatchSize: openfga.PtrInt32(1),
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+		defer cancel()
+
+		_, err = fgaClient.BatchCheck(ctx).
+			Body(requestBody).
+			Options(options).
+			Execute()
+
+		if err != nil {
+			t.Fatalf("BatchCheck error: %v", err)
+		}
+
+		if callCount <= 1 {
+			t.Errorf("Expected multiple API calls with MaxBatchSize=1, got %d", callCount)
+		}
+	})
 }
 
 func getStoreId(t *testing.T, fgaClient *OpenFgaClient) string {

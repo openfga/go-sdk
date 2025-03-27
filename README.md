@@ -946,6 +946,7 @@ func main() {
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+*OpenFgaApi* | [**BatchCheck**](docs/OpenFgaApi.md#batchcheck) | **Post** /stores/{store_id}/batch-check | Send a list of &#x60;check&#x60; operations in a single request
 *OpenFgaApi* | [**Check**](docs/OpenFgaApi.md#check) | **Post** /stores/{store_id}/check | Check whether a user is authorized to access an object
 *OpenFgaApi* | [**CreateStore**](docs/OpenFgaApi.md#createstore) | **Post** /stores | Create a store
 *OpenFgaApi* | [**DeleteStore**](docs/OpenFgaApi.md#deletestore) | **Delete** /stores/{store_id} | Delete a store
@@ -972,6 +973,11 @@ Class | Method | HTTP request | Description
  - [AssertionTupleKey](docs/AssertionTupleKey.md)
  - [AuthErrorCode](docs/AuthErrorCode.md)
  - [AuthorizationModel](docs/AuthorizationModel.md)
+ - [BatchCheckItem](docs/BatchCheckItem.md)
+ - [BatchCheckRequest](docs/BatchCheckRequest.md)
+ - [BatchCheckResponse](docs/BatchCheckResponse.md)
+ - [BatchCheckSingleResult](docs/BatchCheckSingleResult.md)
+ - [CheckError](docs/CheckError.md)
  - [CheckRequest](docs/CheckRequest.md)
  - [CheckRequestTupleKey](docs/CheckRequestTupleKey.md)
  - [CheckResponse](docs/CheckResponse.md)

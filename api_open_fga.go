@@ -35,6 +35,70 @@ var (
 type OpenFgaApi interface {
 
 	/*
+		 * BatchCheck Send a list of `check` operations in a single request
+		 * The `BatchCheck` API functions nearly identically to `Check`, but instead of checking a single user-object relationship BatchCheck accepts a list of relationships to check and returns a map containing `BatchCheckItem` response for each check it received.
+
+	An associated `correlation_id` is required for each check in the batch. This ID is used to correlate a check to the appropriate response. It is a string consisting of only alphanumeric characters or hyphens with a maximum length of 36 characters. This `correlation_id` is used to map the result of each check to the item which was checked, so it must be unique for each item in the batch. We recommend using a UUID or ULID as the `correlation_id`, but you can use whatever unique identifier you need as long  as it matches this regex pattern: `^[\w\d-]{1,36}$`
+
+	For more details on how `Check` functions, see the docs for `/check`.
+
+	### Examples
+	#### A BatchCheckRequest
+	```json
+	{
+	  "checks": [
+	     {
+	       "tuple_key": {
+	         "object": "document:2021-budget"
+	         "relation": "reader",
+	         "user": "user:anne",
+	       },
+	       "contextual_tuples": {...}
+	       "context": {}
+	       "correlation_id": "01JA8PM3QM7VBPGB8KMPK8SBD5"
+	     },
+	     {
+	       "tuple_key": {
+	         "object": "document:2021-budget"
+	         "relation": "reader",
+	         "user": "user:bob",
+	       },
+	       "contextual_tuples": {...}
+	       "context": {}
+	       "correlation_id": "01JA8PMM6A90NV5ET0F28CYSZQ"
+	     }
+	   ]
+	}
+	```
+
+	Below is a possible response to the above request. Note that the result map's keys are the `correlation_id` values from the checked items in the request:
+	```json
+	{
+	   "result": {
+	     "01JA8PMM6A90NV5ET0F28CYSZQ": {
+	       "allowed": false,
+	       "error": {"message": ""}
+	    },
+	     "01JA8PM3QM7VBPGB8KMPK8SBD5": {
+	       "allowed": true,
+	       "error": {"message": ""}
+	    }
+	}
+	```
+
+		 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @param storeId
+		 * @return ApiBatchCheckRequest
+	*/
+	BatchCheck(ctx context.Context, storeId string) ApiBatchCheckRequest
+
+	/*
+	 * BatchCheckExecute executes the request
+	 * @return BatchCheckResponse
+	 */
+	BatchCheckExecute(r ApiBatchCheckRequest) (BatchCheckResponse, *http.Response, error)
+
+	/*
 		 * Check Check whether a user is authorized to access an object
 		 * The Check API returns whether a given user has a relationship with a given object in a given store.
 	The `user` field of the request can be a specific target, such as `user:anne`, or a userset (set of users) such as `group:marketing#member` or a type-bound public access `user:*`.
@@ -200,6 +264,7 @@ type OpenFgaApi interface {
 		 * The Expand API will return all users and usersets that have certain relationship with an object in a certain store.
 	This is different from the `/stores/{store_id}/read` API in that both users and computed usersets are returned.
 	Body parameters `tuple_key.object` and `tuple_key.relation` are all required.
+	A `contextual_tuples` object may also be included in the body of the request. This object contains one field `tuple_keys`, which is an array of tuple keys. Each of these tuples may have an associated `condition`.
 	The response will return a tree whose leaves are the specific users and usersets. Union, intersection and difference operator are located in the intermediate nodes.
 
 	## Example
@@ -246,6 +311,115 @@ type OpenFgaApi interface {
 	}
 	```
 	The caller can then call expand API for the `writer` relationship for the `document:2021-budget`.
+	### Expand Request with Contextual Tuples
+
+	Given the model
+	```python
+	model
+	    schema 1.1
+
+	type user
+
+	type folder
+	    relations
+	        define owner: [user]
+
+	type document
+	    relations
+	        define parent: [folder]
+	        define viewer: [user] or writer
+	        define writer: [user] or owner from parent
+	```
+	and the initial tuples
+	```json
+	[{
+	    "user": "user:bob",
+	    "relation": "owner",
+	    "object": "folder:1"
+	}]
+	```
+
+	To expand all `writers` of `document:1` when `document:1` is put in `folder:1`, the first call could be
+
+	```json
+	{
+	  "tuple_key": {
+	    "object": "document:1",
+	    "relation": "writer"
+	  },
+	  "contextual_tuples": {
+	    "tuple_keys": [
+	      {
+	        "user": "folder:1",
+	        "relation": "parent",
+	        "object": "document:1"
+	      }
+	    ]
+	  }
+	}
+	```
+	this returns:
+	```json
+	{
+	  "tree": {
+	    "root": {
+	      "name": "document:1#writer",
+	      "union": {
+	        "nodes": [
+	          {
+	            "name": "document:1#writer",
+	            "leaf": {
+	              "users": {
+	                "users": []
+	              }
+	            }
+	          },
+	          {
+	            "name": "document:1#writer",
+	            "leaf": {
+	              "tupleToUserset": {
+	                "tupleset": "document:1#parent",
+	                "computed": [
+	                  {
+	                    "userset": "folder:1#owner"
+	                  }
+	                ]
+	              }
+	            }
+	          }
+	        ]
+	      }
+	    }
+	  }
+	}
+	```
+	This tells us that the `owner` of `folder:1` may also be a writer. So our next call could be to find the `owners` of `folder:1`
+	```json
+	{
+	  "tuple_key": {
+	    "object": "folder:1",
+	    "relation": "owner"
+	  }
+	}
+	```
+	which gives
+	```json
+	{
+	  "tree": {
+	    "root": {
+	      "name": "folder:1#owner",
+	      "leaf": {
+	        "users": {
+	          "users": [
+	            "user:bob"
+	          ]
+	        }
+	      }
+	    }
+	  }
+	}
+	```
+
 		 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 		 * @param storeId
 		 * @return ApiExpandRequest
@@ -718,6 +892,240 @@ type OpenFgaApi interface {
 
 // OpenFgaApiService OpenFgaApi service
 type OpenFgaApiService service
+
+type ApiBatchCheckRequest struct {
+	ctx        context.Context
+	ApiService OpenFgaApi
+	storeId    string
+	body       *BatchCheckRequest
+}
+
+func (r ApiBatchCheckRequest) Body(body BatchCheckRequest) ApiBatchCheckRequest {
+	r.body = &body
+	return r
+}
+
+func (r ApiBatchCheckRequest) Execute() (BatchCheckResponse, *http.Response, error) {
+	return r.ApiService.BatchCheckExecute(r)
+}
+
+/*
+  - BatchCheck Send a list of `check` operations in a single request
+  - The `BatchCheck` API functions nearly identically to `Check`, but instead of checking a single user-object relationship BatchCheck accepts a list of relationships to check and returns a map containing `BatchCheckItem` response for each check it received.
+
+An associated `correlation_id` is required for each check in the batch. This ID is used to correlate a check to the appropriate response. It is a string consisting of only alphanumeric characters or hyphens with a maximum length of 36 characters. This `correlation_id` is used to map the result of each check to the item which was checked, so it must be unique for each item in the batch. We recommend using a UUID or ULID as the `correlation_id`, but you can use whatever unique identifier you need as long  as it matches this regex pattern: `^[\w\d-]{1,36}$`
+
+For more details on how `Check` functions, see the docs for `/check`.
+
+### Examples
+#### A BatchCheckRequest
+```json
+
+	{
+	  "checks": [
+	     {
+	       "tuple_key": {
+	         "object": "document:2021-budget"
+	         "relation": "reader",
+	         "user": "user:anne",
+	       },
+	       "contextual_tuples": {...}
+	       "context": {}
+	       "correlation_id": "01JA8PM3QM7VBPGB8KMPK8SBD5"
+	     },
+	     {
+	       "tuple_key": {
+	         "object": "document:2021-budget"
+	         "relation": "reader",
+	         "user": "user:bob",
+	       },
+	       "contextual_tuples": {...}
+	       "context": {}
+	       "correlation_id": "01JA8PMM6A90NV5ET0F28CYSZQ"
+	     }
+	   ]
+	}
+
+```
+
+Below is a possible response to the above request. Note that the result map's keys are the `correlation_id` values from the checked items in the request:
+```json
+
+	{
+	   "result": {
+	     "01JA8PMM6A90NV5ET0F28CYSZQ": {
+	       "allowed": false,
+	       "error": {"message": ""}
+	    },
+	     "01JA8PM3QM7VBPGB8KMPK8SBD5": {
+	       "allowed": true,
+	       "error": {"message": ""}
+	    }
+	}
+
+```
+
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param storeId
+  - @return ApiBatchCheckRequest
+*/
+func (a *OpenFgaApiService) BatchCheck(ctx context.Context, storeId string) ApiBatchCheckRequest {
+	return ApiBatchCheckRequest{
+		ApiService: a,
+		ctx:        ctx,
+		storeId:    storeId,
+	}
+}
+
+/*
+ * Execute executes the request
+ * @return BatchCheckResponse
+ */
+func (a *OpenFgaApiService) BatchCheckExecute(r ApiBatchCheckRequest) (BatchCheckResponse, *http.Response, error) {
+	const (
+		operationName = "BatchCheck"
+		httpMethod    = http.MethodPost
+	)
+	var (
+		requestStarted = time.Now()
+		requestBody    interface{}
+		returnValue    BatchCheckResponse
+	)
+
+	path := "/stores/{store_id}/batch-check"
+	if r.storeId == "" {
+		return returnValue, nil, reportError("storeId is required and must be specified")
+	}
+
+	path = strings.Replace(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")), -1)
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	if r.body == nil {
+		return returnValue, nil, reportError("body is required and must be specified")
+	}
+
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{"application/json"}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	// body params
+	requestBody = r.body
+
+	retryParams := a.client.cfg.RetryParams
+	for i := 0; i < retryParams.MaxRetry+1; i++ {
+		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
+		if err != nil {
+			return returnValue, nil, err
+		}
+
+		httpResponse, err := a.client.callAPI(req)
+		if err != nil || httpResponse == nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
+				if timeToWait > 0 {
+					if a.client.cfg.Debug {
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
+					}
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
+			return returnValue, httpResponse, err
+		}
+
+		responseBody, err := io.ReadAll(httpResponse.Body)
+		httpResponse.Body.Close()
+		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
+		if err != nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
+				if timeToWait > 0 {
+					if a.client.cfg.Debug {
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
+					}
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
+			return returnValue, httpResponse, err
+		}
+
+		if httpResponse.StatusCode >= http.StatusMultipleChoices {
+			err := a.client.handleAPIError(httpResponse, responseBody, requestBody, operationName, r.storeId)
+			if err != nil && i < retryParams.MaxRetry {
+				timeToWait := time.Duration(0)
+				var fgaApiRateLimitExceededError FgaApiRateLimitExceededError
+				var fgaApiInternalError FgaApiInternalError
+				switch {
+				case errors.As(err, &fgaApiRateLimitExceededError):
+					timeToWait = err.(FgaApiRateLimitExceededError).GetTimeToWait(i, *retryParams)
+				case errors.As(err, &fgaApiInternalError):
+					timeToWait = err.(FgaApiInternalError).GetTimeToWait(i, *retryParams)
+				}
+
+				if timeToWait > 0 {
+					if a.client.cfg.Debug {
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
+					}
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
+
+			return returnValue, httpResponse, err
+		}
+
+		err = a.client.decode(&returnValue, responseBody, httpResponse.Header.Get("Content-Type"))
+		if err != nil {
+			newErr := GenericOpenAPIError{
+				body:  responseBody,
+				error: err.Error(),
+			}
+			return returnValue, httpResponse, newErr
+		}
+
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
+			operationName,
+			map[string]interface{}{
+				"storeId": r.storeId,
+				"body":    requestBody,
+			},
+			req,
+			httpResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			metrics.RequestDuration(requestDuration, attrs)
+		}
+
+		if queryDuration > 0 {
+			metrics.QueryDuration(queryDuration, attrs)
+		}
+
+		return returnValue, httpResponse, nil
+	}
+
+	// should never have reached this
+	return returnValue, nil, reportError("Error not handled properly")
+}
 
 type ApiCheckRequest struct {
 	ctx        context.Context
@@ -1392,6 +1800,7 @@ func (r ApiExpandRequest) Execute() (ExpandResponse, *http.Response, error) {
 
 This is different from the `/stores/{store_id}/read` API in that both users and computed usersets are returned.
 Body parameters `tuple_key.object` and `tuple_key.relation` are all required.
+A `contextual_tuples` object may also be included in the body of the request. This object contains one field `tuple_keys`, which is an array of tuple keys. Each of these tuples may have an associated `condition`.
 The response will return a tree whose leaves are the specific users and usersets. Union, intersection and difference operator are located in the intermediate nodes.
 
 ## Example
@@ -1442,6 +1851,129 @@ OpenFGA's response will be a userset tree of the users and usersets that have re
 
 ```
 The caller can then call expand API for the `writer` relationship for the `document:2021-budget`.
+### Expand Request with Contextual Tuples
+
+Given the model
+```python
+model
+
+	schema 1.1
+
+type user
+
+type folder
+
+	relations
+	    define owner: [user]
+
+type document
+
+	relations
+	    define parent: [folder]
+	    define viewer: [user] or writer
+	    define writer: [user] or owner from parent
+
+```
+and the initial tuples
+```json
+
+	[{
+	    "user": "user:bob",
+	    "relation": "owner",
+	    "object": "folder:1"
+	}]
+
+```
+
+To expand all `writers` of `document:1` when `document:1` is put in `folder:1`, the first call could be
+
+```json
+
+	{
+	  "tuple_key": {
+	    "object": "document:1",
+	    "relation": "writer"
+	  },
+	  "contextual_tuples": {
+	    "tuple_keys": [
+	      {
+	        "user": "folder:1",
+	        "relation": "parent",
+	        "object": "document:1"
+	      }
+	    ]
+	  }
+	}
+
+```
+this returns:
+```json
+
+	{
+	  "tree": {
+	    "root": {
+	      "name": "document:1#writer",
+	      "union": {
+	        "nodes": [
+	          {
+	            "name": "document:1#writer",
+	            "leaf": {
+	              "users": {
+	                "users": []
+	              }
+	            }
+	          },
+	          {
+	            "name": "document:1#writer",
+	            "leaf": {
+	              "tupleToUserset": {
+	                "tupleset": "document:1#parent",
+	                "computed": [
+	                  {
+	                    "userset": "folder:1#owner"
+	                  }
+	                ]
+	              }
+	            }
+	          }
+	        ]
+	      }
+	    }
+	  }
+	}
+
+```
+This tells us that the `owner` of `folder:1` may also be a writer. So our next call could be to find the `owners` of `folder:1`
+```json
+
+	{
+	  "tuple_key": {
+	    "object": "folder:1",
+	    "relation": "owner"
+	  }
+	}
+
+```
+which gives
+```json
+
+	{
+	  "tree": {
+	    "root": {
+	      "name": "folder:1#owner",
+	      "leaf": {
+	        "users": {
+	          "users": [
+	            "user:bob"
+	          ]
+	        }
+	      }
+	    }
+	  }
+	}
+
+```
+
   - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @param storeId
   - @return ApiExpandRequest

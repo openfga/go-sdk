@@ -4,6 +4,7 @@ All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
+[**BatchCheck**](OpenFgaApi.md#BatchCheck) | **Post** /stores/{store_id}/batch-check | Send a list of &#x60;check&#x60; operations in a single request
 [**Check**](OpenFgaApi.md#Check) | **Post** /stores/{store_id}/check | Check whether a user is authorized to access an object
 [**CreateStore**](OpenFgaApi.md#CreateStore) | **Post** /stores | Create a store
 [**DeleteStore**](OpenFgaApi.md#DeleteStore) | **Delete** /stores/{store_id} | Delete a store
@@ -21,6 +22,99 @@ Method | HTTP request | Description
 [**WriteAssertions**](OpenFgaApi.md#WriteAssertions) | **Put** /stores/{store_id}/assertions/{authorization_model_id} | Upsert assertions for an authorization model ID
 [**WriteAuthorizationModel**](OpenFgaApi.md#WriteAuthorizationModel) | **Post** /stores/{store_id}/authorization-models | Create a new authorization model
 
+
+
+## BatchCheck
+
+> BatchCheckResponse BatchCheck(ctx).Body(body).Execute()
+
+Send a list of `check` operations in a single request
+
+
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    openfga "github.com/openfga/go-sdk"
+)
+
+func main() {
+    
+    body := *openapiclient.NewBatchCheckRequest([]openapiclient.BatchCheckItem{*openapiclient.NewBatchCheckItem(*openapiclient.NewCheckRequestTupleKey("user:anne", "reader", "document:2021-budget"), "1cd93d8c-8e45-43c6-9a15-cbb3c7f394bc")}) // BatchCheckRequest | 
+
+    configuration, err := openfga.NewConfiguration(openfga.Configuration{
+        ApiUrl:         os.Getenv("FGA_API_URL"), // required, e.g. https://api.fga.example
+        StoreId:        os.Getenv("OPENFGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
+    })
+
+    if err != nil {
+    // .. Handle error
+    }
+
+    apiClient := openfga.NewAPIClient(configuration)
+
+    resp, r, err := apiClient.OpenFgaApi.BatchCheck(context.Background()).Body(body).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `OpenFgaApi.BatchCheck``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+        switch v := err.(type) {
+        case FgaApiAuthenticationError:
+            // Handle authentication error
+        case FgaApiValidationError:
+            // Handle parameter validation error
+        case FgaApiNotFoundError:
+            // Handle not found error
+        case FgaApiInternalError:
+            // Handle API internal error
+        case FgaApiRateLimitError:
+            // Exponential backoff in handling rate limit error
+        default:
+            // Handle unknown/undefined error
+        }
+    }
+    // response from `BatchCheck`: BatchCheckResponse
+    fmt.Fprintf(os.Stdout, "Response from `OpenFgaApi.BatchCheck`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+**ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiBatchCheckRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+**body** | [**BatchCheckRequest**](BatchCheckRequest.md) |  | 
+
+### Return type
+
+[**BatchCheckResponse**](BatchCheckResponse.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
 
 
 ## Check
