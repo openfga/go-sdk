@@ -20,8 +20,8 @@ import (
 
 // FgaObject Object represents an OpenFGA Object.  An Object is composed of a type and identifier (e.g. 'document:1')  See https://openfga.dev/docs/concepts#what-is-an-object
 type FgaObject struct {
-	Type string `json:"type"yaml:"type"`
-	Id   string `json:"id"yaml:"id"`
+	Type string `json:"type" yaml:"type"`
+	Id   string `json:"id" yaml:"id"`
 }
 
 // NewFgaObject instantiates a new FgaObject object

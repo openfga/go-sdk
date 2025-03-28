@@ -20,9 +20,9 @@ import (
 
 // CheckResponse struct for CheckResponse
 type CheckResponse struct {
-	Allowed *bool `json:"allowed,omitempty"yaml:"allowed,omitempty"`
+	Allowed *bool `json:"allowed,omitempty" yaml:"allowed,omitempty"`
 	// For internal use only.
-	Resolution *string `json:"resolution,omitempty"yaml:"resolution,omitempty"`
+	Resolution *string `json:"resolution,omitempty" yaml:"resolution,omitempty"`
 }
 
 // NewCheckResponse instantiates a new CheckResponse object

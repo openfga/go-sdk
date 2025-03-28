@@ -20,9 +20,9 @@ import (
 
 // Metadata struct for Metadata
 type Metadata struct {
-	Relations  *map[string]RelationMetadata `json:"relations,omitempty"yaml:"relations,omitempty"`
-	Module     *string                      `json:"module,omitempty"yaml:"module,omitempty"`
-	SourceInfo *SourceInfo                  `json:"source_info,omitempty"yaml:"source_info,omitempty"`
+	Relations  *map[string]RelationMetadata `json:"relations,omitempty" yaml:"relations,omitempty"`
+	Module     *string                      `json:"module,omitempty" yaml:"module,omitempty"`
+	SourceInfo *SourceInfo                  `json:"source_info,omitempty" yaml:"source_info,omitempty"`
 }
 
 // NewMetadata instantiates a new Metadata object

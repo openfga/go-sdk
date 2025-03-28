@@ -20,9 +20,9 @@ import (
 
 // CheckRequestTupleKey struct for CheckRequestTupleKey
 type CheckRequestTupleKey struct {
-	User     string `json:"user"yaml:"user"`
-	Relation string `json:"relation"yaml:"relation"`
-	Object   string `json:"object"yaml:"object"`
+	User     string `json:"user" yaml:"user"`
+	Relation string `json:"relation" yaml:"relation"`
+	Object   string `json:"object" yaml:"object"`
 }
 
 // NewCheckRequestTupleKey instantiates a new CheckRequestTupleKey object

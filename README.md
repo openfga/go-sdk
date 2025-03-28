@@ -625,11 +625,16 @@ fmt.Printf("%t", data.GetAllowed()) // True
 
 ##### Batch Check
 
-Run a set of [checks](#check). Batch Check will return `allowed: false` if it encounters an error, and will return the error in the body.
-If 429s or 5xxs are encountered, the underlying check will retry up to 15 times before giving up.
+Similar to [Check](#Check), but instead of checking a single user-object relationship, accepts a list of relationships to check. Requires OpenFGA version 1.8.0 or greater.
+
+[API Documentation](https://openfga.dev/api/service#/Relationship%20Queries/BatchCheck)
+
+If you are using an OpenFGA version less than 1.8.0, you can use the `ClientBatchCheck` function, 
+which calls `check` in parallel. It will return `allowed: false` if it encounters an error, and will return the error in the body.
+If 429s or 5xxs are encountered, the underlying check will retry up to 3 times before giving up.
 
 ```golang
-options := ClientBatchCheckOptions{
+options := BatchCheckOptions{
     // You can rely on the model id set in the configuration or override it for this specific request
     AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
     // You can rely on the store id set in the configuration or override it for this specific request
@@ -637,7 +642,7 @@ options := ClientBatchCheckOptions{
     MaxParallelRequests: openfga.PtrInt32(5), // Max number of requests to issue in parallel, defaults to 10
 }
 
-body := ClientBatchCheckBody{ {
+body := BatchCheckBody{ {
     User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     Relation: "viewer",
     Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
@@ -946,6 +951,7 @@ func main() {
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+*OpenFgaApi* | [**BatchCheck**](docs/OpenFgaApi.md#batchcheck) | **Post** /stores/{store_id}/batch-check | Send a list of &#x60;check&#x60; operations in a single request
 *OpenFgaApi* | [**Check**](docs/OpenFgaApi.md#check) | **Post** /stores/{store_id}/check | Check whether a user is authorized to access an object
 *OpenFgaApi* | [**CreateStore**](docs/OpenFgaApi.md#createstore) | **Post** /stores | Create a store
 *OpenFgaApi* | [**DeleteStore**](docs/OpenFgaApi.md#deletestore) | **Delete** /stores/{store_id} | Delete a store
@@ -972,6 +978,11 @@ Class | Method | HTTP request | Description
  - [AssertionTupleKey](docs/AssertionTupleKey.md)
  - [AuthErrorCode](docs/AuthErrorCode.md)
  - [AuthorizationModel](docs/AuthorizationModel.md)
+ - [BatchCheckItem](docs/BatchCheckItem.md)
+ - [BatchCheckRequest](docs/BatchCheckRequest.md)
+ - [BatchCheckResponse](docs/BatchCheckResponse.md)
+ - [BatchCheckSingleResult](docs/BatchCheckSingleResult.md)
+ - [CheckError](docs/CheckError.md)
  - [CheckRequest](docs/CheckRequest.md)
  - [CheckRequestTupleKey](docs/CheckRequestTupleKey.md)
  - [CheckResponse](docs/CheckResponse.md)

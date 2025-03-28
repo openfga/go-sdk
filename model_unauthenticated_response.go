@@ -20,8 +20,8 @@ import (
 
 // UnauthenticatedResponse struct for UnauthenticatedResponse
 type UnauthenticatedResponse struct {
-	Code    *ErrorCode `json:"code,omitempty"yaml:"code,omitempty"`
-	Message *string    `json:"message,omitempty"yaml:"message,omitempty"`
+	Code    *ErrorCode `json:"code,omitempty" yaml:"code,omitempty"`
+	Message *string    `json:"message,omitempty" yaml:"message,omitempty"`
 }
 
 // NewUnauthenticatedResponse instantiates a new UnauthenticatedResponse object
@@ -30,7 +30,7 @@ type UnauthenticatedResponse struct {
 // will change when the set of required properties is changed
 func NewUnauthenticatedResponse() *UnauthenticatedResponse {
 	this := UnauthenticatedResponse{}
-	var code ErrorCode = ERRORCODE_NO_ERROR
+	var code = ERRORCODE_NO_ERROR
 	this.Code = &code
 	return &this
 }
@@ -40,7 +40,7 @@ func NewUnauthenticatedResponse() *UnauthenticatedResponse {
 // but it doesn't guarantee that properties required by API are set
 func NewUnauthenticatedResponseWithDefaults() *UnauthenticatedResponse {
 	this := UnauthenticatedResponse{}
-	var code ErrorCode = ERRORCODE_NO_ERROR
+	var code = ERRORCODE_NO_ERROR
 	this.Code = &code
 	return &this
 }

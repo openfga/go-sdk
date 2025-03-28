@@ -138,6 +138,30 @@ type ClientReadRequestTupleKey = fgaSdk.ReadRequestTupleKey
 type ClientExpandRequestTupleKey = fgaSdk.ExpandRequestTupleKey
 type ClientContextualTupleKey = ClientTupleKey
 
+// ClientBatchCheckItem represents a flattened check item for batch check operations
+type ClientBatchCheckItem struct {
+	User             string                     `json:"user"`
+	Relation         string                     `json:"relation"`
+	Object           string                     `json:"object"`
+	CorrelationId    string                     `json:"correlation_id"`
+	ContextualTuples []ClientContextualTupleKey `json:"contextual_tuples,omitempty"`
+	Context          *map[string]interface{}    `json:"context,omitempty"`
+}
+
+// ClientBatchCheckRequest represents a request for batch check operations
+type ClientBatchCheckRequest struct {
+	Checks []ClientBatchCheckItem `json:"checks"`
+}
+
+// BatchCheckOptions represents options for server-side batch check operations
+type BatchCheckOptions struct {
+	AuthorizationModelId *string                       `json:"authorization_model_id,omitempty"`
+	StoreId              *string                       `json:"store_id,omitempty"`
+	MaxParallelRequests  *int32                        `json:"max_parallel_requests,omitempty"`
+	MaxBatchSize         *int32                        `json:"max_batch_size,omitempty"`
+	Consistency          *fgaSdk.ConsistencyPreference `json:"consistency,omitempty"`
+}
+
 type ClientPaginationOptions struct {
 	PageSize          *int32  `json:"page_size,omitempty"`
 	ContinuationToken *string `json:"continuation_token,omitempty"`
@@ -348,17 +372,39 @@ type SdkClient interface {
 	CheckExecute(request SdkClientCheckRequestInterface) (*ClientCheckResponse, error)
 
 	/*
-	 * BatchCheck Run a set of [checks](#check). Batch Check will return `allowed: false` if it encounters an error, and will return the error in the body.
+	 * ClientBatchCheck Run a set of [checks](#check). Batch Check will return `allowed: false` if it encounters an error, and will return the error in the body.
+	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return SdkClientBatchCheckRequestInterface
+	 */
+	ClientBatchCheck(ctx _context.Context) SdkClientBatchCheckClientRequestInterface
+
+	/*
+	 * ClientBatchCheckExecute executes the BatchCheck request
+	 * @return *ClientBatchCheckResponse
+	 */
+	ClientBatchCheckExecute(request SdkClientBatchCheckClientRequestInterface) (*ClientBatchCheckClientResponse, error)
+
+	/*
+	 * BatchCheck Run a set of checks on the server. Server-side batch check allows for more efficient checking of multiple tuples.
 	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	 * @return SdkClientBatchCheckRequestInterface
 	 */
 	BatchCheck(ctx _context.Context) SdkClientBatchCheckRequestInterface
 
 	/*
-	 * BatchCheckExecute executes the BatchCheck request
-	 * @return *ClientBatchCheckResponse
+	 * BatchCheckExecute executes the server-side BatchCheck request
+	 * @return *BatchCheckResponse
 	 */
-	BatchCheckExecute(request SdkClientBatchCheckRequestInterface) (*ClientBatchCheckResponse, error)
+	BatchCheckExecute(request SdkClientBatchCheckRequestInterface) (*fgaSdk.BatchCheckResponse, error)
+
+	/*
+	 * singleBatchCheck Run a single batch check on the server.
+	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @param body BatchCheckRequest - the request to send to the server.
+	 * @param options *BatchCheckOptions - options for the request.
+	 * @return *BatchCheckResponse
+	 */
+	singleBatchCheck(ctx _context.Context, body fgaSdk.BatchCheckRequest, options *BatchCheckOptions) (*fgaSdk.BatchCheckResponse, error)
 
 	/*
 	 * Expand Expands the relationships in userset tree format.
@@ -1519,14 +1565,14 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 		writeRequest := fgaSdk.WriteRequest{
 			AuthorizationModelId: authorizationModelId,
 		}
-		if request.GetBody().Writes != nil && len(request.GetBody().Writes) > 0 {
+		if len(request.GetBody().Writes) > 0 {
 			writes := fgaSdk.WriteRequestWrites{}
 			for index := 0; index < len(request.GetBody().Writes); index++ {
 				writes.TupleKeys = append(writes.TupleKeys, (request.GetBody().Writes)[index])
 			}
 			writeRequest.Writes = &writes
 		}
-		if request.GetBody().Deletes != nil && len(request.GetBody().Deletes) > 0 {
+		if len(request.GetBody().Deletes) > 0 {
 			deletes := fgaSdk.WriteRequestDeletes{}
 			for index := 0; index < len(request.GetBody().Deletes); index++ {
 				deletes.TupleKeys = append(deletes.TupleKeys, (request.GetBody().Deletes)[index])
@@ -1671,15 +1717,11 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 	}
 
 	for _, writeResponse := range writeResponses {
-		for _, writeSingleResponse := range writeResponse.Writes {
-			response.Writes = append(response.Writes, writeSingleResponse)
-		}
+		response.Writes = append(response.Writes, writeResponse.Writes...)
 	}
 
 	for _, deleteResponse := range deleteResponses {
-		for _, deleteSingleResponse := range deleteResponse.Deletes {
-			response.Deletes = append(response.Deletes, deleteSingleResponse)
-		}
+		response.Deletes = append(response.Deletes, deleteResponse.Deletes...)
 	}
 
 	return &response, nil
@@ -1937,93 +1979,93 @@ func (client *OpenFgaClient) CheckExecute(request SdkClientCheckRequestInterface
 	return &ClientCheckResponse{CheckResponse: data, HttpResponse: httpResponse}, err
 }
 
-/// BatchCheck
+/// ClientBatchCheck
 
-type SdkClientBatchCheckRequest struct {
+type SdkClientBatchCheckClientRequest struct {
 	ctx    _context.Context
 	Client *OpenFgaClient
 
-	body    *ClientBatchCheckBody
-	options *ClientBatchCheckOptions
+	body    *ClientBatchCheckClientBody
+	options *ClientBatchCheckClientOptions
 }
 
-type SdkClientBatchCheckRequestInterface interface {
-	Options(options ClientBatchCheckOptions) SdkClientBatchCheckRequestInterface
-	Body(body ClientBatchCheckBody) SdkClientBatchCheckRequestInterface
-	Execute() (*ClientBatchCheckResponse, error)
+type SdkClientBatchCheckClientRequestInterface interface {
+	Options(options ClientBatchCheckClientOptions) SdkClientBatchCheckClientRequestInterface
+	Body(body ClientBatchCheckClientBody) SdkClientBatchCheckClientRequestInterface
+	Execute() (*ClientBatchCheckClientResponse, error)
 	GetAuthorizationModelIdOverride() *string
 	GetStoreIdOverride() *string
 
 	GetContext() _context.Context
-	GetBody() *ClientBatchCheckBody
-	GetOptions() *ClientBatchCheckOptions
+	GetBody() *ClientBatchCheckClientBody
+	GetOptions() *ClientBatchCheckClientOptions
 }
 
-type ClientBatchCheckBody = []ClientCheckRequest
+type ClientBatchCheckClientBody = []ClientCheckRequest
 
-type ClientBatchCheckOptions struct {
+type ClientBatchCheckClientOptions struct {
 	AuthorizationModelId *string                       `json:"authorization_model_id,omitempty"`
 	StoreId              *string                       `json:"store_id,omitempty"`
 	MaxParallelRequests  *int32                        `json:"max_parallel_requests,omitempty"`
 	Consistency          *fgaSdk.ConsistencyPreference `json:"consistency,omitempty"`
 }
 
-type ClientBatchCheckSingleResponse struct {
+type ClientBatchCheckClientSingleResponse struct {
 	ClientCheckResponse
 	Request ClientCheckRequest
 	Error   error
 }
 
-type ClientBatchCheckResponse = []ClientBatchCheckSingleResponse
+type ClientBatchCheckClientResponse = []ClientBatchCheckClientSingleResponse
 
-func (client *OpenFgaClient) BatchCheck(ctx _context.Context) SdkClientBatchCheckRequestInterface {
-	return &SdkClientBatchCheckRequest{
+func (client *OpenFgaClient) ClientBatchCheck(ctx _context.Context) SdkClientBatchCheckClientRequestInterface {
+	return &SdkClientBatchCheckClientRequest{
 		Client: client,
 		ctx:    ctx,
 	}
 }
 
-func (request *SdkClientBatchCheckRequest) Options(options ClientBatchCheckOptions) SdkClientBatchCheckRequestInterface {
+func (request *SdkClientBatchCheckClientRequest) Options(options ClientBatchCheckClientOptions) SdkClientBatchCheckClientRequestInterface {
 	request.options = &options
 	return request
 }
 
-func (request *SdkClientBatchCheckRequest) GetAuthorizationModelIdOverride() *string {
+func (request *SdkClientBatchCheckClientRequest) GetAuthorizationModelIdOverride() *string {
 	if request.options == nil {
 		return nil
 	}
 	return request.options.AuthorizationModelId
 }
 
-func (request *SdkClientBatchCheckRequest) GetStoreIdOverride() *string {
+func (request *SdkClientBatchCheckClientRequest) GetStoreIdOverride() *string {
 	if request.options == nil {
 		return nil
 	}
 	return request.options.StoreId
 }
 
-func (request *SdkClientBatchCheckRequest) Body(body ClientBatchCheckBody) SdkClientBatchCheckRequestInterface {
+func (request *SdkClientBatchCheckClientRequest) Body(body ClientBatchCheckClientBody) SdkClientBatchCheckClientRequestInterface {
 	request.body = &body
 	return request
 }
 
-func (request *SdkClientBatchCheckRequest) Execute() (*ClientBatchCheckResponse, error) {
-	return request.Client.BatchCheckExecute(request)
+func (request *SdkClientBatchCheckClientRequest) Execute() (*ClientBatchCheckClientResponse, error) {
+	return request.Client.ClientBatchCheckExecute(request)
 }
 
-func (request *SdkClientBatchCheckRequest) GetContext() _context.Context {
+func (request *SdkClientBatchCheckClientRequest) GetContext() _context.Context {
 	return request.ctx
 }
 
-func (request *SdkClientBatchCheckRequest) GetBody() *ClientBatchCheckBody {
+func (request *SdkClientBatchCheckClientRequest) GetBody() *ClientBatchCheckClientBody {
 	return request.body
 }
 
-func (request *SdkClientBatchCheckRequest) GetOptions() *ClientBatchCheckOptions {
+func (request *SdkClientBatchCheckClientRequest) GetOptions() *ClientBatchCheckClientOptions {
 	return request.options
 }
 
-func (client *OpenFgaClient) BatchCheckExecute(request SdkClientBatchCheckRequestInterface) (*ClientBatchCheckResponse, error) {
+func (client *OpenFgaClient) ClientBatchCheckExecute(request SdkClientBatchCheckClientRequestInterface) (*ClientBatchCheckClientResponse, error) {
 	group, ctx := errgroup.WithContext(request.GetContext())
 	var maxParallelReqs int
 	if request.GetOptions() == nil || request.GetOptions().MaxParallelRequests == nil {
@@ -2033,7 +2075,7 @@ func (client *OpenFgaClient) BatchCheckExecute(request SdkClientBatchCheckReques
 	}
 	group.SetLimit(maxParallelReqs)
 	var numOfChecks = len(*request.GetBody())
-	response := make(ClientBatchCheckResponse, numOfChecks)
+	response := make(ClientBatchCheckClientResponse, numOfChecks)
 	authorizationModelId, err := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
 	if err != nil {
 		return nil, err
@@ -2067,7 +2109,7 @@ func (client *OpenFgaClient) BatchCheckExecute(request SdkClientBatchCheckReques
 				return err
 			}
 
-			response[index] = ClientBatchCheckSingleResponse{
+			response[index] = ClientBatchCheckClientSingleResponse{
 				Request:             checkBody,
 				ClientCheckResponse: *singleResponse,
 				Error:               err,
@@ -2082,6 +2124,262 @@ func (client *OpenFgaClient) BatchCheckExecute(request SdkClientBatchCheckReques
 	}
 
 	return &response, nil
+}
+
+// Server-side BatchCheck implementation
+
+// SdkClientBatchCheckRequest represents a server-side batch check request
+type SdkClientBatchCheckRequest struct {
+	ctx     _context.Context
+	client  *OpenFgaClient
+	body    *ClientBatchCheckRequest
+	options *BatchCheckOptions
+}
+
+// SdkClientBatchCheckRequestInterface defines the interface for server-side batch check requests
+type SdkClientBatchCheckRequestInterface interface {
+	Body(body ClientBatchCheckRequest) SdkClientBatchCheckRequestInterface
+	Options(options BatchCheckOptions) SdkClientBatchCheckRequestInterface
+	Execute() (*fgaSdk.BatchCheckResponse, error)
+	GetContext() _context.Context
+	GetBody() *ClientBatchCheckRequest
+	GetOptions() *BatchCheckOptions
+}
+
+func (r *SdkClientBatchCheckRequest) Body(body ClientBatchCheckRequest) SdkClientBatchCheckRequestInterface {
+	r.body = &body
+	return r
+}
+
+func (r *SdkClientBatchCheckRequest) Options(options BatchCheckOptions) SdkClientBatchCheckRequestInterface {
+	r.options = &options
+	return r
+}
+
+func (r *SdkClientBatchCheckRequest) Execute() (*fgaSdk.BatchCheckResponse, error) {
+	return r.client.BatchCheckExecute(r)
+}
+
+func (r *SdkClientBatchCheckRequest) GetContext() _context.Context {
+	return r.ctx
+}
+
+func (r *SdkClientBatchCheckRequest) GetBody() *ClientBatchCheckRequest {
+	return r.body
+}
+
+func (r *SdkClientBatchCheckRequest) GetOptions() *BatchCheckOptions {
+	return r.options
+}
+
+// BatchCheck initializes a new batch check request
+func (client *OpenFgaClient) BatchCheck(ctx _context.Context) SdkClientBatchCheckRequestInterface {
+	return &SdkClientBatchCheckRequest{
+		ctx:    ctx,
+		client: client,
+	}
+}
+
+/*
+ * BatchCheckExecute executes the server-side BatchCheck request
+ * @param request SdkClientBatchCheckRequestInterface - the request interface
+ * @return *fgaSdk.BatchCheckResponse
+ */
+func (client *OpenFgaClient) BatchCheckExecute(request SdkClientBatchCheckRequestInterface) (*fgaSdk.BatchCheckResponse, error) {
+	ctx := request.GetContext()
+	body := request.GetBody()
+	options := request.GetOptions()
+
+	if body == nil || len(body.Checks) == 0 {
+		return nil, FgaRequiredParamError{param: "checks"}
+	}
+
+	if options == nil {
+		options = &BatchCheckOptions{}
+	}
+
+	maxParallelRequests := int32(10)
+	if options.MaxParallelRequests != nil {
+		maxParallelRequests = *options.MaxParallelRequests
+	}
+
+	maxBatchSize := int32(50)
+	if options.MaxBatchSize != nil {
+		maxBatchSize = *options.MaxBatchSize
+	}
+
+	_, err := client.getStoreId(options.StoreId)
+	if err != nil {
+		return nil, err
+	}
+
+	authorizationModelId, err := client.getAuthorizationModelId(options.AuthorizationModelId)
+	if err != nil {
+		return nil, err
+	}
+
+	chunks := chunkClientBatchCheckItems(body.Checks, int(maxBatchSize))
+
+	resultChan := make(chan *fgaSdk.BatchCheckResponse)
+	errorChan := make(chan error)
+
+	var wg errgroup.Group
+	wg.SetLimit(int(maxParallelRequests))
+
+	for _, chunk := range chunks {
+		chunkCopy := chunk
+
+		wg.Go(func() error {
+			batchCheckRequest := createBatchCheckRequest(chunkCopy, authorizationModelId, options.Consistency)
+
+			response, err := client.singleBatchCheck(ctx, batchCheckRequest, options)
+			if err != nil {
+				errorChan <- err
+				return err
+			}
+
+			resultChan <- response
+			return nil
+		})
+	}
+
+	go func() {
+		err := wg.Wait()
+		if err != nil {
+			errorChan <- err
+		}
+		close(resultChan)
+		close(errorChan)
+	}()
+
+	var results []*fgaSdk.BatchCheckResponse
+	for response := range resultChan {
+		results = append(results, response)
+	}
+
+	select {
+	case err := <-errorChan:
+		if err != nil {
+			return nil, err
+		}
+	default:
+		// No error
+	}
+
+	combinedResult := make(map[string]fgaSdk.BatchCheckSingleResult)
+
+	for _, response := range results {
+		for correlationID, result := range response.GetResult() {
+			combinedResult[correlationID] = result
+		}
+	}
+
+	combinedResponse := fgaSdk.NewBatchCheckResponse()
+	combinedResponse.SetResult(combinedResult)
+
+	return combinedResponse, nil
+}
+
+/*
+ * singleBatchCheck performs a single batch check request to the API
+ * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc.
+ * @param body fgaSdk.BatchCheckRequest - the request body
+ * @param options *BatchCheckOptions - options for the request
+ * @return *fgaSdk.BatchCheckResponse
+ */
+func (client *OpenFgaClient) singleBatchCheck(ctx _context.Context, body fgaSdk.BatchCheckRequest, options *BatchCheckOptions) (*fgaSdk.BatchCheckResponse, error) {
+	storeId, err := client.getStoreId(options.StoreId)
+	if err != nil {
+		return nil, err
+	}
+
+	req := client.OpenFgaApi.BatchCheck(ctx, *storeId)
+	req = req.Body(body)
+
+	response, _, err := req.Execute()
+	if err != nil {
+		return nil, err
+	}
+
+	return &response, nil
+}
+
+/*
+ * chunkClientBatchCheckItems splits a list of check items into chunks of specified size
+ * @param items []ClientBatchCheckItem - the items to chunk
+ * @param chunkSize int - the maximum size of each chunk
+ * @return [][]ClientBatchCheckItem - the chunked items
+ */
+func chunkClientBatchCheckItems(items []ClientBatchCheckItem, chunkSize int) [][]ClientBatchCheckItem {
+	if len(items) == 0 {
+		return [][]ClientBatchCheckItem{}
+	}
+
+	chunks := make([][]ClientBatchCheckItem, 0, (len(items)+chunkSize-1)/chunkSize)
+
+	for i := 0; i < len(items); i += chunkSize {
+		end := i + chunkSize
+		if end > len(items) {
+			end = len(items)
+		}
+		chunks = append(chunks, items[i:end])
+	}
+
+	return chunks
+}
+
+/*
+ * createBatchCheckRequest creates a BatchCheckRequest from ClientBatchCheckItems
+ * @param items []ClientBatchCheckItem - the client batch check items
+ * @param authorizationModelId *string - optional authorization model ID
+ * @param consistency *fgaSdk.ConsistencyPreference - optional consistency preference
+ * @return fgaSdk.BatchCheckRequest - the created request
+ */
+func createBatchCheckRequest(items []ClientBatchCheckItem, authorizationModelId *string, consistency *fgaSdk.ConsistencyPreference) fgaSdk.BatchCheckRequest {
+	batchCheckItems := make([]fgaSdk.BatchCheckItem, 0, len(items))
+
+	for _, item := range items {
+		tupleKey := fgaSdk.CheckRequestTupleKey{
+			User:     item.User,
+			Relation: item.Relation,
+			Object:   item.Object,
+		}
+
+		batchCheckItem := fgaSdk.BatchCheckItem{
+			TupleKey:      tupleKey,
+			CorrelationId: item.CorrelationId,
+		}
+
+		if len(item.ContextualTuples) > 0 {
+			contextualTuples := &fgaSdk.ContextualTupleKeys{
+				TupleKeys: []fgaSdk.TupleKey{},
+			}
+
+			contextualTuples.TupleKeys = append(contextualTuples.TupleKeys, item.ContextualTuples...)
+
+			batchCheckItem.ContextualTuples = contextualTuples
+		}
+
+		if item.Context != nil {
+			batchCheckItem.Context = item.Context
+		}
+
+		batchCheckItems = append(batchCheckItems, batchCheckItem)
+	}
+
+	batchCheckRequest := fgaSdk.BatchCheckRequest{
+		Checks: batchCheckItems,
+	}
+
+	if authorizationModelId != nil && *authorizationModelId != "" {
+		batchCheckRequest.AuthorizationModelId = authorizationModelId
+	}
+
+	if consistency != nil {
+		batchCheckRequest.Consistency = consistency
+	}
+
+	return batchCheckRequest
 }
 
 // / Expand
@@ -2410,7 +2708,7 @@ func (client *OpenFgaClient) ListRelationsExecute(request SdkClientListRelations
 		return nil, fmt.Errorf("ListRelations - expected len(Relations) > 0")
 	}
 
-	batchRequestBody := ClientBatchCheckBody{}
+	batchRequestBody := ClientBatchCheckClientBody{}
 	for index := 0; index < len(request.GetBody().Relations); index++ {
 		batchRequestBody = append(batchRequestBody, ClientCheckRequest{
 			User:             request.GetBody().User,
@@ -2429,7 +2727,7 @@ func (client *OpenFgaClient) ListRelationsExecute(request SdkClientListRelations
 		return nil, err
 	}
 
-	options := &ClientBatchCheckOptions{
+	options := &ClientBatchCheckClientOptions{
 		AuthorizationModelId: authorizationModelId,
 		StoreId:              storeId,
 	}
@@ -2438,7 +2736,7 @@ func (client *OpenFgaClient) ListRelationsExecute(request SdkClientListRelations
 		options.MaxParallelRequests = request.GetOptions().MaxParallelRequests
 	}
 
-	batchResponse, err := client.BatchCheckExecute(&SdkClientBatchCheckRequest{
+	batchResponse, err := client.ClientBatchCheckExecute(&SdkClientBatchCheckClientRequest{
 		ctx:     request.GetContext(),
 		Client:  client,
 		body:    &batchRequestBody,
@@ -2481,12 +2779,12 @@ type SdkClientListUsersRequestInterface interface {
 }
 
 type ClientListUsersRequest struct {
-	Object           fgaSdk.FgaObject           `json:"object"yaml:"object"`
-	Relation         string                     `json:"relation"yaml:"relation"`
-	UserFilters      []fgaSdk.UserTypeFilter    `json:"user_filters"yaml:"user_filters"`
+	Object           fgaSdk.FgaObject           `json:"object" yaml:"object"`
+	Relation         string                     `json:"relation" yaml:"relation"`
+	UserFilters      []fgaSdk.UserTypeFilter    `json:"user_filters" yaml:"user_filters"`
 	ContextualTuples []ClientContextualTupleKey `json:"contextual_tuples,omitempty"`
 	// Additional request context that will be used to evaluate any ABAC conditions encountered in the query evaluation.
-	Context *map[string]interface{} `json:"context,omitempty"yaml:"context,omitempty"`
+	Context *map[string]interface{} `json:"context,omitempty" yaml:"context,omitempty"`
 }
 
 type ClientListUsersOptions struct {

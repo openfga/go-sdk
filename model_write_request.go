@@ -20,9 +20,9 @@ import (
 
 // WriteRequest struct for WriteRequest
 type WriteRequest struct {
-	Writes               *WriteRequestWrites  `json:"writes,omitempty"yaml:"writes,omitempty"`
-	Deletes              *WriteRequestDeletes `json:"deletes,omitempty"yaml:"deletes,omitempty"`
-	AuthorizationModelId *string              `json:"authorization_model_id,omitempty"yaml:"authorization_model_id,omitempty"`
+	Writes               *WriteRequestWrites  `json:"writes,omitempty" yaml:"writes,omitempty"`
+	Deletes              *WriteRequestDeletes `json:"deletes,omitempty" yaml:"deletes,omitempty"`
+	AuthorizationModelId *string              `json:"authorization_model_id,omitempty" yaml:"authorization_model_id,omitempty"`
 }
 
 // NewWriteRequest instantiates a new WriteRequest object

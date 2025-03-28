@@ -20,11 +20,11 @@ import (
 
 // Node struct for Node
 type Node struct {
-	Name         string                 `json:"name"yaml:"name"`
-	Leaf         *Leaf                  `json:"leaf,omitempty"yaml:"leaf,omitempty"`
-	Difference   *UsersetTreeDifference `json:"difference,omitempty"yaml:"difference,omitempty"`
-	Union        *Nodes                 `json:"union,omitempty"yaml:"union,omitempty"`
-	Intersection *Nodes                 `json:"intersection,omitempty"yaml:"intersection,omitempty"`
+	Name         string                 `json:"name" yaml:"name"`
+	Leaf         *Leaf                  `json:"leaf,omitempty" yaml:"leaf,omitempty"`
+	Difference   *UsersetTreeDifference `json:"difference,omitempty" yaml:"difference,omitempty"`
+	Union        *Nodes                 `json:"union,omitempty" yaml:"union,omitempty"`
+	Intersection *Nodes                 `json:"intersection,omitempty" yaml:"intersection,omitempty"`
 }
 
 // NewNode instantiates a new Node object

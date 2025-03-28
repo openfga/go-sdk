@@ -44,7 +44,7 @@ func TestRetrieveToken_InParams(t *testing.T) {
 			t.Errorf("client_secret = %q; want empty", got)
 		}
 		w.Header().Set("Content-Type", "application/json")
-		io.WriteString(w, `{"access_token": "ACCESS_TOKEN", "token_type": "bearer"}`)
+		_, _ = io.WriteString(w, `{"access_token": "ACCESS_TOKEN", "token_type": "bearer"}`)
 	}))
 	defer ts.Close()
 	_, err := RetrieveToken(context.Background(), clientID, "", ts.URL, url.Values{}, AuthStyleInParams, RequestConfig{
@@ -64,7 +64,7 @@ func TestRetrieveTokenWithContexts(t *testing.T) {
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		io.WriteString(w, `{"access_token": "ACCESS_TOKEN", "token_type": "bearer"}`)
+		_, _ = io.WriteString(w, `{"access_token": "ACCESS_TOKEN", "token_type": "bearer"}`)
 	}))
 	defer ts.Close()
 

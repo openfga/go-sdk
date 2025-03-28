@@ -20,9 +20,9 @@ import (
 
 // TupleKeyWithoutCondition struct for TupleKeyWithoutCondition
 type TupleKeyWithoutCondition struct {
-	User     string `json:"user"yaml:"user"`
-	Relation string `json:"relation"yaml:"relation"`
-	Object   string `json:"object"yaml:"object"`
+	User     string `json:"user" yaml:"user"`
+	Relation string `json:"relation" yaml:"relation"`
+	Object   string `json:"object" yaml:"object"`
 }
 
 // NewTupleKeyWithoutCondition instantiates a new TupleKeyWithoutCondition object

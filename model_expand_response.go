@@ -20,7 +20,7 @@ import (
 
 // ExpandResponse struct for ExpandResponse
 type ExpandResponse struct {
-	Tree *UsersetTree `json:"tree,omitempty"yaml:"tree,omitempty"`
+	Tree *UsersetTree `json:"tree,omitempty" yaml:"tree,omitempty"`
 }
 
 // NewExpandResponse instantiates a new ExpandResponse object
