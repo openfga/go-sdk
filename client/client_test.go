@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sync"
 	"testing"
 	"time"
 
@@ -3474,13 +3475,16 @@ func TestOpenFgaClient(t *testing.T) {
 			Result: &result,
 		}
 
+		var callCountMu sync.Mutex
 		callCount := 0
 
 		httpmock.RegisterResponder(
 			http.MethodPost,
 			fmt.Sprintf("%s/stores/%s/batch-check", fgaClient.GetConfig().ApiUrl, "01GXSB9YR785C4FYS3C0RTG7B2"),
 			func(req *http.Request) (*http.Response, error) {
+				callCountMu.Lock()
 				callCount++
+				callCountMu.Unlock()
 				resp, err := httpmock.NewJsonResponse(http.StatusOK, response)
 				if err != nil {
 					return httpmock.NewStringResponse(http.StatusInternalServerError, err.Error()), nil
@@ -3531,8 +3535,11 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 
 		expectedCallCount := len(items) // With MaxBatchSize=1, we expect one call per item
-		if callCount != expectedCallCount {
-			t.Errorf("Expected exactly %d API calls with MaxBatchSize=1, got %d", expectedCallCount, callCount)
+		callCountMu.Lock()
+		actualCallCount := callCount
+		callCountMu.Unlock()
+		if actualCallCount != expectedCallCount {
+			t.Errorf("Expected exactly %d API calls with MaxBatchSize=1, got %d", expectedCallCount, actualCallCount)
 		}
 	})
 }
