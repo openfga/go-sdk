@@ -4,7 +4,7 @@ go 1.23.0
 
 toolchain go1.24.0
 
-require github.com/openfga/go-sdk v0.6.5
+require github.com/openfga/go-sdk v0.6.6
 
 require (
 	github.com/go-logr/logr v1.4.2 // indirect
@@ -17,4 +17,4 @@ require (
 )
 
 // To reference local build, uncomment below and run `go mod tidy`
-replace github.com/openfga/go-sdk v0.6.5 => ../../
+replace github.com/openfga/go-sdk v0.6.6 => ../../

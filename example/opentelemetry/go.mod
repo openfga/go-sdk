@@ -5,11 +5,11 @@ go 1.23.0
 toolchain go1.24.0
 
 // To reference local build, uncomment below and run `go mod tidy`
-replace github.com/openfga/go-sdk v0.6.5 => ../../
+replace github.com/openfga/go-sdk v0.6.6 => ../../
 
 require (
 	github.com/joho/godotenv v1.5.1
-	github.com/openfga/go-sdk v0.6.5
+	github.com/openfga/go-sdk v0.6.6
 	go.opentelemetry.io/otel v1.35.0
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v1.35.0
 	go.opentelemetry.io/otel/sdk v1.35.0
