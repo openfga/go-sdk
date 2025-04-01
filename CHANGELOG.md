@@ -12,6 +12,7 @@
   If the header is not sent or on network errors, it will fall back to exponential backoff.
 - feat: retry on network errors when calling the token issuer (#182)
 - feat: add support for server-side BatchCheck (#187)
+- fix: use defaults when transaction options were only partially set (#183)
 - chore: log retry attempts when debug mode is enabled (#182)
 
 ## v0.6.5
