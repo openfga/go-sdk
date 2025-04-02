@@ -1,13 +1,18 @@
 # Changelog
 
-## [Unreleased](https://github.com/openfga/go-sdk/compare/v0.6.5...HEAD)
+## [Unreleased](https://github.com/openfga/go-sdk/compare/v0.6.6...HEAD)
 
+## v0.6.6
+
+### [0.6.6](https://github.com/openfga/go-sdk/compare/v0.6.5...v0.6.6) (2025-03-31)
 - feat: fix and improve retries and rate limit handling. (#176)
   The SDK now retries on network errors and the default retry handling has been fixed
   for both the calls to the OpenFGA API and the API Token Issuer for those using ClientCredentials
   The SDK now also respects the rate limit headers (`Retry-After`) returned by the server and will retry the request after the specified time.
   If the header is not sent or on network errors, it will fall back to exponential backoff.
 - feat: retry on network errors when calling the token issuer (#182)
+- feat: add support for server-side BatchCheck (#187)
+- fix: use defaults when transaction options were only partially set (#183)
 - chore: log retry attempts when debug mode is enabled (#182)
 
 ## v0.6.5
