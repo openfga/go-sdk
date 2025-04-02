@@ -25,6 +25,12 @@ This release contains a breaking change around it's handling of `BatchCheck`
 NOTE:
 This release was previously released as `v0.6.6`, but has been re-released as `v0.7.0` due to the breaking changes.
 
+## v0.6.6
+
+### [0.6.6](https://github.com/openfga/go-sdk/compare/v0.6.5...v0.6.6) (2025-04-02)
+[!WARNING]
+BREAKING CHANGES: This has been re-released as [v0.7.0](https://github.com/openfga/go-sdk/releases/tag/v0.7.0) due to breaking changes around `BatchCheck`.
+
 ## v0.6.5
 
 ### [0.6.5](https://github.com/openfga/go-sdk/compare/v0.6.4...v0.6.5) (2025-02-06)
