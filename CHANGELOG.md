@@ -1,10 +1,11 @@
 # Changelog
 
-## [Unreleased](https://github.com/openfga/go-sdk/compare/v0.6.6...HEAD)
+## [Unreleased](https://github.com/openfga/go-sdk/compare/v0.7.0...HEAD)
 
-## v0.6.6
+## v0.7.0
 
-### [0.6.6](https://github.com/openfga/go-sdk/compare/v0.6.5...v0.6.6) (2025-03-31)
+### [0.7.0](https://github.com/openfga/go-sdk/compare/v0.6.5...v0.7.0) (2025-04-02)
+
 - feat: fix and improve retries and rate limit handling. (#176)
   The SDK now retries on network errors and the default retry handling has been fixed
   for both the calls to the OpenFGA API and the API Token Issuer for those using ClientCredentials
@@ -14,6 +15,21 @@
 - feat: add support for server-side BatchCheck (#187)
 - fix: use defaults when transaction options were only partially set (#183)
 - chore: log retry attempts when debug mode is enabled (#182)
+
+[!WARNING]
+BREAKING CHANGES:
+This release contains a breaking change around it's handling of `BatchCheck`
+- The new `BatchCheck` requires OpenFGA [v1.8.0+](https://github.com/openfga/openfga/releases/tag/v1.8.0) server.
+- The existing `BatchCheck` method has been renamed to `ClientBatchCheck`. The existing `BatchCheckResponse` has been renamed to `ClientBatchCheckResponse`.
+
+NOTE:
+This release was previously released as `v0.6.6`, but has been re-released as `v0.7.0` due to the breaking changes.
+
+## v0.6.6
+
+### [0.6.6](https://github.com/openfga/go-sdk/compare/v0.6.5...v0.6.6) (2025-04-02)
+[!WARNING]
+BREAKING CHANGES: This has been re-released as [v0.7.0](https://github.com/openfga/go-sdk/releases/tag/v0.7.0) due to breaking changes around `BatchCheck`.
 
 ## v0.6.5
 
