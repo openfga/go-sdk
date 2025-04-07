@@ -20,6 +20,7 @@ import (
 	_nethttp "net/http"
 	"time"
 
+	"github.com/sourcegraph/conc/pool"
 	"golang.org/x/sync/errgroup"
 
 	fgaSdk "github.com/openfga/go-sdk"
@@ -396,15 +397,6 @@ type SdkClient interface {
 	 * @return *BatchCheckResponse
 	 */
 	BatchCheckExecute(request SdkClientBatchCheckRequestInterface) (*fgaSdk.BatchCheckResponse, error)
-
-	/*
-	 * singleBatchCheck Run a single batch check on the server.
-	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	 * @param body BatchCheckRequest - the request to send to the server.
-	 * @param options *BatchCheckOptions - options for the request.
-	 * @return *BatchCheckResponse
-	 */
-	singleBatchCheck(ctx _context.Context, body fgaSdk.BatchCheckRequest, options *BatchCheckOptions) (*fgaSdk.BatchCheckResponse, error)
 
 	/*
 	 * Expand Expands the relationships in userset tree format.
@@ -2220,55 +2212,25 @@ func (client *OpenFgaClient) BatchCheckExecute(request SdkClientBatchCheckReques
 
 	chunks := chunkClientBatchCheckItems(body.Checks, int(maxBatchSize))
 
-	resultChan := make(chan *fgaSdk.BatchCheckResponse)
-	errorChan := make(chan error)
-
-	var wg errgroup.Group
-	wg.SetLimit(int(maxParallelRequests))
+	p := pool.NewWithResults[*fgaSdk.BatchCheckResponse]().WithContext(ctx).WithMaxGoroutines(int(maxParallelRequests))
 
 	for _, chunk := range chunks {
 		chunkCopy := chunk
 
-		wg.Go(func() error {
+		p.Go(func(ctx _context.Context) (*fgaSdk.BatchCheckResponse, error) {
 			batchCheckRequest := createBatchCheckRequest(chunkCopy, authorizationModelId, options.Consistency)
-
-			response, err := client.singleBatchCheck(ctx, batchCheckRequest, options)
-			if err != nil {
-				errorChan <- err
-				return err
-			}
-
-			resultChan <- response
-			return nil
+			return client.singleBatchCheck(ctx, batchCheckRequest, options)
 		})
 	}
 
-	go func() {
-		err := wg.Wait()
-		if err != nil {
-			errorChan <- err
-		}
-		close(resultChan)
-		close(errorChan)
-	}()
-
-	var results []*fgaSdk.BatchCheckResponse
-	for response := range resultChan {
-		results = append(results, response)
-	}
-
-	select {
-	case err := <-errorChan:
-		if err != nil {
-			return nil, err
-		}
-	default:
-		// No error
+	responses, err := p.Wait()
+	if err != nil {
+		return nil, err
 	}
 
 	combinedResult := make(map[string]fgaSdk.BatchCheckSingleResult)
 
-	for _, response := range results {
+	for _, response := range responses {
 		for correlationID, result := range response.GetResult() {
 			combinedResult[correlationID] = result
 		}

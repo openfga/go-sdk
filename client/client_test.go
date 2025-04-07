@@ -3493,54 +3493,99 @@ func TestOpenFgaClient(t *testing.T) {
 			},
 		)
 
-		items := []ClientBatchCheckItem{
-			{
-				User:          "user:1",
+		// Create basic item template
+		createItem := func(i int) ClientBatchCheckItem {
+			return ClientBatchCheckItem{
+				User:          fmt.Sprintf("user:%d", i),
 				Relation:      "viewer",
-				Object:        "document:1",
-				CorrelationId: "test1",
-			},
-			{
-				User:          "user:2",
-				Relation:      "viewer",
-				Object:        "document:2",
-				CorrelationId: "test2",
-			},
-			{
-				User:          "user:3",
-				Relation:      "viewer",
-				Object:        "document:3",
-				CorrelationId: "test3",
-			},
+				Object:        fmt.Sprintf("document:%d", i),
+				CorrelationId: fmt.Sprintf("test%d", i),
+			}
 		}
 
-		requestBody := ClientBatchCheckRequest{
-			Checks: items,
-		}
+		t.Run("Simple case with MaxBatchSize=1", func(t *testing.T) {
+			callCountMu.Lock()
+			callCount = 0
+			callCountMu.Unlock()
 
-		options := BatchCheckOptions{
-			MaxBatchSize: openfga.PtrInt32(1),
-		}
+			items := []ClientBatchCheckItem{
+				createItem(1),
+				createItem(2),
+				createItem(3),
+			}
 
-		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-		defer cancel()
+			requestBody := ClientBatchCheckRequest{
+				Checks: items,
+			}
 
-		_, err = fgaClient.BatchCheck(ctx).
-			Body(requestBody).
-			Options(options).
-			Execute()
+			options := BatchCheckOptions{
+				MaxBatchSize: openfga.PtrInt32(1),
+			}
 
-		if err != nil {
-			t.Fatalf("BatchCheck error: %v", err)
-		}
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			defer cancel()
 
-		expectedCallCount := len(items) // With MaxBatchSize=1, we expect one call per item
-		callCountMu.Lock()
-		actualCallCount := callCount
-		callCountMu.Unlock()
-		if actualCallCount != expectedCallCount {
-			t.Errorf("Expected exactly %d API calls with MaxBatchSize=1, got %d", expectedCallCount, actualCallCount)
-		}
+			_, err = fgaClient.BatchCheck(ctx).
+				Body(requestBody).
+				Options(options).
+				Execute()
+
+			if err != nil {
+				t.Fatalf("BatchCheck error: %v", err)
+			}
+
+			expectedCallCount := len(items) // With MaxBatchSize=1, we expect one call per item
+			callCountMu.Lock()
+			actualCallCount := callCount
+			callCountMu.Unlock()
+			if actualCallCount != expectedCallCount {
+				t.Errorf("Expected exactly %d API calls with MaxBatchSize=1, got %d", expectedCallCount, actualCallCount)
+			}
+		})
+
+		t.Run("Edge case where MaxParallelRequests * MaxBatchSize < len(items)", func(t *testing.T) {
+			callCountMu.Lock()
+			callCount = 0
+			callCountMu.Unlock()
+
+			// Create 101 items
+			var items []ClientBatchCheckItem
+			for i := 1; i <= 101; i++ {
+				items = append(items, createItem(i))
+			}
+
+			requestBody := ClientBatchCheckRequest{
+				Checks: items,
+			}
+
+			options := BatchCheckOptions{
+				MaxParallelRequests: openfga.PtrInt32(2),  // 2 parallel requests
+				MaxBatchSize:        openfga.PtrInt32(50), // 50 items per batch
+			}
+			// Total capacity: 2*50 = 100, but we have 101 items
+
+			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			defer cancel()
+
+			_, err = fgaClient.BatchCheck(ctx).
+				Body(requestBody).
+				Options(options).
+				Execute()
+
+			if err != nil {
+				t.Fatalf("BatchCheck error with MaxParallelRequests=2, MaxBatchSize=50, Items=101: %v", err)
+			}
+
+			// We expect 3 API calls (2 batches of 50 + 1 batch of 1)
+			expectedCallCount := 3
+			callCountMu.Lock()
+			actualCallCount := callCount
+			callCountMu.Unlock()
+			if actualCallCount != expectedCallCount {
+				t.Errorf("Expected exactly %d API calls with MaxParallelRequests=2, MaxBatchSize=50, Items=101, got %d",
+					expectedCallCount, actualCallCount)
+			}
+		})
 	})
 }
 
