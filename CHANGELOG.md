@@ -1,6 +1,13 @@
 # Changelog
 
-## [Unreleased](https://github.com/openfga/go-sdk/compare/v0.7.0...HEAD)
+## [Unreleased](https://github.com/openfga/go-sdk/compare/v0.7.1...HEAD)
+
+## v0.7.1
+
+### [0.7.1](https://github.com/openfga/go-sdk/compare/v0.7.0...v0.7.1) (2025-04-07)
+
+- fix: resolves issue where SDK could stall when MaxParallelRequests * MaxBatchSize < body.Checks length
+- fix: resolves issue where private singleBatchCheck method in SdkClient prevented mocking
 
 ## v0.7.0
 
