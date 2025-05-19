@@ -2658,6 +2658,58 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 	})
 
+	t.Run("ExpandWithContextualTuples", func(t *testing.T) {
+		test := TestDefinition{
+			Name:           "Expand",
+			JsonResponse:   `{"tree":{"root":{"name":"document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a#viewer","union":{"nodes":[{"name": "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a#viewer","leaf":{"users":{"users":["user:81684243-9356-4421-8fbf-a4f8d36aa31b"]}}}]}}}}`,
+			ResponseStatus: http.StatusOK,
+			Method:         http.MethodPost,
+			RequestPath:    "expand",
+		}
+
+		requestBody := ClientExpandRequest{
+			Relation: "viewer",
+			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+			ContextualTuples: []ClientContextualTupleKey{
+				{
+					User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+					Relation: "editor",
+					Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				},
+			},
+		}
+		options := ClientExpandOptions{
+			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+		}
+
+		var expectedResponse openfga.ExpandResponse
+		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+			httpmock.BodyContainsString(`"contextual_tuples":`),
+			func(req *http.Request) (*http.Response, error) {
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		got, err := fgaClient.Expand(context.Background()).Body(requestBody).Options(options).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		_, err = got.MarshalJSON()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+	})
+
 	t.Run("ListObjects", func(t *testing.T) {
 		test := TestDefinition{
 			Name:           "ListObjects",
