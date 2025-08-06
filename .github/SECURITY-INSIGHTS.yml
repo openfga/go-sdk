@@ -1,5 +1,5 @@
-# Security Insights 2.0 file https://github.com/ossf/security-insights 
-# Specification: https://github.com/ossf/security-insights/tree/main/spec
+# Security Insights 2.0 file https://github.com/ossf/security-insights
+# Schema: https://github.com/ossf/security-insights/blob/main/spec/schema.cue
 header:
   schema-version: 2.0.0
   last-updated: '2025-07-26'
