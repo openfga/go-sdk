@@ -85,3 +85,13 @@ repository:
           ci: true
           release: true
         comment: Snyk is enabled for this repo to scan for vulnerabilities.
+      - name: Socket
+        type: other
+        version: latest
+        rulesets:
+          - built-in
+        integration:
+          adhoc: false
+          ci: true
+          release: true
+        comment: Socket is enabled for this repo to scan for supply chain security vulnerabilities.
