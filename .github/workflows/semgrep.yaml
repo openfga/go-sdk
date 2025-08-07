@@ -6,6 +6,8 @@ on:
 jobs:
   semgrep:
     name: Scan
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     container:
       image: returntocorp/semgrep
