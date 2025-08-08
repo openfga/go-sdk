@@ -243,11 +243,6 @@ options := ClientListStoresOptions{
 stores, err := fgaClient.ListStores(context.Background()).Options(options).Execute()
 
 // stores = [{ "id": "01FQH7V8BEG3GPQW93KTRFR8JB", "name": "FGA Demo Store", "created_at": "2022-01-01T00:00:00.000Z", "updated_at": "2022-01-01T00:00:00.000Z" }]
-
-// List stores with only name filter
-stores, err := fgaClient.ListStores(context.Background()).Options(client.ClientListStoresOptions{
-  Name: openfga.PtrString("FGA Demo Store"),
-}).Execute()
 ```
 
 ##### Create Store

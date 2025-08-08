@@ -2565,6 +2565,9 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 	if r.continuationToken != nil {
 		localVarQueryParams.Add("continuation_token", parameterToString(*r.continuationToken, ""))
 	}
+	if r.name != nil {
+		localVarQueryParams.Add("name", parameterToString(*r.name, ""))
+	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
 

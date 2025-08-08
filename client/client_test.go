@@ -219,9 +219,10 @@ func TestOpenFgaClient(t *testing.T) {
 	})
 
 	t.Run("ListStoresWithNameFilter", func(t *testing.T) {
+		filteredStoreName := "Filtered Store"
 		test := TestDefinition{
 			Name:           "ListStoresWithNameFilter",
-			JsonResponse:   `{"stores":[{"id":"01GXSA8YR785C4FYS3C0RTG7B1","name":"Filtered Store","created_at":"2023-01-01T23:23:23.000000000Z","updated_at":"2023-01-01T23:23:23.000000000Z"}]}`,
+			JsonResponse:   fmt.Sprintf(`{"stores":[{"id":"01GXSA8YR785C4FYS3C0RTG7B1","name":"%s","created_at":"2023-01-01T23:23:23.000000000Z","updated_at":"2023-01-01T23:23:23.000000000Z"}]}`, filteredStoreName),
 			ResponseStatus: http.StatusOK,
 			Method:         http.MethodGet,
 		}
@@ -235,6 +236,10 @@ func TestOpenFgaClient(t *testing.T) {
 		defer httpmock.DeactivateAndReset()
 		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores", fgaClient.GetConfig().ApiUrl),
 			func(req *http.Request) (*http.Response, error) {
+				// Verify that the name parameter is included in the query
+				if req.URL.Query().Get("name") != filteredStoreName {
+					t.Fatalf("expected name parameter to be '%s', got %s", filteredStoreName, req.URL.Query().Get("name"))
+				}
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
 					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
@@ -244,7 +249,7 @@ func TestOpenFgaClient(t *testing.T) {
 		)
 
 		options := ClientListStoresOptions{
-			Name: openfga.PtrString("Filtered Store"),
+			Name: openfga.PtrString(filteredStoreName),
 		}
 		got, err := fgaClient.ListStores(context.Background()).Options(options).Execute()
 		if err != nil {
@@ -255,8 +260,8 @@ func TestOpenFgaClient(t *testing.T) {
 			t.Fatalf("expected stores of length 1, got %v", len(got.Stores))
 		}
 
-		if got.Stores[0].Name != "Filtered Store" {
-			t.Fatalf("expected store name to be 'Filtered Store', got %s", got.Stores[0].Name)
+		if got.Stores[0].Name != filteredStoreName {
+			t.Fatalf("expected store name to be '%s', got %s", filteredStoreName, got.Stores[0].Name)
 		}
 	})
 
