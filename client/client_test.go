@@ -23,7 +23,7 @@ import (
 
 	"github.com/jarcoal/httpmock"
 
-	"github.com/openfga/go-sdk"
+	openfga "github.com/openfga/go-sdk"
 	. "github.com/openfga/go-sdk/client"
 )
 
@@ -215,6 +215,71 @@ func TestOpenFgaClient(t *testing.T) {
 		_, err = fgaClient.ListStores(context.Background()).Execute()
 		if err != nil {
 			t.Fatalf("%v", err)
+		}
+
+		// Test ListStores with name filter
+		optionsWithName := ClientListStoresOptions{
+			PageSize:          openfga.PtrInt32(10),
+			ContinuationToken: openfga.PtrString("..."),
+			Name:              openfga.PtrString("Test Store"),
+		}
+		gotWithName, err := fgaClient.ListStores(context.Background()).Options(optionsWithName).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		if len(gotWithName.Stores) != 1 {
+			t.Fatalf("expected stores of length 1, got %v", len(gotWithName.Stores))
+		}
+
+		if gotWithName.Stores[0].Id != expectedResponse.Stores[0].Id {
+			t.Fatalf("OpenFgaClient.%v() with name filter = %v, want %v", test.Name, gotWithName.Stores[0].Id, expectedResponse.Stores[0].Id)
+		}
+	})
+
+	t.Run("ListStoresWithNameFilter", func(t *testing.T) {
+		test := TestDefinition{
+			Name:           "ListStoresWithNameFilter",
+			JsonResponse:   `{"stores":[{"id":"01GXSA8YR785C4FYS3C0RTG7B1","name":"Filtered Store","created_at":"2023-01-01T23:23:23.000000000Z","updated_at":"2023-01-01T23:23:23.000000000Z"}]}`,
+			ResponseStatus: http.StatusOK,
+			Method:         http.MethodGet,
+		}
+
+		var expectedResponse openfga.ListStoresResponse
+		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores", fgaClient.GetConfig().ApiUrl),
+			func(req *http.Request) (*http.Response, error) {
+				// Verify that the name parameter is included in the query
+				if req.URL.Query().Get("name") != "Filtered Store" {
+					t.Fatalf("expected name parameter to be 'Filtered Store', got %s", req.URL.Query().Get("name"))
+				}
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+
+		options := ClientListStoresOptions{
+			Name: openfga.PtrString("Filtered Store"),
+		}
+		got, err := fgaClient.ListStores(context.Background()).Options(options).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		if len(got.Stores) != 1 {
+			t.Fatalf("expected stores of length 1, got %v", len(got.Stores))
+		}
+
+		if got.Stores[0].Name != "Filtered Store" {
+			t.Fatalf("expected store name to be 'Filtered Store', got %s", got.Stores[0].Name)
 		}
 	})
 

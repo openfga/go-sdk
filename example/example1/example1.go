@@ -68,6 +68,16 @@ func mainInner() error {
 	}
 	fmt.Printf("Stores Count: %d\n", len(stores.Stores))
 
+	// ListStores with name filter
+	fmt.Println("Listing Stores with name filter")
+	storesWithFilter, err := fgaClient.ListStores(ctx).Options(client.ClientListStoresOptions{
+		Name: openfga.PtrString("Test Store"),
+	}).Execute()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Stores with name filter Count: %d\n", len(storesWithFilter.Stores))
+
 	// GetStore
 	fmt.Println("Getting Current Store")
 	currentStore, err := fgaClient.GetStore(ctx).Execute()
