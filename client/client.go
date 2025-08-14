@@ -181,6 +181,13 @@ func getContinuationTokenFromRequest(options *ClientPaginationOptions) *string {
 	return options.ContinuationToken
 }
 
+func getNameFromRequest(options *ClientListStoresOptions) *string {
+	if options == nil {
+		return nil
+	}
+	return options.Name
+}
+
 type SdkClient interface {
 	/* Stores */
 
@@ -579,6 +586,7 @@ type SdkClientListStoresRequestInterface interface {
 type ClientListStoresOptions struct {
 	PageSize          *int32  `json:"page_size,omitempty"`
 	ContinuationToken *string `json:"continuation_token,omitempty"`
+	Name              *string `json:"name,omitempty"`
 }
 
 type ClientListStoresResponse = fgaSdk.ListStoresResponse
@@ -602,13 +610,17 @@ func (request *SdkClientListStoresRequest) GetOptions() *ClientListStoresOptions
 
 func (client *OpenFgaClient) ListStoresExecute(request SdkClientListStoresRequestInterface) (*ClientListStoresResponse, error) {
 	req := client.OpenFgaApi.ListStores(request.GetContext())
-	pageSize := getPageSizeFromRequest((*ClientPaginationOptions)(request.GetOptions()))
-	if pageSize != nil {
-		req = req.PageSize(*pageSize)
-	}
-	continuationToken := getContinuationTokenFromRequest((*ClientPaginationOptions)(request.GetOptions()))
-	if continuationToken != nil {
-		req = req.ContinuationToken(*continuationToken)
+	options := request.GetOptions()
+	if options != nil {
+		if options.PageSize != nil {
+			req = req.PageSize(*options.PageSize)
+		}
+		if options.ContinuationToken != nil {
+			req = req.ContinuationToken(*options.ContinuationToken)
+		}
+		if options.Name != nil {
+			req = req.Name(*options.Name)
+		}
 	}
 	data, _, err := req.Execute()
 	if err != nil {
