@@ -288,6 +288,11 @@ func (c *APIClient) prepareRequest(
 	}
 
 	if ctx != nil {
+		if headers, ok := HeadersFromContext(ctx); ok {
+			for h, v := range headers {
+				localVarRequest.Header.Set(h, v)
+			}
+		}
 		// add context to the request
 		localVarRequest = localVarRequest.WithContext(ctx)
 	}

@@ -161,6 +161,7 @@ type BatchCheckOptions struct {
 	MaxParallelRequests  *int32                        `json:"max_parallel_requests,omitempty"`
 	MaxBatchSize         *int32                        `json:"max_batch_size,omitempty"`
 	Consistency          *fgaSdk.ConsistencyPreference `json:"consistency,omitempty"`
+	Headers              map[string]string             `json:"headers,omitempty"`
 }
 
 type ClientPaginationOptions struct {
@@ -559,6 +560,13 @@ func (client *OpenFgaClient) getStoreId(storeId *string) (*string, error) {
 	return &store, nil
 }
 
+func addHeadersToContext(ctx _context.Context, headers map[string]string) _context.Context {
+	if len(headers) > 0 {
+		ctx = fgaSdk.ContextWithHeaders(ctx, headers)
+	}
+	return ctx
+}
+
 /* Stores */
 
 // / ListStores
@@ -577,8 +585,9 @@ type SdkClientListStoresRequestInterface interface {
 }
 
 type ClientListStoresOptions struct {
-	PageSize          *int32  `json:"page_size,omitempty"`
-	ContinuationToken *string `json:"continuation_token,omitempty"`
+	PageSize          *int32            `json:"page_size,omitempty"`
+	ContinuationToken *string           `json:"continuation_token,omitempty"`
+	Headers           map[string]string `json:"headers,omitempty"`
 }
 
 type ClientListStoresResponse = fgaSdk.ListStoresResponse
@@ -601,12 +610,21 @@ func (request *SdkClientListStoresRequest) GetOptions() *ClientListStoresOptions
 }
 
 func (client *OpenFgaClient) ListStoresExecute(request SdkClientListStoresRequestInterface) (*ClientListStoresResponse, error) {
-	req := client.OpenFgaApi.ListStores(request.GetContext())
-	pageSize := getPageSizeFromRequest((*ClientPaginationOptions)(request.GetOptions()))
+	ctx := request.GetContext()
+	if request.GetOptions() != nil {
+		ctx = addHeadersToContext(ctx, request.GetOptions().Headers)
+	}
+	req := client.OpenFgaApi.ListStores(ctx)
+	pagingOpts := ClientPaginationOptions{}
+	if request.GetOptions() != nil {
+		pagingOpts.PageSize = request.GetOptions().PageSize
+		pagingOpts.ContinuationToken = request.GetOptions().ContinuationToken
+	}
+	pageSize := getPageSizeFromRequest(&pagingOpts)
 	if pageSize != nil {
 		req = req.PageSize(*pageSize)
 	}
-	continuationToken := getContinuationTokenFromRequest((*ClientPaginationOptions)(request.GetOptions()))
+	continuationToken := getContinuationTokenFromRequest(&pagingOpts)
 	if continuationToken != nil {
 		req = req.ContinuationToken(*continuationToken)
 	}
@@ -648,6 +666,7 @@ type ClientCreateStoreRequest struct {
 }
 
 type ClientCreateStoreOptions struct {
+	Headers map[string]string `json:"headers,omitempty"`
 }
 
 type ClientCreateStoreResponse = fgaSdk.CreateStoreResponse
@@ -679,7 +698,11 @@ func (request *SdkClientCreateStoreRequest) GetBody() *ClientCreateStoreRequest 
 }
 
 func (client *OpenFgaClient) CreateStoreExecute(request SdkClientCreateStoreRequestInterface) (*ClientCreateStoreResponse, error) {
-	data, _, err := client.OpenFgaApi.CreateStore(request.GetContext()).Body(fgaSdk.CreateStoreRequest{
+	ctx := request.GetContext()
+	if request.GetOptions() != nil {
+		ctx = addHeadersToContext(ctx, request.GetOptions().Headers)
+	}
+	data, _, err := client.OpenFgaApi.CreateStore(ctx).Body(fgaSdk.CreateStoreRequest{
 		Name: request.GetBody().Name,
 	}).Execute()
 	if err != nil {
@@ -713,7 +736,8 @@ type SdkClientGetStoreRequestInterface interface {
 }
 
 type ClientGetStoreOptions struct {
-	StoreId *string `json:"store_id,omitempty"`
+	StoreId *string           `json:"store_id,omitempty"`
+	Headers map[string]string `json:"headers,omitempty"`
 }
 
 type ClientGetStoreResponse = fgaSdk.GetStoreResponse
@@ -747,7 +771,11 @@ func (client *OpenFgaClient) GetStoreExecute(request SdkClientGetStoreRequestInt
 	if err != nil {
 		return nil, err
 	}
-	data, _, err := client.OpenFgaApi.GetStore(request.GetContext(), *storeId).Execute()
+	ctx := request.GetContext()
+	if request.GetOptions() != nil {
+		ctx = addHeadersToContext(ctx, request.GetOptions().Headers)
+	}
+	data, _, err := client.OpenFgaApi.GetStore(ctx, *storeId).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -779,7 +807,8 @@ type SdkClientDeleteStoreRequestInterface interface {
 }
 
 type ClientDeleteStoreOptions struct {
-	StoreId *string `json:"store_id,omitempty"`
+	StoreId *string           `json:"store_id,omitempty"`
+	Headers map[string]string `json:"headers,omitempty"`
 }
 
 type ClientDeleteStoreResponse struct{}
@@ -813,7 +842,11 @@ func (client *OpenFgaClient) DeleteStoreExecute(request SdkClientDeleteStoreRequ
 	if err != nil {
 		return nil, err
 	}
-	_, err = client.OpenFgaApi.DeleteStore(request.GetContext(), *storeId).Execute()
+	ctx := request.GetContext()
+	if request.GetOptions() != nil {
+		ctx = addHeadersToContext(ctx, request.GetOptions().Headers)
+	}
+	_, err = client.OpenFgaApi.DeleteStore(ctx, *storeId).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -847,9 +880,10 @@ type SdkClientReadAuthorizationModelsRequestInterface interface {
 }
 
 type ClientReadAuthorizationModelsOptions struct {
-	PageSize          *int32  `json:"page_size,omitempty"`
-	ContinuationToken *string `json:"continuation_token,omitempty"`
-	StoreId           *string `json:"store_id,omitempty"`
+	PageSize          *int32            `json:"page_size,omitempty"`
+	ContinuationToken *string           `json:"continuation_token,omitempty"`
+	StoreId           *string           `json:"store_id,omitempty"`
+	Headers           map[string]string `json:"headers,omitempty"`
 }
 
 type ClientReadAuthorizationModelsResponse = fgaSdk.ReadAuthorizationModelsResponse
@@ -890,7 +924,11 @@ func (client *OpenFgaClient) ReadAuthorizationModelsExecute(request SdkClientRea
 		return nil, err
 	}
 
-	req := client.OpenFgaApi.ReadAuthorizationModels(request.GetContext(), *storeId)
+	ctx := request.GetContext()
+	if request.GetOptions() != nil {
+		ctx = addHeadersToContext(ctx, request.GetOptions().Headers)
+	}
+	req := client.OpenFgaApi.ReadAuthorizationModels(ctx, *storeId)
 	pageSize := getPageSizeFromRequest(&pagingOpts)
 	if pageSize != nil {
 		req = req.PageSize(*pageSize)
@@ -936,7 +974,8 @@ type SdkClientWriteAuthorizationModelRequestInterface interface {
 type ClientWriteAuthorizationModelRequest = fgaSdk.WriteAuthorizationModelRequest
 
 type ClientWriteAuthorizationModelOptions struct {
-	StoreId *string `json:"store_id,omitempty"`
+	StoreId *string           `json:"store_id,omitempty"`
+	Headers map[string]string `json:"headers,omitempty"`
 }
 
 type ClientWriteAuthorizationModelResponse = fgaSdk.WriteAuthorizationModelResponse
@@ -979,7 +1018,11 @@ func (client *OpenFgaClient) WriteAuthorizationModelExecute(request SdkClientWri
 	if err != nil {
 		return nil, err
 	}
-	data, _, err := client.OpenFgaApi.WriteAuthorizationModel(request.GetContext(), *storeId).Body(*request.GetBody()).Execute()
+	ctx := request.GetContext()
+	if request.GetOptions() != nil {
+		ctx = addHeadersToContext(ctx, request.GetOptions().Headers)
+	}
+	data, _, err := client.OpenFgaApi.WriteAuthorizationModel(ctx, *storeId).Body(*request.GetBody()).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -1018,8 +1061,9 @@ type ClientReadAuthorizationModelRequest struct {
 }
 
 type ClientReadAuthorizationModelOptions struct {
-	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
-	StoreId              *string `json:"store_id,omitempty"`
+	AuthorizationModelId *string           `json:"authorization_model_id,omitempty"`
+	StoreId              *string           `json:"store_id,omitempty"`
+	Headers              map[string]string `json:"headers,omitempty"`
 }
 
 type ClientReadAuthorizationModelResponse = fgaSdk.ReadAuthorizationModelResponse
@@ -1076,7 +1120,11 @@ func (client *OpenFgaClient) ReadAuthorizationModelExecute(request SdkClientRead
 	if err != nil {
 		return nil, err
 	}
-	data, _, err := client.OpenFgaApi.ReadAuthorizationModel(request.GetContext(), *storeId, *authorizationModelId).Execute()
+	ctx := request.GetContext()
+	if request.GetOptions() != nil {
+		ctx = addHeadersToContext(ctx, request.GetOptions().Headers)
+	}
+	data, _, err := client.OpenFgaApi.ReadAuthorizationModel(ctx, *storeId, *authorizationModelId).Execute()
 
 	if err != nil {
 		return nil, err
@@ -1109,7 +1157,8 @@ type SdkClientReadLatestAuthorizationModelRequestInterface interface {
 }
 
 type ClientReadLatestAuthorizationModelOptions struct {
-	StoreId *string `json:"store_id,omitempty"`
+	StoreId *string           `json:"store_id,omitempty"`
+	Headers map[string]string `json:"headers,omitempty"`
 }
 
 func (client *OpenFgaClient) ReadLatestAuthorizationModel(ctx _context.Context) SdkClientReadLatestAuthorizationModelRequestInterface {
@@ -1149,6 +1198,7 @@ func (client *OpenFgaClient) ReadLatestAuthorizationModelExecute(request SdkClie
 	}
 	if request.GetOptions() != nil {
 		opts.StoreId = request.GetOptions().StoreId
+		opts.Headers = request.GetOptions().Headers
 	}
 	req := client.ReadAuthorizationModels(request.GetContext()).Options(opts)
 
@@ -1197,9 +1247,10 @@ type ClientReadChangesRequest struct {
 }
 
 type ClientReadChangesOptions struct {
-	PageSize          *int32  `json:"page_size,omitempty"`
-	ContinuationToken *string `json:"continuation_token,omitempty"`
-	StoreId           *string `json:"store_id"`
+	PageSize          *int32            `json:"page_size,omitempty"`
+	ContinuationToken *string           `json:"continuation_token,omitempty"`
+	StoreId           *string           `json:"store_id"`
+	Headers           map[string]string `json:"headers,omitempty"`
 }
 
 type ClientReadChangesResponse = fgaSdk.ReadChangesResponse
@@ -1256,7 +1307,11 @@ func (client *OpenFgaClient) ReadChangesExecute(request SdkClientReadChangesRequ
 		return nil, err
 	}
 
-	req := client.OpenFgaApi.ReadChanges(request.GetContext(), *storeId)
+	ctx := request.GetContext()
+	if request.GetOptions() != nil {
+		ctx = addHeadersToContext(ctx, request.GetOptions().Headers)
+	}
+	req := client.OpenFgaApi.ReadChanges(ctx, *storeId)
 	pageSize := getPageSizeFromRequest(&pagingOpts)
 	if pageSize != nil {
 		req = req.PageSize(*pageSize)
@@ -1311,6 +1366,7 @@ type ClientReadOptions struct {
 	ContinuationToken *string                       `json:"continuation_token,omitempty"`
 	StoreId           *string                       `json:"store_id,omitempty"`
 	Consistency       *fgaSdk.ConsistencyPreference `json:"consistency,omitempty"`
+	Headers           map[string]string             `json:"headers,omitempty"`
 }
 
 type ClientReadResponse = fgaSdk.ReadResponse
@@ -1380,7 +1436,11 @@ func (client *OpenFgaClient) ReadExecute(request SdkClientReadRequestInterface) 
 	if err != nil {
 		return nil, err
 	}
-	data, _, err := client.OpenFgaApi.Read(request.GetContext(), *storeId).Body(body).Execute()
+	ctx := request.GetContext()
+	if request.GetOptions() != nil {
+		ctx = addHeadersToContext(ctx, request.GetOptions().Headers)
+	}
+	data, _, err := client.OpenFgaApi.Read(ctx, *storeId).Body(body).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -1426,6 +1486,7 @@ type ClientWriteOptions struct {
 	AuthorizationModelId *string             `json:"authorization_model_id,omitempty"`
 	StoreId              *string             `json:"store_id,omitempty"`
 	Transaction          *TransactionOptions `json:"transaction_options,omitempty"`
+	Headers              map[string]string   `json:"headers,omitempty"`
 }
 
 type ClientWriteStatus string
@@ -1551,6 +1612,11 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 		return nil, err
 	}
 
+	ctx := request.GetContext()
+	if options != nil {
+		ctx = addHeadersToContext(ctx, options.Headers)
+	}
+
 	// Unless explicitly disabled, transaction mode is enabled
 	// In transaction mode, the client will send the request to the server as is
 	if !transactionOptionsSet || !options.Transaction.Disable {
@@ -1571,7 +1637,7 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 			}
 			writeRequest.Deletes = &deletes
 		}
-		_, httpResponse, err := client.OpenFgaApi.Write(request.GetContext(), *storeId).Body(writeRequest).Execute()
+		_, httpResponse, err := client.OpenFgaApi.Write(ctx, *storeId).Body(writeRequest).Execute()
 
 		clientWriteStatus := SUCCESS
 		if err != nil {
@@ -1629,7 +1695,7 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 		}
 	}
 
-	writeGroup, ctx := errgroup.WithContext(request.GetContext())
+	writeGroup, ctx := errgroup.WithContext(ctx)
 
 	writeGroup.SetLimit(int(maxParallelReqs))
 	writeResponses := make([]ClientWriteResponse, len(writeChunks))
@@ -1645,6 +1711,7 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 				options: &ClientWriteOptions{
 					AuthorizationModelId: authorizationModelId,
 					StoreId:              request.GetStoreIdOverride(),
+					Headers:              options.Headers,
 				},
 			})
 
@@ -1674,7 +1741,7 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 		}
 	}
 
-	deleteGroup, ctx := errgroup.WithContext(request.GetContext())
+	deleteGroup, ctx := errgroup.WithContext(ctx)
 	deleteGroup.SetLimit(int(maxParallelReqs))
 	deleteResponses := make([]ClientWriteResponse, len(deleteChunks))
 	for index, deleteBody := range deleteChunks {
@@ -1689,6 +1756,7 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 				options: &ClientWriteOptions{
 					AuthorizationModelId: authorizationModelId,
 					StoreId:              request.GetStoreIdOverride(),
+					Headers:              options.Headers,
 				},
 			})
 
@@ -1883,6 +1951,7 @@ type ClientCheckOptions struct {
 	AuthorizationModelId *string                       `json:"authorization_model_id,omitempty"`
 	StoreId              *string                       `json:"store_id,omitempty"`
 	Consistency          *fgaSdk.ConsistencyPreference `json:"consistency,omitempty"`
+	Headers              map[string]string             `json:"headers,omitempty"`
 }
 
 type ClientCheckResponse struct {
@@ -1967,7 +2036,12 @@ func (client *OpenFgaClient) CheckExecute(request SdkClientCheckRequestInterface
 		requestBody.Consistency = request.GetOptions().Consistency
 	}
 
-	data, httpResponse, err := client.OpenFgaApi.Check(request.GetContext(), *storeId).Body(requestBody).Execute()
+	ctx := request.GetContext()
+	if request.GetOptions() != nil {
+		ctx = addHeadersToContext(ctx, request.GetOptions().Headers)
+	}
+
+	data, httpResponse, err := client.OpenFgaApi.Check(ctx, *storeId).Body(requestBody).Execute()
 	return &ClientCheckResponse{CheckResponse: data, HttpResponse: httpResponse}, err
 }
 
@@ -2000,6 +2074,7 @@ type ClientBatchCheckClientOptions struct {
 	StoreId              *string                       `json:"store_id,omitempty"`
 	MaxParallelRequests  *int32                        `json:"max_parallel_requests,omitempty"`
 	Consistency          *fgaSdk.ConsistencyPreference `json:"consistency,omitempty"`
+	Headers              map[string]string             `json:"headers,omitempty"`
 }
 
 type ClientBatchCheckClientSingleResponse struct {
@@ -2083,8 +2158,11 @@ func (client *OpenFgaClient) ClientBatchCheckExecute(request SdkClientBatchCheck
 		StoreId:              storeId,
 	}
 
-	if request.GetOptions() != nil && request.GetOptions().Consistency != nil {
-		checkOptions.Consistency = request.GetOptions().Consistency
+	if request.GetOptions() != nil {
+		if request.GetOptions().Consistency != nil {
+			checkOptions.Consistency = request.GetOptions().Consistency
+		}
+		checkOptions.Headers = request.GetOptions().Headers
 	}
 
 	for index, checkBody := range *request.GetBody() {
@@ -2189,6 +2267,8 @@ func (client *OpenFgaClient) BatchCheckExecute(request SdkClientBatchCheckReques
 	if options == nil {
 		options = &BatchCheckOptions{}
 	}
+
+	ctx = addHeadersToContext(ctx, options.Headers)
 
 	maxParallelRequests := int32(10)
 	if options.MaxParallelRequests != nil {
@@ -2374,6 +2454,7 @@ type ClientExpandOptions struct {
 	AuthorizationModelId *string                       `json:"authorization_model_id,omitempty"`
 	StoreId              *string                       `json:"store_id,omitempty"`
 	Consistency          *fgaSdk.ConsistencyPreference `json:"consistency,omitempty"`
+	Headers              map[string]string             `json:"headers,omitempty"`
 }
 
 type ClientExpandResponse = fgaSdk.ExpandResponse
@@ -2447,7 +2528,12 @@ func (client *OpenFgaClient) ExpandExecute(request SdkClientExpandRequestInterfa
 		body.Consistency = request.GetOptions().Consistency
 	}
 
-	data, _, err := client.OpenFgaApi.Expand(request.GetContext(), *storeId).Body(body).Execute()
+	ctx := request.GetContext()
+	if request.GetOptions() != nil {
+		ctx = addHeadersToContext(ctx, request.GetOptions().Headers)
+	}
+
+	data, _, err := client.OpenFgaApi.Expand(ctx, *storeId).Body(body).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -2487,6 +2573,7 @@ type ClientListObjectsOptions struct {
 	AuthorizationModelId *string                       `json:"authorization_model_id,omitempty"`
 	StoreId              *string                       `json:"store_id,omitempty"`
 	Consistency          *fgaSdk.ConsistencyPreference `json:"consistency,omitempty"`
+	Headers              map[string]string             `json:"headers,omitempty"`
 }
 
 type ClientListObjectsResponse = fgaSdk.ListObjectsResponse
@@ -2564,7 +2651,11 @@ func (client *OpenFgaClient) ListObjectsExecute(request SdkClientListObjectsRequ
 	if request.GetOptions() != nil {
 		body.Consistency = request.GetOptions().Consistency
 	}
-	data, _, err := client.OpenFgaApi.ListObjects(request.GetContext(), *storeId).Body(body).Execute()
+	ctx := request.GetContext()
+	if request.GetOptions() != nil {
+		ctx = addHeadersToContext(ctx, request.GetOptions().Headers)
+	}
+	data, _, err := client.OpenFgaApi.ListObjects(ctx, *storeId).Body(body).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -2606,6 +2697,7 @@ type ClientListRelationsOptions struct {
 	MaxParallelRequests  *int32                        `json:"max_parallel_requests,omitempty"`
 	StoreId              *string                       `json:"store_id,omitempty"`
 	Consistency          *fgaSdk.ConsistencyPreference `json:"consistency,omitempty"`
+	Headers              map[string]string             `json:"headers,omitempty"`
 }
 
 type ClientListRelationsResponse struct {
@@ -2696,6 +2788,7 @@ func (client *OpenFgaClient) ListRelationsExecute(request SdkClientListRelations
 	if request.GetOptions() != nil {
 		options.Consistency = request.GetOptions().Consistency
 		options.MaxParallelRequests = request.GetOptions().MaxParallelRequests
+		options.Headers = request.GetOptions().Headers
 	}
 
 	batchResponse, err := client.ClientBatchCheckExecute(&SdkClientBatchCheckClientRequest{
@@ -2753,6 +2846,7 @@ type ClientListUsersOptions struct {
 	AuthorizationModelId *string                       `json:"authorization_model_id,omitempty"`
 	StoreId              *string                       `json:"store_id,omitempty"`
 	Consistency          *fgaSdk.ConsistencyPreference `json:"consistency,omitempty"`
+	Headers              map[string]string             `json:"headers,omitempty"`
 }
 
 type ClientListUsersResponse = fgaSdk.ListUsersResponse
@@ -2832,7 +2926,12 @@ func (client *OpenFgaClient) ListUsersExecute(request SdkClientListUsersRequestI
 		body.Consistency = request.GetOptions().Consistency
 	}
 
-	data, _, err := client.OpenFgaApi.ListUsers(request.GetContext(), *storeId).Body(body).Execute()
+	ctx := request.GetContext()
+	if request.GetOptions() != nil {
+		ctx = addHeadersToContext(ctx, request.GetOptions().Headers)
+	}
+
+	data, _, err := client.OpenFgaApi.ListUsers(ctx, *storeId).Body(body).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -2858,8 +2957,9 @@ type SdkClientReadAssertionsRequestInterface interface {
 }
 
 type ClientReadAssertionsOptions struct {
-	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
-	StoreId              *string `json:"store_id,omitempty"`
+	AuthorizationModelId *string           `json:"authorization_model_id,omitempty"`
+	StoreId              *string           `json:"store_id,omitempty"`
+	Headers              map[string]string `json:"headers,omitempty"`
 }
 
 type ClientReadAssertionsResponse = fgaSdk.ReadAssertionsResponse
@@ -2914,7 +3014,11 @@ func (client *OpenFgaClient) ReadAssertionsExecute(request SdkClientReadAssertio
 	if err != nil {
 		return nil, err
 	}
-	data, _, err := client.OpenFgaApi.ReadAssertions(request.GetContext(), *storeId, *authorizationModelId).Execute()
+	ctx := request.GetContext()
+	if request.GetOptions() != nil {
+		ctx = addHeadersToContext(ctx, request.GetOptions().Headers)
+	}
+	data, _, err := client.OpenFgaApi.ReadAssertions(ctx, *storeId, *authorizationModelId).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -2972,8 +3076,9 @@ func (clientAssertion ClientAssertion) ToAssertion() fgaSdk.Assertion {
 }
 
 type ClientWriteAssertionsOptions struct {
-	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
-	StoreId              *string `json:"store_id,omitempty"`
+	AuthorizationModelId *string           `json:"authorization_model_id,omitempty"`
+	StoreId              *string           `json:"store_id,omitempty"`
+	Headers              map[string]string `json:"headers,omitempty"`
 }
 
 type ClientWriteAssertionsResponse struct {
@@ -3043,7 +3148,11 @@ func (client *OpenFgaClient) WriteAssertionsExecute(request SdkClientWriteAssert
 		clientAssertion := (*request.GetBody())[index]
 		writeAssertionsRequest.Assertions = append(writeAssertionsRequest.Assertions, clientAssertion.ToAssertion())
 	}
-	_, err = client.OpenFgaApi.WriteAssertions(request.GetContext(), *storeId, *authorizationModelId).Body(writeAssertionsRequest).Execute()
+	ctx := request.GetContext()
+	if request.GetOptions() != nil {
+		ctx = addHeadersToContext(ctx, request.GetOptions().Headers)
+	}
+	_, err = client.OpenFgaApi.WriteAssertions(ctx, *storeId, *authorizationModelId).Body(writeAssertionsRequest).Execute()
 
 	if err != nil {
 		return nil, err

@@ -3587,6 +3587,29 @@ func TestOpenFgaClient(t *testing.T) {
 			}
 		})
 	})
+
+	t.Run("Custom headers per request", func(t *testing.T) {
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+
+		headerKey := "X-Correlation-ID"
+		headerVal := "123"
+		httpmock.RegisterResponder(http.MethodPost,
+			fmt.Sprintf("%s/stores/%s/check", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient)),
+			func(req *http.Request) (*http.Response, error) {
+				if req.Header.Get(headerKey) != headerVal {
+					t.Fatalf("expected header %s=%s", headerKey, headerVal)
+				}
+				return httpmock.NewJsonResponse(200, map[string]bool{"allowed": true})
+			})
+
+		opts := ClientCheckOptions{Headers: map[string]string{headerKey: headerVal}}
+		body := ClientCheckRequest{User: "user:anne", Relation: "reader", Object: "document:1"}
+		_, err := fgaClient.Check(context.Background()).Body(body).Options(opts).Execute()
+		if err != nil {
+			t.Fatalf("Check error: %v", err)
+		}
+	})
 }
 
 func getStoreId(t *testing.T, fgaClient *OpenFgaClient) string {
