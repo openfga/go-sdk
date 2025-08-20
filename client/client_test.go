@@ -196,7 +196,7 @@ func TestOpenFgaClient(t *testing.T) {
 		)
 
 		options := ClientListStoresOptions{
-			PageSize:          openfga.ToPtr(10),
+			PageSize:          openfga.ToPtr(int32(10)),
 			ContinuationToken: openfga.ToPtr("..."),
 		}
 		got, err := fgaClient.ListStores(context.Background()).Options(options).Execute()
@@ -489,7 +489,7 @@ func TestOpenFgaClient(t *testing.T) {
 		)
 
 		options := ClientReadAuthorizationModelsOptions{
-			PageSize:          openfga.ToPtr(10),
+			PageSize:          openfga.ToPtr(int32(10)),
 			ContinuationToken: openfga.ToPtr("..."),
 		}
 		got, err := fgaClient.ReadAuthorizationModels(context.Background()).Options(options).Execute()
@@ -1062,7 +1062,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Type:      "document",
 			StartTime: startTime,
 		}
-		options := ClientReadChangesOptions{ContinuationToken: openfga.ToPtr("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="), PageSize: openfga.ToPtr(25)}
+		options := ClientReadChangesOptions{ContinuationToken: openfga.ToPtr("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="), PageSize: openfga.ToPtr(int32(25))}
 		got, err := fgaClient.ReadChanges(context.Background()).Body(body).Options(options).Execute()
 		if err != nil {
 			t.Fatalf("%v", err)
@@ -1144,7 +1144,7 @@ func TestOpenFgaClient(t *testing.T) {
 		)
 
 		options := ClientReadOptions{
-			PageSize:          openfga.ToPtr(10),
+			PageSize:          openfga.ToPtr(int32(10)),
 			ContinuationToken: openfga.ToPtr("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="),
 		}
 		got, err := fgaClient.Read(context.Background()).Body(requestBody).Options(options).Execute()
@@ -1229,7 +1229,7 @@ func TestOpenFgaClient(t *testing.T) {
 		)
 
 		options := ClientReadOptions{
-			PageSize:          openfga.ToPtr(10),
+			PageSize:          openfga.ToPtr(int32(10)),
 			ContinuationToken: openfga.ToPtr("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="),
 			Consistency:       openfga.CONSISTENCYPREFERENCE_MINIMIZE_LATENCY.Ptr(),
 		}
@@ -2215,7 +2215,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		options := ClientBatchCheckClientOptions{
 			AuthorizationModelId: openfga.ToPtr(authModelId),
-			MaxParallelRequests:  openfga.ToPtr(5),
+			MaxParallelRequests:  openfga.ToPtr(int32(5)),
 		}
 
 		var expectedResponse openfga.CheckResponse
@@ -2276,7 +2276,7 @@ func TestOpenFgaClient(t *testing.T) {
 		// ClientBatchCheck with invalid auth model ID should fail
 		badOptions := ClientBatchCheckClientOptions{
 			AuthorizationModelId: openfga.ToPtr("INVALID"),
-			MaxParallelRequests:  openfga.ToPtr(5),
+			MaxParallelRequests:  openfga.ToPtr(int32(5)),
 		}
 		_, err = fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Options(badOptions).Execute()
 		if err == nil {
@@ -2285,7 +2285,7 @@ func TestOpenFgaClient(t *testing.T) {
 		// invalid store ID should fail
 		badStoreOptions := ClientBatchCheckClientOptions{
 			StoreId:             openfga.ToPtr("INVALID"),
-			MaxParallelRequests: openfga.ToPtr(5),
+			MaxParallelRequests: openfga.ToPtr(int32(5)),
 		}
 		_, err = fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
 		if err == nil {
@@ -2311,7 +2311,7 @@ func TestOpenFgaClient(t *testing.T) {
 		// store should be overridden
 		storeOverrideOptions := ClientBatchCheckClientOptions{
 			StoreId:             openfga.ToPtr("7777HCE4YVKPQEKZQHT2R89MQV"),
-			MaxParallelRequests: openfga.ToPtr(5),
+			MaxParallelRequests: openfga.ToPtr(int32(5)),
 		}
 		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
@@ -2369,7 +2369,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		options := ClientBatchCheckClientOptions{
 			AuthorizationModelId: openfga.ToPtr(authModelId),
-			MaxParallelRequests:  openfga.ToPtr(5),
+			MaxParallelRequests:  openfga.ToPtr(int32(5)),
 			Consistency:          openfga.CONSISTENCYPREFERENCE_HIGHER_CONSISTENCY.Ptr(),
 		}
 
@@ -2438,8 +2438,8 @@ func TestOpenFgaClient(t *testing.T) {
 
 		options := BatchCheckOptions{
 			AuthorizationModelId: openfga.ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
-			MaxParallelRequests:  openfga.ToPtr(5),
-			MaxBatchSize:         openfga.ToPtr(10),
+			MaxParallelRequests:  openfga.ToPtr(int32(5)),
+			MaxBatchSize:         openfga.ToPtr(int32(10)),
 		}
 
 		var expectedResponse openfga.BatchCheckResponse
@@ -2487,7 +2487,7 @@ func TestOpenFgaClient(t *testing.T) {
 		// BatchCheck with invalid auth model ID should fail
 		badOptions := BatchCheckOptions{
 			AuthorizationModelId: openfga.ToPtr("INVALID"),
-			MaxParallelRequests:  openfga.ToPtr(5),
+			MaxParallelRequests:  openfga.ToPtr(int32(5)),
 		}
 		ctxBad, cancelBad := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancelBad()
@@ -2499,7 +2499,7 @@ func TestOpenFgaClient(t *testing.T) {
 		// Invalid store ID should fail
 		badStoreOptions := BatchCheckOptions{
 			StoreId:             openfga.ToPtr("INVALID"),
-			MaxParallelRequests: openfga.ToPtr(5),
+			MaxParallelRequests: openfga.ToPtr(int32(5)),
 		}
 		ctxStore, cancelStore := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancelStore()
@@ -2511,7 +2511,7 @@ func TestOpenFgaClient(t *testing.T) {
 		// Store should be overridden
 		storeOverrideOptions := BatchCheckOptions{
 			StoreId:             openfga.ToPtr("7777HCE4YVKPQEKZQHT2R89MQV"),
-			MaxParallelRequests: openfga.ToPtr(5),
+			MaxParallelRequests: openfga.ToPtr(int32(5)),
 		}
 
 		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
@@ -3519,7 +3519,7 @@ func TestOpenFgaClient(t *testing.T) {
 			}
 
 			options := BatchCheckOptions{
-				MaxBatchSize: openfga.ToPtr(1),
+				MaxBatchSize: openfga.ToPtr(int32(1)),
 			}
 
 			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
@@ -3559,8 +3559,8 @@ func TestOpenFgaClient(t *testing.T) {
 			}
 
 			options := BatchCheckOptions{
-				MaxParallelRequests: openfga.ToPtr(2),  // 2 parallel requests
-				MaxBatchSize:        openfga.ToPtr(50), // 50 items per batch
+				MaxParallelRequests: openfga.ToPtr(int32(2)),  // 2 parallel requests
+				MaxBatchSize:        openfga.ToPtr(int32(50)), // 50 items per batch
 			}
 			// Total capacity: 2*50 = 100, but we have 101 items
 
