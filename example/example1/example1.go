@@ -112,8 +112,8 @@ func mainInner() error {
 						Child: []openfga.Userset{
 							{This: &map[string]interface{}{}},
 							{ComputedUserset: &openfga.ObjectRelation{
-								Object:   openfga.PtrString(""),
-								Relation: openfga.PtrString("writer"),
+								Object:   openfga.ToPtr(""),
+								Relation: openfga.ToPtr("writer"),
 							}},
 						},
 					}},
@@ -123,7 +123,7 @@ func mainInner() error {
 						"writer": {
 							DirectlyRelatedUserTypes: &[]openfga.RelationReference{
 								{Type: "user"},
-								{Type: "user", Condition: openfga.PtrString("ViewCountLessThan200")},
+								{Type: "user", Condition: openfga.ToPtr("ViewCountLessThan200")},
 							},
 						},
 						"viewer": {

@@ -1145,7 +1145,7 @@ func (request *SdkClientReadLatestAuthorizationModelRequest) GetOptions() *Clien
 
 func (client *OpenFgaClient) ReadLatestAuthorizationModelExecute(request SdkClientReadLatestAuthorizationModelRequestInterface) (*ClientReadAuthorizationModelResponse, error) {
 	opts := ClientReadAuthorizationModelsOptions{
-		PageSize: fgaSdk.PtrInt32(1),
+		PageSize: fgaSdk.ToPtr(1),
 	}
 	if request.GetOptions() != nil {
 		opts.StoreId = request.GetOptions().StoreId

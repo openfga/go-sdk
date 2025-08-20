@@ -564,8 +564,8 @@ func TestOpenFgaApi(t *testing.T) {
 						Child: []Userset{
 							{This: &map[string]interface{}{}},
 							{ComputedUserset: &ObjectRelation{
-								Object:   PtrString(""),
-								Relation: PtrString("repo_writer"),
+								Object:   ToPtr(""),
+								Relation: ToPtr("repo_writer"),
 							}},
 						},
 					}},
@@ -663,7 +663,7 @@ func TestOpenFgaApi(t *testing.T) {
 				Relation: "viewer",
 				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 			},
-			AuthorizationModelId: PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			AuthorizationModelId: ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
 		}
 
 		var expectedResponse CheckResponse
@@ -717,7 +717,7 @@ func TestOpenFgaApi(t *testing.T) {
 					Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 				}},
 			},
-			AuthorizationModelId: PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			AuthorizationModelId: ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
 		}
 
 		var expectedResponse map[string]interface{}
@@ -763,7 +763,7 @@ func TestOpenFgaApi(t *testing.T) {
 					Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 				}},
 			},
-			AuthorizationModelId: PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			AuthorizationModelId: ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
 		}
 
 		var expectedResponse map[string]interface{}
@@ -806,7 +806,7 @@ func TestOpenFgaApi(t *testing.T) {
 				Relation: "viewer",
 				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 			},
-			AuthorizationModelId: PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			AuthorizationModelId: ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
 		}
 
 		var expectedResponse ExpandResponse
@@ -851,9 +851,9 @@ func TestOpenFgaApi(t *testing.T) {
 
 		requestBody := ReadRequest{
 			TupleKey: &ReadRequestTupleKey{
-				User:     PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-				Relation: PtrString("viewer"),
-				Object:   PtrString("document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"),
+				User:     ToPtr("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
+				Relation: ToPtr("viewer"),
+				Object:   ToPtr("document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"),
 			},
 		}
 
@@ -952,7 +952,7 @@ func TestOpenFgaApi(t *testing.T) {
 		}
 
 		requestBody := ListObjectsRequest{
-			AuthorizationModelId: PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			AuthorizationModelId: ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
 			User:                 "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 			Relation:             "can_read",
 			Type:                 "document",
@@ -1017,7 +1017,7 @@ func TestOpenFgaApi(t *testing.T) {
 		}
 
 		requestBody := ListUsersRequest{
-			AuthorizationModelId: PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			AuthorizationModelId: ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
 			Object: FgaObject{
 				Type: "document",
 				Id:   "roadmap",
@@ -1028,7 +1028,7 @@ func TestOpenFgaApi(t *testing.T) {
 				Type: "user",
 			}, {
 				Type:     "team",
-				Relation: PtrString("member"),
+				Relation: ToPtr("member"),
 			}},
 			ContextualTuples: &[]TupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",

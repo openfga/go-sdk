@@ -196,8 +196,8 @@ func TestOpenFgaClient(t *testing.T) {
 		)
 
 		options := ClientListStoresOptions{
-			PageSize:          openfga.PtrInt32(10),
-			ContinuationToken: openfga.PtrString("..."),
+			PageSize:          openfga.ToPtr(10),
+			ContinuationToken: openfga.ToPtr("..."),
 		}
 		got, err := fgaClient.ListStores(context.Background()).Options(options).Execute()
 		if err != nil {
@@ -305,7 +305,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// invalid store id should result in error
 		badStoreOptions := ClientGetStoreOptions{
-			StoreId: openfga.PtrString("INVALID"),
+			StoreId: openfga.ToPtr("INVALID"),
 		}
 		_, err = fgaClient.GetStore(context.Background()).Options(badStoreOptions).Execute()
 		if err == nil {
@@ -314,7 +314,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// store can be overridden
 		storeOverrideOptions := ClientGetStoreOptions{
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+			StoreId: openfga.ToPtr("7777HCE4YVKPQEKZQHT2R89MQV"),
 		}
 		httpmock.Reset()
 		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId),
@@ -434,7 +434,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// invalid store id should result in error
 		badStoreOptions := ClientDeleteStoreOptions{
-			StoreId: openfga.PtrString("INVALID"),
+			StoreId: openfga.ToPtr("INVALID"),
 		}
 		_, err = fgaClient.DeleteStore(context.Background()).Options(badStoreOptions).Execute()
 		if err == nil {
@@ -443,7 +443,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// store can be overridden
 		storeOverrideOptions := ClientDeleteStoreOptions{
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+			StoreId: openfga.ToPtr("7777HCE4YVKPQEKZQHT2R89MQV"),
 		}
 		httpmock.Reset()
 		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId),
@@ -489,8 +489,8 @@ func TestOpenFgaClient(t *testing.T) {
 		)
 
 		options := ClientReadAuthorizationModelsOptions{
-			PageSize:          openfga.PtrInt32(10),
-			ContinuationToken: openfga.PtrString("..."),
+			PageSize:          openfga.ToPtr(10),
+			ContinuationToken: openfga.ToPtr("..."),
 		}
 		got, err := fgaClient.ReadAuthorizationModels(context.Background()).Options(options).Execute()
 		if err != nil {
@@ -512,7 +512,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// invalid store id should result in error
 		badStoreOptions := ClientReadAuthorizationModelsOptions{
-			StoreId: openfga.PtrString("INVALID"),
+			StoreId: openfga.ToPtr("INVALID"),
 		}
 		_, err = fgaClient.ReadAuthorizationModels(context.Background()).Options(badStoreOptions).Execute()
 		if err == nil {
@@ -521,7 +521,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// store can be overridden
 		storeOverrideOptions := ClientReadAuthorizationModelsOptions{
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+			StoreId: openfga.ToPtr("7777HCE4YVKPQEKZQHT2R89MQV"),
 		}
 		httpmock.Reset()
 		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
@@ -561,8 +561,8 @@ func TestOpenFgaClient(t *testing.T) {
 							Child: []openfga.Userset{
 								{This: &map[string]interface{}{}},
 								{ComputedUserset: &openfga.ObjectRelation{
-									Object:   openfga.PtrString(""),
-									Relation: openfga.PtrString("writer"),
+									Object:   openfga.ToPtr(""),
+									Relation: openfga.ToPtr("writer"),
 								}},
 							},
 						}},
@@ -623,7 +623,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// invalid store id should result in error
 		badStoreOptions := ClientWriteAuthorizationModelOptions{
-			StoreId: openfga.PtrString("INVALID"),
+			StoreId: openfga.ToPtr("INVALID"),
 		}
 		_, err = fgaClient.WriteAuthorizationModel(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
 		if err == nil {
@@ -632,7 +632,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// store can be overridden
 		storeOverrideOptions := ClientWriteAuthorizationModelOptions{
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+			StoreId: openfga.ToPtr("7777HCE4YVKPQEKZQHT2R89MQV"),
 		}
 		httpmock.Reset()
 		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
@@ -673,8 +673,8 @@ func TestOpenFgaClient(t *testing.T) {
 							Child: []openfga.Userset{
 								{This: &map[string]interface{}{}},
 								{ComputedUserset: &openfga.ObjectRelation{
-									Object:   openfga.PtrString(""),
-									Relation: openfga.PtrString("writer"),
+									Object:   openfga.ToPtr(""),
+									Relation: openfga.ToPtr("writer"),
 								}},
 							},
 						}},
@@ -684,7 +684,7 @@ func TestOpenFgaClient(t *testing.T) {
 							"writer": {
 								DirectlyRelatedUserTypes: &[]openfga.RelationReference{
 									{Type: "user"},
-									{Type: "user", Condition: openfga.PtrString("ViewCountLessThan200")},
+									{Type: "user", Condition: openfga.ToPtr("ViewCountLessThan200")},
 								},
 							},
 							"viewer": {
@@ -779,8 +779,8 @@ func TestOpenFgaClient(t *testing.T) {
 						Child: []openfga.Userset{
 							{This: &map[string]interface{}{}},
 							{ComputedUserset: &openfga.ObjectRelation{
-								Object:   openfga.PtrString(""),
-								Relation: openfga.PtrString("writer"),
+								Object:   openfga.ToPtr(""),
+								Relation: openfga.ToPtr("writer"),
 							}},
 						},
 					}},
@@ -790,7 +790,7 @@ func TestOpenFgaClient(t *testing.T) {
 						"writer": {
 							DirectlyRelatedUserTypes: &[]openfga.RelationReference{
 								{Type: "user"},
-								{Type: "user", Condition: openfga.PtrString("ViewCountLessThan200")},
+								{Type: "user", Condition: openfga.ToPtr("ViewCountLessThan200")},
 							},
 						},
 						"viewer": {
@@ -893,7 +893,7 @@ func TestOpenFgaClient(t *testing.T) {
 			},
 		)
 		options := ClientReadAuthorizationModelOptions{
-			AuthorizationModelId: openfga.PtrString(modelId),
+			AuthorizationModelId: openfga.ToPtr(modelId),
 		}
 		got, err := fgaClient.ReadAuthorizationModel(context.Background()).Options(options).Execute()
 		if err != nil {
@@ -916,7 +916,7 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 		// ReadAuthorizationModel with options of empty string should not work
 		badOptions := ClientReadAuthorizationModelOptions{
-			AuthorizationModelId: openfga.PtrString(""),
+			AuthorizationModelId: openfga.ToPtr(""),
 		}
 		_, err = fgaClient.ReadAuthorizationModel(context.Background()).Options(badOptions).Execute()
 		if err == nil || err.Error() != expectedError {
@@ -925,7 +925,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// invalid store id should result in error
 		badStoreOptions := ClientReadAuthorizationModelOptions{
-			StoreId: openfga.PtrString("INVALID"),
+			StoreId: openfga.ToPtr("INVALID"),
 		}
 		_, err = fgaClient.ReadAuthorizationModel(context.Background()).Options(badStoreOptions).Execute()
 		if err == nil {
@@ -934,8 +934,8 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// store can be overridden
 		storeOverrideOptions := ClientReadAuthorizationModelOptions{
-			AuthorizationModelId: openfga.PtrString(modelId),
-			StoreId:              openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+			AuthorizationModelId: openfga.ToPtr(modelId),
+			StoreId:              openfga.ToPtr("7777HCE4YVKPQEKZQHT2R89MQV"),
 		}
 		httpmock.Reset()
 		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath, modelId),
@@ -1001,7 +1001,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// invalid store id should result in error
 		badStoreOptions := ClientReadLatestAuthorizationModelOptions{
-			StoreId: openfga.PtrString("INVALID"),
+			StoreId: openfga.ToPtr("INVALID"),
 		}
 		_, err = fgaClient.ReadLatestAuthorizationModel(context.Background()).Options(badStoreOptions).Execute()
 		if err == nil {
@@ -1010,7 +1010,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// store can be overridden
 		storeOverrideOptions := ClientReadLatestAuthorizationModelOptions{
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+			StoreId: openfga.ToPtr("7777HCE4YVKPQEKZQHT2R89MQV"),
 		}
 		httpmock.Reset()
 		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
@@ -1062,7 +1062,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Type:      "document",
 			StartTime: startTime,
 		}
-		options := ClientReadChangesOptions{ContinuationToken: openfga.PtrString("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="), PageSize: openfga.PtrInt32(25)}
+		options := ClientReadChangesOptions{ContinuationToken: openfga.ToPtr("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="), PageSize: openfga.ToPtr(25)}
 		got, err := fgaClient.ReadChanges(context.Background()).Body(body).Options(options).Execute()
 		if err != nil {
 			t.Fatalf("%v", err)
@@ -1084,7 +1084,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// invalid store id should result in error
 		badStoreOptions := ClientReadChangesOptions{
-			StoreId: openfga.PtrString("INVALID"),
+			StoreId: openfga.ToPtr("INVALID"),
 		}
 		_, err = fgaClient.ReadChanges(context.Background()).Body(body).Options(badStoreOptions).Execute()
 		if err == nil {
@@ -1093,7 +1093,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// store can be overridden
 		storeOverrideOptions := ClientReadChangesOptions{
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+			StoreId: openfga.ToPtr("7777HCE4YVKPQEKZQHT2R89MQV"),
 		}
 		httpmock.Reset()
 		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
@@ -1121,9 +1121,9 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 
 		requestBody := ClientReadRequest{
-			User:     openfga.PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-			Relation: openfga.PtrString("viewer"),
-			Object:   openfga.PtrString("document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"),
+			User:     openfga.ToPtr("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
+			Relation: openfga.ToPtr("viewer"),
+			Object:   openfga.ToPtr("document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"),
 		}
 
 		var expectedResponse openfga.ReadResponse
@@ -1144,8 +1144,8 @@ func TestOpenFgaClient(t *testing.T) {
 		)
 
 		options := ClientReadOptions{
-			PageSize:          openfga.PtrInt32(10),
-			ContinuationToken: openfga.PtrString("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="),
+			PageSize:          openfga.ToPtr(10),
+			ContinuationToken: openfga.ToPtr("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="),
 		}
 		got, err := fgaClient.Read(context.Background()).Body(requestBody).Options(options).Execute()
 		if err != nil {
@@ -1168,7 +1168,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// invalid store id should result in error
 		badStoreOptions := ClientReadOptions{
-			StoreId: openfga.PtrString("INVALID"),
+			StoreId: openfga.ToPtr("INVALID"),
 		}
 		_, err = fgaClient.Read(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
 		if err == nil {
@@ -1177,7 +1177,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// store can be overridden
 		storeOverrideOptions := ClientReadOptions{
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+			StoreId: openfga.ToPtr("7777HCE4YVKPQEKZQHT2R89MQV"),
 		}
 		httpmock.Reset()
 		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
@@ -1205,9 +1205,9 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 
 		requestBody := ClientReadRequest{
-			User:     openfga.PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-			Relation: openfga.PtrString("viewer"),
-			Object:   openfga.PtrString("document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"),
+			User:     openfga.ToPtr("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
+			Relation: openfga.ToPtr("viewer"),
+			Object:   openfga.ToPtr("document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"),
 		}
 
 		var expectedResponse openfga.ReadResponse
@@ -1229,8 +1229,8 @@ func TestOpenFgaClient(t *testing.T) {
 		)
 
 		options := ClientReadOptions{
-			PageSize:          openfga.PtrInt32(10),
-			ContinuationToken: openfga.PtrString("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="),
+			PageSize:          openfga.ToPtr(10),
+			ContinuationToken: openfga.ToPtr("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="),
 			Consistency:       openfga.CONSISTENCYPREFERENCE_MINIMIZE_LATENCY.Ptr(),
 		}
 		_, err := fgaClient.Read(context.Background()).Body(requestBody).Options(options).Execute()
@@ -1256,7 +1256,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Deletes: []ClientTupleKeyWithoutCondition{},
 		}
 		options := ClientWriteOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			AuthorizationModelId: openfga.ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
 		}
 
 		var expectedResponse map[string]interface{}
@@ -1325,7 +1325,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// store ID can be overridden
 		storeOverrideOptions := ClientWriteOptions{
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+			StoreId: openfga.ToPtr("7777HCE4YVKPQEKZQHT2R89MQV"),
 		}
 		httpmock.Reset()
 		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
@@ -1359,7 +1359,7 @@ func TestOpenFgaClient(t *testing.T) {
 			}},
 		}
 		options := ClientWriteOptions{
-			AuthorizationModelId: openfga.PtrString("INVALID"),
+			AuthorizationModelId: openfga.ToPtr("INVALID"),
 		}
 
 		var expectedResponse map[string]interface{}
@@ -1389,7 +1389,7 @@ func TestOpenFgaClient(t *testing.T) {
 			}},
 		}
 		options := ClientWriteOptions{
-			StoreId: openfga.PtrString("INVALID"),
+			StoreId: openfga.ToPtr("INVALID"),
 		}
 
 		var expectedResponse map[string]interface{}
@@ -1429,7 +1429,7 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 		const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
 		options := ClientWriteOptions{
-			AuthorizationModelId: openfga.PtrString(authModelId),
+			AuthorizationModelId: openfga.ToPtr(authModelId),
 			Transaction: &TransactionOptions{
 				Disable:             true,
 				MaxParallelRequests: 5,
@@ -1499,13 +1499,13 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// store can be overridden
 		storeOverrideOptions := ClientWriteOptions{
-			AuthorizationModelId: openfga.PtrString(authModelId),
+			AuthorizationModelId: openfga.ToPtr(authModelId),
 			Transaction: &TransactionOptions{
 				Disable:             true,
 				MaxParallelRequests: 5,
 				MaxPerChunk:         1,
 			},
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+			StoreId: openfga.ToPtr("7777HCE4YVKPQEKZQHT2R89MQV"),
 		}
 		httpmock.Reset()
 		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
@@ -1556,7 +1556,7 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 		const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
 		options := ClientWriteOptions{
-			AuthorizationModelId: openfga.PtrString(authModelId),
+			AuthorizationModelId: openfga.ToPtr(authModelId),
 			Transaction: &TransactionOptions{
 				Disable:     true,
 				MaxPerChunk: 1,
@@ -1625,13 +1625,13 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// store can be overridden
 		storeOverrideOptions := ClientWriteOptions{
-			AuthorizationModelId: openfga.PtrString(authModelId),
+			AuthorizationModelId: openfga.ToPtr(authModelId),
 			Transaction: &TransactionOptions{
 				Disable:             true,
 				MaxParallelRequests: 5,
 				MaxPerChunk:         1,
 			},
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+			StoreId: openfga.ToPtr("7777HCE4YVKPQEKZQHT2R89MQV"),
 		}
 		httpmock.Reset()
 		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
@@ -1672,7 +1672,7 @@ func TestOpenFgaClient(t *testing.T) {
 			}},
 		}
 		options := ClientWriteOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			AuthorizationModelId: openfga.ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
 		}
 
 		httpmock.Activate()
@@ -1708,7 +1708,7 @@ func TestOpenFgaClient(t *testing.T) {
 			}},
 		}
 		options := ClientWriteOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			AuthorizationModelId: openfga.ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
 			Transaction: &TransactionOptions{
 				Disable:             true,
 				MaxPerChunk:         1,
@@ -1767,7 +1767,7 @@ func TestOpenFgaClient(t *testing.T) {
 			}},
 		}
 		options := ClientWriteOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			AuthorizationModelId: openfga.ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
 			Transaction: &TransactionOptions{
 				Disable:             true,
 				MaxPerChunk:         1,
@@ -1824,7 +1824,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 		}}
 		options := ClientWriteOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			AuthorizationModelId: openfga.ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
 		}
 
 		var expectedResponse map[string]interface{}
@@ -1893,7 +1893,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// invalid store id should result in error
 		badStoreOptions := ClientWriteOptions{
-			StoreId: openfga.PtrString("INVALID"),
+			StoreId: openfga.ToPtr("INVALID"),
 		}
 		_, err = fgaClient.WriteTuples(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
 		if err == nil {
@@ -1902,7 +1902,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// store can be overridden
 		storeOverrideOptions := ClientWriteOptions{
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+			StoreId: openfga.ToPtr("7777HCE4YVKPQEKZQHT2R89MQV"),
 		}
 		httpmock.Reset()
 		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
@@ -1935,7 +1935,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 		}}
 		options := ClientWriteOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			AuthorizationModelId: openfga.ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
 		}
 
 		var expectedResponse map[string]interface{}
@@ -2004,7 +2004,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// invalid store id should result in error
 		badStoreOptions := ClientWriteOptions{
-			StoreId: openfga.PtrString("INVALID"),
+			StoreId: openfga.ToPtr("INVALID"),
 		}
 		_, err = fgaClient.DeleteTuples(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
 		if err == nil {
@@ -2013,7 +2013,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// store can be overridden
 		storeOverrideOptions := ClientWriteOptions{
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+			StoreId: openfga.ToPtr("7777HCE4YVKPQEKZQHT2R89MQV"),
 		}
 		httpmock.Reset()
 		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
@@ -2052,7 +2052,7 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 
 		options := ClientCheckOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			AuthorizationModelId: openfga.ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
 		}
 
 		var expectedResponse openfga.CheckResponse
@@ -2092,7 +2092,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// check with invalid auth model id should result in error
 		badOptions := ClientCheckOptions{
-			AuthorizationModelId: openfga.PtrString("INVALID"),
+			AuthorizationModelId: openfga.ToPtr("INVALID"),
 		}
 		_, err = fgaClient.Check(context.Background()).Body(requestBody).Options(badOptions).Execute()
 		if err == nil {
@@ -2100,7 +2100,7 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 		// invalid store id should result in error
 		badStoreOptions := ClientCheckOptions{
-			StoreId: openfga.PtrString("INVALID"),
+			StoreId: openfga.ToPtr("INVALID"),
 		}
 		_, err = fgaClient.Check(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
 		if err == nil {
@@ -2109,7 +2109,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// store can be overridden
 		storeOverrideOptions := ClientCheckOptions{
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+			StoreId: openfga.ToPtr("7777HCE4YVKPQEKZQHT2R89MQV"),
 		}
 		httpmock.Reset()
 		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
@@ -2148,7 +2148,7 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 
 		options := ClientCheckOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			AuthorizationModelId: openfga.ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
 			Consistency:          openfga.CONSISTENCYPREFERENCE_HIGHER_CONSISTENCY.Ptr(),
 		}
 
@@ -2214,8 +2214,8 @@ func TestOpenFgaClient(t *testing.T) {
 		const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
 
 		options := ClientBatchCheckClientOptions{
-			AuthorizationModelId: openfga.PtrString(authModelId),
-			MaxParallelRequests:  openfga.PtrInt32(5),
+			AuthorizationModelId: openfga.ToPtr(authModelId),
+			MaxParallelRequests:  openfga.ToPtr(5),
 		}
 
 		var expectedResponse openfga.CheckResponse
@@ -2275,8 +2275,8 @@ func TestOpenFgaClient(t *testing.T) {
 		httpmock.ZeroCallCounters()
 		// ClientBatchCheck with invalid auth model ID should fail
 		badOptions := ClientBatchCheckClientOptions{
-			AuthorizationModelId: openfga.PtrString("INVALID"),
-			MaxParallelRequests:  openfga.PtrInt32(5),
+			AuthorizationModelId: openfga.ToPtr("INVALID"),
+			MaxParallelRequests:  openfga.ToPtr(5),
 		}
 		_, err = fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Options(badOptions).Execute()
 		if err == nil {
@@ -2284,8 +2284,8 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 		// invalid store ID should fail
 		badStoreOptions := ClientBatchCheckClientOptions{
-			StoreId:             openfga.PtrString("INVALID"),
-			MaxParallelRequests: openfga.PtrInt32(5),
+			StoreId:             openfga.ToPtr("INVALID"),
+			MaxParallelRequests: openfga.ToPtr(5),
 		}
 		_, err = fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
 		if err == nil {
@@ -2310,8 +2310,8 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// store should be overridden
 		storeOverrideOptions := ClientBatchCheckClientOptions{
-			StoreId:             openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
-			MaxParallelRequests: openfga.PtrInt32(5),
+			StoreId:             openfga.ToPtr("7777HCE4YVKPQEKZQHT2R89MQV"),
+			MaxParallelRequests: openfga.ToPtr(5),
 		}
 		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
 			func(req *http.Request) (*http.Response, error) {
@@ -2368,8 +2368,8 @@ func TestOpenFgaClient(t *testing.T) {
 		const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
 
 		options := ClientBatchCheckClientOptions{
-			AuthorizationModelId: openfga.PtrString(authModelId),
-			MaxParallelRequests:  openfga.PtrInt32(5),
+			AuthorizationModelId: openfga.ToPtr(authModelId),
+			MaxParallelRequests:  openfga.ToPtr(5),
 			Consistency:          openfga.CONSISTENCYPREFERENCE_HIGHER_CONSISTENCY.Ptr(),
 		}
 
@@ -2437,9 +2437,9 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 
 		options := BatchCheckOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
-			MaxParallelRequests:  openfga.PtrInt32(5),
-			MaxBatchSize:         openfga.PtrInt32(10),
+			AuthorizationModelId: openfga.ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			MaxParallelRequests:  openfga.ToPtr(5),
+			MaxBatchSize:         openfga.ToPtr(10),
 		}
 
 		var expectedResponse openfga.BatchCheckResponse
@@ -2486,8 +2486,8 @@ func TestOpenFgaClient(t *testing.T) {
 		httpmock.ZeroCallCounters()
 		// BatchCheck with invalid auth model ID should fail
 		badOptions := BatchCheckOptions{
-			AuthorizationModelId: openfga.PtrString("INVALID"),
-			MaxParallelRequests:  openfga.PtrInt32(5),
+			AuthorizationModelId: openfga.ToPtr("INVALID"),
+			MaxParallelRequests:  openfga.ToPtr(5),
 		}
 		ctxBad, cancelBad := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancelBad()
@@ -2498,8 +2498,8 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// Invalid store ID should fail
 		badStoreOptions := BatchCheckOptions{
-			StoreId:             openfga.PtrString("INVALID"),
-			MaxParallelRequests: openfga.PtrInt32(5),
+			StoreId:             openfga.ToPtr("INVALID"),
+			MaxParallelRequests: openfga.ToPtr(5),
 		}
 		ctxStore, cancelStore := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancelStore()
@@ -2510,8 +2510,8 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// Store should be overridden
 		storeOverrideOptions := BatchCheckOptions{
-			StoreId:             openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
-			MaxParallelRequests: openfga.PtrInt32(5),
+			StoreId:             openfga.ToPtr("7777HCE4YVKPQEKZQHT2R89MQV"),
+			MaxParallelRequests: openfga.ToPtr(5),
 		}
 
 		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
@@ -2546,7 +2546,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 		}
 		options := ClientExpandOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			AuthorizationModelId: openfga.ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
 		}
 
 		var expectedResponse openfga.ExpandResponse
@@ -2581,7 +2581,7 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 		// Invalid auth model ID should result in error
 		badOptions := ClientExpandOptions{
-			AuthorizationModelId: openfga.PtrString("INVALID"),
+			AuthorizationModelId: openfga.ToPtr("INVALID"),
 		}
 		_, err = fgaClient.Expand(context.Background()).Body(requestBody).Options(badOptions).Execute()
 		if err == nil {
@@ -2590,7 +2590,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// Invalid auth model ID should result in error
 		badStoreOptions := ClientExpandOptions{
-			StoreId: openfga.PtrString("INVALID"),
+			StoreId: openfga.ToPtr("INVALID"),
 		}
 		_, err = fgaClient.Expand(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
 		if err == nil {
@@ -2599,7 +2599,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// store can be overridden
 		storeOverrideOptions := ClientExpandOptions{
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+			StoreId: openfga.ToPtr("7777HCE4YVKPQEKZQHT2R89MQV"),
 		}
 		httpmock.Reset()
 		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
@@ -2631,7 +2631,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 		}
 		options := ClientExpandOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			AuthorizationModelId: openfga.ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
 			Consistency:          openfga.CONSISTENCYPREFERENCE_MINIMIZE_LATENCY.Ptr(),
 		}
 
@@ -2682,7 +2682,7 @@ func TestOpenFgaClient(t *testing.T) {
 			}},
 		}
 		options := ClientListObjectsOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			AuthorizationModelId: openfga.ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
 		}
 
 		var expectedResponse openfga.ListObjectsResponse
@@ -2725,7 +2725,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// Invalid auth model id should result in error
 		badOptions := ClientListObjectsOptions{
-			AuthorizationModelId: openfga.PtrString("INVALID"),
+			AuthorizationModelId: openfga.ToPtr("INVALID"),
 		}
 		_, err = fgaClient.ListObjects(context.Background()).
 			Body(requestBody).
@@ -2736,7 +2736,7 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 		// Invalid store id should result in error
 		badStoreOptions := ClientListObjectsOptions{
-			StoreId: openfga.PtrString("INVALID"),
+			StoreId: openfga.ToPtr("INVALID"),
 		}
 		_, err = fgaClient.ListObjects(context.Background()).
 			Body(requestBody).
@@ -2748,7 +2748,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// store can be overridden
 		storeOverrideOptions := ClientListObjectsOptions{
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+			StoreId: openfga.ToPtr("7777HCE4YVKPQEKZQHT2R89MQV"),
 		}
 		httpmock.Reset()
 		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
@@ -2793,7 +2793,7 @@ func TestOpenFgaClient(t *testing.T) {
 			}},
 		}
 		options := ClientListObjectsOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			AuthorizationModelId: openfga.ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
 			Consistency:          openfga.CONSISTENCYPREFERENCE_MINIMIZE_LATENCY.Ptr(),
 		}
 
@@ -2844,7 +2844,7 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 		const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
 		options := ClientListRelationsOptions{
-			AuthorizationModelId: openfga.PtrString(authModelId),
+			AuthorizationModelId: openfga.ToPtr(authModelId),
 		}
 
 		var expectedResponse openfga.CheckResponse
@@ -2857,7 +2857,7 @@ func TestOpenFgaClient(t *testing.T) {
 		httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
 			httpmock.BodyContainsString(`"relation":"can_delete"`),
 			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, openfga.CheckResponse{Allowed: openfga.PtrBool(false)})
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, openfga.CheckResponse{Allowed: openfga.ToPtr(false)})
 				if err != nil {
 					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
 				}
@@ -2901,7 +2901,7 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 		// Invalid auth model ID should result in error
 		badOptions := ClientListRelationsOptions{
-			AuthorizationModelId: openfga.PtrString("INVALID"),
+			AuthorizationModelId: openfga.ToPtr("INVALID"),
 		}
 		_, err = fgaClient.ListRelations(context.Background()).
 			Body(requestBody).
@@ -2913,8 +2913,8 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// invalid store ID should result in error
 		badStoreOptions := ClientListRelationsOptions{
-			AuthorizationModelId: openfga.PtrString(authModelId),
-			StoreId:              openfga.PtrString("INVALID"),
+			AuthorizationModelId: openfga.ToPtr(authModelId),
+			StoreId:              openfga.ToPtr("INVALID"),
 		}
 		_, err = fgaClient.ListRelations(context.Background()).
 			Body(requestBody).
@@ -2926,13 +2926,13 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// store can be overridden
 		storeOverrideOptions := ClientListRelationsOptions{
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+			StoreId: openfga.ToPtr("7777HCE4YVKPQEKZQHT2R89MQV"),
 		}
 		httpmock.Reset()
 		httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
 			httpmock.BodyContainsString(`"relation":"can_delete"`),
 			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, openfga.CheckResponse{Allowed: openfga.PtrBool(false)})
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, openfga.CheckResponse{Allowed: openfga.ToPtr(false)})
 				if err != nil {
 					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
 				}
@@ -2980,7 +2980,7 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 		const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
 		options := ClientListRelationsOptions{
-			AuthorizationModelId: openfga.PtrString(authModelId),
+			AuthorizationModelId: openfga.ToPtr(authModelId),
 			Consistency:          openfga.CONSISTENCYPREFERENCE_HIGHER_CONSISTENCY.Ptr(),
 		}
 
@@ -2994,7 +2994,7 @@ func TestOpenFgaClient(t *testing.T) {
 		httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
 			httpmock.BodyContainsString(`"consistency":"HIGHER_CONSISTENCY"`),
 			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, openfga.CheckResponse{Allowed: openfga.PtrBool(false)})
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, openfga.CheckResponse{Allowed: openfga.ToPtr(false)})
 				if err != nil {
 					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
 				}
@@ -3040,7 +3040,7 @@ func TestOpenFgaClient(t *testing.T) {
 			}},
 		}
 		options := ClientListRelationsOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			AuthorizationModelId: openfga.ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
 		}
 
 		httpmock.Activate()
@@ -3076,7 +3076,7 @@ func TestOpenFgaClient(t *testing.T) {
 				Type: "user",
 			}, {
 				Type:     "team",
-				Relation: openfga.PtrString("member"),
+				Relation: openfga.ToPtr("member"),
 			}},
 			ContextualTuples: []ClientContextualTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
@@ -3090,7 +3090,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Context: &map[string]interface{}{"ViewCount": 100},
 		}
 		options := ClientListUsersOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			AuthorizationModelId: openfga.ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
 		}
 
 		var expectedResponse openfga.ListUsersResponse
@@ -3144,7 +3144,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// Invalid auth model id should result in error
 		badOptions := ClientListUsersOptions{
-			AuthorizationModelId: openfga.PtrString("INVALID"),
+			AuthorizationModelId: openfga.ToPtr("INVALID"),
 		}
 		_, err = fgaClient.ListUsers(context.Background()).
 			Body(requestBody).
@@ -3155,7 +3155,7 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 		// Invalid store id should result in error
 		badStoreOptions := ClientListUsersOptions{
-			StoreId: openfga.PtrString("INVALID"),
+			StoreId: openfga.ToPtr("INVALID"),
 		}
 		_, err = fgaClient.ListUsers(context.Background()).
 			Body(requestBody).
@@ -3167,7 +3167,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// StoreId can be overridden
 		storeOverrideOptions := ClientListUsersOptions{
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+			StoreId: openfga.ToPtr("7777HCE4YVKPQEKZQHT2R89MQV"),
 		}
 		httpmock.Reset()
 		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
@@ -3211,7 +3211,7 @@ func TestOpenFgaClient(t *testing.T) {
 				Type: "user",
 			}, {
 				Type:     "team",
-				Relation: openfga.PtrString("member"),
+				Relation: openfga.ToPtr("member"),
 			}},
 			ContextualTuples: []ClientContextualTupleKey{{
 				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
@@ -3225,7 +3225,7 @@ func TestOpenFgaClient(t *testing.T) {
 			Context: &map[string]interface{}{"ViewCount": 100},
 		}
 		options := ClientListUsersOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			AuthorizationModelId: openfga.ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
 			Consistency:          openfga.CONSISTENCYPREFERENCE_MINIMIZE_LATENCY.Ptr(),
 		}
 
@@ -3268,7 +3268,7 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 
 		options := ClientReadAssertionsOptions{
-			AuthorizationModelId: openfga.PtrString(modelId),
+			AuthorizationModelId: openfga.ToPtr(modelId),
 		}
 
 		var expectedResponse openfga.ReadAssertionsResponse
@@ -3311,7 +3311,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// Invalid auth model id should result in error
 		badOptions := ClientReadAssertionsOptions{
-			AuthorizationModelId: openfga.PtrString("INVALID"),
+			AuthorizationModelId: openfga.ToPtr("INVALID"),
 		}
 		_, err = fgaClient.ReadAssertions(context.Background()).
 			Options(badOptions).
@@ -3322,7 +3322,7 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// Invalid store id should result in error
 		badStoreOptions := ClientReadAssertionsOptions{
-			StoreId: openfga.PtrString("INVALID"),
+			StoreId: openfga.ToPtr("INVALID"),
 		}
 		_, err = fgaClient.ReadAssertions(context.Background()).
 			Options(badStoreOptions).
@@ -3333,8 +3333,8 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// store can be overriden
 		storeOverrideOptions := ClientReadAssertionsOptions{
-			AuthorizationModelId: openfga.PtrString(modelId),
-			StoreId:              openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+			AuthorizationModelId: openfga.ToPtr(modelId),
+			StoreId:              openfga.ToPtr("7777HCE4YVKPQEKZQHT2R89MQV"),
 		}
 		httpmock.Reset()
 		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath, modelId),
@@ -3383,7 +3383,7 @@ func TestOpenFgaClient(t *testing.T) {
 			},
 		}
 		options := ClientWriteAssertionsOptions{
-			AuthorizationModelId: openfga.PtrString(modelId),
+			AuthorizationModelId: openfga.ToPtr(modelId),
 		}
 
 		httpmock.Activate()
@@ -3411,7 +3411,7 @@ func TestOpenFgaClient(t *testing.T) {
 			t.Fatalf("Expected error:%v, got: %v", expectedError, err)
 		}
 		badOptions := ClientWriteAssertionsOptions{
-			AuthorizationModelId: openfga.PtrString("INVALID"),
+			AuthorizationModelId: openfga.ToPtr("INVALID"),
 		}
 		_, err = fgaClient.WriteAssertions(context.Background()).
 			Body(requestBody).
@@ -3422,7 +3422,7 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 
 		badStoreOptions := ClientWriteAssertionsOptions{
-			StoreId: openfga.PtrString("INVALID"),
+			StoreId: openfga.ToPtr("INVALID"),
 		}
 		_, err = fgaClient.WriteAssertions(context.Background()).
 			Body(requestBody).
@@ -3434,8 +3434,8 @@ func TestOpenFgaClient(t *testing.T) {
 
 		// store can be overriden
 		storeOverrideOptions := ClientWriteAssertionsOptions{
-			AuthorizationModelId: openfga.PtrString(modelId),
-			StoreId:              openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+			AuthorizationModelId: openfga.ToPtr(modelId),
+			StoreId:              openfga.ToPtr("7777HCE4YVKPQEKZQHT2R89MQV"),
 		}
 		httpmock.Reset()
 		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath, modelId),
@@ -3469,7 +3469,7 @@ func TestOpenFgaClient(t *testing.T) {
 		}
 
 		result := map[string]openfga.BatchCheckSingleResult{
-			"test1": {Allowed: openfga.PtrBool(true)},
+			"test1": {Allowed: openfga.ToPtr(true)},
 		}
 		response := openfga.BatchCheckResponse{
 			Result: &result,
@@ -3519,7 +3519,7 @@ func TestOpenFgaClient(t *testing.T) {
 			}
 
 			options := BatchCheckOptions{
-				MaxBatchSize: openfga.PtrInt32(1),
+				MaxBatchSize: openfga.ToPtr(1),
 			}
 
 			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
@@ -3559,8 +3559,8 @@ func TestOpenFgaClient(t *testing.T) {
 			}
 
 			options := BatchCheckOptions{
-				MaxParallelRequests: openfga.PtrInt32(2),  // 2 parallel requests
-				MaxBatchSize:        openfga.PtrInt32(50), // 50 items per batch
+				MaxParallelRequests: openfga.ToPtr(2),  // 2 parallel requests
+				MaxBatchSize:        openfga.ToPtr(50), // 50 items per batch
 			}
 			// Total capacity: 2*50 = 100, but we have 101 items
 
