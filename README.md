@@ -236,8 +236,8 @@ Get a paginated list of stores.
 
 ```golang
 options := ClientListStoresOptions{
-  PageSize:          openfga.PtrInt32(10),
-  ContinuationToken: openfga.PtrString("..."),
+  PageSize:          openfga.ToPtr(10),
+  ContinuationToken: openfga.ToPtr("..."),
 }
 stores, err := fgaClient.ListStores(context.Background()).Options(options).Execute()
 
@@ -274,7 +274,7 @@ Get information about the current store.
 ```golang
 options := ClientGetStoreOptions{
     // You can rely on the store id set in the configuration or override it for this specific request
-    StoreId: openfga.PtrString("01FQH7V8BEG3GPQW93KTRFR8JB"), 
+    StoreId: openfga.ToPtr("01FQH7V8BEG3GPQW93KTRFR8JB"), 
 }
 store,  err := fgaClient.GetStore(context.Background()).Options(options)Execute()
 if err != nil {
@@ -293,7 +293,7 @@ Delete a store.
 ```golang
 options := ClientDeleteStoreOptions{
     // You can rely on the store id set in the configuration or override it for this specific request
-    StoreId: openfga.PtrString("01FQH7V8BEG3GPQW93KTRFR8JB"), 
+    StoreId: openfga.ToPtr("01FQH7V8BEG3GPQW93KTRFR8JB"), 
 }
 _,  err := fgaClient.DeleteStore(context.Background()).Options(options).Execute()
 if err != nil {
@@ -310,10 +310,10 @@ Read all authorization models in the store.
 
 ```golang
 options := ClientReadAuthorizationModelsOptions{
-    PageSize: openfga.PtrInt32(10),
-    ContinuationToken: openfga.PtrString("..."),
+    PageSize: openfga.ToPtr(10),
+    ContinuationToken: openfga.ToPtr("..."),
     // You can rely on the store id set in the configuration or override it for this specific request
-    StoreId: openfga.PtrString("01FQH7V8BEG3GPQW93KTRFR8JB"),
+    StoreId: openfga.ToPtr("01FQH7V8BEG3GPQW93KTRFR8JB"),
 }
 data, err := fgaClient.ReadAuthorizationModels(context.Background()).Options(options).Execute()
 
@@ -349,8 +349,8 @@ body := ClientWriteAuthorizationModelRequest{
           Child: &[]openfga.Userset{
             {This: &map[string]interface{}{}},
             {ComputedUserset: &openfga.ObjectRelation{
-              Object:   openfga.PtrString(""),
-              Relation: openfga.PtrString("writer"),
+              Object:   openfga.ToPtr(""),
+              Relation: openfga.ToPtr("writer"),
             }},
           },
         }},
@@ -373,7 +373,7 @@ body := ClientWriteAuthorizationModelRequest{
 }
 options := ClientWriteAuthorizationModelOptions{
     // You can rely on the store id set in the configuration or override it for this specific request
-    StoreId: openfga.PtrString("01FQH7V8BEG3GPQW93KTRFR8JB"), 
+    StoreId: openfga.ToPtr("01FQH7V8BEG3GPQW93KTRFR8JB"), 
 }
 data, err := fgaClient.WriteAuthorizationModel(context.Background()).Options(options).Body(body).Execute()
 
@@ -389,9 +389,9 @@ Read a particular authorization model.
 ```golang
 options := ClientReadAuthorizationModelOptions{
     // You can rely on the model id set in the configuration or override it for this specific request
-    AuthorizationModelId: openfga.PtrString(modelId),
+    AuthorizationModelId: openfga.ToPtr(modelId),
     // You can rely on the store id set in the configuration or override it for this specific request
-    StoreId: openfga.PtrString("01FQH7V8BEG3GPQW93KTRFR8JB"), 
+    StoreId: openfga.ToPtr("01FQH7V8BEG3GPQW93KTRFR8JB"), 
 }
 data, err := fgaClient.ReadAuthorizationModel(context.Background()).Options(options).Execute()
 
@@ -409,9 +409,9 @@ Reads the latest authorization model (note: this ignores the model id in configu
 ```golang
 options := ClientReadLatestAuthorizationModelOptions{
     // You can rely on the model id set in the configuration or override it for this specific request
-    AuthorizationModelId: openfga.PtrString(modelId),
+    AuthorizationModelId: openfga.ToPtr(modelId),
     // You can rely on the store id set in the configuration or override it for this specific request
-    StoreId: openfga.PtrString("01FQH7V8BEG3GPQW93KTRFR8JB"), 
+    StoreId: openfga.ToPtr("01FQH7V8BEG3GPQW93KTRFR8JB"), 
 }
 data, err := fgaClient.ReadLatestAuthorizationModel(context.Background()).Options(options)Execute()
 
@@ -433,13 +433,13 @@ Reads the list of historical relationship tuple writes and deletes.
 ```golang
 body := ClientReadChangesRequest{
     Type: "document",
-    StartTime: openfga.PtrString("2022-01-01T00:00:00Z"),
+    StartTime: openfga.ToPtr("2022-01-01T00:00:00Z"),
 }
 options := ClientReadChangesOptions{
-    PageSize: openfga.PtrInt32(10),
-    ContinuationToken: openfga.PtrString("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="),
+    PageSize: openfga.ToPtr(10),
+    ContinuationToken: openfga.ToPtr("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="),
     // You can rely on the store id set in the configuration or override it for this specific request
-    StoreId: openfga.PtrString("01FQH7V8BEG3GPQW93KTRFR8JB"), 
+    StoreId: openfga.ToPtr("01FQH7V8BEG3GPQW93KTRFR8JB"), 
 }
 data, err := fgaClient.ReadChanges(context.Background()).Body(body).Options(options).Execute()
 
@@ -459,37 +459,37 @@ Reads the relationship tuples stored in the database. It does not evaluate nor e
 ```golang
 // Find if a relationship tuple stating that a certain user is a viewer of a certain document
 body := ClientReadRequest{
-    User:     openfga.PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-    Relation: openfga.PtrString("viewer"),
-    Object:   openfga.PtrString("document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"),
+    User:     openfga.ToPtr("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
+    Relation: openfga.ToPtr("viewer"),
+    Object:   openfga.ToPtr("document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"),
 }
 
 // Find all relationship tuples where a certain user has a relationship as any relation to a certain document
 body := ClientReadRequest{
-    User:     openfga.PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-    Object:   openfga.PtrString("document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"),
+    User:     openfga.ToPtr("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
+    Object:   openfga.ToPtr("document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"),
 }
 
 // Find all relationship tuples where a certain user is a viewer of any document
 body := ClientReadRequest{
-    User:     openfga.PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-    Relation: openfga.PtrString("viewer"),
-    Object:   openfga.PtrString("document:"),
+    User:     openfga.ToPtr("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
+    Relation: openfga.ToPtr("viewer"),
+    Object:   openfga.ToPtr("document:"),
 }
 
 // Find all relationship tuples where any user has a relationship as any relation with a particular document
 body := ClientReadRequest{
-    Object:   openfga.PtrString("document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"),
+    Object:   openfga.ToPtr("document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"),
 }
 
 // Read all stored relationship tuples
 body := ClientReadRequest{}
 
 options := ClientReadOptions{
-    PageSize: openfga.PtrInt32(10),
-    ContinuationToken: openfga.PtrString("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="),
+    PageSize: openfga.ToPtr(10),
+    ContinuationToken: openfga.ToPtr("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="),
     // You can rely on the store id set in the configuration or override it for this specific request
-    StoreId: openfga.PtrString("01FQH7V8BEG3GPQW93KTRFR8JB"), 
+    StoreId: openfga.ToPtr("01FQH7V8BEG3GPQW93KTRFR8JB"), 
 }
 data, err := fgaClient.Read(context.Background()).Body(requestBody).Options(options).Execute()
 
@@ -527,9 +527,9 @@ body := ClientWriteRequest{
 
 options := ClientWriteOptions{
     // You can rely on the model id set in the configuration or override it for this specific request
-    AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+    AuthorizationModelId: openfga.ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
     // You can rely on the store id set in the configuration or override it for this specific request
-    StoreId: openfga.PtrString("01FQH7V8BEG3GPQW93KTRFR8JB"), 
+    StoreId: openfga.ToPtr("01FQH7V8BEG3GPQW93KTRFR8JB"), 
 }
 data, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
 ```
@@ -560,9 +560,9 @@ body := ClientWriteRequest{
 
 options := ClientWriteOptions{
     // You can rely on the model id set in the configuration or override it for this specific request
-    AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+    AuthorizationModelId: openfga.ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
     // You can rely on the store id set in the configuration or override it for this specific request
-    StoreId: openfga.PtrString("01FQH7V8BEG3GPQW93KTRFR8JB"), 
+    StoreId: openfga.ToPtr("01FQH7V8BEG3GPQW93KTRFR8JB"), 
     Transaction: &TransactionOptions{
         Disable: true,
         MaxParallelRequests: 5, // Maximum number of requests to issue in parallel
@@ -611,9 +611,9 @@ body := ClientCheckRequest{
 }
 
 options := ClientCheckOptions{
-    AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+    AuthorizationModelId: openfga.ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
     // You can rely on the store id set in the configuration or override it for this specific request
-    StoreId: openfga.PtrString("01FQH7V8BEG3GPQW93KTRFR8JB"), 
+    StoreId: openfga.ToPtr("01FQH7V8BEG3GPQW93KTRFR8JB"), 
 }
 data, err := fgaClient.Check(context.Background()).Body(body).Options(options).Execute()
 
@@ -636,10 +636,10 @@ If 429s or 5xxs are encountered, the underlying check will retry up to 3 times b
 ```golang
 options := BatchCheckOptions{
     // You can rely on the model id set in the configuration or override it for this specific request
-    AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+    AuthorizationModelId: openfga.ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
     // You can rely on the store id set in the configuration or override it for this specific request
-    StoreId: openfga.PtrString("01FQH7V8BEG3GPQW93KTRFR8JB"), 
-    MaxParallelRequests: openfga.PtrInt32(5), // Max number of requests to issue in parallel, defaults to 10
+    StoreId: openfga.ToPtr("01FQH7V8BEG3GPQW93KTRFR8JB"), 
+    MaxParallelRequests: openfga.ToPtr(5), // Max number of requests to issue in parallel, defaults to 10
 }
 
 body := BatchCheckBody{ {
@@ -729,9 +729,9 @@ Expands the relationships in userset tree format.
 ```golang
 options := ClientExpandOptions{
     // You can rely on the model id set in the configuration or override it for this specific request
-    AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+    AuthorizationModelId: openfga.ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
     // You can rely on the store id set in the configuration or override it for this specific request
-    StoreId: openfga.PtrString("01FQH7V8BEG3GPQW93KTRFR8JB"), 
+    StoreId: openfga.ToPtr("01FQH7V8BEG3GPQW93KTRFR8JB"), 
 }
 body := ClientExpandRequest{
     Relation: "viewer",
@@ -751,9 +751,9 @@ List the objects of a particular type a user has access to.
 ```golang
 options := ClientListObjectsOptions{
     // You can rely on the model id set in the configuration or override it for this specific request
-    AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+    AuthorizationModelId: openfga.ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
     // You can rely on the store id set in the configuration or override it for this specific request
-    StoreId: openfga.PtrString("01FQH7V8BEG3GPQW93KTRFR8JB"), 
+    StoreId: openfga.ToPtr("01FQH7V8BEG3GPQW93KTRFR8JB"), 
 }
 body := ClientListObjectsRequest{
     User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
@@ -784,11 +784,11 @@ List the relations a user has on an object.
 ```golang
 options := ClientListRelationsOptions{
     // You can rely on the model id set in the configuration or override it for this specific request
-    AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+    AuthorizationModelId: openfga.ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
     // You can rely on the store id set in the configuration or override it for this specific request
-    StoreId: openfga.PtrString("01FQH7V8BEG3GPQW93KTRFR8JB"), 
+    StoreId: openfga.ToPtr("01FQH7V8BEG3GPQW93KTRFR8JB"), 
     // Max number of requests to issue in parallel, defaults to 10
-    MaxParallelRequests: openfga.PtrInt32(5),
+    MaxParallelRequests: openfga.ToPtr(5),
 }
 body := ClientListRelationsRequest{
     User:      "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
@@ -817,17 +817,17 @@ List the users who have a certain relation to a particular type.
 ```golang
 options := ClientListRelationsOptions{
     // You can rely on the model id set in the configuration or override it for this specific request
-    AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+    AuthorizationModelId: openfga.ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
     // You can rely on the store id set in the configuration or override it for this specific request
-    StoreId: openfga.PtrString("01FQH7V8BEG3GPQW93KTRFR8JB"), 
+    StoreId: openfga.ToPtr("01FQH7V8BEG3GPQW93KTRFR8JB"), 
     // Max number of requests to issue in parallel, defaults to 10
-    MaxParallelRequests: openfga.PtrInt32(5),
+    MaxParallelRequests: openfga.ToPtr(5),
 }
 
 // Only a single filter is allowed by the API for the time being
 userFilters := []openfga.UserTypeFilter{{ Type: "user" }}
 // user filters can also be of the form
-// userFilters := []openfga.UserTypeFilter{{ Type: "team", Relation: openfga.PtrString("member") }}
+// userFilters := []openfga.UserTypeFilter{{ Type: "team", Relation: openfga.ToPtr("member") }}
 
 requestBody := ClientListUsersRequest{
     Object: openfga.FgaObject{
@@ -866,9 +866,9 @@ Read assertions for a particular authorization model.
 ```golang
 options := ClientReadAssertionsOptions{
     // You can rely on the model id set in the configuration or override it for this specific request
-    AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+    AuthorizationModelId: openfga.ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
     // You can rely on the store id set in the configuration or override it for this specific request
-    StoreId: openfga.PtrString("01FQH7V8BEG3GPQW93KTRFR8JB"), 
+    StoreId: openfga.ToPtr("01FQH7V8BEG3GPQW93KTRFR8JB"), 
 }
 data, err := fgaClient.ReadAssertions(context.Background()).
   Options(options).
@@ -884,9 +884,9 @@ Update the assertions for a particular authorization model.
 ```golang
 options := ClientWriteAssertionsOptions{
     // You can rely on the model id set in the configuration or override it for this specific request
-    AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+    AuthorizationModelId: openfga.ToPtr("01GAHCE4YVKPQEKZQHT2R89MQV"),
     // You can rely on the store id set in the configuration or override it for this specific request
-    StoreId:openfga.PtrString("01FQH7V8BEG3GPQW93KTRFR8JB"), 
+    StoreId:openfga.ToPtr("01FQH7V8BEG3GPQW93KTRFR8JB"), 
 }
 requestBody := ClientWriteAssertionsRequest{
     ClientAssertion{
