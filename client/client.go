@@ -1939,6 +1939,9 @@ func (request *SdkClientCheckRequest) GetOptions() *ClientCheckOptions {
 
 func (client *OpenFgaClient) CheckExecute(request SdkClientCheckRequestInterface) (*ClientCheckResponse, error) {
 	var contextualTuples []ClientContextualTupleKey
+    if request.GetBody() == nil {
+        return nil, FgaRequiredParamError{param: "body"}
+    }
 	if request.GetBody().ContextualTuples != nil {
 		for index := 0; index < len(request.GetBody().ContextualTuples); index++ {
 			contextualTuples = append(contextualTuples, (request.GetBody().ContextualTuples)[index])
