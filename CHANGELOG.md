@@ -296,10 +296,10 @@ For example, to find the list of documents that Anne can read:
 
 ```golang
 body := openfga.ListObjectsRequest{
-    AuthorizationModelId: PtrString(""),
-    User:                 PtrString("anne"),
-    Relation:             PtrString("can_view"),
-    Type:                 PtrString("document"),
+    AuthorizationModelId: ToPtr(""),
+    User:                 ToPtr("anne"),
+    Relation:             ToPtr("can_view"),
+    Type:                 ToPtr("document"),
 }
 data, response, err := apiClient.OpenFgaApi.ListObjects(context.Background()).Body(body).Execute()
 
