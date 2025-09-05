@@ -630,6 +630,8 @@ Similar to [Check](#Check), but instead of checking a single user-object relatio
 
 [API Documentation](https://openfga.dev/api/service#/Relationship%20Queries/BatchCheck)
 
+> **Note**: The order of `BatchCheck` results is not guaranteed to match the order of the checks provided. Use `correlationId` to pair responses with requests.
+
 If you are using an OpenFGA version less than 1.8.0, you can use the `ClientBatchCheck` function, 
 which calls `check` in parallel. It will return `allowed: false` if it encounters an error, and will return the error in the body.
 If 429s or 5xxs are encountered, the underlying check will retry up to 3 times before giving up.
@@ -643,81 +645,63 @@ options := BatchCheckOptions{
     MaxParallelRequests: openfga.PtrInt32(5), // Max number of requests to issue in parallel, defaults to 10
 }
 
-body := BatchCheckBody{ {
-    User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-    Relation: "viewer",
-    Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-    ContextualTuples: &[]ClientTupleKey{ {
-        User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-        Relation: "editor",
-        Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-    } },
-}, {
-    User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-    Relation: "admin",
-    Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-    ContextualTuples: &[]ClientTupleKey{ {
-        User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-        Relation: "editor",
-        Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-    } },
-}, {
-    User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-    Relation: "creator",
-    Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-}, {
-    User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-    Relation: "deleter",
-    Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-} }
+body := ClientBatchCheckRequest{
+	Checks: []openfga.ClientBatchCheckItem{ {
+		CorrelationId: "f278708f-298c-4f43-a893-11a02bbf251c",
+        User:          "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+        Relation:      "viewer",
+        Object:        "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+        ContextualTuples: &[]ClientTupleKey{ {
+            User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+            Relation: "editor",
+            Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+        } },
+    }, {
+        CorrelationId: "9f7563d6-2573-4292-9ba2-62d59b97c4d",
+        User:          "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+        Relation:      "admin",
+        Object:        "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+        ContextualTuples: &[]ClientTupleKey{ {
+            User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+            Relation: "editor",
+            Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+        } },
+    }, {
+        CorrelationId: "dbb8311c-d991-488d-82e6-76b0d6a3d7a2",
+        User:          "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+        Relation:      "creator",
+        Object:        "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+    }, {
+        CorrelationId: "9b17215d-89e0-47b4-aaf4-6476dc49649a",
+        User:          "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+        Relation:      "deleter",
+        Object:        "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+    } }
+}
 
-data, err := fgaClient.BatchCheck(context.Background()).Body(requestBody).Options(options).Execute()
+data, err := fgaClient.BatchCheck(context.Background()).Body(body).Options(options).Execute()
 
 /*
-data = [{
-  Allowed: false,
-  Request: {
-    User: "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-    Relation: "viewer",
-    Object: "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-    ContextualTuples: [{
-      User: "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-      Relation: "editor",
-      Object: "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"
-    }]
+// Results are a map keyed by correlationId
+// Example:
+data.GetResults() = {
+  "f278708f-298c-4f43-a893-11a02bbf251c": {
+     Allowed: false,
+     Error: <FgaError ...>
   },
-  HttpResponse: ...
-}, {
-  Allowed: false,
-  Request: {
-    User: "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-    Relation: "admin",
-    Object: "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-    ContextualTuples: [{
-      User: "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-      Relation: "editor",
-      Object: "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"
-    }]
+  "9f7563d6-2573-4292-9ba2-62d59b97c4d": {
+     Allowed: false,
+     Error: <FgaError ...>
   },
-  HttpResponse: ...
-}, {
-  Allowed: false,
-  Request: {
-    User: "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-    Relation: "creator",
-    Object: "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+  "dbb8311c-d991-488d-82e6-76b0d6a3d7a2": {
+     Allowed: false,
+     Error: <FgaError ...>
   },
-  HttpResponse: ...,
-  Error: <FgaError ...>
-}, {
-  Allowed: true,
-  Request: {
-    User: "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-    Relation: "deleter",
-    Object: "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-  }},
-  HttpResponse: ...,
-]
+  "9b17215d-89e0-47b4-aaf4-6476dc49649a": {
+     Allowed: false,
+     Error: <FgaError ...>
+  }
+}
 */
 ```
 
