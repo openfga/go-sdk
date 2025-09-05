@@ -667,7 +667,7 @@ No authorization required
 
 ## ListStores
 
-> ListStoresResponse ListStores(ctx).PageSize(pageSize).ContinuationToken(continuationToken).Execute()
+> ListStoresResponse ListStores(ctx).PageSize(pageSize).ContinuationToken(continuationToken).Name(name).Execute()
 
 List all stores
 
@@ -688,6 +688,7 @@ import (
 func main() {
     
     continuationToken := "continuationToken_example" // string |  (optional)
+    name := "name_example" // string | The name parameter instructs the API to only include results that match that name.Multiple results may be returned. Only exact matches will be returned; substring matches and regexes will not be evaluated (optional)
 
     configuration, err := openfga.NewConfiguration(openfga.Configuration{
         ApiUrl:         os.Getenv("FGA_API_URL"), // required, e.g. https://api.fga.example
@@ -700,7 +701,7 @@ func main() {
 
     apiClient := openfga.NewAPIClient(configuration)
 
-    resp, r, err := apiClient.OpenFgaApi.ListStores(context.Background()).PageSize(pageSize).ContinuationToken(continuationToken).Execute()
+    resp, r, err := apiClient.OpenFgaApi.ListStores(context.Background()).PageSize(pageSize).ContinuationToken(continuationToken).Name(name).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `OpenFgaApi.ListStores``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -737,6 +738,7 @@ Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 **pageSize** | **int32** |  | 
 **continuationToken** | **string** |  | 
+**name** | **string** | The name parameter instructs the API to only include results that match that name.Multiple results may be returned. Only exact matches will be returned; substring matches and regexes will not be evaluated | 
 
 ### Return type
 

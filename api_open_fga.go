@@ -40,6 +40,8 @@ type OpenFgaApi interface {
 
 	An associated `correlation_id` is required for each check in the batch. This ID is used to correlate a check to the appropriate response. It is a string consisting of only alphanumeric characters or hyphens with a maximum length of 36 characters. This `correlation_id` is used to map the result of each check to the item which was checked, so it must be unique for each item in the batch. We recommend using a UUID or ULID as the `correlation_id`, but you can use whatever unique identifier you need as long  as it matches this regex pattern: `^[\w\d-]{1,36}$`
 
+	NOTE: The maximum number of checks that can be passed in the `BatchCheck` API is configurable via the [OPENFGA_MAX_CHECKS_PER_BATCH_CHECK](https://openfga.dev/docs/getting-started/setup-openfga/configuration#OPENFGA_MAX_CHECKS_PER_BATCH_CHECK) environment variable. If `BatchCheck` is called using the SDK, the SDK can split the batch check requests for you.
+
 	For more details on how `Check` functions, see the docs for `/check`.
 
 	### Examples
@@ -518,7 +520,7 @@ type OpenFgaApi interface {
 	In the body:
 	1. `tuple_key` is optional. If not specified, it will return all tuples in the store.
 	2. `tuple_key.object` is mandatory if `tuple_key` is specified. It can be a full object (e.g., `type:object_id`) or type only (e.g., `type:`).
-	3. `tuple_key.user` is mandatory if tuple_key is specified in the case the `tuple_key.object` is a type only.
+	3. `tuple_key.user` is mandatory if tuple_key is specified in the case the `tuple_key.object` is a type only. If tuple_key.user is specified, it needs to be a full object (e.g., `type:user_id`).
 	## Examples
 	### Query for all objects in a type definition
 	To query for all objects that `user:bob` has `reader` relationship in the `document` type definition, call read API with body of
@@ -914,6 +916,8 @@ func (r ApiBatchCheckRequest) Execute() (BatchCheckResponse, *http.Response, err
   - The `BatchCheck` API functions nearly identically to `Check`, but instead of checking a single user-object relationship BatchCheck accepts a list of relationships to check and returns a map containing `BatchCheckItem` response for each check it received.
 
 An associated `correlation_id` is required for each check in the batch. This ID is used to correlate a check to the appropriate response. It is a string consisting of only alphanumeric characters or hyphens with a maximum length of 36 characters. This `correlation_id` is used to map the result of each check to the item which was checked, so it must be unique for each item in the batch. We recommend using a UUID or ULID as the `correlation_id`, but you can use whatever unique identifier you need as long  as it matches this regex pattern: `^[\w\d-]{1,36}$`
+
+NOTE: The maximum number of checks that can be passed in the `BatchCheck` API is configurable via the [OPENFGA_MAX_CHECKS_PER_BATCH_CHECK](https://openfga.dev/docs/getting-started/setup-openfga/configuration#OPENFGA_MAX_CHECKS_PER_BATCH_CHECK) environment variable. If `BatchCheck` is called using the SDK, the SDK can split the batch check requests for you.
 
 For more details on how `Check` functions, see the docs for `/check`.
 
@@ -2508,12 +2512,10 @@ func (r ApiListStoresRequest) PageSize(pageSize int32) ApiListStoresRequest {
 	r.pageSize = &pageSize
 	return r
 }
-
 func (r ApiListStoresRequest) ContinuationToken(continuationToken string) ApiListStoresRequest {
 	r.continuationToken = &continuationToken
 	return r
 }
-
 func (r ApiListStoresRequest) Name(name string) ApiListStoresRequest {
 	r.name = &name
 	return r
@@ -2903,7 +2905,7 @@ It is different from the `/stores/{store_id}/expand` API in that it only returns
 In the body:
 1. `tuple_key` is optional. If not specified, it will return all tuples in the store.
 2. `tuple_key.object` is mandatory if `tuple_key` is specified. It can be a full object (e.g., `type:object_id`) or type only (e.g., `type:`).
-3. `tuple_key.user` is mandatory if tuple_key is specified in the case the `tuple_key.object` is a type only.
+3. `tuple_key.user` is mandatory if tuple_key is specified in the case the `tuple_key.object` is a type only. If tuple_key.user is specified, it needs to be a full object (e.g., `type:user_id`).
 ## Examples
 ### Query for all objects in a type definition
 To query for all objects that `user:bob` has `reader` relationship in the `document` type definition, call read API with body of
