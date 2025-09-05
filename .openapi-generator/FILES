@@ -6,6 +6,7 @@
 .github/ISSUE_TEMPLATE/feature_request.yaml
 .github/dependabot.yaml
 .gitignore
+.golangci.yaml
 CHANGELOG.md
 CONTRIBUTING.md
 LICENSE
