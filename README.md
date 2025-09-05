@@ -153,7 +153,7 @@ func main() {
 }
 ```
 
-#### Auth0 Client Credentials
+#### Client Credentials
 
 ```golang
 import (
