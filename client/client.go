@@ -182,13 +182,6 @@ func getContinuationTokenFromRequest(options *ClientPaginationOptions) *string {
 	return options.ContinuationToken
 }
 
-func getNameFromRequest(options *ClientListStoresOptions) *string {
-	if options == nil {
-		return nil
-	}
-	return options.Name
-}
-
 type SdkClient interface {
 	/* Stores */
 
