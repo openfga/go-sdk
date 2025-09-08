@@ -2690,7 +2690,7 @@ func TestOpenFgaClient(t *testing.T) {
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
 		httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			httpmock.BodyContainsString(`"contextual_tuples":`),
+			httpmock.BodyContainsString(`user:81684243-9356-4421-8fbf-a4f8d36aa31b`),
 			func(req *http.Request) (*http.Response, error) {
 				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
 				if err != nil {
