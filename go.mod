@@ -1,15 +1,13 @@
 module github.com/openfga/go-sdk
 
-go 1.23.0
-
-toolchain go1.24.0
+go 1.24.0
 
 require (
 	github.com/jarcoal/httpmock v1.4.1
 	github.com/sourcegraph/conc v0.3.0
 	go.opentelemetry.io/otel v1.38.0
 	go.opentelemetry.io/otel/metric v1.38.0
-	golang.org/x/sync v0.16.0
+	golang.org/x/sync v0.17.0
 )
 
 require (
