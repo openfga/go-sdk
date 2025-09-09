@@ -238,6 +238,7 @@ Get a paginated list of stores.
 options := ClientListStoresOptions{
   PageSize:          openfga.PtrInt32(10),
   ContinuationToken: openfga.PtrString("..."),
+  Name:              openfga.PtrString("FGA Demo Store"), // Optional: filter stores by name
 }
 stores, err := fgaClient.ListStores(context.Background()).Options(options).Execute()
 

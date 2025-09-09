@@ -2501,14 +2501,21 @@ type ApiListStoresRequest struct {
 	ApiService        OpenFgaApi
 	pageSize          *int32
 	continuationToken *string
+	name              *string
 }
 
 func (r ApiListStoresRequest) PageSize(pageSize int32) ApiListStoresRequest {
 	r.pageSize = &pageSize
 	return r
 }
+
 func (r ApiListStoresRequest) ContinuationToken(continuationToken string) ApiListStoresRequest {
 	r.continuationToken = &continuationToken
+	return r
+}
+
+func (r ApiListStoresRequest) Name(name string) ApiListStoresRequest {
+	r.name = &name
 	return r
 }
 
@@ -2557,6 +2564,9 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 	}
 	if r.continuationToken != nil {
 		localVarQueryParams.Add("continuation_token", parameterToString(*r.continuationToken, ""))
+	}
+	if r.name != nil {
+		localVarQueryParams.Add("name", parameterToString(*r.name, ""))
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
