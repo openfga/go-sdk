@@ -646,7 +646,7 @@ options := BatchCheckOptions{
 }
 
 body := ClientBatchCheckRequest{
-	Checks: []openfga.ClientBatchCheckItem{ {
+	Checks: []ClientBatchCheckItem{ {
 		CorrelationId: "f278708f-298c-4f43-a893-11a02bbf251c",
         User:          "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         Relation:      "viewer",
@@ -684,7 +684,7 @@ data, err := fgaClient.BatchCheck(context.Background()).Body(body).Options(optio
 /*
 // Results are a map keyed by correlationId
 // Example:
-data.GetResults() = {
+data.GetResult() = {
   "f278708f-298c-4f43-a893-11a02bbf251c": {
      Allowed: false,
      Error: <FgaError ...>

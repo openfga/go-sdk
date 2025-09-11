@@ -4,6 +4,9 @@ go 1.23.0
 
 toolchain go1.24.0
 
+// To reference published build, comment below and run `go mod tidy`
+replace github.com/openfga/go-sdk v0.7.1 => ../../
+
 require github.com/openfga/go-sdk v0.7.1
 
 require (
@@ -18,6 +21,3 @@ require (
 	go.uber.org/multierr v1.9.0 // indirect
 	golang.org/x/sync v0.16.0 // indirect
 )
-
-// To reference local build, uncomment below and run `go mod tidy`
-replace github.com/openfga/go-sdk v0.7.1 => ../../

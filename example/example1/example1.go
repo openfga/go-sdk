@@ -278,8 +278,8 @@ func mainInner() error {
 		return err
 	}
 	fmt.Println("BatchCheck results:")
-	for i, response := range batchCheckResponse.GetResult() {
-		fmt.Printf("Item %d - Allowed: %v\n", i, response.Allowed)
+	for correlationID, result := range batchCheckResponse.GetResult() {
+		fmt.Printf("Correlation %s - Allowed: %v\n", correlationID, result.GetAllowed())
 	}
 
 	// ListObjects
