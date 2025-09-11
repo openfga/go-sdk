@@ -1,8 +1,8 @@
 module github.com/openfga/go-sdk
 
-go 1.23.0
+go 1.24.0
 
-toolchain go1.24.0
+toolchain go1.25.1
 
 require (
 	github.com/jarcoal/httpmock v1.4.1
