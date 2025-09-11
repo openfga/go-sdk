@@ -9,7 +9,6 @@
 CHANGELOG.md
 CONTRIBUTING.md
 LICENSE
-NOTICE.txt
 README.md
 VERSION.txt
 api_client.go
