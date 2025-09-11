@@ -174,18 +174,12 @@ func getPageSizeFromRequest(options *ClientPaginationOptions) *int32 {
 	}
 	return options.PageSize
 }
+
 func getContinuationTokenFromRequest(options *ClientPaginationOptions) *string {
 	if options == nil {
 		return nil
 	}
 	return options.ContinuationToken
-}
-
-func getNameFromRequest(options *ClientListStoresOptions) *string {
-	if options == nil {
-		return nil
-	}
-	return options.Name
 }
 
 type SdkClient interface {

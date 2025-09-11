@@ -1,0 +1,20 @@
+version: 2
+
+run:
+  skip-files:
+    - ^.*model_.*\.go$
+
+
+linters:
+  enable-all: true
+  disable:
+    - unused
+
+exclude-rules:
+  - path: ^.*model_.*\.go$
+    linters:
+      - errcheck
+      - govet
+      - ineffassign
+      - staticcheck
+      - unused

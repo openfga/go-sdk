@@ -25,6 +25,8 @@ _testmain.go
 
 coverage.txt
 
+# Ignore go.sum for example projects
+/example/*/go.sum
 
 # IDEs
 .idea
