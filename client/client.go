@@ -1945,6 +1945,9 @@ func (request *SdkClientCheckRequest) GetOptions() *ClientCheckOptions {
 
 func (client *OpenFgaClient) CheckExecute(request SdkClientCheckRequestInterface) (*ClientCheckResponse, error) {
 	var contextualTuples []ClientContextualTupleKey
+    if request.GetBody() == nil {
+        return nil, FgaRequiredParamError{param: "body"}
+    }
 	if request.GetBody().ContextualTuples != nil {
 		for index := 0; index < len(request.GetBody().ContextualTuples); index++ {
 			contextualTuples = append(contextualTuples, (request.GetBody().ContextualTuples)[index])
@@ -2372,8 +2375,9 @@ type SdkClientExpandRequestInterface interface {
 }
 
 type ClientExpandRequest struct {
-	Relation string `json:"relation,omitempty"`
-	Object   string `json:"object,omitempty"`
+	Relation         string                     `json:"relation,omitempty"`
+	Object           string                     `json:"object,omitempty"`
+	ContextualTuples []ClientContextualTupleKey `json:"contextual_tuples,omitempty"`
 }
 
 type ClientExpandOptions struct {
@@ -2441,11 +2445,19 @@ func (client *OpenFgaClient) ExpandExecute(request SdkClientExpandRequestInterfa
 		return nil, err
 	}
 
+	var contextualTuples []ClientContextualTupleKey
+	if request.GetBody().ContextualTuples != nil {
+		for index := 0; index < len(request.GetBody().ContextualTuples); index++ {
+			contextualTuples = append(contextualTuples, (request.GetBody().ContextualTuples)[index])
+		}
+	}
+
 	body := fgaSdk.ExpandRequest{
 		TupleKey: fgaSdk.ExpandRequestTupleKey{
 			Relation: request.GetBody().Relation,
 			Object:   request.GetBody().Object,
 		},
+		ContextualTuples:     fgaSdk.NewContextualTupleKeys(contextualTuples),
 		AuthorizationModelId: authorizationModelId,
 	}
 

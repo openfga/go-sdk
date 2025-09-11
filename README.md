@@ -722,7 +722,30 @@ body := ClientExpandRequest{
     Relation: "viewer",
     Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 }
-data, err := fgaClient.Expand(context.Background()).Body(requestBody).Options(options).Execute()
+data, err := fgaClient.Expand(context.Background()).Body(body).Options(options).Execute()
+
+// data.Tree.Root = {"name":"document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a#viewer","leaf":{"users":{"users":["user:81684243-9356-4421-8fbf-a4f8d36aa31b","user:f52a4f7a-054d-47ff-bb6e-3ac81269988f"]}}}
+```
+
+You can also expand with contextual tuples:
+
+```golang
+options := ClientExpandOptions{
+    // You can rely on the model id set in the configuration or override it for this specific request
+    AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+    // You can rely on the store id set in the configuration or override it for this specific request
+    StoreId: openfga.PtrString("01FQH7V8BEG3GPQW93KTRFR8JB"), 
+}
+body := ClientExpandRequest{
+    Relation: "viewer",
+    Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+    ContextualTuples: []ClientContextualTupleKey{ {
+        User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+        Relation: "editor",
+        Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+    } },
+}
+data, err := fgaClient.Expand(context.Background()).Body(body).Options(options).Execute()
 
 // data.Tree.Root = {"name":"document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a#viewer","leaf":{"users":{"users":["user:81684243-9356-4421-8fbf-a4f8d36aa31b","user:f52a4f7a-054d-47ff-bb6e-3ac81269988f"]}}}
 ```

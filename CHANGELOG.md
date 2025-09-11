@@ -2,6 +2,8 @@
 
 ## [Unreleased](https://github.com/openfga/go-sdk/compare/v0.7.1...HEAD)
 
+- feat: add contextual tuples support in Expand requests
+
 ## v0.7.1
 
 ### [0.7.1](https://github.com/openfga/go-sdk/compare/v0.7.0...v0.7.1) (2025-04-07)
