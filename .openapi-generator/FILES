@@ -4,12 +4,11 @@
 .github/ISSUE_TEMPLATE/bug_report.yaml
 .github/ISSUE_TEMPLATE/config.yaml
 .github/ISSUE_TEMPLATE/feature_request.yaml
-.github/dependabot.yaml
 .gitignore
+.golangci.yaml
 CHANGELOG.md
 CONTRIBUTING.md
 LICENSE
-NOTICE.txt
 README.md
 VERSION.txt
 api_client.go
@@ -27,6 +26,11 @@ docs/Assertion.md
 docs/AssertionTupleKey.md
 docs/AuthErrorCode.md
 docs/AuthorizationModel.md
+docs/BatchCheckItem.md
+docs/BatchCheckRequest.md
+docs/BatchCheckResponse.md
+docs/BatchCheckSingleResult.md
+docs/CheckError.md
 docs/CheckRequest.md
 docs/CheckRequestTupleKey.md
 docs/CheckResponse.md
@@ -126,6 +130,11 @@ model_assertion.go
 model_assertion_tuple_key.go
 model_auth_error_code.go
 model_authorization_model.go
+model_batch_check_item.go
+model_batch_check_request.go
+model_batch_check_response.go
+model_batch_check_single_result.go
+model_check_error.go
 model_check_request.go
 model_check_request_tuple_key.go
 model_check_response.go
