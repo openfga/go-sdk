@@ -5,6 +5,7 @@
 - **Conflict options for Write operations**: (#229)
   The client now supports setting `Conflict` on `ClientWriteOptions` to control behavior when writing duplicate tuples or deleting non-existent tuples. This feature requires OpenFGA server [v1.10.0](https://github.com/openfga/openfga/releases/tag/v1.10.0) or later.
   See [Conflict Options for Write Operations](./README.md#conflict-options-for-write-operations) for more.
+- feat: add contextual tuples support in Expand requests
 
 ## v0.7.1
 
