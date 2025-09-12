@@ -200,6 +200,10 @@ func mainInner() error {
 		},
 	}).Options(client.ClientWriteOptions{
 		AuthorizationModelId: &authorizationModel.AuthorizationModelId,
+		Conflict: client.ClientWriteConflictOptions{
+			// We can choose to ignore conflicts during writes
+			WritesOnDuplicate: client.CLIENT_WRITE_REQUEST_WRITES_ON_DUPLICATE_IGNORE,
+		},
 	}).Execute()
 	if err != nil {
 		return err

@@ -2,6 +2,10 @@
 
 ## [Unreleased](https://github.com/openfga/go-sdk/compare/v0.7.1...HEAD)
 
+- **Conflict options for Write operations**: (#229)
+  The client now supports setting `Conflict` on `ClientWriteOptions` to control behavior when writing duplicate tuples or deleting non-existent tuples. This feature requires OpenFGA server [v1.10.0](https://github.com/openfga/openfga/releases/tag/v1.10.0) or later.
+  See [Conflict Options for Write Operations](./README.md#conflict-options-for-write-operations) for more.
+
 ## v0.7.1
 
 ### [0.7.1](https://github.com/openfga/go-sdk/compare/v0.7.0...v0.7.1) (2025-04-07)
