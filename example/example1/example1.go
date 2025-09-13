@@ -254,6 +254,24 @@ func mainInner() error {
 	}
 	fmt.Printf("Allowed: %v\n", checkResponse.Allowed)
 
+	fmt.Println("Checking for access with custom headers")
+	checkWithHeadersResponse, err := fgaClient.Check(ctx).Body(client.ClientCheckRequest{
+		User:     "user:anne",
+		Relation: "viewer",
+		Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+		Context:  &map[string]interface{}{"ViewCount": 100},
+	}).Options(client.ClientCheckOptions{
+		RequestOptions: client.RequestOptions{
+			Headers: map[string]string{
+				"X-Request-ID": "example-request-123",
+			},
+		},
+	}).Execute()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Allowed (with custom headers): %v\n", checkWithHeadersResponse.Allowed)
+
 	// BatchCheck
 	fmt.Println("Batch checking for access")
 	batchCheckResponse, err := fgaClient.BatchCheck(ctx).Body(client.ClientBatchCheckRequest{
