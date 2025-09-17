@@ -10,4 +10,9 @@ on:
 
 jobs:
   claude-review:
-    uses: openfga/ai-pr-analyzer-gh-action/.github/workflows/claude-code-review.yml@main
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+      id-token: write
+    uses: openfga/ai-pr-analyzer-gh-action/.github/workflows/claude-code-review.yml@707da7c9e19accae1bf9a5bac634e6f928067099
