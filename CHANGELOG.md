@@ -2,6 +2,7 @@
 
 ## [Unreleased](https://github.com/openfga/go-sdk/compare/v0.7.1...HEAD)
 
+- feat: add support for custom headers per request
 - feat: add contextual tuples support in Expand requests
 
 ## v0.7.1

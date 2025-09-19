@@ -32,6 +32,12 @@ var (
 	_ context.Context
 )
 
+type RequestOptions struct {
+	MaxRetry    *int              `json:"max_retry,omitempty"`
+	MinWaitInMs *int              `json:"min_wait_in_ms,omitempty"`
+	Headers     map[string]string `json:"headers,omitempty"`
+}
+
 type OpenFgaApi interface {
 
 	/*
@@ -900,10 +906,16 @@ type ApiBatchCheckRequest struct {
 	ApiService OpenFgaApi
 	storeId    string
 	body       *BatchCheckRequest
+	options    RequestOptions
 }
 
 func (r ApiBatchCheckRequest) Body(body BatchCheckRequest) ApiBatchCheckRequest {
 	r.body = &body
+	return r
+}
+
+func (r ApiBatchCheckRequest) Options(options RequestOptions) ApiBatchCheckRequest {
+	r.options = options
 	return r
 }
 
@@ -1029,6 +1041,11 @@ func (a *OpenFgaApiService) BatchCheckExecute(r ApiBatchCheckRequest) (BatchChec
 	// body params
 	requestBody = r.body
 
+	// if any override headers were in the options, set them now
+	for header, val := range r.options.Headers {
+		localVarHeaderParams[header] = val
+	}
+
 	retryParams := a.client.cfg.RetryParams
 	for i := 0; i < retryParams.MaxRetry+1; i++ {
 		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
@@ -1136,10 +1153,16 @@ type ApiCheckRequest struct {
 	ApiService OpenFgaApi
 	storeId    string
 	body       *CheckRequest
+	options    RequestOptions
 }
 
 func (r ApiCheckRequest) Body(body CheckRequest) ApiCheckRequest {
 	r.body = &body
+	return r
+}
+
+func (r ApiCheckRequest) Options(options RequestOptions) ApiCheckRequest {
+	r.options = options
 	return r
 }
 
@@ -1349,6 +1372,11 @@ func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *htt
 	// body params
 	requestBody = r.body
 
+	// if any override headers were in the options, set them now
+	for header, val := range r.options.Headers {
+		localVarHeaderParams[header] = val
+	}
+
 	retryParams := a.client.cfg.RetryParams
 	for i := 0; i < retryParams.MaxRetry+1; i++ {
 		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
@@ -1455,10 +1483,16 @@ type ApiCreateStoreRequest struct {
 	ctx        context.Context
 	ApiService OpenFgaApi
 	body       *CreateStoreRequest
+	options    RequestOptions
 }
 
 func (r ApiCreateStoreRequest) Body(body CreateStoreRequest) ApiCreateStoreRequest {
 	r.body = &body
+	return r
+}
+
+func (r ApiCreateStoreRequest) Options(options RequestOptions) ApiCreateStoreRequest {
+	r.options = options
 	return r
 }
 
@@ -1521,6 +1555,11 @@ func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateS
 	}
 	// body params
 	requestBody = r.body
+
+	// if any override headers were in the options, set them now
+	for header, val := range r.options.Headers {
+		localVarHeaderParams[header] = val
+	}
 
 	retryParams := a.client.cfg.RetryParams
 	for i := 0; i < retryParams.MaxRetry+1; i++ {
@@ -1627,6 +1666,12 @@ type ApiDeleteStoreRequest struct {
 	ctx        context.Context
 	ApiService OpenFgaApi
 	storeId    string
+	options    RequestOptions
+}
+
+func (r ApiDeleteStoreRequest) Options(options RequestOptions) ApiDeleteStoreRequest {
+	r.options = options
+	return r
 }
 
 func (r ApiDeleteStoreRequest) Execute() (*http.Response, error) {
@@ -1687,6 +1732,11 @@ func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*http.R
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+
+	// if any override headers were in the options, set them now
+	for header, val := range r.options.Headers {
+		localVarHeaderParams[header] = val
 	}
 
 	retryParams := a.client.cfg.RetryParams
@@ -1787,10 +1837,16 @@ type ApiExpandRequest struct {
 	ApiService OpenFgaApi
 	storeId    string
 	body       *ExpandRequest
+	options    RequestOptions
 }
 
 func (r ApiExpandRequest) Body(body ExpandRequest) ApiExpandRequest {
 	r.body = &body
+	return r
+}
+
+func (r ApiExpandRequest) Options(options RequestOptions) ApiExpandRequest {
+	r.options = options
 	return r
 }
 
@@ -2038,6 +2094,11 @@ func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *
 	// body params
 	requestBody = r.body
 
+	// if any override headers were in the options, set them now
+	for header, val := range r.options.Headers {
+		localVarHeaderParams[header] = val
+	}
+
 	retryParams := a.client.cfg.RetryParams
 	for i := 0; i < retryParams.MaxRetry+1; i++ {
 		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
@@ -2144,6 +2205,12 @@ type ApiGetStoreRequest struct {
 	ctx        context.Context
 	ApiService OpenFgaApi
 	storeId    string
+	options    RequestOptions
+}
+
+func (r ApiGetStoreRequest) Options(options RequestOptions) ApiGetStoreRequest {
+	r.options = options
+	return r
 }
 
 func (r ApiGetStoreRequest) Execute() (GetStoreResponse, *http.Response, error) {
@@ -2206,6 +2273,11 @@ func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreRespo
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+
+	// if any override headers were in the options, set them now
+	for header, val := range r.options.Headers {
+		localVarHeaderParams[header] = val
 	}
 
 	retryParams := a.client.cfg.RetryParams
@@ -2315,10 +2387,16 @@ type ApiListObjectsRequest struct {
 	ApiService OpenFgaApi
 	storeId    string
 	body       *ListObjectsRequest
+	options    RequestOptions
 }
 
 func (r ApiListObjectsRequest) Body(body ListObjectsRequest) ApiListObjectsRequest {
 	r.body = &body
+	return r
+}
+
+func (r ApiListObjectsRequest) Options(options RequestOptions) ApiListObjectsRequest {
+	r.options = options
 	return r
 }
 
@@ -2397,6 +2475,11 @@ func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObj
 	}
 	// body params
 	requestBody = r.body
+
+	// if any override headers were in the options, set them now
+	for header, val := range r.options.Headers {
+		localVarHeaderParams[header] = val
+	}
 
 	retryParams := a.client.cfg.RetryParams
 	for i := 0; i < retryParams.MaxRetry+1; i++ {
@@ -2506,6 +2589,7 @@ type ApiListStoresRequest struct {
 	pageSize          *int32
 	continuationToken *string
 	name              *string
+	options           RequestOptions
 }
 
 func (r ApiListStoresRequest) PageSize(pageSize int32) ApiListStoresRequest {
@@ -2518,6 +2602,11 @@ func (r ApiListStoresRequest) ContinuationToken(continuationToken string) ApiLis
 }
 func (r ApiListStoresRequest) Name(name string) ApiListStoresRequest {
 	r.name = &name
+	return r
+}
+
+func (r ApiListStoresRequest) Options(options RequestOptions) ApiListStoresRequest {
+	r.options = options
 	return r
 }
 
@@ -2586,6 +2675,11 @@ func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStore
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+
+	// if any override headers were in the options, set them now
+	for header, val := range r.options.Headers {
+		localVarHeaderParams[header] = val
 	}
 
 	retryParams := a.client.cfg.RetryParams
@@ -2694,10 +2788,16 @@ type ApiListUsersRequest struct {
 	ApiService OpenFgaApi
 	storeId    string
 	body       *ListUsersRequest
+	options    RequestOptions
 }
 
 func (r ApiListUsersRequest) Body(body ListUsersRequest) ApiListUsersRequest {
 	r.body = &body
+	return r
+}
+
+func (r ApiListUsersRequest) Options(options RequestOptions) ApiListUsersRequest {
+	r.options = options
 	return r
 }
 
@@ -2777,6 +2877,11 @@ func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersRe
 	}
 	// body params
 	requestBody = r.body
+
+	// if any override headers were in the options, set them now
+	for header, val := range r.options.Headers {
+		localVarHeaderParams[header] = val
+	}
 
 	retryParams := a.client.cfg.RetryParams
 	for i := 0; i < retryParams.MaxRetry+1; i++ {
@@ -2885,10 +2990,16 @@ type ApiReadRequest struct {
 	ApiService OpenFgaApi
 	storeId    string
 	body       *ReadRequest
+	options    RequestOptions
 }
 
 func (r ApiReadRequest) Body(body ReadRequest) ApiReadRequest {
 	r.body = &body
+	return r
+}
+
+func (r ApiReadRequest) Options(options RequestOptions) ApiReadRequest {
+	r.options = options
 	return r
 }
 
@@ -3070,6 +3181,11 @@ func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *http.R
 	// body params
 	requestBody = r.body
 
+	// if any override headers were in the options, set them now
+	for header, val := range r.options.Headers {
+		localVarHeaderParams[header] = val
+	}
+
 	retryParams := a.client.cfg.RetryParams
 	for i := 0; i < retryParams.MaxRetry+1; i++ {
 		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
@@ -3177,6 +3293,12 @@ type ApiReadAssertionsRequest struct {
 	ApiService           OpenFgaApi
 	storeId              string
 	authorizationModelId string
+	options              RequestOptions
+}
+
+func (r ApiReadAssertionsRequest) Options(options RequestOptions) ApiReadAssertionsRequest {
+	r.options = options
+	return r
 }
 
 func (r ApiReadAssertionsRequest) Execute() (ReadAssertionsResponse, *http.Response, error) {
@@ -3246,6 +3368,11 @@ func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (R
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+
+	// if any override headers were in the options, set them now
+	for header, val := range r.options.Headers {
+		localVarHeaderParams[header] = val
 	}
 
 	retryParams := a.client.cfg.RetryParams
@@ -3355,6 +3482,12 @@ type ApiReadAuthorizationModelRequest struct {
 	ApiService OpenFgaApi
 	storeId    string
 	id         string
+	options    RequestOptions
+}
+
+func (r ApiReadAuthorizationModelRequest) Options(options RequestOptions) ApiReadAuthorizationModelRequest {
+	r.options = options
+	return r
 }
 
 func (r ApiReadAuthorizationModelRequest) Execute() (ReadAuthorizationModelResponse, *http.Response, error) {
@@ -3469,6 +3602,11 @@ func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorization
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 
+	// if any override headers were in the options, set them now
+	for header, val := range r.options.Headers {
+		localVarHeaderParams[header] = val
+	}
+
 	retryParams := a.client.cfg.RetryParams
 	for i := 0; i < retryParams.MaxRetry+1; i++ {
 		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
@@ -3577,6 +3715,7 @@ type ApiReadAuthorizationModelsRequest struct {
 	storeId           string
 	pageSize          *int32
 	continuationToken *string
+	options           RequestOptions
 }
 
 func (r ApiReadAuthorizationModelsRequest) PageSize(pageSize int32) ApiReadAuthorizationModelsRequest {
@@ -3585,6 +3724,11 @@ func (r ApiReadAuthorizationModelsRequest) PageSize(pageSize int32) ApiReadAutho
 }
 func (r ApiReadAuthorizationModelsRequest) ContinuationToken(continuationToken string) ApiReadAuthorizationModelsRequest {
 	r.continuationToken = &continuationToken
+	return r
+}
+
+func (r ApiReadAuthorizationModelsRequest) Options(options RequestOptions) ApiReadAuthorizationModelsRequest {
+	r.options = options
 	return r
 }
 
@@ -3697,6 +3841,11 @@ func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizatio
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 
+	// if any override headers were in the options, set them now
+	for header, val := range r.options.Headers {
+		localVarHeaderParams[header] = val
+	}
+
 	retryParams := a.client.cfg.RetryParams
 	for i := 0; i < retryParams.MaxRetry+1; i++ {
 		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
@@ -3807,6 +3956,7 @@ type ApiReadChangesRequest struct {
 	pageSize          *int32
 	continuationToken *string
 	startTime         *time.Time
+	options           RequestOptions
 }
 
 func (r ApiReadChangesRequest) Type_(type_ string) ApiReadChangesRequest {
@@ -3823,6 +3973,11 @@ func (r ApiReadChangesRequest) ContinuationToken(continuationToken string) ApiRe
 }
 func (r ApiReadChangesRequest) StartTime(startTime time.Time) ApiReadChangesRequest {
 	r.startTime = &startTime
+	return r
+}
+
+func (r ApiReadChangesRequest) Options(options RequestOptions) ApiReadChangesRequest {
+	r.options = options
 	return r
 }
 
@@ -3903,6 +4058,11 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+
+	// if any override headers were in the options, set them now
+	for header, val := range r.options.Headers {
+		localVarHeaderParams[header] = val
 	}
 
 	retryParams := a.client.cfg.RetryParams
@@ -4012,10 +4172,16 @@ type ApiWriteRequest struct {
 	ApiService OpenFgaApi
 	storeId    string
 	body       *WriteRequest
+	options    RequestOptions
 }
 
 func (r ApiWriteRequest) Body(body WriteRequest) ApiWriteRequest {
 	r.body = &body
+	return r
+}
+
+func (r ApiWriteRequest) Options(options RequestOptions) ApiWriteRequest {
+	r.options = options
 	return r
 }
 
@@ -4128,6 +4294,11 @@ func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interfac
 	// body params
 	requestBody = r.body
 
+	// if any override headers were in the options, set them now
+	for header, val := range r.options.Headers {
+		localVarHeaderParams[header] = val
+	}
+
 	retryParams := a.client.cfg.RetryParams
 	for i := 0; i < retryParams.MaxRetry+1; i++ {
 		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
@@ -4236,10 +4407,16 @@ type ApiWriteAssertionsRequest struct {
 	storeId              string
 	authorizationModelId string
 	body                 *WriteAssertionsRequest
+	options              RequestOptions
 }
 
 func (r ApiWriteAssertionsRequest) Body(body WriteAssertionsRequest) ApiWriteAssertionsRequest {
 	r.body = &body
+	return r
+}
+
+func (r ApiWriteAssertionsRequest) Options(options RequestOptions) ApiWriteAssertionsRequest {
+	r.options = options
 	return r
 }
 
@@ -4314,6 +4491,11 @@ func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) 
 	}
 	// body params
 	requestBody = r.body
+
+	// if any override headers were in the options, set them now
+	for header, val := range r.options.Headers {
+		localVarHeaderParams[header] = val
+	}
 
 	retryParams := a.client.cfg.RetryParams
 	for i := 0; i < retryParams.MaxRetry+1; i++ {
@@ -4413,10 +4595,16 @@ type ApiWriteAuthorizationModelRequest struct {
 	ApiService OpenFgaApi
 	storeId    string
 	body       *WriteAuthorizationModelRequest
+	options    RequestOptions
 }
 
 func (r ApiWriteAuthorizationModelRequest) Body(body WriteAuthorizationModelRequest) ApiWriteAuthorizationModelRequest {
 	r.body = &body
+	return r
+}
+
+func (r ApiWriteAuthorizationModelRequest) Options(options RequestOptions) ApiWriteAuthorizationModelRequest {
+	r.options = options
 	return r
 }
 
@@ -4531,6 +4719,11 @@ func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizati
 	}
 	// body params
 	requestBody = r.body
+
+	// if any override headers were in the options, set them now
+	for header, val := range r.options.Headers {
+		localVarHeaderParams[header] = val
+	}
 
 	retryParams := a.client.cfg.RetryParams
 	for i := 0; i < retryParams.MaxRetry+1; i++ {
