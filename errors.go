@@ -512,7 +512,6 @@ type FgaApiInternalError struct {
 
 	retryAfterDurationInMs int
 	retryAfterEpoc         string
-	shouldRetry            bool
 }
 
 // Error returns non-empty string if there was an error.
@@ -597,7 +596,7 @@ func (e FgaApiInternalError) ShouldRetry() bool {
 
 // GetTimeToWait returns how much time is needed before we can retry
 func (e FgaApiInternalError) GetTimeToWait(retryCount int, retryParams retryutils.RetryParams) time.Duration {
-	if !e.shouldRetry {
+	if !e.ShouldRetry() {
 		return time.Duration(0)
 	}
 	return retryutils.GetTimeToWait(retryCount, retryParams.MaxRetry, retryParams.MinWaitInMs, e.responseHeader, e.endpointCategory)
@@ -632,7 +631,7 @@ func NewFgaApiInternalError(
 		}
 	}
 
-	retryAfter := retryutils.ParseRetryAfterHeaderValue(httpResponse.Header, "Retry-After")
+	retryAfter := retryutils.ParseRetryAfterHeaderValue(httpResponse.Header, retryutils.RetryAfterHeaderName)
 	if retryAfter > 0 {
 		err.retryAfterDurationInMs = int(retryAfter.Milliseconds())
 		err.retryAfterEpoc = time.Now().Add(retryAfter).Format(time.RFC3339)
