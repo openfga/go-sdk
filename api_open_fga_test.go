@@ -1576,6 +1576,28 @@ func TestOpenFgaApi(t *testing.T) {
 		}
 	})
 
+	t.Run("Do not retry on 501 error", func(t *testing.T) {
+		var attempts int32
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			atomic.AddInt32(&attempts, 1)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusNotImplemented) // 501
+			_, _ = w.Write([]byte(`{"code":"not_implemented","message":"no retry"}`))
+		}))
+		defer server.Close()
+
+		cfg, _ := NewConfiguration(Configuration{ApiUrl: server.URL, RetryParams: &RetryParams{MaxRetry: 4, MinWaitInMs: 10}, HTTPClient: &http.Client{}})
+		apiClient := NewAPIClient(cfg)
+
+		_, _, err := apiClient.OpenFgaApi.Check(context.Background(), "store").Body(CheckRequest{TupleKey: CheckRequestTupleKey{User: "u", Relation: "r", Object: "o"}}).Execute()
+		if err == nil {
+			t.Fatalf("expected error")
+		}
+		if got := int(atomic.LoadInt32(&attempts)); got != 1 {
+			t.Fatalf("expected 1 attempt, got %d", got)
+		}
+	})
+
 	t.Run("Retry on 429 error with Retry-After", func(t *testing.T) {
 		storeID := "01H0H015178Y2V4CX10C2KGHF4"
 

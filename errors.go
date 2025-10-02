@@ -631,7 +631,7 @@ func NewFgaApiInternalError(
 		}
 	}
 
-	retryAfter := retryutils.ParseRetryAfterHeaderValue(httpResponse.Header, "Retry-After")
+	retryAfter := retryutils.ParseRetryAfterHeaderValue(httpResponse.Header, retryutils.RetryAfterHeaderName)
 	if retryAfter > 0 {
 		err.retryAfterDurationInMs = int(retryAfter.Milliseconds())
 		err.retryAfterEpoc = time.Now().Add(retryAfter).Format(time.RFC3339)
