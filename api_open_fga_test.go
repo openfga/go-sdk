@@ -794,6 +794,298 @@ func TestOpenFgaApi(t *testing.T) {
 		}
 	})
 
+	t.Run("Write (Write Tuple with OnDuplicate ignore)", func(t *testing.T) {
+		test := TestDefinition{
+			Name:           "Write",
+			JsonResponse:   `{}`,
+			ResponseStatus: 200,
+			Method:         "POST",
+			RequestPath:    "write",
+		}
+		onDuplicateIgnore := "ignore"
+		requestBody := WriteRequest{
+			Writes: &WriteRequestWrites{
+				TupleKeys: []TupleKey{{
+					User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+					Relation: "viewer",
+					Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				}},
+				OnDuplicate: &onDuplicateIgnore,
+			},
+			AuthorizationModelId: PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+		}
+
+		var expectedResponse map[string]interface{}
+		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", configuration.ApiUrl, "01GXSB9YR785C4FYS3C0RTG7B2", test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				// Verify the request body contains the OnDuplicate field
+				var body WriteRequest
+				if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
+					t.Errorf("Failed to decode request body: %v", err)
+				}
+				if body.Writes.OnDuplicate == nil || *body.Writes.OnDuplicate != "ignore" {
+					t.Errorf("Expected OnDuplicate to be 'ignore', got %v", body.Writes.OnDuplicate)
+				}
+
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(500, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		_, response, err := apiClient.OpenFgaApi.Write(context.Background(), "01GXSB9YR785C4FYS3C0RTG7B2").Body(requestBody).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		if response.StatusCode != test.ResponseStatus {
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
+		}
+	})
+
+	t.Run("Write (Write Tuple with OnDuplicate error)", func(t *testing.T) {
+		test := TestDefinition{
+			Name:           "Write",
+			JsonResponse:   `{}`,
+			ResponseStatus: 200,
+			Method:         "POST",
+			RequestPath:    "write",
+		}
+		onDuplicateError := "error"
+		requestBody := WriteRequest{
+			Writes: &WriteRequestWrites{
+				TupleKeys: []TupleKey{{
+					User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+					Relation: "viewer",
+					Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				}},
+				OnDuplicate: &onDuplicateError,
+			},
+			AuthorizationModelId: PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+		}
+
+		var expectedResponse map[string]interface{}
+		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", configuration.ApiUrl, "01GXSB9YR785C4FYS3C0RTG7B2", test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				// Verify the request body contains the OnDuplicate field
+				var body WriteRequest
+				if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
+					t.Errorf("Failed to decode request body: %v", err)
+				}
+				if body.Writes.OnDuplicate == nil || *body.Writes.OnDuplicate != "error" {
+					t.Errorf("Expected OnDuplicate to be 'error', got %v", body.Writes.OnDuplicate)
+				}
+
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(500, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		_, response, err := apiClient.OpenFgaApi.Write(context.Background(), "01GXSB9YR785C4FYS3C0RTG7B2").Body(requestBody).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		if response.StatusCode != test.ResponseStatus {
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
+		}
+	})
+
+	t.Run("Write (Delete Tuple with OnMissing ignore)", func(t *testing.T) {
+		test := TestDefinition{
+			Name:           "Write",
+			JsonResponse:   `{}`,
+			ResponseStatus: 200,
+			Method:         "POST",
+			RequestPath:    "write",
+		}
+		onMissingIgnore := "ignore"
+		requestBody := WriteRequest{
+			Deletes: &WriteRequestDeletes{
+				TupleKeys: []TupleKeyWithoutCondition{{
+					User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+					Relation: "viewer",
+					Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				}},
+				OnMissing: &onMissingIgnore,
+			},
+			AuthorizationModelId: PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+		}
+
+		var expectedResponse map[string]interface{}
+		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", configuration.ApiUrl, "01GXSB9YR785C4FYS3C0RTG7B2", test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				// Verify the request body contains the OnMissing field
+				var body WriteRequest
+				if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
+					t.Errorf("Failed to decode request body: %v", err)
+				}
+				if body.Deletes.OnMissing == nil || *body.Deletes.OnMissing != "ignore" {
+					t.Errorf("Expected OnMissing to be 'ignore', got %v", body.Deletes.OnMissing)
+				}
+
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(500, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		_, response, err := apiClient.OpenFgaApi.Write(context.Background(), "01GXSB9YR785C4FYS3C0RTG7B2").Body(requestBody).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		if response.StatusCode != test.ResponseStatus {
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
+		}
+	})
+
+	t.Run("Write (Delete Tuple with OnMissing error)", func(t *testing.T) {
+		test := TestDefinition{
+			Name:           "Write",
+			JsonResponse:   `{}`,
+			ResponseStatus: 200,
+			Method:         "POST",
+			RequestPath:    "write",
+		}
+		onMissingError := "error"
+		requestBody := WriteRequest{
+			Deletes: &WriteRequestDeletes{
+				TupleKeys: []TupleKeyWithoutCondition{{
+					User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+					Relation: "viewer",
+					Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				}},
+				OnMissing: &onMissingError,
+			},
+			AuthorizationModelId: PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+		}
+
+		var expectedResponse map[string]interface{}
+		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", configuration.ApiUrl, "01GXSB9YR785C4FYS3C0RTG7B2", test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				// Verify the request body contains the OnMissing field
+				var body WriteRequest
+				if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
+					t.Errorf("Failed to decode request body: %v", err)
+				}
+				if body.Deletes.OnMissing == nil || *body.Deletes.OnMissing != "error" {
+					t.Errorf("Expected OnMissing to be 'error', got %v", body.Deletes.OnMissing)
+				}
+
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(500, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		_, response, err := apiClient.OpenFgaApi.Write(context.Background(), "01GXSB9YR785C4FYS3C0RTG7B2").Body(requestBody).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		if response.StatusCode != test.ResponseStatus {
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
+		}
+	})
+
+	t.Run("Write (Mixed writes and deletes with conflict options)", func(t *testing.T) {
+		test := TestDefinition{
+			Name:           "Write",
+			JsonResponse:   `{}`,
+			ResponseStatus: 200,
+			Method:         "POST",
+			RequestPath:    "write",
+		}
+		onDuplicateIgnore := "ignore"
+		onMissingIgnore := "ignore"
+		requestBody := WriteRequest{
+			Writes: &WriteRequestWrites{
+				TupleKeys: []TupleKey{{
+					User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+					Relation: "viewer",
+					Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				}},
+				OnDuplicate: &onDuplicateIgnore,
+			},
+			Deletes: &WriteRequestDeletes{
+				TupleKeys: []TupleKeyWithoutCondition{{
+					User:     "user:another-user",
+					Relation: "viewer",
+					Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				}},
+				OnMissing: &onMissingIgnore,
+			},
+			AuthorizationModelId: PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+		}
+
+		var expectedResponse map[string]interface{}
+		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", configuration.ApiUrl, "01GXSB9YR785C4FYS3C0RTG7B2", test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				// Verify the request body contains both OnDuplicate and OnMissing fields
+				var body WriteRequest
+				if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
+					t.Errorf("Failed to decode request body: %v", err)
+				}
+				if body.Writes.OnDuplicate == nil || *body.Writes.OnDuplicate != "ignore" {
+					t.Errorf("Expected OnDuplicate to be 'ignore', got %v", body.Writes.OnDuplicate)
+				}
+				if body.Deletes.OnMissing == nil || *body.Deletes.OnMissing != "ignore" {
+					t.Errorf("Expected OnMissing to be 'ignore', got %v", body.Deletes.OnMissing)
+				}
+
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(500, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		_, response, err := apiClient.OpenFgaApi.Write(context.Background(), "01GXSB9YR785C4FYS3C0RTG7B2").Body(requestBody).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		if response.StatusCode != test.ResponseStatus {
+			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, response.StatusCode, test.ResponseStatus)
+		}
+	})
+
 	t.Run("Expand", func(t *testing.T) {
 		test := TestDefinition{
 			Name:           "Expand",

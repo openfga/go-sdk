@@ -1428,10 +1428,60 @@ type TransactionOptions struct {
 	MaxParallelRequests int32 `json:"max_parallel_requests,omitempty"`
 }
 
+// ClientWriteRequestWritesOnDuplicate indicates what to do when a write conflicts with an existing tuple
+type ClientWriteRequestWritesOnDuplicate string
+
+func (w *ClientWriteRequestWritesOnDuplicate) ToString() *string {
+	if w == nil {
+		return nil
+	}
+
+	str := string(*w)
+
+	return &str
+}
+
+const (
+	// CLIENT_WRITE_REQUEST_WRITES_ON_DUPLICATE_ERROR returns an error if a write conflicts with an existing tuple (default)
+	CLIENT_WRITE_REQUEST_WRITES_ON_DUPLICATE_ERROR ClientWriteRequestWritesOnDuplicate = "error"
+	// CLIENT_WRITE_REQUEST_WRITES_ON_DUPLICATE_IGNORE ignores writes that conflict with existing tuples (they must match exactly, including conditions)
+	CLIENT_WRITE_REQUEST_WRITES_ON_DUPLICATE_IGNORE ClientWriteRequestWritesOnDuplicate = "ignore"
+)
+
+// ClientWriteRequestDeletesOnMissing indicates what to do when a delete is issued for a tuple that does not exist
+type ClientWriteRequestDeletesOnMissing string
+
+func (d *ClientWriteRequestDeletesOnMissing) ToString() *string {
+	if d == nil {
+		return nil
+	}
+
+	str := string(*d)
+
+	return &str
+}
+
+const (
+	// CLIENT_WRITE_REQUEST_DELETES_ON_MISSING_ERROR returns an error if a delete is issued for a tuple that does not exist (default)
+	CLIENT_WRITE_REQUEST_DELETES_ON_MISSING_ERROR ClientWriteRequestDeletesOnMissing = "error"
+	// CLIENT_WRITE_REQUEST_DELETES_ON_MISSING_IGNORE ignores deletes for tuples that do not exist
+	CLIENT_WRITE_REQUEST_DELETES_ON_MISSING_IGNORE ClientWriteRequestDeletesOnMissing = "ignore"
+)
+
+type ClientWriteConflictOptions struct {
+	// WritesOnDuplicate defines what to do when a write conflicts with an existing tuple
+	// Options are: "error" (default) or "ignore"
+	WritesOnDuplicate ClientWriteRequestWritesOnDuplicate `json:"writes_on_duplicate,omitempty"`
+	// DeleteOnMissing defines what to do when a delete is issued for a tuple that does not exist
+	// Options are: "error" (default) or "ignore"
+	DeleteOnMissing ClientWriteRequestDeletesOnMissing `json:"delete_on_missing,omitempty"`
+}
+
 type ClientWriteOptions struct {
-	AuthorizationModelId *string             `json:"authorization_model_id,omitempty"`
-	StoreId              *string             `json:"store_id,omitempty"`
-	Transaction          *TransactionOptions `json:"transaction_options,omitempty"`
+	AuthorizationModelId *string                    `json:"authorization_model_id,omitempty"`
+	StoreId              *string                    `json:"store_id,omitempty"`
+	Transaction          *TransactionOptions        `json:"transaction_options,omitempty"`
+	Conflict             ClientWriteConflictOptions `json:"conflict,omitempty"`
 }
 
 type ClientWriteStatus string
@@ -1565,6 +1615,9 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 		}
 		if len(request.GetBody().Writes) > 0 {
 			writes := fgaSdk.WriteRequestWrites{}
+			if options != nil {
+				writes.OnDuplicate = options.Conflict.WritesOnDuplicate.ToString()
+			}
 			for index := 0; index < len(request.GetBody().Writes); index++ {
 				writes.TupleKeys = append(writes.TupleKeys, (request.GetBody().Writes)[index])
 			}
@@ -1572,6 +1625,9 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 		}
 		if len(request.GetBody().Deletes) > 0 {
 			deletes := fgaSdk.WriteRequestDeletes{}
+			if options != nil {
+				deletes.OnMissing = options.Conflict.DeleteOnMissing.ToString()
+			}
 			for index := 0; index < len(request.GetBody().Deletes); index++ {
 				deletes.TupleKeys = append(deletes.TupleKeys, (request.GetBody().Deletes)[index])
 			}
@@ -1651,6 +1707,7 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 				options: &ClientWriteOptions{
 					AuthorizationModelId: authorizationModelId,
 					StoreId:              request.GetStoreIdOverride(),
+					Conflict:             options.Conflict,
 				},
 			})
 
@@ -1695,6 +1752,7 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 				options: &ClientWriteOptions{
 					AuthorizationModelId: authorizationModelId,
 					StoreId:              request.GetStoreIdOverride(),
+					Conflict:             options.Conflict,
 				},
 			})
 
