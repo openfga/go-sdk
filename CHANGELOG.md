@@ -1,8 +1,13 @@
 # Changelog
 
-## [Unreleased](https://github.com/openfga/go-sdk/compare/v0.7.1...HEAD)
+## [Unreleased](https://github.com/openfga/go-sdk/compare/v0.7.2...HEAD)
 
-- feat: add contextual tuples support in Expand requests
+## 0.7.2
+
+### [0.7.2](https://github.com/openfga/go-sdk/compare/v0.7.1...0.7.2) (2025-09-15)
+
+- feat: add contextual tuples support in Expand requests - thanks @SoulPancake
+- feat: Support passing name filter to ListStores (#213) - thanks @Oscmage
 - fix: 5xx errors were not being properly retried
 
 ## v0.7.1
