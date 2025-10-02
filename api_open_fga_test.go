@@ -1581,7 +1581,7 @@ func TestOpenFgaApi(t *testing.T) {
 
 		var attempts int32
 
-		// We're simulate two 429 responses providing Retry-After, then a success.
+		// We simulate two 429 responses providing Retry-After, then a success.
 		retryAfterSeconds := 1.0
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			current := atomic.AddInt32(&attempts, 1)
