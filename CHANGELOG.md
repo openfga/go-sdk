@@ -5,6 +5,10 @@
 - feat: add support for custom headers per request
 - feat: add contextual tuples support in Expand requests
 
+> [!WARNING]
+> BREAKING CHANGES:
+> This unreleased version contains a breaking change around `client.RequestOptions` - no longer accepting `MinRetry` and `MaxRetry` fields - they will be re-added before the next release.
+
 ## v0.7.1
 
 ### [0.7.1](https://github.com/openfga/go-sdk/compare/v0.7.0...v0.7.1) (2025-04-07)

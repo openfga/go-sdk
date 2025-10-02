@@ -33,9 +33,7 @@ var (
 )
 
 type RequestOptions struct {
-	MaxRetry    *int              `json:"max_retry,omitempty"`
-	MinWaitInMs *int              `json:"min_wait_in_ms,omitempty"`
-	Headers     map[string]string `json:"headers,omitempty"`
+	Headers map[string]string `json:"headers,omitempty"`
 }
 
 type OpenFgaApi interface {

@@ -71,28 +71,16 @@ func TestAPIRequestOptionsStructure(t *testing.T) {
 			Headers: map[string]string{
 				"Test-Header": "test-value",
 			},
-			MaxRetry:    openfga.PtrInt(3),
-			MinWaitInMs: openfga.PtrInt(1000),
 		}
 
 		if options.Headers["Test-Header"] != "test-value" {
 			t.Errorf("Expected Test-Header to be 'test-value', got '%s'", options.Headers["Test-Header"])
 		}
-
-		if options.MaxRetry == nil || *options.MaxRetry != 3 {
-			t.Errorf("Expected MaxRetry to be 3, got %v", options.MaxRetry)
-		}
-
-		if options.MinWaitInMs == nil || *options.MinWaitInMs != 1000 {
-			t.Errorf("Expected MinWaitInMs to be 1000, got %v", options.MinWaitInMs)
-		}
 	})
 
 	t.Run("RequestOptionsWithNilHeaders", func(t *testing.T) {
 		options := openfga.RequestOptions{
-			Headers:     nil,
-			MaxRetry:    openfga.PtrInt(3),
-			MinWaitInMs: openfga.PtrInt(1000),
+			Headers: nil,
 		}
 
 		if options.Headers != nil {
@@ -102,9 +90,7 @@ func TestAPIRequestOptionsStructure(t *testing.T) {
 
 	t.Run("RequestOptionsWithEmptyHeaders", func(t *testing.T) {
 		options := openfga.RequestOptions{
-			Headers:     map[string]string{},
-			MaxRetry:    openfga.PtrInt(3),
-			MinWaitInMs: openfga.PtrInt(1000),
+			Headers: map[string]string{},
 		}
 
 		if len(options.Headers) != 0 {

@@ -74,8 +74,6 @@ func TestRequestOptionsStructure(t *testing.T) {
 				Headers: map[string]string{
 					testHeaderName: testHeaderValue,
 				},
-				MaxRetry:    fgaSdk.PtrInt(3),
-				MinWaitInMs: fgaSdk.PtrInt(1000),
 			},
 			AuthorizationModelId: fgaSdk.PtrString("01H0H015178Y2V4CX10C2KGHF4"),
 			Consistency:          nil,
@@ -83,14 +81,6 @@ func TestRequestOptionsStructure(t *testing.T) {
 
 		if options.Headers[testHeaderName] != testHeaderValue {
 			t.Errorf("Expected %s to be '%s', got '%s'", testHeaderName, testHeaderValue, options.Headers[testHeaderName])
-		}
-
-		if options.MaxRetry == nil || *options.MaxRetry != 3 {
-			t.Errorf("Expected MaxRetry to be 3, got %v", options.MaxRetry)
-		}
-
-		if options.MinWaitInMs == nil || *options.MinWaitInMs != 1000 {
-			t.Errorf("Expected MinWaitInMs to be 1000, got %v", options.MinWaitInMs)
 		}
 
 		if options.AuthorizationModelId == nil || *options.AuthorizationModelId != "01H0H015178Y2V4CX10C2KGHF4" {
@@ -101,9 +91,7 @@ func TestRequestOptionsStructure(t *testing.T) {
 	t.Run("RequestWithNilHeaders", func(t *testing.T) {
 		options := fgaSdkClient.ClientCheckOptions{
 			RequestOptions: fgaSdkClient.RequestOptions{
-				Headers:     nil,
-				MaxRetry:    fgaSdk.PtrInt(3),
-				MinWaitInMs: fgaSdk.PtrInt(1000),
+				Headers: nil,
 			},
 		}
 
