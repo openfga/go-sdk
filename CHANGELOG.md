@@ -8,6 +8,7 @@
 
 - feat: add contextual tuples support in Expand requests - thanks @SoulPancake
 - feat: Support passing name filter to ListStores (#213) - thanks @Oscmage
+- fix: 5xx errors were not being properly retried
 
 ## v0.7.1
 
