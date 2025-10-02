@@ -3,6 +3,7 @@
 ## [Unreleased](https://github.com/openfga/go-sdk/compare/v0.7.1...HEAD)
 
 - feat: add contextual tuples support in Expand requests
+- fix: 5xx errors were not being properly retried
 
 ## v0.7.1
 

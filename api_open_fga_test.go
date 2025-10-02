@@ -17,6 +17,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -1518,6 +1520,119 @@ func TestOpenFgaApi(t *testing.T) {
 
 		if internalError.ResponseCode() != INTERNALERRORCODE_INTERNAL_ERROR {
 			t.Fatalf("Expected response code to be INTERNALERRORCODE_INTERNAL_ERROR but actual %s", internalError.ResponseCode())
+		}
+	})
+
+	t.Run("Retry on 500 error", func(t *testing.T) {
+		storeID := "01H0H015178Y2V4CX10C2KGHF4"
+
+		var attempts int32
+
+		// First two attempts return 500, third succeeds.
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			cur := atomic.AddInt32(&attempts, 1)
+			w.Header().Set("Content-Type", "application/json")
+			if cur < 3 {
+				w.WriteHeader(http.StatusInternalServerError)
+				_, _ = w.Write([]byte(`{"code":"internal_error","message":"transient"}`))
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(`{"allowed":true}`))
+		}))
+		defer server.Close()
+
+		cfg, err := NewConfiguration(Configuration{
+			ApiUrl: server.URL,
+			RetryParams: &RetryParams{ // allow enough retries (default max is 3, which is fine too)
+				MaxRetry:    4,
+				MinWaitInMs: 10, // keep test fast
+			},
+			HTTPClient: &http.Client{},
+		})
+		if err != nil {
+			t.Fatalf("failed to create configuration: %v", err)
+		}
+
+		apiClient := NewAPIClient(cfg)
+
+		resp, httpResp, reqErr := apiClient.OpenFgaApi.Check(context.Background(), storeID).
+			Body(CheckRequest{TupleKey: CheckRequestTupleKey{User: "user:anne", Relation: "viewer", Object: "document:doc"}}).
+			Execute()
+
+		if reqErr != nil {
+			t.Fatalf("expected eventual success after internal error retries, got: %v", reqErr)
+		}
+		if httpResp == nil || httpResp.StatusCode != http.StatusOK {
+			t.Fatalf("expected final HTTP 200, got %+v", httpResp)
+		}
+		if resp.Allowed == nil || !*resp.Allowed {
+			t.Fatalf("expected Allowed true in final response")
+		}
+
+		gotAttempts := int(atomic.LoadInt32(&attempts))
+		if gotAttempts != 3 { // 1 initial + 2 retries
+			t.Fatalf("expected 3 attempts (500 retried), got %d", gotAttempts)
+		}
+	})
+
+	t.Run("Retry on 429 error with Retry-After", func(t *testing.T) {
+		storeID := "01H0H015178Y2V4CX10C2KGHF4"
+
+		var attempts int32
+
+		// We're simulate two 429 responses providing Retry-After, then a success.
+		retryAfterSeconds := 1.0
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			current := atomic.AddInt32(&attempts, 1)
+			w.Header().Set("Content-Type", "application/json")
+			if current < 3 { // first two attempts fail with rate limit and Retry-After header
+				w.Header().Set("Retry-After", "1") // 1 second
+				w.WriteHeader(http.StatusTooManyRequests)
+				_, _ = w.Write([]byte(`{"code":"rate_limit_exceeded","message":"Rate limit exceeded, retry after some time"}`))
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(`{"allowed":true}`))
+		}))
+		defer server.Close()
+
+		cfg, err := NewConfiguration(Configuration{
+			ApiUrl: server.URL,
+			RetryParams: &RetryParams{
+				MaxRetry:    3,
+				MinWaitInMs: 5, // this won't be used due to Retry-After headers
+			},
+			HTTPClient: &http.Client{},
+		})
+		if err != nil {
+			t.Fatalf("failed to build configuration: %v", err)
+		}
+
+		apiClient := NewAPIClient(cfg)
+
+		start := time.Now()
+		resp, _, reqErr := apiClient.OpenFgaApi.Check(context.Background(), storeID).
+			Body(CheckRequest{TupleKey: CheckRequestTupleKey{User: "user:anne", Relation: "viewer", Object: "document:doc"}}).
+			Execute()
+		elapsed := time.Since(start)
+
+		if reqErr != nil {
+			t.Fatalf("expected success after retries, got error: %v", reqErr)
+		}
+		if resp.Allowed == nil || !*resp.Allowed {
+			t.Fatalf("expected Allowed true in final response")
+		}
+
+		gotAttempts := int(atomic.LoadInt32(&attempts))
+		if gotAttempts != 3 { // 1 initial + 2 retries
+			t.Fatalf("expected 3 attempts total, got %d", gotAttempts)
+		}
+
+		// 2xe Retry-After header (1s each) -> expect >= 2s total
+		minExpected := time.Duration(2*retryAfterSeconds) * time.Second
+		if elapsed < minExpected {
+			t.Fatalf("expected elapsed >= %v due to Retry-After headers, got %v", minExpected, elapsed)
 		}
 	})
 }
