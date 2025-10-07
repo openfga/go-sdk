@@ -284,7 +284,9 @@ func (c *APIClient) prepareRequest(
 	localVarRequest.Header.Set("User-Agent", c.cfg.UserAgent)
 
 	for header, value := range c.cfg.DefaultHeaders {
-		localVarRequest.Header.Set(header, value)
+		if localVarRequest.Header.Get(header) == "" {
+			localVarRequest.Header.Set(header, value)
+		}
 	}
 
 	if ctx != nil {

@@ -219,6 +219,46 @@ func main() {
 }
 ```
 
+### Custom Headers
+
+#### Default Headers
+You can set default headers that will be sent with every request during client initialization:
+
+```golang
+fgaClient, err := client.NewSdkClient(&client.ClientConfiguration{
+    ApiUrl:               os.Getenv("FGA_API_URL"),
+    StoreId:              os.Getenv("FGA_STORE_ID"),
+    AuthorizationModelId: os.Getenv("FGA_MODEL_ID"),
+    DefaultHeaders: map[string]string{
+        "X-Custom-Header": "default-value",
+        "X-Request-Source": "my-app",
+    },
+})
+```
+
+#### Per-Request Headers
+
+You can also send custom headers on a per-request basis by using the `Options` parameter. Custom headers will override any default headers set in the client configuration.
+
+```golang
+// Add custom headers to a specific request
+checkResponse, err := fgaClient.Check(context.Background()).
+    Body(client.ClientCheckRequest{
+        User:     "user:anne",
+        Relation: "viewer",
+        Object:   "document:roadmap",
+    }).
+    Options(client.ClientCheckOptions{
+        RequestOptions: client.RequestOptions{
+            Headers: map[string]string{
+                "X-Request-ID": "123e4567-e89b-12d3-a456-426614174000",
+                "X-Custom-Header": "custom-value", // these override any default headers set
+            },
+        },
+    }).
+    Execute()
+```
+
 
 ### Get your Store ID
 
