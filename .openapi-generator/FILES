@@ -13,9 +13,11 @@ README.md
 VERSION.txt
 api_client.go
 api_client_test.go
+api_headers_test.go
 api_open_fga.go
 api_open_fga_test.go
 client/client.go
+client/client_headers_test.go
 client/client_test.go
 client/errors.go
 configuration.go
@@ -210,6 +212,7 @@ model_write_authorization_model_response.go
 model_write_request.go
 model_write_request_deletes.go
 model_write_request_writes.go
+models_test.go
 oauth2/LICENSE
 oauth2/ORIGINAL_AUTHORS
 oauth2/ORIGINAL_CONTRIBUTORS

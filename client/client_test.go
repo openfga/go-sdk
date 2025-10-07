@@ -3688,6 +3688,665 @@ func TestOpenFgaClient(t *testing.T) {
 	})
 }
 
+func TestOpenFgaClientWriteClientWriteConflictOptions(t *testing.T) {
+	fgaClient, err := NewSdkClient(&ClientConfiguration{
+		ApiUrl:  "https://api.fga.example",
+		StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
+	})
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+
+	t.Run("Client Write with OnDuplicateWrites ignore option", func(t *testing.T) {
+		test := TestDefinition{
+			Name:           "Write",
+			JsonResponse:   `{}`,
+			ResponseStatus: 200,
+			Method:         "POST",
+			RequestPath:    "write",
+		}
+
+		body := ClientWriteRequest{
+			Writes: []ClientTupleKey{{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "viewer",
+				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+			}},
+		}
+
+		var expectedResponse map[string]interface{}
+		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				// Verify the request body contains the OnDuplicate field set to "ignore"
+				var requestBody openfga.WriteRequest
+				if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
+					t.Errorf("Failed to decode request body: %v", err)
+				}
+				if requestBody.Writes == nil || requestBody.Writes.OnDuplicate == nil || *requestBody.Writes.OnDuplicate != "ignore" {
+					t.Errorf("Expected OnDuplicate to be 'ignore', got %v", requestBody.Writes.OnDuplicate)
+				}
+
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(500, ""), nil
+				}
+				return resp, nil
+			},
+		)
+
+		options := ClientWriteOptions{
+			Conflict: ClientWriteConflictOptions{
+				OnDuplicateWrites: CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_IGNORE,
+			},
+		}
+		_, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+	})
+
+	t.Run("Client Write with OnDuplicateWrites error option", func(t *testing.T) {
+		test := TestDefinition{
+			Name:           "Write",
+			JsonResponse:   `{}`,
+			ResponseStatus: 200,
+			Method:         "POST",
+			RequestPath:    "write",
+		}
+
+		body := ClientWriteRequest{
+			Writes: []ClientTupleKey{{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "viewer",
+				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+			}},
+		}
+
+		var expectedResponse map[string]interface{}
+		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				// Verify the request body contains the OnDuplicate field set to "error"
+				var requestBody openfga.WriteRequest
+				if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
+					t.Errorf("Failed to decode request body: %v", err)
+				}
+				if requestBody.Writes == nil || requestBody.Writes.OnDuplicate == nil || *requestBody.Writes.OnDuplicate != "error" {
+					t.Errorf("Expected OnDuplicate to be 'error', got %v", requestBody.Writes.OnDuplicate)
+				}
+
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(500, ""), nil
+				}
+				return resp, nil
+			},
+		)
+
+		options := ClientWriteOptions{
+			Conflict: ClientWriteConflictOptions{
+				OnDuplicateWrites: CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_ERROR,
+			},
+		}
+		_, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+	})
+
+	t.Run("Client Write with OnMissingDeletes ignore option", func(t *testing.T) {
+		test := TestDefinition{
+			Name:           "Write",
+			JsonResponse:   `{}`,
+			ResponseStatus: 200,
+			Method:         "POST",
+			RequestPath:    "write",
+		}
+
+		body := ClientWriteRequest{
+			Deletes: []ClientTupleKeyWithoutCondition{{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "viewer",
+				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+			}},
+		}
+
+		var expectedResponse map[string]interface{}
+		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				// Verify the request body contains the OnMissing field set to "ignore"
+				var requestBody openfga.WriteRequest
+				if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
+					t.Errorf("Failed to decode request body: %v", err)
+				}
+				if requestBody.Deletes == nil || requestBody.Deletes.OnMissing == nil || *requestBody.Deletes.OnMissing != "ignore" {
+					t.Errorf("Expected OnMissing to be 'ignore', got %v", requestBody.Deletes.OnMissing)
+				}
+
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(500, ""), nil
+				}
+				return resp, nil
+			},
+		)
+
+		options := ClientWriteOptions{
+			Conflict: ClientWriteConflictOptions{
+				OnMissingDeletes: CLIENT_WRITE_REQUEST_ON_MISSING_DELETES_IGNORE,
+			},
+		}
+		_, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+	})
+
+	t.Run("Client Write with OnMissingDeletes error option", func(t *testing.T) {
+		test := TestDefinition{
+			Name:           "Write",
+			JsonResponse:   `{}`,
+			ResponseStatus: 200,
+			Method:         "POST",
+			RequestPath:    "write",
+		}
+
+		body := ClientWriteRequest{
+			Deletes: []ClientTupleKeyWithoutCondition{{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "viewer",
+				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+			}},
+		}
+
+		var expectedResponse map[string]interface{}
+		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				// Verify the request body contains the OnMissing field set to "error"
+				var requestBody openfga.WriteRequest
+				if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
+					t.Errorf("Failed to decode request body: %v", err)
+				}
+				if requestBody.Deletes == nil || requestBody.Deletes.OnMissing == nil || *requestBody.Deletes.OnMissing != "error" {
+					t.Errorf("Expected OnMissing to be 'error', got %v", requestBody.Deletes.OnMissing)
+				}
+
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(500, ""), nil
+				}
+				return resp, nil
+			},
+		)
+
+		options := ClientWriteOptions{
+			Conflict: ClientWriteConflictOptions{
+				OnMissingDeletes: CLIENT_WRITE_REQUEST_ON_MISSING_DELETES_ERROR,
+			},
+		}
+		_, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+	})
+
+	t.Run("Client Write with both OnDuplicateWrites and OnMissingDeletes options", func(t *testing.T) {
+		test := TestDefinition{
+			Name:           "Write",
+			JsonResponse:   `{}`,
+			ResponseStatus: 200,
+			Method:         "POST",
+			RequestPath:    "write",
+		}
+
+		body := ClientWriteRequest{
+			Writes: []ClientTupleKey{{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "viewer",
+				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+			}},
+			Deletes: []ClientTupleKeyWithoutCondition{{
+				User:     "user:another-user",
+				Relation: "viewer",
+				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+			}},
+		}
+
+		var expectedResponse map[string]interface{}
+		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				// Verify the request body contains both OnDuplicate and OnMissing fields
+				var requestBody openfga.WriteRequest
+				if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
+					t.Errorf("Failed to decode request body: %v", err)
+				}
+				if requestBody.Writes == nil || requestBody.Writes.OnDuplicate == nil || *requestBody.Writes.OnDuplicate != "ignore" {
+					t.Errorf("Expected OnDuplicate to be 'ignore', got %v", requestBody.Writes.OnDuplicate)
+				}
+				if requestBody.Deletes == nil || requestBody.Deletes.OnMissing == nil || *requestBody.Deletes.OnMissing != "ignore" {
+					t.Errorf("Expected OnMissing to be 'ignore', got %v", requestBody.Deletes.OnMissing)
+				}
+
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(500, ""), nil
+				}
+				return resp, nil
+			},
+		)
+
+		options := ClientWriteOptions{
+			Conflict: ClientWriteConflictOptions{
+				OnDuplicateWrites: CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_IGNORE,
+				OnMissingDeletes:  CLIENT_WRITE_REQUEST_ON_MISSING_DELETES_IGNORE,
+			},
+		}
+		_, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+	})
+
+	t.Run("Client Write with conflict options and transaction disabled", func(t *testing.T) {
+		test := TestDefinition{
+			Name:           "Write",
+			JsonResponse:   `{}`,
+			ResponseStatus: 200,
+			Method:         "POST",
+			RequestPath:    "write",
+		}
+
+		body := ClientWriteRequest{
+			Writes: []ClientTupleKey{
+				{
+					User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+					Relation: "viewer",
+					Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				},
+				{
+					User:     "user:another-user",
+					Relation: "viewer",
+					Object:   "document:another-doc",
+				},
+			},
+		}
+
+		var expectedResponse map[string]interface{}
+		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				// Verify each chunked request contains the OnDuplicate field
+				var requestBody openfga.WriteRequest
+				if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
+					t.Errorf("Failed to decode request body: %v", err)
+				}
+				if requestBody.Writes == nil || requestBody.Writes.OnDuplicate == nil || *requestBody.Writes.OnDuplicate != "ignore" {
+					t.Errorf("Expected OnDuplicate to be 'ignore' in chunked request, got %v", requestBody.Writes.OnDuplicate)
+				}
+
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(500, ""), nil
+				}
+				return resp, nil
+			},
+		)
+
+		options := ClientWriteOptions{
+			Conflict: ClientWriteConflictOptions{
+				OnDuplicateWrites: CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_IGNORE,
+			},
+			Transaction: &TransactionOptions{
+				Disable:             true,
+				MaxPerChunk:         1,
+				MaxParallelRequests: 2,
+			},
+		}
+		_, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+	})
+
+	t.Run("Client Write with conflict options and authorization model", func(t *testing.T) {
+		test := TestDefinition{
+			Name:           "Write",
+			JsonResponse:   `{}`,
+			ResponseStatus: 200,
+			Method:         "POST",
+			RequestPath:    "write",
+		}
+
+		body := ClientWriteRequest{
+			Writes: []ClientTupleKey{{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "viewer",
+				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+			}},
+		}
+
+		var expectedResponse map[string]interface{}
+		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		modelId := "01GAHCE4YVKPQEKZQHT2R89MQV"
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				// Verify the request contains both conflict options and authorization model
+				var requestBody openfga.WriteRequest
+				if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
+					t.Errorf("Failed to decode request body: %v", err)
+				}
+				if requestBody.Writes == nil || requestBody.Writes.OnDuplicate == nil || *requestBody.Writes.OnDuplicate != "ignore" {
+					t.Errorf("Expected OnDuplicate to be 'ignore', got %v", requestBody.Writes.OnDuplicate)
+				}
+				if requestBody.AuthorizationModelId == nil || *requestBody.AuthorizationModelId != modelId {
+					t.Errorf("Expected AuthorizationModelId to be %s, got %v", modelId, requestBody.AuthorizationModelId)
+				}
+
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(500, ""), nil
+				}
+				return resp, nil
+			},
+		)
+
+		options := ClientWriteOptions{
+			Conflict: ClientWriteConflictOptions{
+				OnDuplicateWrites: CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_IGNORE,
+			},
+			AuthorizationModelId: &modelId,
+		}
+		_, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+	})
+
+	t.Run("Client Write with store override and conflict options", func(t *testing.T) {
+		test := TestDefinition{
+			Name:           "Write",
+			JsonResponse:   `{}`,
+			ResponseStatus: 200,
+			Method:         "POST",
+			RequestPath:    "write",
+		}
+
+		body := ClientWriteRequest{
+			Writes: []ClientTupleKey{{
+				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+				Relation: "viewer",
+				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+			}},
+		}
+
+		var expectedResponse map[string]interface{}
+		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		overrideStoreId := "01GXSB9YR785C4FYS3C0RTG7B3"
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, overrideStoreId, test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				// Verify the request contains conflict options
+				var requestBody openfga.WriteRequest
+				if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
+					t.Errorf("Failed to decode request body: %v", err)
+				}
+				if requestBody.Writes == nil || requestBody.Writes.OnDuplicate == nil || *requestBody.Writes.OnDuplicate != "ignore" {
+					t.Errorf("Expected OnDuplicate to be 'ignore', got %v", requestBody.Writes.OnDuplicate)
+				}
+
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(500, ""), nil
+				}
+				return resp, nil
+			},
+		)
+
+		options := ClientWriteOptions{
+			Conflict: ClientWriteConflictOptions{
+				OnDuplicateWrites: CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_IGNORE,
+			},
+			StoreId: &overrideStoreId,
+		}
+		_, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+	})
+
+	t.Run("Client Write conflict options precedence test", func(t *testing.T) {
+		test := TestDefinition{
+			Name:           "Write",
+			JsonResponse:   `{}`,
+			ResponseStatus: 200,
+			Method:         "POST",
+			RequestPath:    "write",
+		}
+
+		body := ClientWriteRequest{
+			Writes: []ClientTupleKey{
+				{
+					User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+					Relation: "viewer",
+					Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				},
+				{
+					User:     "user:another-user",
+					Relation: "editor",
+					Object:   "document:another-doc",
+				},
+			},
+			Deletes: []ClientTupleKeyWithoutCondition{
+				{
+					User:     "user:old-user",
+					Relation: "viewer",
+					Object:   "document:old-doc",
+				},
+			},
+		}
+
+		var expectedResponse map[string]interface{}
+		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				// Verify that client options override any default values
+				var requestBody openfga.WriteRequest
+				if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
+					t.Errorf("Failed to decode request body: %v", err)
+				}
+
+				if requestBody.Writes == nil || requestBody.Writes.OnDuplicate == nil || *requestBody.Writes.OnDuplicate != "ignore" {
+					t.Errorf("Expected client OnDuplicateWrites option to override defaults, got %v", requestBody.Writes.OnDuplicate)
+				}
+
+				if requestBody.Deletes == nil || requestBody.Deletes.OnMissing == nil || *requestBody.Deletes.OnMissing != "ignore" {
+					t.Errorf("Expected client OnMissingDeletes option to override defaults, got %v", requestBody.Deletes.OnMissing)
+				}
+
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(500, ""), nil
+				}
+				return resp, nil
+			},
+		)
+
+		options := ClientWriteOptions{
+			Conflict: ClientWriteConflictOptions{
+				OnDuplicateWrites: CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_IGNORE,
+				OnMissingDeletes:  CLIENT_WRITE_REQUEST_ON_MISSING_DELETES_IGNORE,
+			},
+		}
+
+		result, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		if result == nil {
+			t.Fatalf("Expected non-nil result")
+		}
+
+		if len(result.Writes) != 2 {
+			t.Fatalf("Expected 2 write results, got %d", len(result.Writes))
+		}
+
+		if len(result.Deletes) != 1 {
+			t.Fatalf("Expected 1 delete result, got %d", len(result.Deletes))
+		}
+	})
+
+	t.Run("Client Write mixed conflict options with chunked requests", func(t *testing.T) {
+		test := TestDefinition{
+			Name:           "Write",
+			JsonResponse:   `{}`,
+			ResponseStatus: 200,
+			Method:         "POST",
+			RequestPath:    "write",
+		}
+
+		body := ClientWriteRequest{
+			Writes: []ClientTupleKey{
+				{
+					User:     "user:writer1",
+					Relation: "viewer",
+					Object:   "document:doc1",
+				},
+				{
+					User:     "user:writer2",
+					Relation: "viewer",
+					Object:   "document:doc2",
+				},
+			},
+			Deletes: []ClientTupleKeyWithoutCondition{
+				{
+					User:     "user:deleter1",
+					Relation: "viewer",
+					Object:   "document:doc3",
+				},
+				{
+					User:     "user:deleter2",
+					Relation: "viewer",
+					Object:   "document:doc4",
+				},
+			},
+		}
+
+		var expectedResponse map[string]interface{}
+		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+			func(req *http.Request) (*http.Response, error) {
+				var requestBody openfga.WriteRequest
+				if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
+					t.Errorf("Failed to decode request body: %v", err)
+				}
+
+				if requestBody.Writes != nil && len(requestBody.Writes.TupleKeys) > 0 {
+					if requestBody.Writes.OnDuplicate == nil || *requestBody.Writes.OnDuplicate != "ignore" {
+						t.Errorf("Expected OnDuplicate to be 'ignore' in write chunk, got %v", requestBody.Writes.OnDuplicate)
+					}
+				}
+
+				if requestBody.Deletes != nil && len(requestBody.Deletes.TupleKeys) > 0 {
+					if requestBody.Deletes.OnMissing == nil || *requestBody.Deletes.OnMissing != "ignore" {
+						t.Errorf("Expected OnMissing to be 'ignore' in delete chunk, got %v", requestBody.Deletes.OnMissing)
+					}
+				}
+
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+				if err != nil {
+					return httpmock.NewStringResponse(500, ""), nil
+				}
+				return resp, nil
+			},
+		)
+
+		options := ClientWriteOptions{
+			Conflict: ClientWriteConflictOptions{
+				OnDuplicateWrites: CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_IGNORE,
+				OnMissingDeletes:  CLIENT_WRITE_REQUEST_ON_MISSING_DELETES_IGNORE,
+			},
+			Transaction: &TransactionOptions{
+				Disable:             true,
+				MaxPerChunk:         1,
+				MaxParallelRequests: 4,
+			},
+		}
+
+		result, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		if result == nil {
+			t.Fatalf("Expected non-nil result")
+		}
+
+		if len(result.Writes) != 2 {
+			t.Fatalf("Expected 2 write results, got %d", len(result.Writes))
+		}
+
+		if len(result.Deletes) != 2 {
+			t.Fatalf("Expected 2 delete results, got %d", len(result.Deletes))
+		}
+	})
+}
+
 func getStoreId(t *testing.T, fgaClient *OpenFgaClient) string {
 	storeId, err := fgaClient.GetStoreId()
 	if err != nil {

@@ -219,6 +219,46 @@ func main() {
 }
 ```
 
+### Custom Headers
+
+#### Default Headers
+You can set default headers that will be sent with every request during client initialization:
+
+```golang
+fgaClient, err := client.NewSdkClient(&client.ClientConfiguration{
+    ApiUrl:               os.Getenv("FGA_API_URL"),
+    StoreId:              os.Getenv("FGA_STORE_ID"),
+    AuthorizationModelId: os.Getenv("FGA_MODEL_ID"),
+    DefaultHeaders: map[string]string{
+        "X-Custom-Header": "default-value",
+        "X-Request-Source": "my-app",
+    },
+})
+```
+
+#### Per-Request Headers
+
+You can also send custom headers on a per-request basis by using the `Options` parameter. Custom headers will override any default headers set in the client configuration.
+
+```golang
+// Add custom headers to a specific request
+checkResponse, err := fgaClient.Check(context.Background()).
+    Body(client.ClientCheckRequest{
+        User:     "user:anne",
+        Relation: "viewer",
+        Object:   "document:roadmap",
+    }).
+    Options(client.ClientCheckOptions{
+        RequestOptions: client.RequestOptions{
+            Headers: map[string]string{
+                "X-Request-ID": "123e4567-e89b-12d3-a456-426614174000",
+                "X-Custom-Header": "custom-value", // these override any default headers set
+            },
+        },
+    }).
+    Execute()
+```
+
 
 ### Get your Store ID
 
@@ -589,6 +629,42 @@ data, err := fgaClient.Write(context.Background()).Body(body).Options(options).E
 //   Status: "CLIENT_WRITE_STATUS_SUCCESS
 //   HttpResponse: ... // http response"
 // }]
+```
+
+#### Conflict Options for Write Operations
+
+The SDK supports conflict options for write operations, allowing you to control how the API handles duplicate writes and missing deletes.
+
+> Note: This requires OpenFGA [v1.10.0](https://github.com/openfga/openfga/releases/tag/v1.10.0) or later.
+
+```go
+options := ClientWriteOptions{
+    Conflict: ClientWriteConflictOptions{
+        // Control what happens when writing a tuple that already exists
+        OnDuplicateWrites: CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_IGNORE, // or CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_ERROR (the current default behavior)
+
+        // Control what happens when deleting a tuple that doesn't exist
+        OnMissingDeletes: CLIENT_WRITE_REQUEST_ON_MISSING_DELETES_IGNORE, // or CLIENT_WRITE_REQUEST_ON_MISSING_DELETES_ERROR (the current default behavior)
+    },
+}
+
+body := ClientWriteRequest{
+    Writes: []ClientTupleKey{ {
+        User:     "user:anne",
+        Relation: "writer",
+        Object:   "document:2021-budget",
+    } },
+    Deletes: []ClientTupleKeyWithoutCondition{ {
+        User:     "user:bob",
+        Relation: "reader",
+        Object:   "document:2021-budget",
+    } },
+}
+
+data, err := fgaClient.Write(context.Background()).
+    Body(body).
+    Options(options).
+    Execute()
 ```
 
 #### Relationship Queries
