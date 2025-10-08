@@ -479,22 +479,22 @@ type SdkClient interface {
 	WriteAssertionsExecute(request SdkClientWriteAssertionsRequestInterface) (*ClientWriteAssertionsResponse, error)
 
 	/*
-	 * SetAuthorizationModelId allows setting the Authorization Model ID for an OpenFGAClient.
+	 * SetAuthorizationModelId allows setting the Authorization Model ID for an OpenFgaClient.
 	 * @param string authorizationModelId - The Authorization Model ID to set.
 	 */
 	SetAuthorizationModelId(authorizationModelId string) error
 	/*
-	 * GetAuthorizationModelId retrieves the Authorization Model ID for an OpenFGAClient.
+	 * GetAuthorizationModelId retrieves the Authorization Model ID for an OpenFgaClient.
 	 * @return string
 	 */
 	GetAuthorizationModelId() (string, error)
 	/*
-	 * SetStoreId allows setting the Store ID for an OpenFGAClient.
+	 * SetStoreId allows setting the Store ID for an OpenFgaClient.
 	 * @param string storeId - The Store ID to set.
 	 */
 	SetStoreId(storeId string) error
 	/*
-	 * GetStoreId retrieves the Store ID set in the OpenFGAClient.
+	 * GetStoreId retrieves the Store ID set in the OpenFgaClient.
 	 * @return string
 	 */
 	GetStoreId() (string, error)
@@ -1515,12 +1515,62 @@ type TransactionOptions struct {
 	MaxParallelRequests int32 `json:"max_parallel_requests,omitempty"`
 }
 
+// ClientWriteRequestOnDuplicateWrites indicates what to do when a write conflicts with an existing tuple
+type ClientWriteRequestOnDuplicateWrites string
+
+func (w *ClientWriteRequestOnDuplicateWrites) ToString() *string {
+	if w == nil {
+		return nil
+	}
+
+	str := string(*w)
+
+	return &str
+}
+
+const (
+	// CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_ERROR returns an error if a write conflicts with an existing tuple (default)
+	CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_ERROR ClientWriteRequestOnDuplicateWrites = "error"
+	// CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_IGNORE ignores writes that conflict with existing tuples (they must match exactly, including conditions)
+	CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_IGNORE ClientWriteRequestOnDuplicateWrites = "ignore"
+)
+
+// ClientWriteRequestOnMissingDeletes indicates what to do when a delete is issued for a tuple that does not exist
+type ClientWriteRequestOnMissingDeletes string
+
+func (d *ClientWriteRequestOnMissingDeletes) ToString() *string {
+	if d == nil {
+		return nil
+	}
+
+	str := string(*d)
+
+	return &str
+}
+
+const (
+	// CLIENT_WRITE_REQUEST_ON_MISSING_DELETES_ERROR returns an error if a delete is issued for a tuple that does not exist (default)
+	CLIENT_WRITE_REQUEST_ON_MISSING_DELETES_ERROR ClientWriteRequestOnMissingDeletes = "error"
+	// CLIENT_WRITE_REQUEST_ON_MISSING_DELETES_IGNORE ignores deletes for tuples that do not exist
+	CLIENT_WRITE_REQUEST_ON_MISSING_DELETES_IGNORE ClientWriteRequestOnMissingDeletes = "ignore"
+)
+
+type ClientWriteConflictOptions struct {
+	// OnDuplicateWrites defines what to do when a write conflicts with an existing tuple
+	// Options are: "error" (default) or "ignore"
+	OnDuplicateWrites ClientWriteRequestOnDuplicateWrites `json:"on_duplicate_writes,omitempty"`
+	// OnMissingDeletes defines what to do when a delete is issued for a tuple that does not exist
+	// Options are: "error" (default) or "ignore"
+	OnMissingDeletes ClientWriteRequestOnMissingDeletes `json:"on_missing_deletes,omitempty"`
+}
+
 type ClientWriteOptions struct {
 	RequestOptions
 
 	AuthorizationModelId *string             `json:"authorization_model_id,omitempty"`
 	StoreId              *string             `json:"store_id,omitempty"`
 	Transaction          *TransactionOptions `json:"transaction_options,omitempty"`
+	Conflict             ClientWriteConflictOptions
 }
 
 type ClientWriteStatus string
@@ -1658,6 +1708,9 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 		}
 		if len(request.GetBody().Writes) > 0 {
 			writes := fgaSdk.WriteRequestWrites{}
+			if options != nil {
+				writes.OnDuplicate = options.Conflict.OnDuplicateWrites.ToString()
+			}
 			for index := 0; index < len(request.GetBody().Writes); index++ {
 				writes.TupleKeys = append(writes.TupleKeys, (request.GetBody().Writes)[index])
 			}
@@ -1665,6 +1718,9 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 		}
 		if len(request.GetBody().Deletes) > 0 {
 			deletes := fgaSdk.WriteRequestDeletes{}
+			if options != nil {
+				deletes.OnMissing = options.Conflict.OnMissingDeletes.ToString()
+			}
 			for index := 0; index < len(request.GetBody().Deletes); index++ {
 				deletes.TupleKeys = append(deletes.TupleKeys, (request.GetBody().Deletes)[index])
 			}
@@ -1750,6 +1806,7 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 					RequestOptions:       options.RequestOptions,
 					AuthorizationModelId: authorizationModelId,
 					StoreId:              request.GetStoreIdOverride(),
+					Conflict:             options.Conflict,
 				},
 			})
 
@@ -1795,6 +1852,7 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 					RequestOptions:       options.RequestOptions,
 					AuthorizationModelId: authorizationModelId,
 					StoreId:              request.GetStoreIdOverride(),
+					Conflict:             options.Conflict,
 				},
 			})
 

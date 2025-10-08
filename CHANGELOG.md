@@ -7,14 +7,17 @@
 ### [0.7.3](https://github.com/openfga/go-sdk/compare/v0.7.2...v0.7.3)
 
 - feat: add support for custom headers per request. See [documentation](https://github.com/openfga/go-sdk#custom-headers).
+- feat: add support for conflict options for Write operations**: (#229)
+  The client now supports setting `Conflict` on `ClientWriteOptions` to control behavior when writing duplicate tuples or deleting non-existent tuples. This feature requires OpenFGA server [v1.10.0](https://github.com/openfga/openfga/releases/tag/v1.10.0) or later.
+  See [Conflict Options for Write Operations](./README.md#conflict-options-for-write-operations) for more.
 
 ## v0.7.2
 
-### [0.7.2](https://github.com/openfga/go-sdk/compare/v0.7.1...0.7.2) (2025-09-15)
+### [0.7.2](https://github.com/openfga/go-sdk/compare/v0.7.1...v0.7.2) (2025-09-15)
 
-- feat: add contextual tuples support in Expand requests - thanks @SoulPancake
-- feat: Support passing name filter to ListStores (#213) - thanks @Oscmage
-- fix: 5xx errors were not being properly retried
+- feat: add contextual tuples support in Expand requests (https://github.com/openfga/sdk-generator/pull/547) - thanks @SoulPancake
+- feat: Support passing name filter to ListStores (#186, #213) - thanks @Oscmage!
+- fix: 5xx errors were not being properly retried (#204) - thanks @maxlegault for reporting
 
 ## v0.7.1
 

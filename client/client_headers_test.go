@@ -495,10 +495,10 @@ func TestBatchCheckMethodHeaderHandling(t *testing.T) {
 
 		checks := fgaSdkClient.ClientBatchCheckRequest{
 			Checks: []fgaSdkClient.ClientBatchCheckItem{{
-                CorrelationId: "corr-id-123",
-				User:     testUser,
-				Relation: testRelation,
-				Object:   testObject,
+				CorrelationId: "corr-id-123",
+				User:          testUser,
+				Relation:      testRelation,
+				Object:        testObject,
 			}},
 		}
 

@@ -21,6 +21,8 @@ import (
 // WriteRequestDeletes struct for WriteRequestDeletes
 type WriteRequestDeletes struct {
 	TupleKeys []TupleKeyWithoutCondition `json:"tuple_keys" yaml:"tuple_keys"`
+	// On 'error', the API returns an error when deleting a tuple that does not exist. On 'ignore', deletes of non-existent tuples are treated as no-ops.
+	OnMissing *string `json:"on_missing,omitempty" yaml:"on_missing,omitempty"`
 }
 
 // NewWriteRequestDeletes instantiates a new WriteRequestDeletes object
@@ -30,6 +32,8 @@ type WriteRequestDeletes struct {
 func NewWriteRequestDeletes(tupleKeys []TupleKeyWithoutCondition) *WriteRequestDeletes {
 	this := WriteRequestDeletes{}
 	this.TupleKeys = tupleKeys
+	var onMissing = "error"
+	this.OnMissing = &onMissing
 	return &this
 }
 
@@ -38,6 +42,8 @@ func NewWriteRequestDeletes(tupleKeys []TupleKeyWithoutCondition) *WriteRequestD
 // but it doesn't guarantee that properties required by API are set
 func NewWriteRequestDeletesWithDefaults() *WriteRequestDeletes {
 	this := WriteRequestDeletes{}
+	var onMissing = "error"
+	this.OnMissing = &onMissing
 	return &this
 }
 
@@ -65,9 +71,44 @@ func (o *WriteRequestDeletes) SetTupleKeys(v []TupleKeyWithoutCondition) {
 	o.TupleKeys = v
 }
 
+// GetOnMissing returns the OnMissing field value if set, zero value otherwise.
+func (o *WriteRequestDeletes) GetOnMissing() string {
+	if o == nil || o.OnMissing == nil {
+		var ret string
+		return ret
+	}
+	return *o.OnMissing
+}
+
+// GetOnMissingOk returns a tuple with the OnMissing field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *WriteRequestDeletes) GetOnMissingOk() (*string, bool) {
+	if o == nil || o.OnMissing == nil {
+		return nil, false
+	}
+	return o.OnMissing, true
+}
+
+// HasOnMissing returns a boolean if a field has been set.
+func (o *WriteRequestDeletes) HasOnMissing() bool {
+	if o != nil && o.OnMissing != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetOnMissing gets a reference to the given string and assigns it to the OnMissing field.
+func (o *WriteRequestDeletes) SetOnMissing(v string) {
+	o.OnMissing = &v
+}
+
 func (o WriteRequestDeletes) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["tuple_keys"] = o.TupleKeys
+	if o.OnMissing != nil {
+		toSerialize["on_missing"] = o.OnMissing
+	}
 	var b bytes.Buffer
 	enc := json.NewEncoder(&b)
 	enc.SetEscapeHTML(false)
