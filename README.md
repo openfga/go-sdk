@@ -680,6 +680,42 @@ data, err := fgaClient.Write(context.Background()).Body(body).Options(options).E
 // }]
 ```
 
+#### Conflict Options for Write Operations
+
+The SDK supports conflict options for write operations, allowing you to control how the API handles duplicate writes and missing deletes.
+
+> Note: This requires OpenFGA [v1.10.0](https://github.com/openfga/openfga/releases/tag/v1.10.0) or later.
+
+```go
+options := ClientWriteOptions{
+    Conflict: ClientWriteConflictOptions{
+        // Control what happens when writing a tuple that already exists
+        OnDuplicateWrites: CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_IGNORE, // or CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_ERROR (the current default behavior)
+
+        // Control what happens when deleting a tuple that doesn't exist
+        OnMissingDeletes: CLIENT_WRITE_REQUEST_ON_MISSING_DELETES_IGNORE, // or CLIENT_WRITE_REQUEST_ON_MISSING_DELETES_ERROR (the current default behavior)
+    },
+}
+
+body := ClientWriteRequest{
+    Writes: []ClientTupleKey{ {
+        User:     "user:anne",
+        Relation: "writer",
+        Object:   "document:2021-budget",
+    } },
+    Deletes: []ClientTupleKeyWithoutCondition{ {
+        User:     "user:bob",
+        Relation: "reader",
+        Object:   "document:2021-budget",
+    } },
+}
+
+data, err := fgaClient.Write(context.Background()).
+    Body(body).
+    Options(options).
+    Execute()
+```
+
 #### Relationship Queries
 
 ##### Check

@@ -212,6 +212,7 @@ model_write_authorization_model_response.go
 model_write_request.go
 model_write_request_deletes.go
 model_write_request_writes.go
+models_test.go
 oauth2/LICENSE
 oauth2/ORIGINAL_AUTHORS
 oauth2/ORIGINAL_CONTRIBUTORS
