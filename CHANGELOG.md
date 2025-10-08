@@ -1,10 +1,14 @@
 # Changelog
 
-## [Unreleased](https://github.com/openfga/go-sdk/compare/v0.7.2...HEAD)
+## [Unreleased](https://github.com/openfga/go-sdk/compare/v0.7.3...HEAD)
 
-- feat: add support for custom headers per request
+## v0.7.3
 
-## 0.7.2
+### [0.7.3](https://github.com/openfga/go-sdk/compare/v0.7.2...v0.7.3)
+
+- feat: add support for custom headers per request. See [documentation](https://github.com/openfga/go-sdk#custom-headers).
+
+## v0.7.2
 
 ### [0.7.2](https://github.com/openfga/go-sdk/compare/v0.7.1...0.7.2) (2025-09-15)
 
