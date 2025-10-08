@@ -479,22 +479,22 @@ type SdkClient interface {
 	WriteAssertionsExecute(request SdkClientWriteAssertionsRequestInterface) (*ClientWriteAssertionsResponse, error)
 
 	/*
-	 * SetAuthorizationModelId allows setting the Authorization Model ID for an OpenFGAClient.
+	 * SetAuthorizationModelId allows setting the Authorization Model ID for an OpenFgaClient.
 	 * @param string authorizationModelId - The Authorization Model ID to set.
 	 */
 	SetAuthorizationModelId(authorizationModelId string) error
 	/*
-	 * GetAuthorizationModelId retrieves the Authorization Model ID for an OpenFGAClient.
+	 * GetAuthorizationModelId retrieves the Authorization Model ID for an OpenFgaClient.
 	 * @return string
 	 */
 	GetAuthorizationModelId() (string, error)
 	/*
-	 * SetStoreId allows setting the Store ID for an OpenFGAClient.
+	 * SetStoreId allows setting the Store ID for an OpenFgaClient.
 	 * @param string storeId - The Store ID to set.
 	 */
 	SetStoreId(storeId string) error
 	/*
-	 * GetStoreId retrieves the Store ID set in the OpenFGAClient.
+	 * GetStoreId retrieves the Store ID set in the OpenFgaClient.
 	 * @return string
 	 */
 	GetStoreId() (string, error)
