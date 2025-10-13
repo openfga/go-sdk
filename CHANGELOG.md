@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased](https://github.com/openfga/go-sdk/compare/v0.7.3...HEAD)
+- feat: add generic `ToPtr[T any](v T) *T` function for creating pointers to any type
+- deprecation: `PtrBool`, `PtrInt`, `PtrInt32`, `PtrInt64`, `PtrFloat32`, `PtrFloat64`, `PtrString`, and `PtrTime` are now deprecated in favor of the generic `ToPtr` function
 
 ## v0.7.3
 
@@ -10,8 +12,6 @@
 - feat: add support for conflict options for Write operations**: (#229)
   The client now supports setting `Conflict` on `ClientWriteOptions` to control behavior when writing duplicate tuples or deleting non-existent tuples. This feature requires OpenFGA server [v1.10.0](https://github.com/openfga/openfga/releases/tag/v1.10.0) or later.
   See [Conflict Options for Write Operations](./README.md#conflict-options-for-write-operations) for more.
-- feat: add generic `ToPtr[T any](v T) *T` function for creating pointers to any type
-- deprecation: `PtrBool`, `PtrInt`, `PtrInt32`, `PtrInt64`, `PtrFloat32`, `PtrFloat64`, `PtrString`, and `PtrTime` are now deprecated in favor of the generic `ToPtr` function
 
 ## v0.7.2
 
