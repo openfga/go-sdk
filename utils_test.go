@@ -15,198 +15,224 @@ package openfga
 import (
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestToPtr(t *testing.T) {
-	// Test with bool
-	boolVal := true
-	boolPtr := ToPtr(boolVal)
-	if boolPtr == nil {
-		t.Errorf("ToPtr(bool) returned nil")
-	}
-	if *boolPtr != boolVal {
-		t.Errorf("ToPtr(bool) = %v, want %v", *boolPtr, boolVal)
+	now := time.Now()
+
+	testCases := []struct {
+		name     string
+		value    interface{}
+		expected interface{}
+	}{
+		{"bool_true", true, true},
+		{"bool_false", false, false},
+		{"int", 42, 42},
+		{"int_zero", 0, 0},
+		{"int32", int32(32), int32(32)},
+		{"int64", int64(64), int64(64)},
+		{"float32", float32(3.14), float32(3.14)},
+		{"float64", float64(3.14159), float64(3.14159)},
+		{"string", "test", "test"},
+		{"string_empty", "", ""},
+		{"time", now, now},
 	}
 
-	// Test with int
-	intVal := 42
-	intPtr := ToPtr(intVal)
-	if intPtr == nil {
-		t.Errorf("ToPtr(int) returned nil")
-	}
-	if *intPtr != intVal {
-		t.Errorf("ToPtr(int) = %v, want %v", *intPtr, intVal)
-	}
-
-	// Test with int32
-	int32Val := int32(32)
-	int32Ptr := ToPtr(int32Val)
-	if int32Ptr == nil {
-		t.Errorf("ToPtr(int32) returned nil")
-	}
-	if *int32Ptr != int32Val {
-		t.Errorf("ToPtr(int32) = %v, want %v", *int32Ptr, int32Val)
-	}
-
-	// Test with int64
-	int64Val := int64(64)
-	int64Ptr := ToPtr(int64Val)
-	if int64Ptr == nil {
-		t.Errorf("ToPtr(int64) returned nil")
-	}
-	if *int64Ptr != int64Val {
-		t.Errorf("ToPtr(int64) = %v, want %v", *int64Ptr, int64Val)
-	}
-
-	// Test with float32
-	float32Val := float32(3.14)
-	float32Ptr := ToPtr(float32Val)
-	if float32Ptr == nil {
-		t.Errorf("ToPtr(float32) returned nil")
-	}
-	if *float32Ptr != float32Val {
-		t.Errorf("ToPtr(float32) = %v, want %v", *float32Ptr, float32Val)
-	}
-
-	// Test with float64
-	float64Val := float64(3.14159)
-	float64Ptr := ToPtr(float64Val)
-	if float64Ptr == nil {
-		t.Errorf("ToPtr(float64) returned nil")
-	}
-	if *float64Ptr != float64Val {
-		t.Errorf("ToPtr(float64) = %v, want %v", *float64Ptr, float64Val)
-	}
-
-	// Test with string
-	stringVal := "test"
-	stringPtr := ToPtr(stringVal)
-	if stringPtr == nil {
-		t.Errorf("ToPtr(string) returned nil")
-	}
-	if *stringPtr != stringVal {
-		t.Errorf("ToPtr(string) = %v, want %v", *stringPtr, stringVal)
-	}
-
-	// Test with time.Time
-	timeVal := time.Now()
-	timePtr := ToPtr(timeVal)
-	if timePtr == nil {
-		t.Errorf("ToPtr(time.Time) returned nil")
-	}
-	if *timePtr != timeVal {
-		t.Errorf("ToPtr(time.Time) = %v, want %v", *timePtr, timeVal)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			switch v := tc.value.(type) {
+			case bool:
+				ptr := ToPtr(v)
+				require.NotNil(t, ptr)
+				assert.Equal(t, v, *ptr)
+			case int:
+				ptr := ToPtr(v)
+				require.NotNil(t, ptr)
+				assert.Equal(t, v, *ptr)
+			case int32:
+				ptr := ToPtr(v)
+				require.NotNil(t, ptr)
+				assert.Equal(t, v, *ptr)
+			case int64:
+				ptr := ToPtr(v)
+				require.NotNil(t, ptr)
+				assert.Equal(t, v, *ptr)
+			case float32:
+				ptr := ToPtr(v)
+				require.NotNil(t, ptr)
+				assert.Equal(t, v, *ptr)
+			case float64:
+				ptr := ToPtr(v)
+				require.NotNil(t, ptr)
+				assert.Equal(t, v, *ptr)
+			case string:
+				ptr := ToPtr(v)
+				require.NotNil(t, ptr)
+				assert.Equal(t, v, *ptr)
+			case time.Time:
+				ptr := ToPtr(v)
+				require.NotNil(t, ptr)
+				assert.Equal(t, v, *ptr)
+			default:
+				t.Errorf("Unsupported type: %T", v)
+			}
+		})
 	}
 }
 
 func TestPtrFunctionsBackwardCompatibility(t *testing.T) {
-	// Test that deprecated functions still work correctly
-	
-	// PtrBool
-	boolVal := true
-	boolPtr := PtrBool(boolVal)
-	if boolPtr == nil || *boolPtr != boolVal {
-		t.Errorf("PtrBool(%v) failed", boolVal)
+	now := time.Now()
+
+	testCases := []struct {
+		name     string
+		testFunc func(t *testing.T)
+	}{
+		{
+			name: "PtrBool",
+			testFunc: func(t *testing.T) {
+				value := true
+				ptr := PtrBool(value)
+				require.NotNil(t, ptr)
+				assert.Equal(t, value, *ptr)
+			},
+		},
+		{
+			name: "PtrInt",
+			testFunc: func(t *testing.T) {
+				value := 42
+				ptr := PtrInt(value)
+				require.NotNil(t, ptr)
+				assert.Equal(t, value, *ptr)
+			},
+		},
+		{
+			name: "PtrInt32",
+			testFunc: func(t *testing.T) {
+				value := int32(32)
+				ptr := PtrInt32(value)
+				require.NotNil(t, ptr)
+				assert.Equal(t, value, *ptr)
+			},
+		},
+		{
+			name: "PtrInt64",
+			testFunc: func(t *testing.T) {
+				value := int64(64)
+				ptr := PtrInt64(value)
+				require.NotNil(t, ptr)
+				assert.Equal(t, value, *ptr)
+			},
+		},
+		{
+			name: "PtrFloat32",
+			testFunc: func(t *testing.T) {
+				value := float32(3.14)
+				ptr := PtrFloat32(value)
+				require.NotNil(t, ptr)
+				assert.Equal(t, value, *ptr)
+			},
+		},
+		{
+			name: "PtrFloat64",
+			testFunc: func(t *testing.T) {
+				value := float64(3.14159)
+				ptr := PtrFloat64(value)
+				require.NotNil(t, ptr)
+				assert.Equal(t, value, *ptr)
+			},
+		},
+		{
+			name: "PtrString",
+			testFunc: func(t *testing.T) {
+				value := "test"
+				ptr := PtrString(value)
+				require.NotNil(t, ptr)
+				assert.Equal(t, value, *ptr)
+			},
+		},
+		{
+			name: "PtrTime",
+			testFunc: func(t *testing.T) {
+				ptr := PtrTime(now)
+				require.NotNil(t, ptr)
+				assert.Equal(t, now, *ptr)
+			},
+		},
 	}
 
-	// PtrInt
-	intVal := 42
-	intPtr := PtrInt(intVal)
-	if intPtr == nil || *intPtr != intVal {
-		t.Errorf("PtrInt(%v) failed", intVal)
-	}
-
-	// PtrInt32
-	int32Val := int32(32)
-	int32Ptr := PtrInt32(int32Val)
-	if int32Ptr == nil || *int32Ptr != int32Val {
-		t.Errorf("PtrInt32(%v) failed", int32Val)
-	}
-
-	// PtrInt64
-	int64Val := int64(64)
-	int64Ptr := PtrInt64(int64Val)
-	if int64Ptr == nil || *int64Ptr != int64Val {
-		t.Errorf("PtrInt64(%v) failed", int64Val)
-	}
-
-	// PtrFloat32
-	float32Val := float32(3.14)
-	float32Ptr := PtrFloat32(float32Val)
-	if float32Ptr == nil || *float32Ptr != float32Val {
-		t.Errorf("PtrFloat32(%v) failed", float32Val)
-	}
-
-	// PtrFloat64
-	float64Val := float64(3.14159)
-	float64Ptr := PtrFloat64(float64Val)
-	if float64Ptr == nil || *float64Ptr != float64Val {
-		t.Errorf("PtrFloat64(%v) failed", float64Val)
-	}
-
-	// PtrString
-	stringVal := "test"
-	stringPtr := PtrString(stringVal)
-	if stringPtr == nil || *stringPtr != stringVal {
-		t.Errorf("PtrString(%v) failed", stringVal)
-	}
-
-	// PtrTime
-	timeVal := time.Now()
-	timePtr := PtrTime(timeVal)
-	if timePtr == nil || *timePtr != timeVal {
-		t.Errorf("PtrTime(%v) failed", timeVal)
+	for _, tc := range testCases {
+		t.Run(tc.name, tc.testFunc)
 	}
 }
 
 func TestToPtrVsPtrFunctions(t *testing.T) {
-	// Ensure ToPtr produces the same behavior as the specific Ptr functions
+	now := time.Now()
 
-	// Bool
-	boolVal := true
-	if *ToPtr(boolVal) != *PtrBool(boolVal) {
-		t.Errorf("ToPtr and PtrBool produce different results")
+	testCases := []struct {
+		name     string
+		testFunc func(t *testing.T)
+	}{
+		{
+			name: "Bool",
+			testFunc: func(t *testing.T) {
+				value := true
+				assert.Equal(t, *ToPtr(value), *PtrBool(value))
+			},
+		},
+		{
+			name: "Int",
+			testFunc: func(t *testing.T) {
+				value := 42
+				assert.Equal(t, *ToPtr(value), *PtrInt(value))
+			},
+		},
+		{
+			name: "Int32",
+			testFunc: func(t *testing.T) {
+				value := int32(32)
+				assert.Equal(t, *ToPtr(value), *PtrInt32(value))
+			},
+		},
+		{
+			name: "Int64",
+			testFunc: func(t *testing.T) {
+				value := int64(64)
+				assert.Equal(t, *ToPtr(value), *PtrInt64(value))
+			},
+		},
+		{
+			name: "Float32",
+			testFunc: func(t *testing.T) {
+				value := float32(3.14)
+				assert.Equal(t, *ToPtr(value), *PtrFloat32(value))
+			},
+		},
+		{
+			name: "Float64",
+			testFunc: func(t *testing.T) {
+				value := float64(3.14159)
+				assert.Equal(t, *ToPtr(value), *PtrFloat64(value))
+			},
+		},
+		{
+			name: "String",
+			testFunc: func(t *testing.T) {
+				value := "test"
+				assert.Equal(t, *ToPtr(value), *PtrString(value))
+			},
+		},
+		{
+			name: "Time",
+			testFunc: func(t *testing.T) {
+				assert.Equal(t, *ToPtr(now), *PtrTime(now))
+			},
+		},
 	}
 
-	// Int
-	intVal := 42
-	if *ToPtr(intVal) != *PtrInt(intVal) {
-		t.Errorf("ToPtr and PtrInt produce different results")
-	}
-
-	// Int32
-	int32Val := int32(32)
-	if *ToPtr(int32Val) != *PtrInt32(int32Val) {
-		t.Errorf("ToPtr and PtrInt32 produce different results")
-	}
-
-	// Int64
-	int64Val := int64(64)
-	if *ToPtr(int64Val) != *PtrInt64(int64Val) {
-		t.Errorf("ToPtr and PtrInt64 produce different results")
-	}
-
-	// Float32
-	float32Val := float32(3.14)
-	if *ToPtr(float32Val) != *PtrFloat32(float32Val) {
-		t.Errorf("ToPtr and PtrFloat32 produce different results")
-	}
-
-	// Float64
-	float64Val := float64(3.14159)
-	if *ToPtr(float64Val) != *PtrFloat64(float64Val) {
-		t.Errorf("ToPtr and PtrFloat64 produce different results")
-	}
-
-	// String
-	stringVal := "test"
-	if *ToPtr(stringVal) != *PtrString(stringVal) {
-		t.Errorf("ToPtr and PtrString produce different results")
-	}
-
-	// Time
-	timeVal := time.Now()
-	if *ToPtr(timeVal) != *PtrTime(timeVal) {
-		t.Errorf("ToPtr and PtrTime produce different results")
+	for _, tc := range testCases {
+		t.Run(tc.name, tc.testFunc)
 	}
 }
