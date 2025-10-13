@@ -21,6 +21,8 @@ import (
 // WriteRequestWrites struct for WriteRequestWrites
 type WriteRequestWrites struct {
 	TupleKeys []TupleKey `json:"tuple_keys" yaml:"tuple_keys"`
+	// On 'error' ( or unspecified ), the API returns an error if an identical tuple already exists. On 'ignore', identical writes are treated as no-ops (matching on user, relation, object, and RelationshipCondition).
+	OnDuplicate *string `json:"on_duplicate,omitempty" yaml:"on_duplicate,omitempty"`
 }
 
 // NewWriteRequestWrites instantiates a new WriteRequestWrites object
@@ -30,6 +32,8 @@ type WriteRequestWrites struct {
 func NewWriteRequestWrites(tupleKeys []TupleKey) *WriteRequestWrites {
 	this := WriteRequestWrites{}
 	this.TupleKeys = tupleKeys
+	var onDuplicate = "error"
+	this.OnDuplicate = &onDuplicate
 	return &this
 }
 
@@ -38,6 +42,8 @@ func NewWriteRequestWrites(tupleKeys []TupleKey) *WriteRequestWrites {
 // but it doesn't guarantee that properties required by API are set
 func NewWriteRequestWritesWithDefaults() *WriteRequestWrites {
 	this := WriteRequestWrites{}
+	var onDuplicate = "error"
+	this.OnDuplicate = &onDuplicate
 	return &this
 }
 
@@ -65,9 +71,44 @@ func (o *WriteRequestWrites) SetTupleKeys(v []TupleKey) {
 	o.TupleKeys = v
 }
 
+// GetOnDuplicate returns the OnDuplicate field value if set, zero value otherwise.
+func (o *WriteRequestWrites) GetOnDuplicate() string {
+	if o == nil || o.OnDuplicate == nil {
+		var ret string
+		return ret
+	}
+	return *o.OnDuplicate
+}
+
+// GetOnDuplicateOk returns a tuple with the OnDuplicate field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *WriteRequestWrites) GetOnDuplicateOk() (*string, bool) {
+	if o == nil || o.OnDuplicate == nil {
+		return nil, false
+	}
+	return o.OnDuplicate, true
+}
+
+// HasOnDuplicate returns a boolean if a field has been set.
+func (o *WriteRequestWrites) HasOnDuplicate() bool {
+	if o != nil && o.OnDuplicate != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetOnDuplicate gets a reference to the given string and assigns it to the OnDuplicate field.
+func (o *WriteRequestWrites) SetOnDuplicate(v string) {
+	o.OnDuplicate = &v
+}
+
 func (o WriteRequestWrites) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["tuple_keys"] = o.TupleKeys
+	if o.OnDuplicate != nil {
+		toSerialize["on_duplicate"] = o.OnDuplicate
+	}
 	var b bytes.Buffer
 	enc := json.NewEncoder(&b)
 	enc.SetEscapeHTML(false)
