@@ -2,3 +2,8 @@
 api/openapi.yaml
 test/api_open_fga_test.go
 client.go
+utils.go
+configuration.go
+response.go
+go.mod
+api_client.go
