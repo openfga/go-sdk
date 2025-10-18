@@ -1790,9 +1790,8 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 	}
 
 	writePool := pool.NewWithResults[*ClientWriteResponse]().WithContext(request.GetContext()).WithMaxGoroutines(int(maxParallelReqs))
-	writeResponses := make([]ClientWriteResponse, len(writeChunks))
-	for index, writeBody := range writeChunks {
-		index, writeBody := index, writeBody
+	for _, writeBody := range writeChunks {
+		writeBody := writeBody
 		writePool.Go(func(ctx _context.Context) (*ClientWriteResponse, error) {
 			singleResponse, err := client.WriteExecute(&SdkClientWriteRequest{
 				ctx:    ctx,
@@ -1812,14 +1811,10 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 				return nil, err
 			}
 
-			if singleResponse != nil {
-				writeResponses[index] = *singleResponse
-			}
-
 			return singleResponse, nil
 		})
 	}
-	_, err = writePool.Wait()
+	writeResponses, err := writePool.Wait()
 	if err != nil {
 		return &response, err
 	}
@@ -1835,9 +1830,8 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 	}
 
 	deletePool := pool.NewWithResults[*ClientWriteResponse]().WithContext(request.GetContext()).WithMaxGoroutines(int(maxParallelReqs))
-	deleteResponses := make([]ClientWriteResponse, len(deleteChunks))
-	for index, deleteBody := range deleteChunks {
-		index, deleteBody := index, deleteBody
+	for _, deleteBody := range deleteChunks {
+		deleteBody := deleteBody
 		deletePool.Go(func(ctx _context.Context) (*ClientWriteResponse, error) {
 			singleResponse, err := client.WriteExecute(&SdkClientWriteRequest{
 				ctx:    ctx,
@@ -1857,16 +1851,11 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 			if errors.As(err, &authErr) {
 				return nil, err
 			}
-
-			if singleResponse != nil {
-				deleteResponses[index] = *singleResponse
-			}
-
 			return singleResponse, nil
 		})
 	}
 
-	_, err = deletePool.Wait()
+	deleteResponses, err := deletePool.Wait()
 	if err != nil {
 		return &response, err
 	}
