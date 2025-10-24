@@ -68,6 +68,8 @@ docs/RelationshipCondition.md
 docs/SourceInfo.md
 docs/Status.md
 docs/Store.md
+docs/StreamResultOfStreamedListObjectsResponse.md
+docs/StreamedListObjectsResponse.md
 docs/Tuple.md
 docs/TupleChange.md
 docs/TupleKey.md
@@ -157,6 +159,8 @@ model_relationship_condition.go
 model_source_info.go
 model_status.go
 model_store.go
+model_stream_result_of_streamed_list_objects_response.go
+model_streamed_list_objects_response.go
 model_tuple.go
 model_tuple_change.go
 model_tuple_key.go

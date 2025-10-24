@@ -3,10 +3,12 @@
 ## [Unreleased](https://github.com/openfga/go-sdk/compare/v0.7.3...HEAD)
 - feat: add generic `ToPtr[T any](v T) *T` function for creating pointers to any type
 - deprecation: `PtrBool`, `PtrInt`, `PtrInt32`, `PtrInt64`, `PtrFloat32`, `PtrFloat64`, `PtrString`, and `PtrTime` are now deprecated in favor of the generic `ToPtr` function
+- feat: add support for StreamedListObjects endpoint
+- feat: add configurable buffer size for streaming responses via `ClientStreamedListObjectsOptions.StreamBufferSize`
 
 ## v0.7.3
 
-### [0.7.3](https://github.com/openfga/go-sdk/compare/v0.7.2...v0.7.3)
+### [0.7.3](https://github.com/openfga/go-sdk/compare/v0.7.2...v0.7.3) (2025-10-08)
 
 - feat: add support for custom headers per request. See [documentation](https://github.com/openfga/go-sdk#custom-headers).
 - feat: add support for conflict options for Write operations**: (#229)

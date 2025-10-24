@@ -772,6 +772,24 @@ type OpenFgaApi interface {
 	ReadChangesExecute(r ApiReadChangesRequest) (ReadChangesResponse, *http.Response, error)
 
 	/*
+		 * StreamedListObjects Stream all objects of the given type that the user has a relation with
+		 * The Streamed ListObjects API is very similar to the the ListObjects API, with two differences:
+	1. Instead of collecting all objects before returning a response, it streams them to the client as they are collected.
+	2. The number of results returned is only limited by the execution timeout specified in the flag OPENFGA_LIST_OBJECTS_DEADLINE.
+
+		 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+		 * @param storeId
+		 * @return ApiStreamedListObjectsRequest
+	*/
+	StreamedListObjects(ctx context.Context, storeId string) ApiStreamedListObjectsRequest
+
+	/*
+	 * StreamedListObjectsExecute executes the request
+	 * @return StreamResultOfStreamedListObjectsResponse
+	 */
+	StreamedListObjectsExecute(r ApiStreamedListObjectsRequest) (StreamResultOfStreamedListObjectsResponse, *http.Response, error)
+
+	/*
 		 * Write Add or delete tuples from the store
 		 * The Write API will transactionally update the tuples for a certain store. Tuples and type definitions allow OpenFGA to determine whether a relationship exists between an object and an user.
 	In the body, `writes` adds new tuples and `deletes` removes existing tuples. When deleting a tuple, any `condition` specified with it is ignored.
@@ -4062,6 +4080,202 @@ func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadCha
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
+
+	// if any override headers were in the options, set them now
+	for header, val := range r.options.Headers {
+		localVarHeaderParams[header] = val
+	}
+
+	retryParams := a.client.cfg.RetryParams
+	for i := 0; i < retryParams.MaxRetry+1; i++ {
+		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
+		if err != nil {
+			return returnValue, nil, err
+		}
+
+		httpResponse, err := a.client.callAPI(req)
+		if err != nil || httpResponse == nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
+				if timeToWait > 0 {
+					if a.client.cfg.Debug {
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
+					}
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
+			return returnValue, httpResponse, err
+		}
+
+		responseBody, err := io.ReadAll(httpResponse.Body)
+		_ = httpResponse.Body.Close()
+		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
+		if err != nil {
+			if i < retryParams.MaxRetry {
+				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
+				if timeToWait > 0 {
+					if a.client.cfg.Debug {
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
+					}
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
+			return returnValue, httpResponse, err
+		}
+
+		if httpResponse.StatusCode >= http.StatusMultipleChoices {
+			err := a.client.handleAPIError(httpResponse, responseBody, requestBody, operationName, r.storeId)
+			if err != nil && i < retryParams.MaxRetry {
+				timeToWait := time.Duration(0)
+				var fgaApiRateLimitExceededError FgaApiRateLimitExceededError
+				var fgaApiInternalError FgaApiInternalError
+				switch {
+				case errors.As(err, &fgaApiRateLimitExceededError):
+					timeToWait = err.(FgaApiRateLimitExceededError).GetTimeToWait(i, *retryParams)
+				case errors.As(err, &fgaApiInternalError):
+					timeToWait = err.(FgaApiInternalError).GetTimeToWait(i, *retryParams)
+				}
+
+				if timeToWait > 0 {
+					if a.client.cfg.Debug {
+						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
+					}
+					time.Sleep(timeToWait)
+					continue
+				}
+			}
+
+			return returnValue, httpResponse, err
+		}
+
+		err = a.client.decode(&returnValue, responseBody, httpResponse.Header.Get("Content-Type"))
+		if err != nil {
+			newErr := GenericOpenAPIError{
+				body:  responseBody,
+				error: err.Error(),
+			}
+			return returnValue, httpResponse, newErr
+		}
+
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
+
+		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
+			operationName,
+			map[string]interface{}{
+				"storeId": r.storeId,
+				"body":    requestBody,
+			},
+			req,
+			httpResponse,
+			requestStarted,
+			i,
+		)
+
+		if requestDuration > 0 {
+			_, _ = metrics.RequestDuration(requestDuration, attrs)
+		}
+
+		if queryDuration > 0 {
+			_, _ = metrics.QueryDuration(queryDuration, attrs)
+		}
+
+		return returnValue, httpResponse, nil
+	}
+
+	// should never have reached this
+	return returnValue, nil, reportError("Error not handled properly")
+}
+
+type ApiStreamedListObjectsRequest struct {
+	ctx        context.Context
+	ApiService OpenFgaApi
+	storeId    string
+	body       *ListObjectsRequest
+	options    RequestOptions
+}
+
+func (r ApiStreamedListObjectsRequest) Body(body ListObjectsRequest) ApiStreamedListObjectsRequest {
+	r.body = &body
+	return r
+}
+
+func (r ApiStreamedListObjectsRequest) Options(options RequestOptions) ApiStreamedListObjectsRequest {
+	r.options = options
+	return r
+}
+
+func (r ApiStreamedListObjectsRequest) Execute() (StreamResultOfStreamedListObjectsResponse, *http.Response, error) {
+	return r.ApiService.StreamedListObjectsExecute(r)
+}
+
+/*
+  - StreamedListObjects Stream all objects of the given type that the user has a relation with
+  - The Streamed ListObjects API is very similar to the the ListObjects API, with two differences:
+
+1. Instead of collecting all objects before returning a response, it streams them to the client as they are collected.
+2. The number of results returned is only limited by the execution timeout specified in the flag OPENFGA_LIST_OBJECTS_DEADLINE.
+
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param storeId
+  - @return ApiStreamedListObjectsRequest
+*/
+func (a *OpenFgaApiService) StreamedListObjects(ctx context.Context, storeId string) ApiStreamedListObjectsRequest {
+	return ApiStreamedListObjectsRequest{
+		ApiService: a,
+		ctx:        ctx,
+		storeId:    storeId,
+	}
+}
+
+/*
+ * Execute executes the request
+ * @return StreamResultOfStreamedListObjectsResponse
+ */
+func (a *OpenFgaApiService) StreamedListObjectsExecute(r ApiStreamedListObjectsRequest) (StreamResultOfStreamedListObjectsResponse, *http.Response, error) {
+	const (
+		operationName = "StreamedListObjects"
+		httpMethod    = http.MethodPost
+	)
+	var (
+		requestStarted = time.Now()
+		requestBody    interface{}
+		returnValue    StreamResultOfStreamedListObjectsResponse
+	)
+
+	path := "/stores/{store_id}/streamed-list-objects"
+	if r.storeId == "" {
+		return returnValue, nil, reportError("storeId is required and must be specified")
+	}
+
+	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	if r.body == nil {
+		return returnValue, nil, reportError("body is required and must be specified")
+	}
+
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{"application/json"}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	// body params
+	requestBody = r.body
 
 	// if any override headers were in the options, set them now
 	for header, val := range r.options.Headers {
