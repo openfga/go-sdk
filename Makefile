@@ -1,4 +1,4 @@
-.PHONY: help test test-unit test-integration lint fmt vet security check
+.PHONY: help test lint fmt vet security check
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'
@@ -6,13 +6,8 @@ help: ## Show this help message
 	@echo 'Available targets:'
 	@awk 'BEGIN {FS = ":.*?## "}; /^[a-zA-Z_-]+:.*?## / {printf "  %-20s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-test: test-unit ## Run all tests
-
-test-unit: ## Run unit tests only
+test: ## Run all tests
 	go test -race -coverprofile=coverage.txt -covermode=atomic -v ./...
-
-test-integration: ## Run integration tests only (if available, tagged with *integration*)
-	go test -v -tags=integration -count=1 ./...
 
 fmt: ## Run code formatting
 	go fmt ./...
