@@ -1,4 +1,4 @@
-.PHONY: help test test-unit test-integration lint fmt vet security
+.PHONY: help test test-unit test-integration lint fmt vet security check
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'
@@ -27,4 +27,4 @@ security: ## Run security scans
 	gosec ./...
 	govulncheck ./...
 
-check: fmt lint test security # Run all and everything
+check: fmt lint test security ## Run all checks: formatting, linting, tests, and security
