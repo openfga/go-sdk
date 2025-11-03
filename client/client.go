@@ -1807,6 +1807,7 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 				},
 			})
 			var authErr fgaSdk.FgaApiAuthenticationError
+			// If an error was returned then it will be an authentication error so we want to return
 			if errors.As(err, &authErr) {
 				return nil, err
 			}
@@ -1856,6 +1857,7 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 	}
 
 	deleteResponses, err := deletePool.Wait()
+	// If an error was returned then it will be an authentication error so we want to return
 	if err != nil {
 		return &response, err
 	}
