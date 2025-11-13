@@ -1,143 +1,140 @@
-# StreamedListObjects Example
+# Streamed List Objects Example
 
-This example demonstrates how to use the `StreamedListObjects` API in the OpenFGA Go SDK in both:
-- Synchronous mode (range over the channel)
-- Asynchronous mode (consume in a goroutine)
+Demonstrates using `StreamedListObjects` to retrieve objects via the streaming API in the Go SDK.
 
-It creates (if not provided) a temporary store and authorization model, writes mock tuples, streams objects, and optionally cleans up.
+## What is StreamedListObjects?
+
+The Streamed ListObjects API is very similar to the ListObjects API, with two key differences:
+
+1. **Streaming Results**: Instead of collecting all objects before returning a response, it streams them to the client as they are collected.
+2. **No Pagination Limit**: Returns all results without the 1000-object limit of the standard ListObjects API.
+
+This makes it ideal for scenarios where you need to retrieve large numbers of objects, especially when querying computed relations.
 
 ## Prerequisites
 
-1. An OpenFGA server running (default: `http://localhost:8080`)
-2. (Optional) Existing store and authorization model IDs
+- OpenFGA server running on `http://localhost:8080` (or set `FGA_API_URL`)
 
-## Environment Variables
-
-- `FGA_API_URL` (default: `http://localhost:8080`)
-- `FGA_STORE_ID` (optional; if absent a new store is created and later deleted)
-- `FGA_MODEL_ID` (optional; if absent a simple model is created)
-- `FGA_TUPLE_COUNT` (optional; number of tuples to write; overridden by CLI arg if passed)
-- `FGA_RELATION` (optional; relation used when writing and listing; must be `viewer` or `owner`; overridden by CLI arg if passed)
-- `FGA_BUFFER_SIZE` (optional; buffer size for streaming channel; defaults to 10 if not set; overridden by CLI arg if passed)
-
-## CLI Arguments
-
-```
-go run . [mode] [tupleCount] [relation] [bufferSize]
-```
-
-- `mode`: `sync` (default) or `async`
-- `tupleCount`: positive integer (default: 3 if omitted and env var not set)
-- `relation`: `viewer` or `owner` (default: `viewer`)
-- `bufferSize`: positive integer (optional; sets the streaming channel buffer size; defaults to 10)
-
-Examples:
+## Running
 
 ```bash
-# Basic sync (defaults to 3 tuples, relation viewer)
+# From the example directory
+cd example/streamed_list_objects
 go run .
-
-# Explicit sync, 10 tuples, relation owner
-go run . sync 10 owner
-
-# Async mode with 50 tuples and viewer relation
-go run . async 50 viewer
-
-# Sync mode with custom buffer size of 100
-go run . sync 10 viewer 100
-
-# Using environment variables (relation owner, 25 tuples, buffer size 50)
-export FGA_TUPLE_COUNT=25
-export FGA_RELATION=owner
-export FGA_BUFFER_SIZE=50
-go run . async
 ```
 
-## Buffer Size Configuration
+## What it does
 
-The `bufferSize` parameter (4th CLI argument or `FGA_BUFFER_SIZE` env var) controls the size of the internal channel buffer used for streaming responses:
+- Creates a temporary store
+- Writes an authorization model with **computed relations**
+- Adds 2000 tuples (1000 owners + 1000 viewers)
+- Queries the **computed `can_read` relation** via `StreamedListObjects`
+- Shows all 2000 results (demonstrating computed relations)
+- Shows progress (first 3 objects and every 500th)
+- Cleans up the store
 
-- **Larger buffers** (e.g., 100+) improve throughput for high-volume streams but use more memory
-- **Smaller buffers** (e.g., 1-10) reduce memory usage but may decrease throughput
-- **Default value** is 10, providing a balanced approach for most use cases
+## Authorization Model
 
-Example with large buffer for high-volume streaming:
-```bash
-go run . async 1000 viewer 200
-```
-
-## What Happens Internally
-
-1. Store creation (if `FGA_STORE_ID` not provided)
-2. Authorization model creation (if `FGA_MODEL_ID` not provided) with `viewer` and `owner` relations
-3. Tuple writes: `user:anne` assigned chosen relation for `document:0 .. document:N-1`
-4. Streaming request (`StreamedListObjects`) for the chosen relation
-5. Consumption pattern:
-    - Sync: range directly over `response.Objects`
-    - Async: consume in a goroutine while main goroutine reports progress
-6. Final error check via `response.Errors`
-7. Temporary store deletion (only if the example created it)
-
-## Expected Output (Sync Mode Example)
+The example demonstrates OpenFGA's **computed relations**:
 
 ```
-OpenFGA StreamedListObjects Example
-====================================
-API URL: http://localhost:8080
-Store ID: 01ARZ3NDEKTSV4RRFFQ69G5FAV
+type user
 
-Creating authorization model...
-Created authorization model: 01ARZ3NDEKTSV4RRFFQ69G5FAX
-
-Writing 3 test tuples for relation 'viewer'...
-Wrote 3 test tuples
-
-Selected mode: sync | relation: viewer | tuple count: 3 (pass 'sync|async [count] [relation] [bufferSize]')
-Mode: sync streaming (range over channel)
-Streaming objects (sync):
-  1. document:0
-  2. document:1
-  3. document:2
-
-Total objects received (sync): 3 (expected up to 3)
-
-Deleting temporary store...
-Deleted temporary store (01ARZ3NDEKTSV4RRFFQ69G5FAV)
-
-Done.
+type document
+  relations
+    define owner: [user]
+    define viewer: [user]
+    define can_read: owner or viewer
 ```
 
-## Expected Output (Async Mode with Custom Buffer Size)
+**Why this matters:**
+- We write tuples to `owner` and `viewer` (base permissions)
+- We query `can_read` (computed from owner OR viewer)
 
+**Example flow:**
+1. Write: `user:anne owner document:1-1000`
+2. Write: `user:anne viewer document:1001-2000`
+3. Query: `StreamedListObjects(user:anne, relation:can_read, type:document)`
+4. Result: All 2000 documents (because `can_read = owner OR viewer`)
+
+## Key Features Demonstrated
+
+### Channel-based Streaming Pattern
+
+The `StreamedListObjects` method returns a response with channels, which is the idiomatic Go way to handle streaming data:
+
+```go
+response, err := fgaClient.StreamedListObjects(ctx).Body(request).Execute()
+if err != nil {
+    log.Fatal(err)
+}
+defer response.Close()
+
+for obj := range response.Objects {
+    fmt.Printf("Received: %s\n", obj.Object)
+}
+
+// Check for errors
+if err := <-response.Errors; err != nil {
+    log.Fatal(err)
+}
 ```
-OpenFGA StreamedListObjects Example
-====================================
-API URL: http://localhost:8080
-Store ID: 01ARZ3NDEKTSV4RRFFQ69G5FAV
 
-Creating authorization model...
-Created authorization model: 01ARZ3NDEKTSV4RRFFQ69G5FAX
+### Early Break and Cleanup
 
-Writing 5 test tuples for relation 'owner'...
-Wrote 5 test tuples
+The streaming implementation properly handles early termination:
 
-Selected mode: async | relation: owner | tuple count: 5 | buffer size: 50 (pass 'sync|async [count] [relation] [bufferSize]')
-Mode: async streaming (consume in goroutine)
-Using custom buffer size: 50
-Performing other work while streaming...
-  (main goroutine still free to do work)
-  async -> 1. document:0
-  (main goroutine still free to do work)
-  async -> 2. document:1
-  async -> 3. document:2
-  (main goroutine still free to do work)
-  async -> 4. document:3
-  async -> 5. document:4
-
-Total objects received (async): 5 (expected up to 5)
-
-Deleting temporary store...
-Deleted temporary store (01ARZ3NDEKTSV4RRFFQ69G5FAV)
-
-Done.
+```go
+for obj := range response.Objects {
+    fmt.Println(obj.Object)
+    if someCondition {
+        break // Stream is automatically cleaned up via defer response.Close()
+    }
+}
 ```
+
+### Context Cancellation Support
+
+Full support for `context.Context`:
+
+```go
+ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+defer cancel()
+
+response, err := fgaClient.StreamedListObjects(ctx).Body(request).Execute()
+if err != nil {
+    log.Fatal(err)
+}
+defer response.Close()
+
+for obj := range response.Objects {
+    fmt.Println(obj.Object)
+}
+
+if err := <-response.Errors; err != nil && err != context.Canceled {
+    log.Fatal(err)
+}
+```
+
+## Benefits Over ListObjects
+
+- **No Pagination**: Retrieve all objects in a single streaming request
+- **Lower Memory**: Objects are processed as they arrive, not held in memory
+- **Early Termination**: Can stop streaming at any point without wasting resources
+- **Better for Large Results**: Ideal when expecting hundreds or thousands of objects
+
+## Performance Considerations
+
+- Streaming starts immediately - no need to wait for all results
+- HTTP connection remains open during streaming
+- Properly handles cleanup if consumer stops early
+- Supports all the same options as `ListObjects` (consistency, contextual tuples, etc.)
+
+## Error Handling
+
+The example includes robust error handling that:
+- Catches configuration errors
+- Detects connection issues
+- Avoids logging sensitive data
+- Provides helpful messages for common issues
+
