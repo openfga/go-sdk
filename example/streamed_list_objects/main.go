@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 
 	openfga "github.com/openfga/go-sdk"
 	"github.com/openfga/go-sdk/client"
+	"github.com/openfga/language/pkg/go/transformer"
 )
 
 func main() {
@@ -86,59 +88,33 @@ func main() {
 }
 
 func writeAuthorizationModel(ctx context.Context, fgaClient *client.OpenFgaClient) (*client.ClientWriteAuthorizationModelResponse, error) {
-	// Define the authorization model with computed relations
-	ownerUserset := openfga.Userset{This: &map[string]interface{}{}}
-	viewerUserset := openfga.Userset{This: &map[string]interface{}{}}
-	canReadUserset := openfga.Userset{
-		Union: &openfga.Usersets{
-			Child: []openfga.Userset{
-				{ComputedUserset: &openfga.ObjectRelation{
-					Object:   openfga.PtrString(""),
-					Relation: openfga.PtrString("owner"),
-				}},
-				{ComputedUserset: &openfga.ObjectRelation{
-					Object:   openfga.PtrString(""),
-					Relation: openfga.PtrString("viewer"),
-				}},
-			},
-		},
+	// Define the authorization model using OpenFGA DSL
+	dslString := `model
+  schema 1.1
+
+type user
+
+type document
+  relations
+    define owner: [user]
+    define viewer: [user]
+    define can_read: owner or viewer`
+
+	// Transform DSL to JSON string
+	modelJSON, err := transformer.TransformDSLToJSON(dslString)
+	if err != nil {
+		return nil, fmt.Errorf("failed to transform DSL to JSON: %w", err)
 	}
 
-	relations := map[string]openfga.Userset{
-		"owner":    ownerUserset,
-		"viewer":   viewerUserset,
-		"can_read": canReadUserset,
-	}
-
-	relationMetadata := map[string]openfga.RelationMetadata{
-		"owner": {
-			DirectlyRelatedUserTypes: &[]openfga.RelationReference{
-				{Type: "user"},
-			},
-		},
-		"viewer": {
-			DirectlyRelatedUserTypes: &[]openfga.RelationReference{
-				{Type: "user"},
-			},
-		},
-		"can_read": {
-			DirectlyRelatedUserTypes: &[]openfga.RelationReference{},
-		},
+	// Parse the JSON into the authorization model request
+	var authModel openfga.AuthorizationModel
+	if err := json.Unmarshal([]byte(modelJSON), &authModel); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal authorization model: %w", err)
 	}
 
 	return fgaClient.WriteAuthorizationModel(ctx).Body(openfga.WriteAuthorizationModelRequest{
-		SchemaVersion: "1.1",
-		TypeDefinitions: []openfga.TypeDefinition{
-			{
-				Type:      "user",
-				Relations: &map[string]openfga.Userset{},
-			},
-			{
-				Type:      "document",
-				Relations: &relations,
-				Metadata:  &openfga.Metadata{Relations: &relationMetadata},
-			},
-		},
+		SchemaVersion:   authModel.SchemaVersion,
+		TypeDefinitions: authModel.TypeDefinitions,
 	}).Execute()
 }
 
