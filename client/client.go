@@ -439,6 +439,19 @@ type SdkClient interface {
 	 */
 	ListUsersExecute(r SdkClientListUsersRequestInterface) (*ClientListUsersResponse, error)
 
+	/*
+	 * StreamedListObjects Stream all objects of the given type that the user has a relation with
+	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return SdkClientStreamedListObjectsRequestInterface
+	 */
+	StreamedListObjects(ctx _context.Context) SdkClientStreamedListObjectsRequestInterface
+
+	/*
+	 * StreamedListObjectsExecute executes the StreamedListObjects request and returns a channel
+	 * @return *ClientStreamedListObjectsResponse
+	 */
+	StreamedListObjectsExecute(request SdkClientStreamedListObjectsRequestInterface) (*ClientStreamedListObjectsResponse, error)
+
 	/* Assertions */
 
 	/*
@@ -3281,4 +3294,160 @@ func (client *OpenFgaClient) WriteAssertionsExecute(request SdkClientWriteAssert
 		return nil, err
 	}
 	return &ClientWriteAssertionsResponse{}, nil
+}
+
+type SdkClientStreamedListObjectsRequest struct {
+	ctx    _context.Context
+	Client *OpenFgaClient
+
+	body    *ClientStreamedListObjectsRequest
+	options *ClientStreamedListObjectsOptions
+}
+
+type SdkClientStreamedListObjectsRequestInterface interface {
+	Options(options ClientStreamedListObjectsOptions) SdkClientStreamedListObjectsRequestInterface
+	Body(body ClientStreamedListObjectsRequest) SdkClientStreamedListObjectsRequestInterface
+	Execute() (*ClientStreamedListObjectsResponse, error)
+	GetAuthorizationModelIdOverride() *string
+	GetStoreIdOverride() *string
+
+	GetContext() _context.Context
+	GetBody() *ClientStreamedListObjectsRequest
+	GetOptions() *ClientStreamedListObjectsOptions
+}
+
+type ClientStreamedListObjectsRequest struct {
+	User             string                     `json:"user,omitempty"`
+	Relation         string                     `json:"relation,omitempty"`
+	Type             string                     `json:"type,omitempty"`
+	Context          *map[string]interface{}    `json:"context,omitempty"`
+	ContextualTuples []ClientContextualTupleKey `json:"contextual_tuples,omitempty"`
+}
+
+type ClientStreamedListObjectsOptions struct {
+	RequestOptions
+
+	AuthorizationModelId *string                       `json:"authorization_model_id,omitempty"`
+	StoreId              *string                       `json:"store_id,omitempty"`
+	Consistency          *fgaSdk.ConsistencyPreference `json:"consistency,omitempty"`
+	// StreamBufferSize configures the buffer size for streaming response channels.
+	// A larger buffer improves throughput for high-volume streams but increases memory usage.
+	// A smaller buffer reduces memory usage but may decrease throughput.
+	// Defaults to 10 if not specified or if set to 0.
+	StreamBufferSize *int `json:"stream_buffer_size,omitempty"`
+}
+
+type ClientStreamedListObjectsResponse struct {
+	Objects <-chan fgaSdk.StreamedListObjectsResponse
+	Errors  <-chan error
+	close   func()
+}
+
+func (r *ClientStreamedListObjectsResponse) Close() {
+	if r.close != nil {
+		r.close()
+	}
+}
+
+func (client *OpenFgaClient) StreamedListObjects(ctx _context.Context) SdkClientStreamedListObjectsRequestInterface {
+	return &SdkClientStreamedListObjectsRequest{
+		Client: client,
+		ctx:    ctx,
+	}
+}
+
+func (request *SdkClientStreamedListObjectsRequest) Options(options ClientStreamedListObjectsOptions) SdkClientStreamedListObjectsRequestInterface {
+	request.options = &options
+	return request
+}
+
+func (request *SdkClientStreamedListObjectsRequest) GetAuthorizationModelIdOverride() *string {
+	if request.options == nil {
+		return nil
+	}
+	return request.options.AuthorizationModelId
+}
+
+func (request *SdkClientStreamedListObjectsRequest) GetStoreIdOverride() *string {
+	if request.options == nil {
+		return nil
+	}
+	return request.options.StoreId
+}
+
+func (request *SdkClientStreamedListObjectsRequest) Body(body ClientStreamedListObjectsRequest) SdkClientStreamedListObjectsRequestInterface {
+	request.body = &body
+	return request
+}
+
+func (request *SdkClientStreamedListObjectsRequest) Execute() (*ClientStreamedListObjectsResponse, error) {
+	return request.Client.StreamedListObjectsExecute(request)
+}
+
+func (request *SdkClientStreamedListObjectsRequest) GetContext() _context.Context {
+	return request.ctx
+}
+
+func (request *SdkClientStreamedListObjectsRequest) GetBody() *ClientStreamedListObjectsRequest {
+	return request.body
+}
+
+func (request *SdkClientStreamedListObjectsRequest) GetOptions() *ClientStreamedListObjectsOptions {
+	return request.options
+}
+
+func (client *OpenFgaClient) StreamedListObjectsExecute(request SdkClientStreamedListObjectsRequestInterface) (*ClientStreamedListObjectsResponse, error) {
+	if request.GetBody() == nil {
+		return nil, FgaRequiredParamError{param: "body"}
+	}
+	var contextualTuples []ClientContextualTupleKey
+	if request.GetBody().ContextualTuples != nil {
+		for index := 0; index < len(request.GetBody().ContextualTuples); index++ {
+			contextualTuples = append(contextualTuples, (request.GetBody().ContextualTuples)[index])
+		}
+	}
+	authorizationModelId, err := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
+	if err != nil {
+		return nil, err
+	}
+	storeId, err := client.getStoreId(request.GetStoreIdOverride())
+	if err != nil {
+		return nil, err
+	}
+	body := fgaSdk.ListObjectsRequest{
+		User:                 request.GetBody().User,
+		Relation:             request.GetBody().Relation,
+		Type:                 request.GetBody().Type,
+		ContextualTuples:     fgaSdk.NewContextualTupleKeys(contextualTuples),
+		Context:              request.GetBody().Context,
+		AuthorizationModelId: authorizationModelId,
+	}
+	requestOptions := RequestOptions{}
+	bufferSize := 0
+	if request.GetOptions() != nil {
+		requestOptions = request.GetOptions().RequestOptions
+		body.Consistency = request.GetOptions().Consistency
+		if request.GetOptions().StreamBufferSize != nil {
+			bufferSize = *request.GetOptions().StreamBufferSize
+		}
+	}
+
+	channel, err := fgaSdk.ExecuteStreamedListObjectsWithBufferSize(
+		&client.APIClient,
+		request.GetContext(),
+		*storeId,
+		body,
+		requestOptions,
+		bufferSize,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &ClientStreamedListObjectsResponse{
+		Objects: channel.Objects,
+		Errors:  channel.Errors,
+		close:   channel.Close,
+	}, nil
 }

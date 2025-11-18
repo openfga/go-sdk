@@ -18,6 +18,7 @@ Method | HTTP request | Description
 [**ReadAuthorizationModel**](OpenFgaApi.md#ReadAuthorizationModel) | **Get** /stores/{store_id}/authorization-models/{id} | Return a particular version of an authorization model
 [**ReadAuthorizationModels**](OpenFgaApi.md#ReadAuthorizationModels) | **Get** /stores/{store_id}/authorization-models | Return all the authorization models for a particular store
 [**ReadChanges**](OpenFgaApi.md#ReadChanges) | **Get** /stores/{store_id}/changes | Return a list of all the tuple changes
+[**StreamedListObjects**](OpenFgaApi.md#StreamedListObjects) | **Post** /stores/{store_id}/streamed-list-objects | Stream all objects of the given type that the user has a relation with
 [**Write**](OpenFgaApi.md#Write) | **Post** /stores/{store_id}/write | Add or delete tuples from the store
 [**WriteAssertions**](OpenFgaApi.md#WriteAssertions) | **Put** /stores/{store_id}/assertions/{authorization_model_id} | Upsert assertions for an authorization model ID
 [**WriteAuthorizationModel**](OpenFgaApi.md#WriteAuthorizationModel) | **Post** /stores/{store_id}/authorization-models | Create a new authorization model
@@ -1318,6 +1319,99 @@ No authorization required
 ### HTTP request headers
 
 - **Content-Type**: Not defined
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## StreamedListObjects
+
+> StreamResultOfStreamedListObjectsResponse StreamedListObjects(ctx).Body(body).Execute()
+
+Stream all objects of the given type that the user has a relation with
+
+
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    openfga "github.com/openfga/go-sdk"
+)
+
+func main() {
+    
+    body := *openapiclient.NewListObjectsRequest("document", "reader", "user:anne") // ListObjectsRequest | 
+
+    configuration, err := openfga.NewConfiguration(openfga.Configuration{
+        ApiUrl:         os.Getenv("FGA_API_URL"), // required, e.g. https://api.fga.example
+        StoreId:        os.Getenv("OPENFGA_STORE_ID"), // not needed when calling `CreateStore` or `ListStores`
+    })
+
+    if err != nil {
+    // .. Handle error
+    }
+
+    apiClient := openfga.NewAPIClient(configuration)
+
+    resp, r, err := apiClient.OpenFgaApi.StreamedListObjects(context.Background()).Body(body).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `OpenFgaApi.StreamedListObjects``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+        switch v := err.(type) {
+        case FgaApiAuthenticationError:
+            // Handle authentication error
+        case FgaApiValidationError:
+            // Handle parameter validation error
+        case FgaApiNotFoundError:
+            // Handle not found error
+        case FgaApiInternalError:
+            // Handle API internal error
+        case FgaApiRateLimitError:
+            // Exponential backoff in handling rate limit error
+        default:
+            // Handle unknown/undefined error
+        }
+    }
+    // response from `StreamedListObjects`: StreamResultOfStreamedListObjectsResponse
+    fmt.Fprintf(os.Stdout, "Response from `OpenFgaApi.StreamedListObjects`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+**ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiStreamedListObjectsRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+**body** | [**ListObjectsRequest**](ListObjectsRequest.md) |  | 
+
+### Return type
+
+[**StreamResultOfStreamedListObjectsResponse**](StreamResultOfStreamedListObjectsResponse.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json
 - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)

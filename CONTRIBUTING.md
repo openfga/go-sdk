@@ -10,7 +10,7 @@ Reading and following these guidelines will help us make the contribution proces
 * [Getting Started](#getting-started)
     * [Making Changes](#making-changes)
     * [Opening Issues](#opening-issues)
-    * [Submitting Pull Requests](#submitting-pull-requests) [Note: We are not accepting Pull Requests at this time!]
+    * [Submitting Pull Requests](#submitting-pull-requests)
 * [Getting in Touch](#getting-in-touch)
     * [Have a question or problem?](#have-a-question-or-problem)
     * [Vulnerability Reporting](#vulnerability-reporting)
