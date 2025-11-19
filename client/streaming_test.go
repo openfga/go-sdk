@@ -40,7 +40,7 @@ func TestClientStreamedListObjects_Success(t *testing.T) {
 
 		w.Header().Set("Content-Type", "application/x-ndjson")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(responseBody))
+		_, _ = w.Write([]byte(responseBody))
 	}))
 	defer server.Close()
 
@@ -98,7 +98,7 @@ func TestClientStreamedListObjects_WithOptions(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/x-ndjson")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(responseBody))
+		_, _ = w.Write([]byte(responseBody))
 	}))
 	defer server.Close()
 
@@ -146,7 +146,7 @@ func TestClientStreamedListObjects_WithOptions(t *testing.T) {
 func TestClientStreamedListObjects_ErrorHandling(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`{"code":"internal_error","message":"Internal server error"}`))
+		_, _ = w.Write([]byte(`{"code":"internal_error","message":"Internal server error"}`))
 	}))
 	defer server.Close()
 
@@ -213,7 +213,7 @@ func TestClientStreamedListObjects_CustomBufferSize(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/x-ndjson")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(responseBody))
+		_, _ = w.Write([]byte(responseBody))
 	}))
 	defer server.Close()
 
@@ -280,7 +280,7 @@ func TestClientStreamedListObjects_DefaultBufferSize(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/x-ndjson")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(responseBody))
+		_, _ = w.Write([]byte(responseBody))
 	}))
 	defer server.Close()
 

@@ -58,7 +58,12 @@ func ProcessStreamedListObjectsResponse(ctx context.Context, httpResponse *http.
 		defer close(channel.Objects)
 		defer close(channel.Errors)
 		defer cancel()
-		defer httpResponse.Body.Close()
+		defer func(Body io.ReadCloser) {
+			err := Body.Close()
+			if err != nil {
+				channel.Errors <- err
+			}
+		}(httpResponse.Body)
 
 		scanner := bufio.NewScanner(httpResponse.Body)
 		// Allow large NDJSON entries (up to 10MB). Tune as needed.

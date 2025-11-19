@@ -57,7 +57,7 @@ func TestStreamedListObjectsWithChannel_Success(t *testing.T) {
 
 		w.Header().Set("Content-Type", "application/x-ndjson")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(responseBody))
+		_, _ = w.Write([]byte(responseBody))
 	}))
 	defer server.Close()
 
@@ -115,7 +115,7 @@ func TestStreamedListObjectsWithChannel_EmptyLines(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/x-ndjson")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(responseBody))
+		_, _ = w.Write([]byte(responseBody))
 	}))
 	defer server.Close()
 
@@ -160,7 +160,7 @@ func TestStreamedListObjectsWithChannel_ErrorInStream(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/x-ndjson")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(responseBody))
+		_, _ = w.Write([]byte(responseBody))
 	}))
 	defer server.Close()
 
@@ -214,7 +214,7 @@ invalid json`
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/x-ndjson")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(responseBody))
+		_, _ = w.Write([]byte(responseBody))
 	}))
 	defer server.Close()
 
@@ -262,7 +262,7 @@ func TestStreamedListObjectsWithChannel_ContextCancellation(t *testing.T) {
 		w.Header().Set("Content-Type", "application/x-ndjson")
 		w.WriteHeader(http.StatusOK)
 		for i := 0; i < 100; i++ {
-			w.Write([]byte(`{"result":{"object":"document:` + strconv.Itoa(i) + `"}}` + "\n"))
+			_, _ = w.Write([]byte(`{"result":{"object":"document:` + strconv.Itoa(i) + `"}}` + "\n"))
 			if f, ok := w.(http.Flusher); ok {
 				f.Flush()
 			}
@@ -326,7 +326,7 @@ func TestStreamedListObjectsWithChannel_CustomBufferSize(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/x-ndjson")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(responseBody))
+		_, _ = w.Write([]byte(responseBody))
 	}))
 	defer server.Close()
 
@@ -386,7 +386,7 @@ func TestStreamedListObjectsWithChannel_DefaultBufferSize(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/x-ndjson")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(responseBody))
+		_, _ = w.Write([]byte(responseBody))
 	}))
 	defer server.Close()
 
@@ -437,7 +437,7 @@ func TestStreamedListObjectsWithChannel_ProperNumericStrings(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 		// Generate 15 objects to ensure we test values >= 10
 		for i := 0; i < 15; i++ {
-			w.Write([]byte(`{"result":{"object":"document:` + strconv.Itoa(i) + `"}}` + "\n"))
+			_, _ = w.Write([]byte(`{"result":{"object":"document:` + strconv.Itoa(i) + `"}}` + "\n"))
 		}
 	}))
 	defer server.Close()
