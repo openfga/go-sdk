@@ -274,6 +274,11 @@ func (e *apiExecutor) executeInternal(ctx context.Context, request APIExecutorRe
 
 	// Build request parameters
 	path := buildPath(request.Path, request.PathParameters)
+
+	if strings.Contains(path, "{") || strings.Contains(path, "}") {
+		return nil, reportError("not all path parameters were provided for path: %s", path)
+	}
+
 	headerParams := prepareHeaders(request.Headers)
 	queryParams := request.QueryParameters
 	if queryParams == nil {

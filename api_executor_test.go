@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-    "github.com/openfga/go-sdk/internal/constants"
+	"github.com/openfga/go-sdk/internal/constants"
 )
 
 // Test helpers
@@ -50,7 +50,7 @@ func newTestClient(t *testing.T, rt http.RoundTripper, retry *RetryParams) *APIC
 // Tests
 
 func TestValidateRequest(t *testing.T) {
-    t.Parallel()
+	t.Parallel()
 
 	testCases := []struct {
 		name        string
@@ -137,7 +137,7 @@ func TestValidateRequest(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-            t.Parallel()
+			t.Parallel()
 
 			err := validateRequest(tc.request)
 
@@ -152,7 +152,7 @@ func TestValidateRequest(t *testing.T) {
 }
 
 func TestBuildPath(t *testing.T) {
-    t.Parallel()
+	t.Parallel()
 
 	testCases := []struct {
 		name         string
@@ -242,7 +242,7 @@ func TestBuildPath(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-            t.Parallel()
+			t.Parallel()
 
 			result := buildPath(tc.template, tc.params)
 			assert.Equal(t, tc.expectedPath, result)
@@ -251,7 +251,7 @@ func TestBuildPath(t *testing.T) {
 }
 
 func TestPrepareHeaders(t *testing.T) {
-    t.Parallel()
+	t.Parallel()
 
 	testCases := []struct {
 		name            string
@@ -346,7 +346,7 @@ func TestPrepareHeaders(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-            t.Parallel()
+			t.Parallel()
 
 			result := prepareHeaders(tc.customHeaders)
 			assert.Equal(t, tc.expectedHeaders, result)
@@ -355,7 +355,7 @@ func TestPrepareHeaders(t *testing.T) {
 }
 
 func TestMakeAPIExecutorResponse(t *testing.T) {
-    t.Parallel()
+	t.Parallel()
 
 	testCases := []struct {
 		name         string
@@ -415,7 +415,7 @@ func TestMakeAPIExecutorResponse(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-            t.Parallel()
+			t.Parallel()
 
 			result := makeAPIExecutorResponse(tc.httpResponse, tc.body)
 
@@ -429,10 +429,10 @@ func TestMakeAPIExecutorResponse(t *testing.T) {
 }
 
 func TestAPIExecutorRequestBuilder_NilMaps(t *testing.T) {
-    t.Parallel()
+	t.Parallel()
 
 	t.Run("with_path_parameter_initializes_nil_map", func(t *testing.T) {
-        t.Parallel()
+		t.Parallel()
 
 		builder := &APIExecutorRequestBuilder{
 			request: APIExecutorRequest{
@@ -447,7 +447,7 @@ func TestAPIExecutorRequestBuilder_NilMaps(t *testing.T) {
 	})
 
 	t.Run("with_query_parameter_initializes_nil_map", func(t *testing.T) {
-        t.Parallel()
+		t.Parallel()
 
 		builder := &APIExecutorRequestBuilder{
 			request: APIExecutorRequest{
@@ -462,7 +462,7 @@ func TestAPIExecutorRequestBuilder_NilMaps(t *testing.T) {
 	})
 
 	t.Run("with_header_initializes_nil_map", func(t *testing.T) {
-        t.Parallel()
+		t.Parallel()
 
 		builder := &APIExecutorRequestBuilder{
 			request: APIExecutorRequest{
@@ -478,7 +478,7 @@ func TestAPIExecutorRequestBuilder_NilMaps(t *testing.T) {
 }
 
 func TestAPIExecutorRequestBuilder_MultipleQueryValues(t *testing.T) {
-    t.Parallel()
+	t.Parallel()
 
 	builder := NewAPIExecutorRequestBuilder("Test", "GET", "/test")
 
@@ -496,7 +496,7 @@ func TestAPIExecutorRequestBuilder_MultipleQueryValues(t *testing.T) {
 }
 
 func TestAPIExecutorRequestBuilder_PathParameterOverwrite(t *testing.T) {
-    t.Parallel()
+	t.Parallel()
 
 	builder := NewAPIExecutorRequestBuilder("Test", "GET", "/stores/{store_id}")
 
@@ -509,7 +509,7 @@ func TestAPIExecutorRequestBuilder_PathParameterOverwrite(t *testing.T) {
 }
 
 func TestAPIExecutorRequestBuilder_QueryParameterReplace(t *testing.T) {
-    t.Parallel()
+	t.Parallel()
 
 	builder := NewAPIExecutorRequestBuilder("Test", "GET", "/test")
 
@@ -528,7 +528,7 @@ func TestAPIExecutorRequestBuilder_QueryParameterReplace(t *testing.T) {
 }
 
 func TestAPIExecutorRequestBuilder_HeaderReplace(t *testing.T) {
-    t.Parallel()
+	t.Parallel()
 
 	builder := NewAPIExecutorRequestBuilder("Test", "GET", "/test")
 
@@ -550,7 +550,7 @@ func TestAPIExecutorRequestBuilder_HeaderReplace(t *testing.T) {
 }
 
 func TestAPIExecutorRequestBuilder_BodyTypes(t *testing.T) {
-    t.Parallel()
+	t.Parallel()
 
 	testCases := []struct {
 		name string
@@ -583,7 +583,7 @@ func TestAPIExecutorRequestBuilder_BodyTypes(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-            t.Parallel()
+			t.Parallel()
 
 			builder := NewAPIExecutorRequestBuilder("Test", "POST", "/test")
 			builder.WithBody(tc.body)
@@ -595,10 +595,10 @@ func TestAPIExecutorRequestBuilder_BodyTypes(t *testing.T) {
 }
 
 func TestNewAPIExecutor(t *testing.T) {
-    t.Parallel()
+	t.Parallel()
 
 	t.Run("creates_executor_with_valid_client", func(t *testing.T) {
-        t.Parallel()
+		t.Parallel()
 
 		client := newTestClient(t, &testRoundTripper{fn: func(r *http.Request) (*http.Response, error) {
 			return makeResp(200, `{"ok":true}`, nil), nil
@@ -610,7 +610,7 @@ func TestNewAPIExecutor(t *testing.T) {
 	})
 
 	t.Run("executor_can_execute_request", func(t *testing.T) {
-        t.Parallel()
+		t.Parallel()
 
 		client := newTestClient(t, &testRoundTripper{fn: func(r *http.Request) (*http.Response, error) {
 			return makeResp(200, `{"message":"ok"}`, map[string]string{"Content-Type": "application/json"}), nil
@@ -627,10 +627,28 @@ func TestNewAPIExecutor(t *testing.T) {
 		assert.NotNil(t, resp)
 		assert.Equal(t, 200, resp.StatusCode)
 	})
+
+	t.Run("executor_error_on_missing_path_params", func(t *testing.T) {
+		t.Parallel()
+
+		client := newTestClient(t, &testRoundTripper{fn: func(r *http.Request) (*http.Response, error) {
+			return makeResp(200, `{"message":"ok"}`, map[string]string{"Content-Type": "application/json"}), nil
+		}}, nil)
+
+		executor := NewAPIExecutor(client)
+		resp, err := executor.Execute(context.Background(), APIExecutorRequest{
+			OperationName: "Test",
+			Method:        "GET",
+			Path:          "/stores/{store_id}/test",
+		})
+
+		assert.Error(t, err)
+		assert.Nil(t, resp)
+	})
 }
 
 func TestAPIExecutor_GetRetryParams(t *testing.T) {
-    t.Parallel()
+	t.Parallel()
 
 	testCases := []struct {
 		name                string
@@ -669,7 +687,7 @@ func TestAPIExecutor_GetRetryParams(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-            t.Parallel()
+			t.Parallel()
 
 			client := newTestClient(t, &testRoundTripper{fn: func(r *http.Request) (*http.Response, error) {
 				return makeResp(200, `{"ok":true}`, nil), nil
@@ -685,7 +703,7 @@ func TestAPIExecutor_GetRetryParams(t *testing.T) {
 }
 
 func TestAPIExecutor_DetermineRetry(t *testing.T) {
-    t.Parallel()
+	t.Parallel()
 
 	testCases := []struct {
 		name                string
@@ -756,7 +774,7 @@ func TestAPIExecutor_DetermineRetry(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-            t.Parallel()
+			t.Parallel()
 
 			client := newTestClient(t, &testRoundTripper{fn: func(r *http.Request) (*http.Response, error) {
 				return makeResp(200, `{"ok":true}`, nil), nil
@@ -782,7 +800,7 @@ func TestAPIExecutor_DetermineRetry(t *testing.T) {
 }
 
 func TestBuildPath_EdgeCases(t *testing.T) {
-    t.Parallel()
+	t.Parallel()
 
 	testCases := []struct {
 		name         string
@@ -872,7 +890,7 @@ func TestBuildPath_EdgeCases(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-            t.Parallel()
+			t.Parallel()
 
 			result := buildPath(tc.template, tc.params)
 			assert.Equal(t, tc.expectedPath, result)
@@ -881,7 +899,7 @@ func TestBuildPath_EdgeCases(t *testing.T) {
 }
 
 func TestPrepareHeaders_EdgeCases(t *testing.T) {
-    t.Parallel()
+	t.Parallel()
 
 	testCases := []struct {
 		name          string
@@ -925,7 +943,7 @@ func TestPrepareHeaders_EdgeCases(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-            t.Parallel()
+			t.Parallel()
 
 			result := prepareHeaders(tc.customHeaders)
 			assert.Equal(t, tc.expectedValue, result[tc.checkHeader])
@@ -934,10 +952,10 @@ func TestPrepareHeaders_EdgeCases(t *testing.T) {
 }
 
 func TestAPIExecutorResponse_Fields(t *testing.T) {
-    t.Parallel()
+	t.Parallel()
 
 	t.Run("all_fields_populated", func(t *testing.T) {
-        t.Parallel()
+		t.Parallel()
 
 		httpResp := &http.Response{
 			StatusCode: 201,
@@ -961,7 +979,7 @@ func TestAPIExecutorResponse_Fields(t *testing.T) {
 	})
 
 	t.Run("access_body_directly", func(t *testing.T) {
-        t.Parallel()
+		t.Parallel()
 
 		body := []byte(`{"data":"test"}`)
 		resp := makeAPIExecutorResponse(&http.Response{StatusCode: 200, Header: http.Header{}}, body)
@@ -970,7 +988,7 @@ func TestAPIExecutorResponse_Fields(t *testing.T) {
 	})
 
 	t.Run("response_with_redirect_status", func(t *testing.T) {
-        t.Parallel()
+		t.Parallel()
 
 		httpResp := &http.Response{
 			StatusCode: 302,
@@ -989,10 +1007,10 @@ func TestAPIExecutorResponse_Fields(t *testing.T) {
 }
 
 func TestAPIExecutorRequestBuilder_Chaining(t *testing.T) {
-    t.Parallel()
+	t.Parallel()
 
 	t.Run("complete_chain", func(t *testing.T) {
-        t.Parallel()
+		t.Parallel()
 
 		req := NewAPIExecutorRequestBuilder("ComplexOp", "POST", "/stores/{store_id}/check").
 			WithPathParameter("store_id", "store-123").
@@ -1017,7 +1035,7 @@ func TestAPIExecutorRequestBuilder_Chaining(t *testing.T) {
 	})
 
 	t.Run("empty_chain", func(t *testing.T) {
-        t.Parallel()
+		t.Parallel()
 
 		req := NewAPIExecutorRequestBuilder("Empty", "GET", "/empty").Build()
 
@@ -1031,7 +1049,7 @@ func TestAPIExecutorRequestBuilder_Chaining(t *testing.T) {
 	})
 
 	t.Run("build_multiple_times", func(t *testing.T) {
-        t.Parallel()
+		t.Parallel()
 
 		builder := NewAPIExecutorRequestBuilder("Multi", "GET", "/test")
 		builder.WithPathParameter("key", "value1")
@@ -1047,10 +1065,10 @@ func TestAPIExecutorRequestBuilder_Chaining(t *testing.T) {
 }
 
 func TestAPIExecutorRequestBuilder_Overrides(t *testing.T) {
-    t.Parallel()
+	t.Parallel()
 
 	t.Run("path_parameters_replacement", func(t *testing.T) {
-        t.Parallel()
+		t.Parallel()
 
 		builder := NewAPIExecutorRequestBuilder("Test", "GET", "/test")
 
@@ -1072,7 +1090,7 @@ func TestAPIExecutorRequestBuilder_Overrides(t *testing.T) {
 	})
 
 	t.Run("query_parameters_replacement", func(t *testing.T) {
-        t.Parallel()
+		t.Parallel()
 
 		builder := NewAPIExecutorRequestBuilder("Test", "GET", "/test")
 
@@ -1093,7 +1111,7 @@ func TestAPIExecutorRequestBuilder_Overrides(t *testing.T) {
 	})
 
 	t.Run("headers_replacement", func(t *testing.T) {
-        t.Parallel()
+		t.Parallel()
 
 		builder := NewAPIExecutorRequestBuilder("Test", "GET", "/test")
 
@@ -1117,10 +1135,10 @@ func TestAPIExecutorRequestBuilder_Overrides(t *testing.T) {
 }
 
 func TestValidateRequest_AllFieldCombinations(t *testing.T) {
-    t.Parallel()
+	t.Parallel()
 
 	t.Run("only_operation_name", func(t *testing.T) {
-        t.Parallel()
+		t.Parallel()
 
 		err := validateRequest(APIExecutorRequest{
 			OperationName: "Test",
@@ -1130,7 +1148,7 @@ func TestValidateRequest_AllFieldCombinations(t *testing.T) {
 	})
 
 	t.Run("only_method", func(t *testing.T) {
-        t.Parallel()
+		t.Parallel()
 
 		err := validateRequest(APIExecutorRequest{
 			Method: "GET",
@@ -1140,7 +1158,7 @@ func TestValidateRequest_AllFieldCombinations(t *testing.T) {
 	})
 
 	t.Run("only_path", func(t *testing.T) {
-        t.Parallel()
+		t.Parallel()
 
 		err := validateRequest(APIExecutorRequest{
 			Path: "/test",
@@ -1150,7 +1168,7 @@ func TestValidateRequest_AllFieldCombinations(t *testing.T) {
 	})
 
 	t.Run("operation_name_and_method", func(t *testing.T) {
-        t.Parallel()
+		t.Parallel()
 
 		err := validateRequest(APIExecutorRequest{
 			OperationName: "Test",
@@ -1161,7 +1179,7 @@ func TestValidateRequest_AllFieldCombinations(t *testing.T) {
 	})
 
 	t.Run("operation_name_and_path", func(t *testing.T) {
-        t.Parallel()
+		t.Parallel()
 
 		err := validateRequest(APIExecutorRequest{
 			OperationName: "Test",
@@ -1172,7 +1190,7 @@ func TestValidateRequest_AllFieldCombinations(t *testing.T) {
 	})
 
 	t.Run("method_and_path", func(t *testing.T) {
-        t.Parallel()
+		t.Parallel()
 
 		err := validateRequest(APIExecutorRequest{
 			Method: "GET",
@@ -1183,7 +1201,7 @@ func TestValidateRequest_AllFieldCombinations(t *testing.T) {
 	})
 
 	t.Run("all_required_fields_with_optional_fields", func(t *testing.T) {
-        t.Parallel()
+		t.Parallel()
 
 		err := validateRequest(APIExecutorRequest{
 			OperationName:   "Test",
@@ -1199,52 +1217,52 @@ func TestValidateRequest_AllFieldCombinations(t *testing.T) {
 }
 
 func TestBuildPath_SpecialCases(t *testing.T) {
-    t.Parallel()
+	t.Parallel()
 
 	t.Run("empty_template", func(t *testing.T) {
-        t.Parallel()
+		t.Parallel()
 
 		result := buildPath("", map[string]string{"id": "123"})
 		assert.Equal(t, "", result)
 	})
 
 	t.Run("template_with_only_placeholder", func(t *testing.T) {
-        t.Parallel()
+		t.Parallel()
 
 		result := buildPath("{id}", map[string]string{"id": "123"})
 		assert.Equal(t, "123", result)
 	})
 
 	t.Run("nested_braces", func(t *testing.T) {
-        t.Parallel()
+		t.Parallel()
 
 		result := buildPath("/api/{{id}}", map[string]string{"id": "123"})
 		assert.Equal(t, "/api/{123}", result)
 	})
 
 	t.Run("placeholder_with_dash", func(t *testing.T) {
-        t.Parallel()
+		t.Parallel()
 
 		result := buildPath("/stores/{store-id}", map[string]string{"store-id": "123"})
 		assert.Equal(t, "/stores/123", result)
 	})
 
 	t.Run("empty_params_map", func(t *testing.T) {
-        t.Parallel()
+		t.Parallel()
 
 		result := buildPath("/stores/{store_id}", map[string]string{})
 		assert.Equal(t, "/stores/{store_id}", result)
 	})
 
 	t.Run("value_with_equals_sign", func(t *testing.T) {
-        t.Parallel()
+		t.Parallel()
 
 		result := buildPath("/query/{q}", map[string]string{"q": "key=value"})
 		assert.Contains(t, result, "=")
 	})
 
 	t.Run("value_with_ampersand", func(t *testing.T) {
-        t.Parallel()
+		t.Parallel()
 
 		result := buildPath("/query/{q}", map[string]string{"q": "a&b"})
 		assert.Contains(t, result, "&")

@@ -1096,7 +1096,7 @@ data, err := fgaClient.WriteAssertions(context.Background()).
 ### Calling Other Endpoints
 
 In certain cases you may want to call other APIs not yet wrapped by the SDK. You can do so by using the `APIExecutor` available from the `fgaClient`.
-The `APIExecutor` allows you to make raw HTTP calls to any OpenFGA endpoint by specifying the operation name, HTTP method, path, parameters, body, and headers, while still taking into account the configuration and handling authentication, telemetry, retry and error handling.
+The `APIExecutor` allows you to make raw HTTP calls to any OpenFGA endpoint by specifying the operation name, HTTP method, path, parameters, body, and headers, while still honoring the client configuration (authentication, telemetry, retries, and error handling).
 
 This is useful when:
 
@@ -1123,10 +1123,10 @@ requestBody := map[string]interface{}{
 // Build the request
 request := openfga.NewAPIExecutorRequestBuilder("CustomEndpoint", http.MethodPost, "/stores/{store_id}/custom-endpoint").
     WithPathParameter("store_id", storeID).
-	WithQueryParameter("page_size", "20").
-	WithQueryParameter("continuation_token", "eyJwayI6...").
+    WithQueryParameter("page_size", "20").
+    WithQueryParameter("continuation_token", "eyJwayI6...").
     WithBody(requestBody).
-	WithHeader("X-Experimental-Feature", "enabled").
+    WithHeader("X-Experimental-Feature", "enabled").
     Build()
 ```
 
@@ -1164,7 +1164,7 @@ type CustomEndpointResponse struct {
 var customEndpointResponse CustomEndpointResponse
 
 // Get raw response decoded into CustomEndpointResponse struct
-rawResponse, err := executor.Execute(ctx, request, &customEndpointResponse) // Pass pointer to struct for decoding
+rawResponse, err := executor.ExecuteWithDecode(ctx, request, &customEndpointResponse) // Pass pointer to struct for decoding
 
 if err != nil {
     log.Fatalf("Custom endpoint failed: %v", err)
@@ -1175,7 +1175,7 @@ fmt.Printf("Response: %+v\n", customEndpointResponse)
 // You can access fields like headers, status code, etc. from rawResponse:
 fmt.Printf("Status Code: %d\n", rawResponse.StatusCode)
 fmt.Printf("Headers: %+v\n", rawResponse.Headers)
-````
+```
 
 ### Retries
 

@@ -275,8 +275,8 @@ func mainInner() error {
 	}
 	fmt.Printf("Allowed (with custom headers): %v\n", checkWithHeadersResponse.Allowed)
 
-	// Checking for access using a custom executor
-	fmt.Println("Checking for access with context")
+	// Checking for access using the API executor
+	fmt.Println("Checking for access using the API executor")
 
 	// Get the API executor
 	executor := fgaClient.GetAPIExecutor()
@@ -287,7 +287,7 @@ func mainInner() error {
 		WithHeader("X-Experimental-Feature", "enabled").
 		Build()
 
-		// custom executor + decoded response
+	// custom executor + decoded response
 	var checkResponseCustomExecutorWithDecode openfga.CheckResponse
 	_, err = executor.ExecuteWithDecode(ctx, customRequest, &checkResponseCustomExecutorWithDecode)
 	if err != nil {

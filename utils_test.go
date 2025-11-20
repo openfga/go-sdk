@@ -238,7 +238,7 @@ func TestToPtrVsPtrFunctions(t *testing.T) {
 }
 
 func TestValidatePathParameter(t *testing.T) {
-    t.Parallel()
+	t.Parallel()
 
 	testCases := []struct {
 		name        string
@@ -277,7 +277,7 @@ func TestValidatePathParameter(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-            t.Parallel()
+			t.Parallel()
 
 			err := validatePathParameter(tc.paramName, tc.paramValue)
 
@@ -292,7 +292,7 @@ func TestValidatePathParameter(t *testing.T) {
 }
 
 func TestValidateParameter(t *testing.T) {
-    t.Parallel()
+	t.Parallel()
 
 	testCases := []struct {
 		name        string
@@ -373,7 +373,7 @@ func TestValidateParameter(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-            t.Parallel()
+			t.Parallel()
 
 			err := validateParameter(tc.paramName, tc.paramValue)
 
