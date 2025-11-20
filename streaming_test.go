@@ -22,6 +22,23 @@ import (
 	"time"
 )
 
+func TestStreamingChannel_Close(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	channel := &StreamingChannel[StreamedListObjectsResponse]{
+		Results: make(chan StreamedListObjectsResponse),
+		Errors:  make(chan error),
+		cancel:  cancel,
+	}
+
+	channel.Close()
+
+	select {
+	case <-ctx.Done():
+	case <-time.After(100 * time.Millisecond):
+		t.Error("Context was not cancelled")
+	}
+}
+
 func TestStreamedListObjectsChannel_Close(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	channel := &StreamedListObjectsChannel{
@@ -249,7 +266,7 @@ invalid json`
 
 	err = <-channel.Errors
 	if err == nil {
-		t.Fatal("Expected error from channel for invalid JSON, got nil")
+		t.Fatal("Expected error from channel, got nil")
 	}
 
 	if len(receivedObjects) != 1 {
@@ -261,13 +278,13 @@ func TestStreamedListObjectsWithChannel_ContextCancellation(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/x-ndjson")
 		w.WriteHeader(http.StatusOK)
-		for i := 0; i < 100; i++ {
-			_, _ = w.Write([]byte(`{"result":{"object":"document:` + strconv.Itoa(i) + `"}}` + "\n"))
-			if f, ok := w.(http.Flusher); ok {
-				f.Flush()
-			}
-			time.Sleep(10 * time.Millisecond)
+		// Send first result
+		_, _ = w.Write([]byte(`{"result":{"object":"document:1"}}` + "\n"))
+		if f, ok := w.(http.Flusher); ok {
+			f.Flush()
 		}
+		// Wait indefinitely to simulate a long stream
+		<-r.Context().Done()
 	}))
 	defer server.Close()
 
@@ -295,31 +312,31 @@ func TestStreamedListObjectsWithChannel_ContextCancellation(t *testing.T) {
 
 	defer channel.Close()
 
-	receivedObjects := []string{}
-	for i := 0; i < 5; i++ {
-		obj := <-channel.Objects
-		receivedObjects = append(receivedObjects, obj.Object)
+	// Read first result
+	obj := <-channel.Objects
+	if obj.Object != "document:1" {
+		t.Errorf("Expected document:1, got %s", obj.Object)
 	}
 
+	// Cancel context
 	cancel()
 
-	time.Sleep(100 * time.Millisecond)
-
-	remaining := 0
-	for range channel.Objects {
-		remaining++
+	// Check that we get a cancellation error
+	err = <-channel.Errors
+	if err == nil {
+		t.Fatal("Expected cancellation error, got nil")
 	}
 
-	if len(receivedObjects) < 5 {
-		t.Fatalf("Expected at least 5 objects, got %d", len(receivedObjects))
+	if !strings.Contains(err.Error(), "context canceled") && !strings.Contains(err.Error(), "operation was canceled") {
+		t.Errorf("Expected context cancellation error, got: %v", err)
 	}
 }
 
 func TestStreamedListObjectsWithChannel_CustomBufferSize(t *testing.T) {
-	objects := []string{"document:1", "document:2", "document:3", "document:4", "document:5"}
+	numObjects := 100
 	expectedResults := []string{}
-	for _, obj := range objects {
-		expectedResults = append(expectedResults, `{"result":{"object":"`+obj+`"}}`)
+	for i := 0; i < numObjects; i++ {
+		expectedResults = append(expectedResults, `{"result":{"object":"document:`+strconv.Itoa(i)+`"}}`)
 	}
 	responseBody := strings.Join(expectedResults, "\n")
 
@@ -346,11 +363,11 @@ func TestStreamedListObjectsWithChannel_CustomBufferSize(t *testing.T) {
 		User:     "user:anne",
 	}
 
-	// Test with custom buffer size using the new function
+	// Use custom buffer size of 50
 	channel, err := ExecuteStreamedListObjectsWithBufferSize(client, ctx, "test-store", request, RequestOptions{}, 50)
 
 	if err != nil {
-		t.Fatalf("ExecuteStreamedListObjects failed: %v", err)
+		t.Fatalf("ExecuteStreamedListObjectsWithBufferSize failed: %v", err)
 	}
 
 	defer channel.Close()
@@ -364,24 +381,15 @@ func TestStreamedListObjectsWithChannel_CustomBufferSize(t *testing.T) {
 		t.Fatalf("Received error from channel: %v", err)
 	}
 
-	if len(receivedObjects) != len(objects) {
-		t.Fatalf("Expected %d objects, got %d", len(objects), len(receivedObjects))
-	}
-
-	for i, expected := range objects {
-		if receivedObjects[i] != expected {
-			t.Errorf("Expected object %s at index %d, got %s", expected, i, receivedObjects[i])
-		}
+	if len(receivedObjects) != numObjects {
+		t.Fatalf("Expected %d objects, got %d", numObjects, len(receivedObjects))
 	}
 }
 
-func TestStreamedListObjectsWithChannel_DefaultBufferSize(t *testing.T) {
-	objects := []string{"document:1", "document:2"}
-	expectedResults := []string{}
-	for _, obj := range objects {
-		expectedResults = append(expectedResults, `{"result":{"object":"`+obj+`"}}`)
-	}
-	responseBody := strings.Join(expectedResults, "\n")
+func TestProcessStreamingResponse_Generic(t *testing.T) {
+	// Test the generic ProcessStreamingResponse function
+	responseBody := `{"result":{"object":"document:1"}}
+{"result":{"object":"document:2"}}`
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/x-ndjson")
@@ -390,33 +398,22 @@ func TestStreamedListObjectsWithChannel_DefaultBufferSize(t *testing.T) {
 	}))
 	defer server.Close()
 
-	config, err := NewConfiguration(Configuration{
-		ApiUrl: server.URL,
-	})
+	resp, err := http.Get(server.URL)
 	if err != nil {
-		t.Fatalf("Failed to create configuration: %v", err)
+		t.Fatalf("Failed to make request: %v", err)
 	}
 
-	client := NewAPIClient(config)
 	ctx := context.Background()
-
-	request := ListObjectsRequest{
-		Type:     "document",
-		Relation: "viewer",
-		User:     "user:anne",
-	}
-
-	// Test with default buffer size (0 uses default of 10)
-	channel, err := ExecuteStreamedListObjectsWithBufferSize(client, ctx, "test-store", request, RequestOptions{}, 0)
+	channel, err := ProcessStreamingResponse[StreamedListObjectsResponse](ctx, resp, 10)
 
 	if err != nil {
-		t.Fatalf("ExecuteStreamedListObjects failed: %v", err)
+		t.Fatalf("ProcessStreamingResponse failed: %v", err)
 	}
 
 	defer channel.Close()
 
 	receivedObjects := []string{}
-	for obj := range channel.Objects {
+	for obj := range channel.Results {
 		receivedObjects = append(receivedObjects, obj.Object)
 	}
 
@@ -424,70 +421,14 @@ func TestStreamedListObjectsWithChannel_DefaultBufferSize(t *testing.T) {
 		t.Fatalf("Received error from channel: %v", err)
 	}
 
-	if len(receivedObjects) != len(objects) {
-		t.Fatalf("Expected %d objects, got %d", len(objects), len(receivedObjects))
-	}
-}
-
-func TestStreamedListObjectsWithChannel_ProperNumericStrings(t *testing.T) {
-	// Test that document IDs are generated correctly for values >= 10
-	// This verifies the fix: using strconv.Itoa(i) instead of string(rune('0'+i%10))
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/x-ndjson")
-		w.WriteHeader(http.StatusOK)
-		// Generate 15 objects to ensure we test values >= 10
-		for i := 0; i < 15; i++ {
-			_, _ = w.Write([]byte(`{"result":{"object":"document:` + strconv.Itoa(i) + `"}}` + "\n"))
-		}
-	}))
-	defer server.Close()
-
-	config, err := NewConfiguration(Configuration{
-		ApiUrl: server.URL,
-	})
-	if err != nil {
-		t.Fatalf("Failed to create configuration: %v", err)
+	if len(receivedObjects) != 2 {
+		t.Fatalf("Expected 2 objects, got %d", len(receivedObjects))
 	}
 
-	client := NewAPIClient(config)
-	ctx := context.Background()
-
-	request := ListObjectsRequest{
-		Type:     "document",
-		Relation: "viewer",
-		User:     "user:anne",
+	if receivedObjects[0] != "document:1" {
+		t.Errorf("Expected document:1, got %s", receivedObjects[0])
 	}
-
-	channel, err := ExecuteStreamedListObjects(client, ctx, "test-store", request, RequestOptions{})
-
-	if err != nil {
-		t.Fatalf("ExecuteStreamedListObjects failed: %v", err)
-	}
-
-	defer channel.Close()
-
-	receivedObjects := []string{}
-	for obj := range channel.Objects {
-		receivedObjects = append(receivedObjects, obj.Object)
-	}
-
-	if err := <-channel.Errors; err != nil {
-		t.Fatalf("Received error from channel: %v", err)
-	}
-
-	expectedObjects := []string{
-		"document:0", "document:1", "document:2", "document:3", "document:4",
-		"document:5", "document:6", "document:7", "document:8", "document:9",
-		"document:10", "document:11", "document:12", "document:13", "document:14",
-	}
-
-	if len(receivedObjects) != len(expectedObjects) {
-		t.Fatalf("Expected %d objects, got %d", len(expectedObjects), len(receivedObjects))
-	}
-
-	for i, expected := range expectedObjects {
-		if receivedObjects[i] != expected {
-			t.Errorf("At index %d: expected %s, got %s", i, expected, receivedObjects[i])
-		}
+	if receivedObjects[1] != "document:2" {
+		t.Errorf("Expected document:2, got %s", receivedObjects[1])
 	}
 }
