@@ -230,8 +230,11 @@ func executeStreamingRequest[TReq any, TRes any](
 	}
 
 	httpResponse, err := client.callAPI(req)
-	if err != nil || httpResponse == nil {
+	if err != nil {
 		return nil, err
+	}
+	if httpResponse == nil {
+		return nil, errors.New("nil HTTP response from API client")
 	}
 
 	if httpResponse.StatusCode >= http.StatusMultipleChoices {
