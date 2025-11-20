@@ -189,3 +189,5 @@ model_write_authorization_model_response.go
 model_write_request.go
 model_write_request_deletes.go
 model_write_request_writes.go
+streaming.go
+streaming_test.go
