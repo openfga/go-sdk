@@ -236,3 +236,153 @@ func TestToPtrVsPtrFunctions(t *testing.T) {
 		t.Run(tc.name, tc.testFunc)
 	}
 }
+
+func TestValidatePathParameter(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name        string
+		paramName   string
+		paramValue  string
+		expectError bool
+		errorMsg    string
+	}{
+		{
+			name:        "valid_non_empty_string",
+			paramName:   "storeId",
+			paramValue:  "01ARZ3NDEKTSV4RRFFQ69G5FAV",
+			expectError: false,
+		},
+		{
+			name:        "empty_string_returns_error",
+			paramName:   "storeId",
+			paramValue:  "",
+			expectError: true,
+			errorMsg:    "storeId is required and must be specified",
+		},
+		{
+			name:        "whitespace_string_is_valid",
+			paramName:   "modelId",
+			paramValue:  " ",
+			expectError: false,
+		},
+		{
+			name:        "empty_string_different_parameter_name",
+			paramName:   "authorizationModelId",
+			paramValue:  "",
+			expectError: true,
+			errorMsg:    "authorizationModelId is required and must be specified",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			err := validatePathParameter(tc.paramName, tc.paramValue)
+
+			if tc.expectError {
+				require.Error(t, err)
+				assert.Equal(t, tc.errorMsg, err.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestValidateParameter(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name        string
+		paramName   string
+		paramValue  interface{}
+		expectError bool
+		errorMsg    string
+	}{
+		{
+			name:        "valid_string_value",
+			paramName:   "body",
+			paramValue:  "test",
+			expectError: false,
+		},
+		{
+			name:        "valid_int_value",
+			paramName:   "pageSize",
+			paramValue:  10,
+			expectError: false,
+		},
+		{
+			name:        "valid_struct_value",
+			paramName:   "request",
+			paramValue:  struct{ Name string }{Name: "test"},
+			expectError: false,
+		},
+		{
+			name:        "valid_pointer_value",
+			paramName:   "options",
+			paramValue:  ToPtr("value"),
+			expectError: false,
+		},
+		{
+			name:        "valid_slice_value",
+			paramName:   "items",
+			paramValue:  []string{"a", "b", "c"},
+			expectError: false,
+		},
+		{
+			name:        "valid_map_value",
+			paramName:   "metadata",
+			paramValue:  map[string]string{"key": "value"},
+			expectError: false,
+		},
+		{
+			name:        "valid_empty_string_is_not_nil",
+			paramName:   "body",
+			paramValue:  "",
+			expectError: false,
+		},
+		{
+			name:        "valid_zero_int_is_not_nil",
+			paramName:   "count",
+			paramValue:  0,
+			expectError: false,
+		},
+		{
+			name:        "valid_false_bool_is_not_nil",
+			paramName:   "enabled",
+			paramValue:  false,
+			expectError: false,
+		},
+		{
+			name:        "nil_value_returns_error",
+			paramName:   "body",
+			paramValue:  nil,
+			expectError: true,
+			errorMsg:    "body is required and must be specified",
+		},
+		{
+			name:        "nil_value_different_parameter_name",
+			paramName:   "request",
+			paramValue:  nil,
+			expectError: true,
+			errorMsg:    "request is required and must be specified",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			err := validateParameter(tc.paramName, tc.paramValue)
+
+			if tc.expectError {
+				require.Error(t, err)
+				assert.Equal(t, tc.errorMsg, err.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
