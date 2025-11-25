@@ -1,0 +1,20 @@
+linters:
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - revive
+    - misspell
+    - goconst
+
+issues:
+  exclude-rules:
+    - path: ^.*model_.*\.go$
+      linters:
+        - errcheck
+        - govet
+        - ineffassign
+        - staticcheck
+        - unused
