@@ -13,18 +13,10 @@
 package openfga
 
 import (
-	"bytes"
 	"context"
-	"errors"
-	"io"
-	"log"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
-
-	"github.com/openfga/go-sdk/internal/utils/retryutils"
-	"github.com/openfga/go-sdk/telemetry"
 )
 
 // Linger please
@@ -1019,154 +1011,28 @@ func (a *OpenFgaApiService) BatchCheck(ctx context.Context, storeId string) ApiB
  * @return BatchCheckResponse
  */
 func (a *OpenFgaApiService) BatchCheckExecute(r ApiBatchCheckRequest) (BatchCheckResponse, *http.Response, error) {
-	const (
-		operationName = "BatchCheck"
-		httpMethod    = http.MethodPost
-	)
-	var (
-		requestStarted = time.Now()
-		requestBody    interface{}
-		returnValue    BatchCheckResponse
-	)
-
-	path := "/stores/{store_id}/batch-check"
-	if r.storeId == "" {
-		return returnValue, nil, reportError("storeId is required and must be specified")
+	var returnValue BatchCheckResponse
+	if err := validatePathParameter("storeId", r.storeId); err != nil {
+		return returnValue, nil, err
+	}
+	if err := validateParameter("body", r.body); err != nil {
+		return returnValue, nil, err
 	}
 
-	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
+	executor := a.client.GetAPIExecutor()
 
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	if r.body == nil {
-		return returnValue, nil, reportError("body is required and must be specified")
+	request := NewAPIExecutorRequestBuilder("BatchCheck", http.MethodPost, "/stores/{store_id}/batch-check").
+		WithPathParameter("store_id", r.storeId).
+		WithBody(r.body).
+		WithHeaders(r.options.Headers).
+		Build()
+	response, err := executor.ExecuteWithDecode(r.ctx, request, &returnValue)
+
+	if response != nil {
+		return returnValue, response.HTTPResponse, err
 	}
 
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{"application/json"}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
-	}
-
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-	// body params
-	requestBody = r.body
-
-	// if any override headers were in the options, set them now
-	for header, val := range r.options.Headers {
-		localVarHeaderParams[header] = val
-	}
-
-	retryParams := a.client.cfg.RetryParams
-	for i := 0; i < retryParams.MaxRetry+1; i++ {
-		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-		if err != nil {
-			return returnValue, nil, err
-		}
-
-		httpResponse, err := a.client.callAPI(req)
-		if err != nil || httpResponse == nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		responseBody, err := io.ReadAll(httpResponse.Body)
-		_ = httpResponse.Body.Close()
-		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
-		if err != nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		if httpResponse.StatusCode >= http.StatusMultipleChoices {
-			err := a.client.handleAPIError(httpResponse, responseBody, requestBody, operationName, r.storeId)
-			if err != nil && i < retryParams.MaxRetry {
-				timeToWait := time.Duration(0)
-				var fgaApiRateLimitExceededError FgaApiRateLimitExceededError
-				var fgaApiInternalError FgaApiInternalError
-				switch {
-				case errors.As(err, &fgaApiRateLimitExceededError):
-					timeToWait = err.(FgaApiRateLimitExceededError).GetTimeToWait(i, *retryParams)
-				case errors.As(err, &fgaApiInternalError):
-					timeToWait = err.(FgaApiInternalError).GetTimeToWait(i, *retryParams)
-				}
-
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-
-			return returnValue, httpResponse, err
-		}
-
-		err = a.client.decode(&returnValue, responseBody, httpResponse.Header.Get("Content-Type"))
-		if err != nil {
-			newErr := GenericOpenAPIError{
-				body:  responseBody,
-				error: err.Error(),
-			}
-			return returnValue, httpResponse, newErr
-		}
-
-		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
-
-		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
-			operationName,
-			map[string]interface{}{
-				"storeId": r.storeId,
-				"body":    requestBody,
-			},
-			req,
-			httpResponse,
-			requestStarted,
-			i,
-		)
-
-		if requestDuration > 0 {
-			_, _ = metrics.RequestDuration(requestDuration, attrs)
-		}
-
-		if queryDuration > 0 {
-			_, _ = metrics.QueryDuration(queryDuration, attrs)
-		}
-
-		return returnValue, httpResponse, nil
-	}
-
-	// should never have reached this
-	return returnValue, nil, reportError("Error not handled properly")
+	return returnValue, nil, err
 }
 
 type ApiCheckRequest struct {
@@ -1350,154 +1216,28 @@ func (a *OpenFgaApiService) Check(ctx context.Context, storeId string) ApiCheckR
  * @return CheckResponse
  */
 func (a *OpenFgaApiService) CheckExecute(r ApiCheckRequest) (CheckResponse, *http.Response, error) {
-	const (
-		operationName = "Check"
-		httpMethod    = http.MethodPost
-	)
-	var (
-		requestStarted = time.Now()
-		requestBody    interface{}
-		returnValue    CheckResponse
-	)
-
-	path := "/stores/{store_id}/check"
-	if r.storeId == "" {
-		return returnValue, nil, reportError("storeId is required and must be specified")
+	var returnValue CheckResponse
+	if err := validatePathParameter("storeId", r.storeId); err != nil {
+		return returnValue, nil, err
+	}
+	if err := validateParameter("body", r.body); err != nil {
+		return returnValue, nil, err
 	}
 
-	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
+	executor := a.client.GetAPIExecutor()
 
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	if r.body == nil {
-		return returnValue, nil, reportError("body is required and must be specified")
+	request := NewAPIExecutorRequestBuilder("Check", http.MethodPost, "/stores/{store_id}/check").
+		WithPathParameter("store_id", r.storeId).
+		WithBody(r.body).
+		WithHeaders(r.options.Headers).
+		Build()
+	response, err := executor.ExecuteWithDecode(r.ctx, request, &returnValue)
+
+	if response != nil {
+		return returnValue, response.HTTPResponse, err
 	}
 
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{"application/json"}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
-	}
-
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-	// body params
-	requestBody = r.body
-
-	// if any override headers were in the options, set them now
-	for header, val := range r.options.Headers {
-		localVarHeaderParams[header] = val
-	}
-
-	retryParams := a.client.cfg.RetryParams
-	for i := 0; i < retryParams.MaxRetry+1; i++ {
-		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-		if err != nil {
-			return returnValue, nil, err
-		}
-
-		httpResponse, err := a.client.callAPI(req)
-		if err != nil || httpResponse == nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		responseBody, err := io.ReadAll(httpResponse.Body)
-		_ = httpResponse.Body.Close()
-		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
-		if err != nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		if httpResponse.StatusCode >= http.StatusMultipleChoices {
-			err := a.client.handleAPIError(httpResponse, responseBody, requestBody, operationName, r.storeId)
-			if err != nil && i < retryParams.MaxRetry {
-				timeToWait := time.Duration(0)
-				var fgaApiRateLimitExceededError FgaApiRateLimitExceededError
-				var fgaApiInternalError FgaApiInternalError
-				switch {
-				case errors.As(err, &fgaApiRateLimitExceededError):
-					timeToWait = err.(FgaApiRateLimitExceededError).GetTimeToWait(i, *retryParams)
-				case errors.As(err, &fgaApiInternalError):
-					timeToWait = err.(FgaApiInternalError).GetTimeToWait(i, *retryParams)
-				}
-
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-
-			return returnValue, httpResponse, err
-		}
-
-		err = a.client.decode(&returnValue, responseBody, httpResponse.Header.Get("Content-Type"))
-		if err != nil {
-			newErr := GenericOpenAPIError{
-				body:  responseBody,
-				error: err.Error(),
-			}
-			return returnValue, httpResponse, newErr
-		}
-
-		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
-
-		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
-			operationName,
-			map[string]interface{}{
-				"storeId": r.storeId,
-				"body":    requestBody,
-			},
-			req,
-			httpResponse,
-			requestStarted,
-			i,
-		)
-
-		if requestDuration > 0 {
-			_, _ = metrics.RequestDuration(requestDuration, attrs)
-		}
-
-		if queryDuration > 0 {
-			_, _ = metrics.QueryDuration(queryDuration, attrs)
-		}
-
-		return returnValue, httpResponse, nil
-	}
-
-	// should never have reached this
-	return returnValue, nil, reportError("Error not handled properly")
+	return returnValue, nil, err
 }
 
 type ApiCreateStoreRequest struct {
@@ -1539,148 +1279,24 @@ func (a *OpenFgaApiService) CreateStore(ctx context.Context) ApiCreateStoreReque
  * @return CreateStoreResponse
  */
 func (a *OpenFgaApiService) CreateStoreExecute(r ApiCreateStoreRequest) (CreateStoreResponse, *http.Response, error) {
-	const (
-		operationName = "CreateStore"
-		httpMethod    = http.MethodPost
-	)
-	var (
-		requestStarted = time.Now()
-		requestBody    interface{}
-		returnValue    CreateStoreResponse
-	)
-
-	path := "/stores"
-
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	if r.body == nil {
-		return returnValue, nil, reportError("body is required and must be specified")
+	var returnValue CreateStoreResponse
+	if err := validateParameter("body", r.body); err != nil {
+		return returnValue, nil, err
 	}
 
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{"application/json"}
+	executor := a.client.GetAPIExecutor()
 
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	request := NewAPIExecutorRequestBuilder("CreateStore", http.MethodPost, "/stores").
+		WithBody(r.body).
+		WithHeaders(r.options.Headers).
+		Build()
+	response, err := executor.ExecuteWithDecode(r.ctx, request, &returnValue)
+
+	if response != nil {
+		return returnValue, response.HTTPResponse, err
 	}
 
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-	// body params
-	requestBody = r.body
-
-	// if any override headers were in the options, set them now
-	for header, val := range r.options.Headers {
-		localVarHeaderParams[header] = val
-	}
-
-	retryParams := a.client.cfg.RetryParams
-	for i := 0; i < retryParams.MaxRetry+1; i++ {
-		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-		if err != nil {
-			return returnValue, nil, err
-		}
-
-		httpResponse, err := a.client.callAPI(req)
-		if err != nil || httpResponse == nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		responseBody, err := io.ReadAll(httpResponse.Body)
-		_ = httpResponse.Body.Close()
-		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
-		if err != nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		if httpResponse.StatusCode >= http.StatusMultipleChoices {
-			err := a.client.handleAPIError(httpResponse, responseBody, requestBody, operationName, "")
-			if err != nil && i < retryParams.MaxRetry {
-				timeToWait := time.Duration(0)
-				var fgaApiRateLimitExceededError FgaApiRateLimitExceededError
-				var fgaApiInternalError FgaApiInternalError
-				switch {
-				case errors.As(err, &fgaApiRateLimitExceededError):
-					timeToWait = err.(FgaApiRateLimitExceededError).GetTimeToWait(i, *retryParams)
-				case errors.As(err, &fgaApiInternalError):
-					timeToWait = err.(FgaApiInternalError).GetTimeToWait(i, *retryParams)
-				}
-
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-
-			return returnValue, httpResponse, err
-		}
-
-		err = a.client.decode(&returnValue, responseBody, httpResponse.Header.Get("Content-Type"))
-		if err != nil {
-			newErr := GenericOpenAPIError{
-				body:  responseBody,
-				error: err.Error(),
-			}
-			return returnValue, httpResponse, newErr
-		}
-
-		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
-
-		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
-			operationName,
-			map[string]interface{}{
-				"body": requestBody,
-			},
-			req,
-			httpResponse,
-			requestStarted,
-			i,
-		)
-
-		if requestDuration > 0 {
-			_, _ = metrics.RequestDuration(requestDuration, attrs)
-		}
-
-		if queryDuration > 0 {
-			_, _ = metrics.QueryDuration(queryDuration, attrs)
-		}
-
-		return returnValue, httpResponse, nil
-	}
-
-	// should never have reached this
-	return returnValue, nil, reportError("Error not handled properly")
+	return returnValue, nil, err
 }
 
 type ApiDeleteStoreRequest struct {
@@ -1718,139 +1334,23 @@ func (a *OpenFgaApiService) DeleteStore(ctx context.Context, storeId string) Api
  * Execute executes the request
  */
 func (a *OpenFgaApiService) DeleteStoreExecute(r ApiDeleteStoreRequest) (*http.Response, error) {
-	const (
-		operationName = "DeleteStore"
-		httpMethod    = http.MethodDelete
-	)
-	var (
-		requestStarted = time.Now()
-		requestBody    interface{}
-	)
-
-	path := "/stores/{store_id}"
-	if r.storeId == "" {
-		return nil, reportError("storeId is required and must be specified")
+	if err := validatePathParameter("storeId", r.storeId); err != nil {
+		return nil, err
 	}
 
-	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
+	executor := a.client.GetAPIExecutor()
 
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
+	request := NewAPIExecutorRequestBuilder("DeleteStore", http.MethodDelete, "/stores/{store_id}").
+		WithPathParameter("store_id", r.storeId).
+		WithHeaders(r.options.Headers).
+		Build()
+	response, err := executor.Execute(r.ctx, request)
 
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	if response != nil {
+		return response.HTTPResponse, err
 	}
 
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-
-	// if any override headers were in the options, set them now
-	for header, val := range r.options.Headers {
-		localVarHeaderParams[header] = val
-	}
-
-	retryParams := a.client.cfg.RetryParams
-	for i := 0; i < retryParams.MaxRetry+1; i++ {
-		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-		if err != nil {
-			return nil, err
-		}
-
-		httpResponse, err := a.client.callAPI(req)
-		if err != nil || httpResponse == nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return httpResponse, err
-		}
-
-		responseBody, err := io.ReadAll(httpResponse.Body)
-		_ = httpResponse.Body.Close()
-		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
-		if err != nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return httpResponse, err
-		}
-
-		if httpResponse.StatusCode >= http.StatusMultipleChoices {
-			err := a.client.handleAPIError(httpResponse, responseBody, requestBody, operationName, r.storeId)
-			if err != nil && i < retryParams.MaxRetry {
-				timeToWait := time.Duration(0)
-				var fgaApiRateLimitExceededError FgaApiRateLimitExceededError
-				var fgaApiInternalError FgaApiInternalError
-				switch {
-				case errors.As(err, &fgaApiRateLimitExceededError):
-					timeToWait = err.(FgaApiRateLimitExceededError).GetTimeToWait(i, *retryParams)
-				case errors.As(err, &fgaApiInternalError):
-					timeToWait = err.(FgaApiInternalError).GetTimeToWait(i, *retryParams)
-				}
-
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-
-			return httpResponse, err
-		}
-
-		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
-
-		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
-			operationName,
-			map[string]interface{}{
-				"storeId": r.storeId,
-				"body":    requestBody,
-			},
-			req,
-			httpResponse,
-			requestStarted,
-			i,
-		)
-
-		if requestDuration > 0 {
-			_, _ = metrics.RequestDuration(requestDuration, attrs)
-		}
-
-		if queryDuration > 0 {
-			_, _ = metrics.QueryDuration(queryDuration, attrs)
-		}
-
-		return httpResponse, nil
-	}
-
-	// should never have reached this
-	return nil, reportError("Error not handled properly")
+	return nil, err
 }
 
 type ApiExpandRequest struct {
@@ -2072,154 +1572,28 @@ func (a *OpenFgaApiService) Expand(ctx context.Context, storeId string) ApiExpan
  * @return ExpandResponse
  */
 func (a *OpenFgaApiService) ExpandExecute(r ApiExpandRequest) (ExpandResponse, *http.Response, error) {
-	const (
-		operationName = "Expand"
-		httpMethod    = http.MethodPost
-	)
-	var (
-		requestStarted = time.Now()
-		requestBody    interface{}
-		returnValue    ExpandResponse
-	)
-
-	path := "/stores/{store_id}/expand"
-	if r.storeId == "" {
-		return returnValue, nil, reportError("storeId is required and must be specified")
+	var returnValue ExpandResponse
+	if err := validatePathParameter("storeId", r.storeId); err != nil {
+		return returnValue, nil, err
+	}
+	if err := validateParameter("body", r.body); err != nil {
+		return returnValue, nil, err
 	}
 
-	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
+	executor := a.client.GetAPIExecutor()
 
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	if r.body == nil {
-		return returnValue, nil, reportError("body is required and must be specified")
+	request := NewAPIExecutorRequestBuilder("Expand", http.MethodPost, "/stores/{store_id}/expand").
+		WithPathParameter("store_id", r.storeId).
+		WithBody(r.body).
+		WithHeaders(r.options.Headers).
+		Build()
+	response, err := executor.ExecuteWithDecode(r.ctx, request, &returnValue)
+
+	if response != nil {
+		return returnValue, response.HTTPResponse, err
 	}
 
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{"application/json"}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
-	}
-
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-	// body params
-	requestBody = r.body
-
-	// if any override headers were in the options, set them now
-	for header, val := range r.options.Headers {
-		localVarHeaderParams[header] = val
-	}
-
-	retryParams := a.client.cfg.RetryParams
-	for i := 0; i < retryParams.MaxRetry+1; i++ {
-		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-		if err != nil {
-			return returnValue, nil, err
-		}
-
-		httpResponse, err := a.client.callAPI(req)
-		if err != nil || httpResponse == nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		responseBody, err := io.ReadAll(httpResponse.Body)
-		_ = httpResponse.Body.Close()
-		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
-		if err != nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		if httpResponse.StatusCode >= http.StatusMultipleChoices {
-			err := a.client.handleAPIError(httpResponse, responseBody, requestBody, operationName, r.storeId)
-			if err != nil && i < retryParams.MaxRetry {
-				timeToWait := time.Duration(0)
-				var fgaApiRateLimitExceededError FgaApiRateLimitExceededError
-				var fgaApiInternalError FgaApiInternalError
-				switch {
-				case errors.As(err, &fgaApiRateLimitExceededError):
-					timeToWait = err.(FgaApiRateLimitExceededError).GetTimeToWait(i, *retryParams)
-				case errors.As(err, &fgaApiInternalError):
-					timeToWait = err.(FgaApiInternalError).GetTimeToWait(i, *retryParams)
-				}
-
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-
-			return returnValue, httpResponse, err
-		}
-
-		err = a.client.decode(&returnValue, responseBody, httpResponse.Header.Get("Content-Type"))
-		if err != nil {
-			newErr := GenericOpenAPIError{
-				body:  responseBody,
-				error: err.Error(),
-			}
-			return returnValue, httpResponse, newErr
-		}
-
-		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
-
-		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
-			operationName,
-			map[string]interface{}{
-				"storeId": r.storeId,
-				"body":    requestBody,
-			},
-			req,
-			httpResponse,
-			requestStarted,
-			i,
-		)
-
-		if requestDuration > 0 {
-			_, _ = metrics.RequestDuration(requestDuration, attrs)
-		}
-
-		if queryDuration > 0 {
-			_, _ = metrics.QueryDuration(queryDuration, attrs)
-		}
-
-		return returnValue, httpResponse, nil
-	}
-
-	// should never have reached this
-	return returnValue, nil, reportError("Error not handled properly")
+	return returnValue, nil, err
 }
 
 type ApiGetStoreRequest struct {
@@ -2258,149 +1632,24 @@ func (a *OpenFgaApiService) GetStore(ctx context.Context, storeId string) ApiGet
  * @return GetStoreResponse
  */
 func (a *OpenFgaApiService) GetStoreExecute(r ApiGetStoreRequest) (GetStoreResponse, *http.Response, error) {
-	const (
-		operationName = "GetStore"
-		httpMethod    = http.MethodGet
-	)
-	var (
-		requestStarted = time.Now()
-		requestBody    interface{}
-		returnValue    GetStoreResponse
-	)
-
-	path := "/stores/{store_id}"
-	if r.storeId == "" {
-		return returnValue, nil, reportError("storeId is required and must be specified")
+	var returnValue GetStoreResponse
+	if err := validatePathParameter("storeId", r.storeId); err != nil {
+		return returnValue, nil, err
 	}
 
-	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
+	executor := a.client.GetAPIExecutor()
 
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
+	request := NewAPIExecutorRequestBuilder("GetStore", http.MethodGet, "/stores/{store_id}").
+		WithPathParameter("store_id", r.storeId).
+		WithHeaders(r.options.Headers).
+		Build()
+	response, err := executor.ExecuteWithDecode(r.ctx, request, &returnValue)
 
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	if response != nil {
+		return returnValue, response.HTTPResponse, err
 	}
 
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-
-	// if any override headers were in the options, set them now
-	for header, val := range r.options.Headers {
-		localVarHeaderParams[header] = val
-	}
-
-	retryParams := a.client.cfg.RetryParams
-	for i := 0; i < retryParams.MaxRetry+1; i++ {
-		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-		if err != nil {
-			return returnValue, nil, err
-		}
-
-		httpResponse, err := a.client.callAPI(req)
-		if err != nil || httpResponse == nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		responseBody, err := io.ReadAll(httpResponse.Body)
-		_ = httpResponse.Body.Close()
-		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
-		if err != nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		if httpResponse.StatusCode >= http.StatusMultipleChoices {
-			err := a.client.handleAPIError(httpResponse, responseBody, requestBody, operationName, r.storeId)
-			if err != nil && i < retryParams.MaxRetry {
-				timeToWait := time.Duration(0)
-				var fgaApiRateLimitExceededError FgaApiRateLimitExceededError
-				var fgaApiInternalError FgaApiInternalError
-				switch {
-				case errors.As(err, &fgaApiRateLimitExceededError):
-					timeToWait = err.(FgaApiRateLimitExceededError).GetTimeToWait(i, *retryParams)
-				case errors.As(err, &fgaApiInternalError):
-					timeToWait = err.(FgaApiInternalError).GetTimeToWait(i, *retryParams)
-				}
-
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-
-			return returnValue, httpResponse, err
-		}
-
-		err = a.client.decode(&returnValue, responseBody, httpResponse.Header.Get("Content-Type"))
-		if err != nil {
-			newErr := GenericOpenAPIError{
-				body:  responseBody,
-				error: err.Error(),
-			}
-			return returnValue, httpResponse, newErr
-		}
-
-		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
-
-		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
-			operationName,
-			map[string]interface{}{
-				"storeId": r.storeId,
-				"body":    requestBody,
-			},
-			req,
-			httpResponse,
-			requestStarted,
-			i,
-		)
-
-		if requestDuration > 0 {
-			_, _ = metrics.RequestDuration(requestDuration, attrs)
-		}
-
-		if queryDuration > 0 {
-			_, _ = metrics.QueryDuration(queryDuration, attrs)
-		}
-
-		return returnValue, httpResponse, nil
-	}
-
-	// should never have reached this
-	return returnValue, nil, reportError("Error not handled properly")
+	return returnValue, nil, err
 }
 
 type ApiListObjectsRequest struct {
@@ -2454,154 +1703,28 @@ func (a *OpenFgaApiService) ListObjects(ctx context.Context, storeId string) Api
  * @return ListObjectsResponse
  */
 func (a *OpenFgaApiService) ListObjectsExecute(r ApiListObjectsRequest) (ListObjectsResponse, *http.Response, error) {
-	const (
-		operationName = "ListObjects"
-		httpMethod    = http.MethodPost
-	)
-	var (
-		requestStarted = time.Now()
-		requestBody    interface{}
-		returnValue    ListObjectsResponse
-	)
-
-	path := "/stores/{store_id}/list-objects"
-	if r.storeId == "" {
-		return returnValue, nil, reportError("storeId is required and must be specified")
+	var returnValue ListObjectsResponse
+	if err := validatePathParameter("storeId", r.storeId); err != nil {
+		return returnValue, nil, err
+	}
+	if err := validateParameter("body", r.body); err != nil {
+		return returnValue, nil, err
 	}
 
-	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
+	executor := a.client.GetAPIExecutor()
 
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	if r.body == nil {
-		return returnValue, nil, reportError("body is required and must be specified")
+	request := NewAPIExecutorRequestBuilder("ListObjects", http.MethodPost, "/stores/{store_id}/list-objects").
+		WithPathParameter("store_id", r.storeId).
+		WithBody(r.body).
+		WithHeaders(r.options.Headers).
+		Build()
+	response, err := executor.ExecuteWithDecode(r.ctx, request, &returnValue)
+
+	if response != nil {
+		return returnValue, response.HTTPResponse, err
 	}
 
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{"application/json"}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
-	}
-
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-	// body params
-	requestBody = r.body
-
-	// if any override headers were in the options, set them now
-	for header, val := range r.options.Headers {
-		localVarHeaderParams[header] = val
-	}
-
-	retryParams := a.client.cfg.RetryParams
-	for i := 0; i < retryParams.MaxRetry+1; i++ {
-		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-		if err != nil {
-			return returnValue, nil, err
-		}
-
-		httpResponse, err := a.client.callAPI(req)
-		if err != nil || httpResponse == nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		responseBody, err := io.ReadAll(httpResponse.Body)
-		_ = httpResponse.Body.Close()
-		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
-		if err != nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		if httpResponse.StatusCode >= http.StatusMultipleChoices {
-			err := a.client.handleAPIError(httpResponse, responseBody, requestBody, operationName, r.storeId)
-			if err != nil && i < retryParams.MaxRetry {
-				timeToWait := time.Duration(0)
-				var fgaApiRateLimitExceededError FgaApiRateLimitExceededError
-				var fgaApiInternalError FgaApiInternalError
-				switch {
-				case errors.As(err, &fgaApiRateLimitExceededError):
-					timeToWait = err.(FgaApiRateLimitExceededError).GetTimeToWait(i, *retryParams)
-				case errors.As(err, &fgaApiInternalError):
-					timeToWait = err.(FgaApiInternalError).GetTimeToWait(i, *retryParams)
-				}
-
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-
-			return returnValue, httpResponse, err
-		}
-
-		err = a.client.decode(&returnValue, responseBody, httpResponse.Header.Get("Content-Type"))
-		if err != nil {
-			newErr := GenericOpenAPIError{
-				body:  responseBody,
-				error: err.Error(),
-			}
-			return returnValue, httpResponse, newErr
-		}
-
-		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
-
-		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
-			operationName,
-			map[string]interface{}{
-				"storeId": r.storeId,
-				"body":    requestBody,
-			},
-			req,
-			httpResponse,
-			requestStarted,
-			i,
-		)
-
-		if requestDuration > 0 {
-			_, _ = metrics.RequestDuration(requestDuration, attrs)
-		}
-
-		if queryDuration > 0 {
-			_, _ = metrics.QueryDuration(queryDuration, attrs)
-		}
-
-		return returnValue, httpResponse, nil
-	}
-
-	// should never have reached this
-	return returnValue, nil, reportError("Error not handled properly")
+	return returnValue, nil, err
 }
 
 type ApiListStoresRequest struct {
@@ -2656,152 +1779,32 @@ func (a *OpenFgaApiService) ListStores(ctx context.Context) ApiListStoresRequest
  * @return ListStoresResponse
  */
 func (a *OpenFgaApiService) ListStoresExecute(r ApiListStoresRequest) (ListStoresResponse, *http.Response, error) {
-	const (
-		operationName = "ListStores"
-		httpMethod    = http.MethodGet
-	)
-	var (
-		requestStarted = time.Now()
-		requestBody    interface{}
-		returnValue    ListStoresResponse
-	)
+	var returnValue ListStoresResponse
 
-	path := "/stores"
+	executor := a.client.GetAPIExecutor()
 
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-
+	queryParams := url.Values{}
 	if r.pageSize != nil {
-		localVarQueryParams.Add("page_size", parameterToString(*r.pageSize, ""))
+		queryParams.Add("page_size", parameterToString(*r.pageSize, ""))
 	}
 	if r.continuationToken != nil {
-		localVarQueryParams.Add("continuation_token", parameterToString(*r.continuationToken, ""))
+		queryParams.Add("continuation_token", parameterToString(*r.continuationToken, ""))
 	}
 	if r.name != nil {
-		localVarQueryParams.Add("name", parameterToString(*r.name, ""))
-	}
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+		queryParams.Add("name", parameterToString(*r.name, ""))
 	}
 
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
+	request := NewAPIExecutorRequestBuilder("ListStores", http.MethodGet, "/stores").
+		WithQueryParameters(queryParams).
+		WithHeaders(r.options.Headers).
+		Build()
+	response, err := executor.ExecuteWithDecode(r.ctx, request, &returnValue)
 
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	if response != nil {
+		return returnValue, response.HTTPResponse, err
 	}
 
-	// if any override headers were in the options, set them now
-	for header, val := range r.options.Headers {
-		localVarHeaderParams[header] = val
-	}
-
-	retryParams := a.client.cfg.RetryParams
-	for i := 0; i < retryParams.MaxRetry+1; i++ {
-		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-		if err != nil {
-			return returnValue, nil, err
-		}
-
-		httpResponse, err := a.client.callAPI(req)
-		if err != nil || httpResponse == nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		responseBody, err := io.ReadAll(httpResponse.Body)
-		_ = httpResponse.Body.Close()
-		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
-		if err != nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		if httpResponse.StatusCode >= http.StatusMultipleChoices {
-			err := a.client.handleAPIError(httpResponse, responseBody, requestBody, operationName, "")
-			if err != nil && i < retryParams.MaxRetry {
-				timeToWait := time.Duration(0)
-				var fgaApiRateLimitExceededError FgaApiRateLimitExceededError
-				var fgaApiInternalError FgaApiInternalError
-				switch {
-				case errors.As(err, &fgaApiRateLimitExceededError):
-					timeToWait = err.(FgaApiRateLimitExceededError).GetTimeToWait(i, *retryParams)
-				case errors.As(err, &fgaApiInternalError):
-					timeToWait = err.(FgaApiInternalError).GetTimeToWait(i, *retryParams)
-				}
-
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-
-			return returnValue, httpResponse, err
-		}
-
-		err = a.client.decode(&returnValue, responseBody, httpResponse.Header.Get("Content-Type"))
-		if err != nil {
-			newErr := GenericOpenAPIError{
-				body:  responseBody,
-				error: err.Error(),
-			}
-			return returnValue, httpResponse, newErr
-		}
-
-		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
-
-		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
-			operationName,
-			map[string]interface{}{
-				"body": requestBody,
-			},
-			req,
-			httpResponse,
-			requestStarted,
-			i,
-		)
-
-		if requestDuration > 0 {
-			_, _ = metrics.RequestDuration(requestDuration, attrs)
-		}
-
-		if queryDuration > 0 {
-			_, _ = metrics.QueryDuration(queryDuration, attrs)
-		}
-
-		return returnValue, httpResponse, nil
-	}
-
-	// should never have reached this
-	return returnValue, nil, reportError("Error not handled properly")
+	return returnValue, nil, err
 }
 
 type ApiListUsersRequest struct {
@@ -2856,154 +1859,28 @@ func (a *OpenFgaApiService) ListUsers(ctx context.Context, storeId string) ApiLi
  * @return ListUsersResponse
  */
 func (a *OpenFgaApiService) ListUsersExecute(r ApiListUsersRequest) (ListUsersResponse, *http.Response, error) {
-	const (
-		operationName = "ListUsers"
-		httpMethod    = http.MethodPost
-	)
-	var (
-		requestStarted = time.Now()
-		requestBody    interface{}
-		returnValue    ListUsersResponse
-	)
-
-	path := "/stores/{store_id}/list-users"
-	if r.storeId == "" {
-		return returnValue, nil, reportError("storeId is required and must be specified")
+	var returnValue ListUsersResponse
+	if err := validatePathParameter("storeId", r.storeId); err != nil {
+		return returnValue, nil, err
+	}
+	if err := validateParameter("body", r.body); err != nil {
+		return returnValue, nil, err
 	}
 
-	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
+	executor := a.client.GetAPIExecutor()
 
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	if r.body == nil {
-		return returnValue, nil, reportError("body is required and must be specified")
+	request := NewAPIExecutorRequestBuilder("ListUsers", http.MethodPost, "/stores/{store_id}/list-users").
+		WithPathParameter("store_id", r.storeId).
+		WithBody(r.body).
+		WithHeaders(r.options.Headers).
+		Build()
+	response, err := executor.ExecuteWithDecode(r.ctx, request, &returnValue)
+
+	if response != nil {
+		return returnValue, response.HTTPResponse, err
 	}
 
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{"application/json"}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
-	}
-
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-	// body params
-	requestBody = r.body
-
-	// if any override headers were in the options, set them now
-	for header, val := range r.options.Headers {
-		localVarHeaderParams[header] = val
-	}
-
-	retryParams := a.client.cfg.RetryParams
-	for i := 0; i < retryParams.MaxRetry+1; i++ {
-		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-		if err != nil {
-			return returnValue, nil, err
-		}
-
-		httpResponse, err := a.client.callAPI(req)
-		if err != nil || httpResponse == nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		responseBody, err := io.ReadAll(httpResponse.Body)
-		_ = httpResponse.Body.Close()
-		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
-		if err != nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		if httpResponse.StatusCode >= http.StatusMultipleChoices {
-			err := a.client.handleAPIError(httpResponse, responseBody, requestBody, operationName, r.storeId)
-			if err != nil && i < retryParams.MaxRetry {
-				timeToWait := time.Duration(0)
-				var fgaApiRateLimitExceededError FgaApiRateLimitExceededError
-				var fgaApiInternalError FgaApiInternalError
-				switch {
-				case errors.As(err, &fgaApiRateLimitExceededError):
-					timeToWait = err.(FgaApiRateLimitExceededError).GetTimeToWait(i, *retryParams)
-				case errors.As(err, &fgaApiInternalError):
-					timeToWait = err.(FgaApiInternalError).GetTimeToWait(i, *retryParams)
-				}
-
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-
-			return returnValue, httpResponse, err
-		}
-
-		err = a.client.decode(&returnValue, responseBody, httpResponse.Header.Get("Content-Type"))
-		if err != nil {
-			newErr := GenericOpenAPIError{
-				body:  responseBody,
-				error: err.Error(),
-			}
-			return returnValue, httpResponse, newErr
-		}
-
-		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
-
-		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
-			operationName,
-			map[string]interface{}{
-				"storeId": r.storeId,
-				"body":    requestBody,
-			},
-			req,
-			httpResponse,
-			requestStarted,
-			i,
-		)
-
-		if requestDuration > 0 {
-			_, _ = metrics.RequestDuration(requestDuration, attrs)
-		}
-
-		if queryDuration > 0 {
-			_, _ = metrics.QueryDuration(queryDuration, attrs)
-		}
-
-		return returnValue, httpResponse, nil
-	}
-
-	// should never have reached this
-	return returnValue, nil, reportError("Error not handled properly")
+	return returnValue, nil, err
 }
 
 type ApiReadRequest struct {
@@ -3159,154 +2036,28 @@ func (a *OpenFgaApiService) Read(ctx context.Context, storeId string) ApiReadReq
  * @return ReadResponse
  */
 func (a *OpenFgaApiService) ReadExecute(r ApiReadRequest) (ReadResponse, *http.Response, error) {
-	const (
-		operationName = "Read"
-		httpMethod    = http.MethodPost
-	)
-	var (
-		requestStarted = time.Now()
-		requestBody    interface{}
-		returnValue    ReadResponse
-	)
-
-	path := "/stores/{store_id}/read"
-	if r.storeId == "" {
-		return returnValue, nil, reportError("storeId is required and must be specified")
+	var returnValue ReadResponse
+	if err := validatePathParameter("storeId", r.storeId); err != nil {
+		return returnValue, nil, err
+	}
+	if err := validateParameter("body", r.body); err != nil {
+		return returnValue, nil, err
 	}
 
-	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
+	executor := a.client.GetAPIExecutor()
 
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	if r.body == nil {
-		return returnValue, nil, reportError("body is required and must be specified")
+	request := NewAPIExecutorRequestBuilder("Read", http.MethodPost, "/stores/{store_id}/read").
+		WithPathParameter("store_id", r.storeId).
+		WithBody(r.body).
+		WithHeaders(r.options.Headers).
+		Build()
+	response, err := executor.ExecuteWithDecode(r.ctx, request, &returnValue)
+
+	if response != nil {
+		return returnValue, response.HTTPResponse, err
 	}
 
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{"application/json"}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
-	}
-
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-	// body params
-	requestBody = r.body
-
-	// if any override headers were in the options, set them now
-	for header, val := range r.options.Headers {
-		localVarHeaderParams[header] = val
-	}
-
-	retryParams := a.client.cfg.RetryParams
-	for i := 0; i < retryParams.MaxRetry+1; i++ {
-		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-		if err != nil {
-			return returnValue, nil, err
-		}
-
-		httpResponse, err := a.client.callAPI(req)
-		if err != nil || httpResponse == nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		responseBody, err := io.ReadAll(httpResponse.Body)
-		_ = httpResponse.Body.Close()
-		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
-		if err != nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		if httpResponse.StatusCode >= http.StatusMultipleChoices {
-			err := a.client.handleAPIError(httpResponse, responseBody, requestBody, operationName, r.storeId)
-			if err != nil && i < retryParams.MaxRetry {
-				timeToWait := time.Duration(0)
-				var fgaApiRateLimitExceededError FgaApiRateLimitExceededError
-				var fgaApiInternalError FgaApiInternalError
-				switch {
-				case errors.As(err, &fgaApiRateLimitExceededError):
-					timeToWait = err.(FgaApiRateLimitExceededError).GetTimeToWait(i, *retryParams)
-				case errors.As(err, &fgaApiInternalError):
-					timeToWait = err.(FgaApiInternalError).GetTimeToWait(i, *retryParams)
-				}
-
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-
-			return returnValue, httpResponse, err
-		}
-
-		err = a.client.decode(&returnValue, responseBody, httpResponse.Header.Get("Content-Type"))
-		if err != nil {
-			newErr := GenericOpenAPIError{
-				body:  responseBody,
-				error: err.Error(),
-			}
-			return returnValue, httpResponse, newErr
-		}
-
-		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
-
-		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
-			operationName,
-			map[string]interface{}{
-				"storeId": r.storeId,
-				"body":    requestBody,
-			},
-			req,
-			httpResponse,
-			requestStarted,
-			i,
-		)
-
-		if requestDuration > 0 {
-			_, _ = metrics.RequestDuration(requestDuration, attrs)
-		}
-
-		if queryDuration > 0 {
-			_, _ = metrics.QueryDuration(queryDuration, attrs)
-		}
-
-		return returnValue, httpResponse, nil
-	}
-
-	// should never have reached this
-	return returnValue, nil, reportError("Error not handled properly")
+	return returnValue, nil, err
 }
 
 type ApiReadAssertionsRequest struct {
@@ -3348,154 +2099,28 @@ func (a *OpenFgaApiService) ReadAssertions(ctx context.Context, storeId string, 
  * @return ReadAssertionsResponse
  */
 func (a *OpenFgaApiService) ReadAssertionsExecute(r ApiReadAssertionsRequest) (ReadAssertionsResponse, *http.Response, error) {
-	const (
-		operationName = "ReadAssertions"
-		httpMethod    = http.MethodGet
-	)
-	var (
-		requestStarted = time.Now()
-		requestBody    interface{}
-		returnValue    ReadAssertionsResponse
-	)
-
-	path := "/stores/{store_id}/assertions/{authorization_model_id}"
-	if r.storeId == "" {
-		return returnValue, nil, reportError("storeId is required and must be specified")
+	var returnValue ReadAssertionsResponse
+	if err := validatePathParameter("storeId", r.storeId); err != nil {
+		return returnValue, nil, err
+	}
+	if err := validatePathParameter("authorizationModelId", r.authorizationModelId); err != nil {
+		return returnValue, nil, err
 	}
 
-	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
-	if r.authorizationModelId == "" {
-		return returnValue, nil, reportError("authorizationModelId is required and must be specified")
+	executor := a.client.GetAPIExecutor()
+
+	request := NewAPIExecutorRequestBuilder("ReadAssertions", http.MethodGet, "/stores/{store_id}/assertions/{authorization_model_id}").
+		WithPathParameter("store_id", r.storeId).
+		WithPathParameter("authorization_model_id", r.authorizationModelId).
+		WithHeaders(r.options.Headers).
+		Build()
+	response, err := executor.ExecuteWithDecode(r.ctx, request, &returnValue)
+
+	if response != nil {
+		return returnValue, response.HTTPResponse, err
 	}
 
-	path = strings.ReplaceAll(path, "{"+"authorization_model_id"+"}", url.PathEscape(parameterToString(r.authorizationModelId, "")))
-
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
-	}
-
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-
-	// if any override headers were in the options, set them now
-	for header, val := range r.options.Headers {
-		localVarHeaderParams[header] = val
-	}
-
-	retryParams := a.client.cfg.RetryParams
-	for i := 0; i < retryParams.MaxRetry+1; i++ {
-		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-		if err != nil {
-			return returnValue, nil, err
-		}
-
-		httpResponse, err := a.client.callAPI(req)
-		if err != nil || httpResponse == nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		responseBody, err := io.ReadAll(httpResponse.Body)
-		_ = httpResponse.Body.Close()
-		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
-		if err != nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		if httpResponse.StatusCode >= http.StatusMultipleChoices {
-			err := a.client.handleAPIError(httpResponse, responseBody, requestBody, operationName, r.storeId)
-			if err != nil && i < retryParams.MaxRetry {
-				timeToWait := time.Duration(0)
-				var fgaApiRateLimitExceededError FgaApiRateLimitExceededError
-				var fgaApiInternalError FgaApiInternalError
-				switch {
-				case errors.As(err, &fgaApiRateLimitExceededError):
-					timeToWait = err.(FgaApiRateLimitExceededError).GetTimeToWait(i, *retryParams)
-				case errors.As(err, &fgaApiInternalError):
-					timeToWait = err.(FgaApiInternalError).GetTimeToWait(i, *retryParams)
-				}
-
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-
-			return returnValue, httpResponse, err
-		}
-
-		err = a.client.decode(&returnValue, responseBody, httpResponse.Header.Get("Content-Type"))
-		if err != nil {
-			newErr := GenericOpenAPIError{
-				body:  responseBody,
-				error: err.Error(),
-			}
-			return returnValue, httpResponse, newErr
-		}
-
-		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
-
-		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
-			operationName,
-			map[string]interface{}{
-				"storeId": r.storeId,
-				"body":    requestBody,
-			},
-			req,
-			httpResponse,
-			requestStarted,
-			i,
-		)
-
-		if requestDuration > 0 {
-			_, _ = metrics.RequestDuration(requestDuration, attrs)
-		}
-
-		if queryDuration > 0 {
-			_, _ = metrics.QueryDuration(queryDuration, attrs)
-		}
-
-		return returnValue, httpResponse, nil
-	}
-
-	// should never have reached this
-	return returnValue, nil, reportError("Error not handled properly")
+	return returnValue, nil, err
 }
 
 type ApiReadAuthorizationModelRequest struct {
@@ -3580,154 +2205,28 @@ func (a *OpenFgaApiService) ReadAuthorizationModel(ctx context.Context, storeId 
  * @return ReadAuthorizationModelResponse
  */
 func (a *OpenFgaApiService) ReadAuthorizationModelExecute(r ApiReadAuthorizationModelRequest) (ReadAuthorizationModelResponse, *http.Response, error) {
-	const (
-		operationName = "ReadAuthorizationModel"
-		httpMethod    = http.MethodGet
-	)
-	var (
-		requestStarted = time.Now()
-		requestBody    interface{}
-		returnValue    ReadAuthorizationModelResponse
-	)
-
-	path := "/stores/{store_id}/authorization-models/{id}"
-	if r.storeId == "" {
-		return returnValue, nil, reportError("storeId is required and must be specified")
+	var returnValue ReadAuthorizationModelResponse
+	if err := validatePathParameter("storeId", r.storeId); err != nil {
+		return returnValue, nil, err
+	}
+	if err := validatePathParameter("id", r.id); err != nil {
+		return returnValue, nil, err
 	}
 
-	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
-	if r.id == "" {
-		return returnValue, nil, reportError("id is required and must be specified")
+	executor := a.client.GetAPIExecutor()
+
+	request := NewAPIExecutorRequestBuilder("ReadAuthorizationModel", http.MethodGet, "/stores/{store_id}/authorization-models/{id}").
+		WithPathParameter("store_id", r.storeId).
+		WithPathParameter("id", r.id).
+		WithHeaders(r.options.Headers).
+		Build()
+	response, err := executor.ExecuteWithDecode(r.ctx, request, &returnValue)
+
+	if response != nil {
+		return returnValue, response.HTTPResponse, err
 	}
 
-	path = strings.ReplaceAll(path, "{"+"id"+"}", url.PathEscape(parameterToString(r.id, "")))
-
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
-	}
-
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-
-	// if any override headers were in the options, set them now
-	for header, val := range r.options.Headers {
-		localVarHeaderParams[header] = val
-	}
-
-	retryParams := a.client.cfg.RetryParams
-	for i := 0; i < retryParams.MaxRetry+1; i++ {
-		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-		if err != nil {
-			return returnValue, nil, err
-		}
-
-		httpResponse, err := a.client.callAPI(req)
-		if err != nil || httpResponse == nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		responseBody, err := io.ReadAll(httpResponse.Body)
-		_ = httpResponse.Body.Close()
-		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
-		if err != nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		if httpResponse.StatusCode >= http.StatusMultipleChoices {
-			err := a.client.handleAPIError(httpResponse, responseBody, requestBody, operationName, r.storeId)
-			if err != nil && i < retryParams.MaxRetry {
-				timeToWait := time.Duration(0)
-				var fgaApiRateLimitExceededError FgaApiRateLimitExceededError
-				var fgaApiInternalError FgaApiInternalError
-				switch {
-				case errors.As(err, &fgaApiRateLimitExceededError):
-					timeToWait = err.(FgaApiRateLimitExceededError).GetTimeToWait(i, *retryParams)
-				case errors.As(err, &fgaApiInternalError):
-					timeToWait = err.(FgaApiInternalError).GetTimeToWait(i, *retryParams)
-				}
-
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-
-			return returnValue, httpResponse, err
-		}
-
-		err = a.client.decode(&returnValue, responseBody, httpResponse.Header.Get("Content-Type"))
-		if err != nil {
-			newErr := GenericOpenAPIError{
-				body:  responseBody,
-				error: err.Error(),
-			}
-			return returnValue, httpResponse, newErr
-		}
-
-		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
-
-		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
-			operationName,
-			map[string]interface{}{
-				"storeId": r.storeId,
-				"body":    requestBody,
-			},
-			req,
-			httpResponse,
-			requestStarted,
-			i,
-		)
-
-		if requestDuration > 0 {
-			_, _ = metrics.RequestDuration(requestDuration, attrs)
-		}
-
-		if queryDuration > 0 {
-			_, _ = metrics.QueryDuration(queryDuration, attrs)
-		}
-
-		return returnValue, httpResponse, nil
-	}
-
-	// should never have reached this
-	return returnValue, nil, reportError("Error not handled properly")
+	return returnValue, nil, err
 }
 
 type ApiReadAuthorizationModelsRequest struct {
@@ -3818,155 +2317,33 @@ func (a *OpenFgaApiService) ReadAuthorizationModels(ctx context.Context, storeId
  * @return ReadAuthorizationModelsResponse
  */
 func (a *OpenFgaApiService) ReadAuthorizationModelsExecute(r ApiReadAuthorizationModelsRequest) (ReadAuthorizationModelsResponse, *http.Response, error) {
-	const (
-		operationName = "ReadAuthorizationModels"
-		httpMethod    = http.MethodGet
-	)
-	var (
-		requestStarted = time.Now()
-		requestBody    interface{}
-		returnValue    ReadAuthorizationModelsResponse
-	)
-
-	path := "/stores/{store_id}/authorization-models"
-	if r.storeId == "" {
-		return returnValue, nil, reportError("storeId is required and must be specified")
+	var returnValue ReadAuthorizationModelsResponse
+	if err := validatePathParameter("storeId", r.storeId); err != nil {
+		return returnValue, nil, err
 	}
 
-	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
+	executor := a.client.GetAPIExecutor()
 
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-
+	queryParams := url.Values{}
 	if r.pageSize != nil {
-		localVarQueryParams.Add("page_size", parameterToString(*r.pageSize, ""))
+		queryParams.Add("page_size", parameterToString(*r.pageSize, ""))
 	}
 	if r.continuationToken != nil {
-		localVarQueryParams.Add("continuation_token", parameterToString(*r.continuationToken, ""))
-	}
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+		queryParams.Add("continuation_token", parameterToString(*r.continuationToken, ""))
 	}
 
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
+	request := NewAPIExecutorRequestBuilder("ReadAuthorizationModels", http.MethodGet, "/stores/{store_id}/authorization-models").
+		WithPathParameter("store_id", r.storeId).
+		WithQueryParameters(queryParams).
+		WithHeaders(r.options.Headers).
+		Build()
+	response, err := executor.ExecuteWithDecode(r.ctx, request, &returnValue)
 
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	if response != nil {
+		return returnValue, response.HTTPResponse, err
 	}
 
-	// if any override headers were in the options, set them now
-	for header, val := range r.options.Headers {
-		localVarHeaderParams[header] = val
-	}
-
-	retryParams := a.client.cfg.RetryParams
-	for i := 0; i < retryParams.MaxRetry+1; i++ {
-		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-		if err != nil {
-			return returnValue, nil, err
-		}
-
-		httpResponse, err := a.client.callAPI(req)
-		if err != nil || httpResponse == nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		responseBody, err := io.ReadAll(httpResponse.Body)
-		_ = httpResponse.Body.Close()
-		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
-		if err != nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		if httpResponse.StatusCode >= http.StatusMultipleChoices {
-			err := a.client.handleAPIError(httpResponse, responseBody, requestBody, operationName, r.storeId)
-			if err != nil && i < retryParams.MaxRetry {
-				timeToWait := time.Duration(0)
-				var fgaApiRateLimitExceededError FgaApiRateLimitExceededError
-				var fgaApiInternalError FgaApiInternalError
-				switch {
-				case errors.As(err, &fgaApiRateLimitExceededError):
-					timeToWait = err.(FgaApiRateLimitExceededError).GetTimeToWait(i, *retryParams)
-				case errors.As(err, &fgaApiInternalError):
-					timeToWait = err.(FgaApiInternalError).GetTimeToWait(i, *retryParams)
-				}
-
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-
-			return returnValue, httpResponse, err
-		}
-
-		err = a.client.decode(&returnValue, responseBody, httpResponse.Header.Get("Content-Type"))
-		if err != nil {
-			newErr := GenericOpenAPIError{
-				body:  responseBody,
-				error: err.Error(),
-			}
-			return returnValue, httpResponse, newErr
-		}
-
-		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
-
-		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
-			operationName,
-			map[string]interface{}{
-				"storeId": r.storeId,
-				"body":    requestBody,
-			},
-			req,
-			httpResponse,
-			requestStarted,
-			i,
-		)
-
-		if requestDuration > 0 {
-			_, _ = metrics.RequestDuration(requestDuration, attrs)
-		}
-
-		if queryDuration > 0 {
-			_, _ = metrics.QueryDuration(queryDuration, attrs)
-		}
-
-		return returnValue, httpResponse, nil
-	}
-
-	// should never have reached this
-	return returnValue, nil, reportError("Error not handled properly")
+	return returnValue, nil, err
 }
 
 type ApiReadChangesRequest struct {
@@ -4031,161 +2408,39 @@ func (a *OpenFgaApiService) ReadChanges(ctx context.Context, storeId string) Api
  * @return ReadChangesResponse
  */
 func (a *OpenFgaApiService) ReadChangesExecute(r ApiReadChangesRequest) (ReadChangesResponse, *http.Response, error) {
-	const (
-		operationName = "ReadChanges"
-		httpMethod    = http.MethodGet
-	)
-	var (
-		requestStarted = time.Now()
-		requestBody    interface{}
-		returnValue    ReadChangesResponse
-	)
-
-	path := "/stores/{store_id}/changes"
-	if r.storeId == "" {
-		return returnValue, nil, reportError("storeId is required and must be specified")
+	var returnValue ReadChangesResponse
+	if err := validatePathParameter("storeId", r.storeId); err != nil {
+		return returnValue, nil, err
 	}
 
-	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
+	executor := a.client.GetAPIExecutor()
 
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-
+	queryParams := url.Values{}
 	if r.type_ != nil {
-		localVarQueryParams.Add("type", parameterToString(*r.type_, ""))
+		queryParams.Add("type", parameterToString(*r.type_, ""))
 	}
 	if r.pageSize != nil {
-		localVarQueryParams.Add("page_size", parameterToString(*r.pageSize, ""))
+		queryParams.Add("page_size", parameterToString(*r.pageSize, ""))
 	}
 	if r.continuationToken != nil {
-		localVarQueryParams.Add("continuation_token", parameterToString(*r.continuationToken, ""))
+		queryParams.Add("continuation_token", parameterToString(*r.continuationToken, ""))
 	}
 	if r.startTime != nil {
-		localVarQueryParams.Add("start_time", parameterToString(*r.startTime, ""))
-	}
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+		queryParams.Add("start_time", parameterToString(*r.startTime, ""))
 	}
 
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
+	request := NewAPIExecutorRequestBuilder("ReadChanges", http.MethodGet, "/stores/{store_id}/changes").
+		WithPathParameter("store_id", r.storeId).
+		WithQueryParameters(queryParams).
+		WithHeaders(r.options.Headers).
+		Build()
+	response, err := executor.ExecuteWithDecode(r.ctx, request, &returnValue)
 
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	if response != nil {
+		return returnValue, response.HTTPResponse, err
 	}
 
-	// if any override headers were in the options, set them now
-	for header, val := range r.options.Headers {
-		localVarHeaderParams[header] = val
-	}
-
-	retryParams := a.client.cfg.RetryParams
-	for i := 0; i < retryParams.MaxRetry+1; i++ {
-		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-		if err != nil {
-			return returnValue, nil, err
-		}
-
-		httpResponse, err := a.client.callAPI(req)
-		if err != nil || httpResponse == nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		responseBody, err := io.ReadAll(httpResponse.Body)
-		_ = httpResponse.Body.Close()
-		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
-		if err != nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		if httpResponse.StatusCode >= http.StatusMultipleChoices {
-			err := a.client.handleAPIError(httpResponse, responseBody, requestBody, operationName, r.storeId)
-			if err != nil && i < retryParams.MaxRetry {
-				timeToWait := time.Duration(0)
-				var fgaApiRateLimitExceededError FgaApiRateLimitExceededError
-				var fgaApiInternalError FgaApiInternalError
-				switch {
-				case errors.As(err, &fgaApiRateLimitExceededError):
-					timeToWait = err.(FgaApiRateLimitExceededError).GetTimeToWait(i, *retryParams)
-				case errors.As(err, &fgaApiInternalError):
-					timeToWait = err.(FgaApiInternalError).GetTimeToWait(i, *retryParams)
-				}
-
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-
-			return returnValue, httpResponse, err
-		}
-
-		err = a.client.decode(&returnValue, responseBody, httpResponse.Header.Get("Content-Type"))
-		if err != nil {
-			newErr := GenericOpenAPIError{
-				body:  responseBody,
-				error: err.Error(),
-			}
-			return returnValue, httpResponse, newErr
-		}
-
-		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
-
-		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
-			operationName,
-			map[string]interface{}{
-				"storeId": r.storeId,
-				"body":    requestBody,
-			},
-			req,
-			httpResponse,
-			requestStarted,
-			i,
-		)
-
-		if requestDuration > 0 {
-			_, _ = metrics.RequestDuration(requestDuration, attrs)
-		}
-
-		if queryDuration > 0 {
-			_, _ = metrics.QueryDuration(queryDuration, attrs)
-		}
-
-		return returnValue, httpResponse, nil
-	}
-
-	// should never have reached this
-	return returnValue, nil, reportError("Error not handled properly")
+	return returnValue, nil, err
 }
 
 type ApiStreamedListObjectsRequest struct {
@@ -4234,154 +2489,28 @@ func (a *OpenFgaApiService) StreamedListObjects(ctx context.Context, storeId str
  * @return StreamResultOfStreamedListObjectsResponse
  */
 func (a *OpenFgaApiService) StreamedListObjectsExecute(r ApiStreamedListObjectsRequest) (StreamResultOfStreamedListObjectsResponse, *http.Response, error) {
-	const (
-		operationName = "StreamedListObjects"
-		httpMethod    = http.MethodPost
-	)
-	var (
-		requestStarted = time.Now()
-		requestBody    interface{}
-		returnValue    StreamResultOfStreamedListObjectsResponse
-	)
-
-	path := "/stores/{store_id}/streamed-list-objects"
-	if r.storeId == "" {
-		return returnValue, nil, reportError("storeId is required and must be specified")
+	var returnValue StreamResultOfStreamedListObjectsResponse
+	if err := validatePathParameter("storeId", r.storeId); err != nil {
+		return returnValue, nil, err
+	}
+	if err := validateParameter("body", r.body); err != nil {
+		return returnValue, nil, err
 	}
 
-	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
+	executor := a.client.GetAPIExecutor()
 
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	if r.body == nil {
-		return returnValue, nil, reportError("body is required and must be specified")
+	request := NewAPIExecutorRequestBuilder("StreamedListObjects", http.MethodPost, "/stores/{store_id}/streamed-list-objects").
+		WithPathParameter("store_id", r.storeId).
+		WithBody(r.body).
+		WithHeaders(r.options.Headers).
+		Build()
+	response, err := executor.ExecuteWithDecode(r.ctx, request, &returnValue)
+
+	if response != nil {
+		return returnValue, response.HTTPResponse, err
 	}
 
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{"application/json"}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
-	}
-
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-	// body params
-	requestBody = r.body
-
-	// if any override headers were in the options, set them now
-	for header, val := range r.options.Headers {
-		localVarHeaderParams[header] = val
-	}
-
-	retryParams := a.client.cfg.RetryParams
-	for i := 0; i < retryParams.MaxRetry+1; i++ {
-		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-		if err != nil {
-			return returnValue, nil, err
-		}
-
-		httpResponse, err := a.client.callAPI(req)
-		if err != nil || httpResponse == nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		responseBody, err := io.ReadAll(httpResponse.Body)
-		_ = httpResponse.Body.Close()
-		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
-		if err != nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		if httpResponse.StatusCode >= http.StatusMultipleChoices {
-			err := a.client.handleAPIError(httpResponse, responseBody, requestBody, operationName, r.storeId)
-			if err != nil && i < retryParams.MaxRetry {
-				timeToWait := time.Duration(0)
-				var fgaApiRateLimitExceededError FgaApiRateLimitExceededError
-				var fgaApiInternalError FgaApiInternalError
-				switch {
-				case errors.As(err, &fgaApiRateLimitExceededError):
-					timeToWait = err.(FgaApiRateLimitExceededError).GetTimeToWait(i, *retryParams)
-				case errors.As(err, &fgaApiInternalError):
-					timeToWait = err.(FgaApiInternalError).GetTimeToWait(i, *retryParams)
-				}
-
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-
-			return returnValue, httpResponse, err
-		}
-
-		err = a.client.decode(&returnValue, responseBody, httpResponse.Header.Get("Content-Type"))
-		if err != nil {
-			newErr := GenericOpenAPIError{
-				body:  responseBody,
-				error: err.Error(),
-			}
-			return returnValue, httpResponse, newErr
-		}
-
-		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
-
-		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
-			operationName,
-			map[string]interface{}{
-				"storeId": r.storeId,
-				"body":    requestBody,
-			},
-			req,
-			httpResponse,
-			requestStarted,
-			i,
-		)
-
-		if requestDuration > 0 {
-			_, _ = metrics.RequestDuration(requestDuration, attrs)
-		}
-
-		if queryDuration > 0 {
-			_, _ = metrics.QueryDuration(queryDuration, attrs)
-		}
-
-		return returnValue, httpResponse, nil
-	}
-
-	// should never have reached this
-	return returnValue, nil, reportError("Error not handled properly")
+	return returnValue, nil, err
 }
 
 type ApiWriteRequest struct {
@@ -4473,154 +2602,28 @@ func (a *OpenFgaApiService) Write(ctx context.Context, storeId string) ApiWriteR
  * @return map[string]interface{}
  */
 func (a *OpenFgaApiService) WriteExecute(r ApiWriteRequest) (map[string]interface{}, *http.Response, error) {
-	const (
-		operationName = "Write"
-		httpMethod    = http.MethodPost
-	)
-	var (
-		requestStarted = time.Now()
-		requestBody    interface{}
-		returnValue    map[string]interface{}
-	)
-
-	path := "/stores/{store_id}/write"
-	if r.storeId == "" {
-		return returnValue, nil, reportError("storeId is required and must be specified")
+	var returnValue map[string]interface{}
+	if err := validatePathParameter("storeId", r.storeId); err != nil {
+		return returnValue, nil, err
+	}
+	if err := validateParameter("body", r.body); err != nil {
+		return returnValue, nil, err
 	}
 
-	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
+	executor := a.client.GetAPIExecutor()
 
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	if r.body == nil {
-		return returnValue, nil, reportError("body is required and must be specified")
+	request := NewAPIExecutorRequestBuilder("Write", http.MethodPost, "/stores/{store_id}/write").
+		WithPathParameter("store_id", r.storeId).
+		WithBody(r.body).
+		WithHeaders(r.options.Headers).
+		Build()
+	response, err := executor.ExecuteWithDecode(r.ctx, request, &returnValue)
+
+	if response != nil {
+		return returnValue, response.HTTPResponse, err
 	}
 
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{"application/json"}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
-	}
-
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-	// body params
-	requestBody = r.body
-
-	// if any override headers were in the options, set them now
-	for header, val := range r.options.Headers {
-		localVarHeaderParams[header] = val
-	}
-
-	retryParams := a.client.cfg.RetryParams
-	for i := 0; i < retryParams.MaxRetry+1; i++ {
-		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-		if err != nil {
-			return returnValue, nil, err
-		}
-
-		httpResponse, err := a.client.callAPI(req)
-		if err != nil || httpResponse == nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		responseBody, err := io.ReadAll(httpResponse.Body)
-		_ = httpResponse.Body.Close()
-		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
-		if err != nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		if httpResponse.StatusCode >= http.StatusMultipleChoices {
-			err := a.client.handleAPIError(httpResponse, responseBody, requestBody, operationName, r.storeId)
-			if err != nil && i < retryParams.MaxRetry {
-				timeToWait := time.Duration(0)
-				var fgaApiRateLimitExceededError FgaApiRateLimitExceededError
-				var fgaApiInternalError FgaApiInternalError
-				switch {
-				case errors.As(err, &fgaApiRateLimitExceededError):
-					timeToWait = err.(FgaApiRateLimitExceededError).GetTimeToWait(i, *retryParams)
-				case errors.As(err, &fgaApiInternalError):
-					timeToWait = err.(FgaApiInternalError).GetTimeToWait(i, *retryParams)
-				}
-
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-
-			return returnValue, httpResponse, err
-		}
-
-		err = a.client.decode(&returnValue, responseBody, httpResponse.Header.Get("Content-Type"))
-		if err != nil {
-			newErr := GenericOpenAPIError{
-				body:  responseBody,
-				error: err.Error(),
-			}
-			return returnValue, httpResponse, newErr
-		}
-
-		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
-
-		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
-			operationName,
-			map[string]interface{}{
-				"storeId": r.storeId,
-				"body":    requestBody,
-			},
-			req,
-			httpResponse,
-			requestStarted,
-			i,
-		)
-
-		if requestDuration > 0 {
-			_, _ = metrics.RequestDuration(requestDuration, attrs)
-		}
-
-		if queryDuration > 0 {
-			_, _ = metrics.QueryDuration(queryDuration, attrs)
-		}
-
-		return returnValue, httpResponse, nil
-	}
-
-	// should never have reached this
-	return returnValue, nil, reportError("Error not handled properly")
+	return returnValue, nil, err
 }
 
 type ApiWriteAssertionsRequest struct {
@@ -4667,149 +2670,31 @@ func (a *OpenFgaApiService) WriteAssertions(ctx context.Context, storeId string,
  * Execute executes the request
  */
 func (a *OpenFgaApiService) WriteAssertionsExecute(r ApiWriteAssertionsRequest) (*http.Response, error) {
-	const (
-		operationName = "WriteAssertions"
-		httpMethod    = http.MethodPut
-	)
-	var (
-		requestStarted = time.Now()
-		requestBody    interface{}
-	)
-
-	path := "/stores/{store_id}/assertions/{authorization_model_id}"
-	if r.storeId == "" {
-		return nil, reportError("storeId is required and must be specified")
+	if err := validatePathParameter("storeId", r.storeId); err != nil {
+		return nil, err
+	}
+	if err := validatePathParameter("authorizationModelId", r.authorizationModelId); err != nil {
+		return nil, err
+	}
+	if err := validateParameter("body", r.body); err != nil {
+		return nil, err
 	}
 
-	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
-	if r.authorizationModelId == "" {
-		return nil, reportError("authorizationModelId is required and must be specified")
+	executor := a.client.GetAPIExecutor()
+
+	request := NewAPIExecutorRequestBuilder("WriteAssertions", http.MethodPut, "/stores/{store_id}/assertions/{authorization_model_id}").
+		WithPathParameter("store_id", r.storeId).
+		WithPathParameter("authorization_model_id", r.authorizationModelId).
+		WithBody(r.body).
+		WithHeaders(r.options.Headers).
+		Build()
+	response, err := executor.Execute(r.ctx, request)
+
+	if response != nil {
+		return response.HTTPResponse, err
 	}
 
-	path = strings.ReplaceAll(path, "{"+"authorization_model_id"+"}", url.PathEscape(parameterToString(r.authorizationModelId, "")))
-
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	if r.body == nil {
-		return nil, reportError("body is required and must be specified")
-	}
-
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{"application/json"}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
-	}
-
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-	// body params
-	requestBody = r.body
-
-	// if any override headers were in the options, set them now
-	for header, val := range r.options.Headers {
-		localVarHeaderParams[header] = val
-	}
-
-	retryParams := a.client.cfg.RetryParams
-	for i := 0; i < retryParams.MaxRetry+1; i++ {
-		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-		if err != nil {
-			return nil, err
-		}
-
-		httpResponse, err := a.client.callAPI(req)
-		if err != nil || httpResponse == nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return httpResponse, err
-		}
-
-		responseBody, err := io.ReadAll(httpResponse.Body)
-		_ = httpResponse.Body.Close()
-		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
-		if err != nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return httpResponse, err
-		}
-
-		if httpResponse.StatusCode >= http.StatusMultipleChoices {
-			err := a.client.handleAPIError(httpResponse, responseBody, requestBody, operationName, r.storeId)
-			if err != nil && i < retryParams.MaxRetry {
-				timeToWait := time.Duration(0)
-				var fgaApiRateLimitExceededError FgaApiRateLimitExceededError
-				var fgaApiInternalError FgaApiInternalError
-				switch {
-				case errors.As(err, &fgaApiRateLimitExceededError):
-					timeToWait = err.(FgaApiRateLimitExceededError).GetTimeToWait(i, *retryParams)
-				case errors.As(err, &fgaApiInternalError):
-					timeToWait = err.(FgaApiInternalError).GetTimeToWait(i, *retryParams)
-				}
-
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-
-			return httpResponse, err
-		}
-
-		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
-
-		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
-			operationName,
-			map[string]interface{}{
-				"storeId": r.storeId,
-				"body":    requestBody,
-			},
-			req,
-			httpResponse,
-			requestStarted,
-			i,
-		)
-
-		if requestDuration > 0 {
-			_, _ = metrics.RequestDuration(requestDuration, attrs)
-		}
-
-		if queryDuration > 0 {
-			_, _ = metrics.QueryDuration(queryDuration, attrs)
-		}
-
-		return httpResponse, nil
-	}
-
-	// should never have reached this
-	return nil, reportError("Error not handled properly")
+	return nil, err
 }
 
 type ApiWriteAuthorizationModelRequest struct {
@@ -4899,152 +2784,26 @@ func (a *OpenFgaApiService) WriteAuthorizationModel(ctx context.Context, storeId
  * @return WriteAuthorizationModelResponse
  */
 func (a *OpenFgaApiService) WriteAuthorizationModelExecute(r ApiWriteAuthorizationModelRequest) (WriteAuthorizationModelResponse, *http.Response, error) {
-	const (
-		operationName = "WriteAuthorizationModel"
-		httpMethod    = http.MethodPost
-	)
-	var (
-		requestStarted = time.Now()
-		requestBody    interface{}
-		returnValue    WriteAuthorizationModelResponse
-	)
-
-	path := "/stores/{store_id}/authorization-models"
-	if r.storeId == "" {
-		return returnValue, nil, reportError("storeId is required and must be specified")
+	var returnValue WriteAuthorizationModelResponse
+	if err := validatePathParameter("storeId", r.storeId); err != nil {
+		return returnValue, nil, err
+	}
+	if err := validateParameter("body", r.body); err != nil {
+		return returnValue, nil, err
 	}
 
-	path = strings.ReplaceAll(path, "{"+"store_id"+"}", url.PathEscape(parameterToString(r.storeId, "")))
+	executor := a.client.GetAPIExecutor()
 
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	if r.body == nil {
-		return returnValue, nil, reportError("body is required and must be specified")
+	request := NewAPIExecutorRequestBuilder("WriteAuthorizationModel", http.MethodPost, "/stores/{store_id}/authorization-models").
+		WithPathParameter("store_id", r.storeId).
+		WithBody(r.body).
+		WithHeaders(r.options.Headers).
+		Build()
+	response, err := executor.ExecuteWithDecode(r.ctx, request, &returnValue)
+
+	if response != nil {
+		return returnValue, response.HTTPResponse, err
 	}
 
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{"application/json"}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
-	}
-
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-	// body params
-	requestBody = r.body
-
-	// if any override headers were in the options, set them now
-	for header, val := range r.options.Headers {
-		localVarHeaderParams[header] = val
-	}
-
-	retryParams := a.client.cfg.RetryParams
-	for i := 0; i < retryParams.MaxRetry+1; i++ {
-		req, err := a.client.prepareRequest(r.ctx, path, httpMethod, requestBody, localVarHeaderParams, localVarQueryParams)
-		if err != nil {
-			return returnValue, nil, err
-		}
-
-		httpResponse, err := a.client.callAPI(req)
-		if err != nil || httpResponse == nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, http.Header{}, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to network error (error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		responseBody, err := io.ReadAll(httpResponse.Body)
-		_ = httpResponse.Body.Close()
-		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
-		if err != nil {
-			if i < retryParams.MaxRetry {
-				timeToWait := retryutils.GetTimeToWait(i, retryParams.MaxRetry, retryParams.MinWaitInMs, httpResponse.Header, operationName)
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to error parsing response body (err=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-			return returnValue, httpResponse, err
-		}
-
-		if httpResponse.StatusCode >= http.StatusMultipleChoices {
-			err := a.client.handleAPIError(httpResponse, responseBody, requestBody, operationName, r.storeId)
-			if err != nil && i < retryParams.MaxRetry {
-				timeToWait := time.Duration(0)
-				var fgaApiRateLimitExceededError FgaApiRateLimitExceededError
-				var fgaApiInternalError FgaApiInternalError
-				switch {
-				case errors.As(err, &fgaApiRateLimitExceededError):
-					timeToWait = err.(FgaApiRateLimitExceededError).GetTimeToWait(i, *retryParams)
-				case errors.As(err, &fgaApiInternalError):
-					timeToWait = err.(FgaApiInternalError).GetTimeToWait(i, *retryParams)
-				}
-
-				if timeToWait > 0 {
-					if a.client.cfg.Debug {
-						log.Printf("\nWaiting %v to retry %v (%v %v) due to api retryable error (status code %v, error=%v) on attempt %v. Request body: %v\n", timeToWait, operationName, req.Method, req.URL, httpResponse.StatusCode, err, i, requestBody)
-					}
-					time.Sleep(timeToWait)
-					continue
-				}
-			}
-
-			return returnValue, httpResponse, err
-		}
-
-		err = a.client.decode(&returnValue, responseBody, httpResponse.Header.Get("Content-Type"))
-		if err != nil {
-			newErr := GenericOpenAPIError{
-				body:  responseBody,
-				error: err.Error(),
-			}
-			return returnValue, httpResponse, newErr
-		}
-
-		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: a.client.cfg.Telemetry})
-
-		var attrs, queryDuration, requestDuration, _ = metrics.BuildTelemetryAttributes(
-			operationName,
-			map[string]interface{}{
-				"storeId": r.storeId,
-				"body":    requestBody,
-			},
-			req,
-			httpResponse,
-			requestStarted,
-			i,
-		)
-
-		if requestDuration > 0 {
-			_, _ = metrics.RequestDuration(requestDuration, attrs)
-		}
-
-		if queryDuration > 0 {
-			_, _ = metrics.QueryDuration(queryDuration, attrs)
-		}
-
-		return returnValue, httpResponse, nil
-	}
-
-	// should never have reached this
-	return returnValue, nil, reportError("Error not handled properly")
+	return returnValue, nil, err
 }
