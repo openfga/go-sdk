@@ -4,7 +4,7 @@
 package main
 
 func main() {
-    // Example temporarily disabled - streamedListObjects is not publicly accessible
+	// Example temporarily disabled - streamedListObjects is not publicly accessible
 }
 
 /*
