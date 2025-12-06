@@ -56,7 +56,7 @@ func TestClientStreamedListObjects_Success(t *testing.T) {
 
 	ctx := context.Background()
 
-	response, err := client.StreamedListObjects(ctx).
+	response, err := client.streamedListObjects(ctx).
 		Body(ClientStreamedListObjectsRequest{
 			Type:     "document",
 			Relation: "viewer",
@@ -115,7 +115,7 @@ func TestClientStreamedListObjects_WithOptions(t *testing.T) {
 	ctx := context.Background()
 	consistency := openfga.CONSISTENCYPREFERENCE_HIGHER_CONSISTENCY
 
-	response, err := client.StreamedListObjects(ctx).
+	response, err := client.streamedListObjects(ctx).
 		Body(ClientStreamedListObjectsRequest{
 			Type:     "document",
 			Relation: "viewer",
@@ -162,7 +162,7 @@ func TestClientStreamedListObjects_ErrorHandling(t *testing.T) {
 
 	ctx := context.Background()
 
-	_, err = client.StreamedListObjects(ctx).
+	_, err = client.streamedListObjects(ctx).
 		Body(ClientStreamedListObjectsRequest{
 			Type:     "document",
 			Relation: "viewer",
@@ -187,7 +187,7 @@ func TestClientStreamedListObjects_NoStoreId(t *testing.T) {
 
 	ctx := context.Background()
 
-	_, err = client.StreamedListObjects(ctx).
+	_, err = client.streamedListObjects(ctx).
 		Body(ClientStreamedListObjectsRequest{
 			Type:     "document",
 			Relation: "viewer",
@@ -230,7 +230,7 @@ func TestClientStreamedListObjects_CustomBufferSize(t *testing.T) {
 	ctx := context.Background()
 	customBufferSize := 50
 
-	response, err := client.StreamedListObjects(ctx).
+	response, err := client.streamedListObjects(ctx).
 		Body(ClientStreamedListObjectsRequest{
 			Type:     "document",
 			Relation: "viewer",
@@ -297,7 +297,7 @@ func TestClientStreamedListObjects_DefaultBufferSize(t *testing.T) {
 	ctx := context.Background()
 	zeroBufferSize := 0
 
-	response, err := client.StreamedListObjects(ctx).
+	response, err := client.streamedListObjects(ctx).
 		Body(ClientStreamedListObjectsRequest{
 			Type:     "document",
 			Relation: "viewer",
