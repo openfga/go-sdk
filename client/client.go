@@ -3,6 +3,7 @@ package client
 import (
 	_context "context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	_nethttp "net/http"
@@ -1773,18 +1774,14 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 	if request.GetBody() != nil {
 		for i := 0; i < len(request.GetBody().Writes); i += writeChunkSize {
 			end := int(math.Min(float64(i+writeChunkSize), float64(len(request.GetBody().Writes))))
-
 			writeChunks = append(writeChunks, (request.GetBody().Writes)[i:end])
 		}
 	}
 
-	writeGroup, ctx := errgroup.WithContext(request.GetContext())
-
-	writeGroup.SetLimit(int(maxParallelReqs))
-	writeResponses := make([]ClientWriteResponse, len(writeChunks))
-	for index, writeBody := range writeChunks {
-		index, writeBody := index, writeBody
-		writeGroup.Go(func() error {
+	writePool := pool.NewWithResults[*ClientWriteResponse]().WithContext(request.GetContext()).WithMaxGoroutines(int(maxParallelReqs))
+	for _, writeBody := range writeChunks {
+		writeBody := writeBody
+		writePool.Go(func(ctx _context.Context) (*ClientWriteResponse, error) {
 			singleResponse, err := client.WriteExecute(&SdkClientWriteRequest{
 				ctx:    ctx,
 				Client: client,
@@ -1798,19 +1795,16 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 					Conflict:             options.Conflict,
 				},
 			})
-
-			if _, ok := err.(fgaSdk.FgaApiAuthenticationError); ok {
-				return err
+			var authErr fgaSdk.FgaApiAuthenticationError
+			// If an error was returned then it will be an authentication error so we want to return
+			if errors.As(err, &authErr) {
+				return nil, err
 			}
 
-			writeResponses[index] = *singleResponse
-
-			return nil
+			return singleResponse, nil
 		})
 	}
-
-	err = writeGroup.Wait()
-	// If an error was returned then it will be an authentication error so we want to return
+	writeResponses, err := writePool.Wait()
 	if err != nil {
 		return &response, err
 	}
@@ -1825,12 +1819,10 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 		}
 	}
 
-	deleteGroup, ctx := errgroup.WithContext(request.GetContext())
-	deleteGroup.SetLimit(int(maxParallelReqs))
-	deleteResponses := make([]ClientWriteResponse, len(deleteChunks))
-	for index, deleteBody := range deleteChunks {
-		index, deleteBody := index, deleteBody
-		deleteGroup.Go(func() error {
+	deletePool := pool.NewWithResults[*ClientWriteResponse]().WithContext(request.GetContext()).WithMaxGoroutines(int(maxParallelReqs))
+	for _, deleteBody := range deleteChunks {
+		deleteBody := deleteBody
+		deletePool.Go(func(ctx _context.Context) (*ClientWriteResponse, error) {
 			singleResponse, err := client.WriteExecute(&SdkClientWriteRequest{
 				ctx:    ctx,
 				Client: client,
@@ -1845,19 +1837,17 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 				},
 			})
 
-			if _, ok := err.(fgaSdk.FgaApiAuthenticationError); ok {
-				return err
+			var authErr fgaSdk.FgaApiAuthenticationError
+			if errors.As(err, &authErr) {
+				return nil, err
 			}
-
-			deleteResponses[index] = *singleResponse
-
-			return nil
+			return singleResponse, nil
 		})
 	}
 
-	err = deleteGroup.Wait()
+	deleteResponses, err := deletePool.Wait()
+	// If an error was returned then it will be an authentication error so we want to return
 	if err != nil {
-		// If an error was returned then it will be an authentication error so we want to return
 		return &response, err
 	}
 
