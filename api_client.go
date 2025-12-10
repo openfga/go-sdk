@@ -188,11 +188,17 @@ func (c *APIClient) callAPI(request *http.Request) (*http.Response, error) {
 	}
 
 	if c.cfg.Debug {
-		dump, err := httputil.DumpResponse(resp, true)
+		// for debugging, don't dump the body for streaming resp. as it would buffer the entire response
+		// only dump headers
+		isStreamingResponse := resp.Header.Get("Content-Type") == "application/x-ndjson"
+		dump, err := httputil.DumpResponse(resp, !isStreamingResponse)
 		if err != nil {
 			return resp, err
 		}
 		log.Printf("\n%s\n", string(dump))
+		if isStreamingResponse {
+			log.Printf("Streaming response body - not dumped to preserve streaming\n")
+		}
 	}
 
 	if resp.Request == nil {

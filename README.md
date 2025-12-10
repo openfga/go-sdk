@@ -911,7 +911,6 @@ data, err := fgaClient.ListObjects(context.Background()).
 
 // data.Objects = ["document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"]
 ```
-
 #### List Relations
 
 List the relations a user has on an object.
@@ -1101,6 +1100,7 @@ Class | Method | HTTP request | Description
 *OpenFgaApi* | [**ReadAuthorizationModel**](docs/OpenFgaApi.md#readauthorizationmodel) | **Get** /stores/{store_id}/authorization-models/{id} | Return a particular version of an authorization model
 *OpenFgaApi* | [**ReadAuthorizationModels**](docs/OpenFgaApi.md#readauthorizationmodels) | **Get** /stores/{store_id}/authorization-models | Return all the authorization models for a particular store
 *OpenFgaApi* | [**ReadChanges**](docs/OpenFgaApi.md#readchanges) | **Get** /stores/{store_id}/changes | Return a list of all the tuple changes
+*OpenFgaApi* | [**StreamedListObjects**](docs/OpenFgaApi.md#streamedlistobjects) | **Post** /stores/{store_id}/streamed-list-objects | Stream all objects of the given type that the user has a relation with
 *OpenFgaApi* | [**Write**](docs/OpenFgaApi.md#write) | **Post** /stores/{store_id}/write | Add or delete tuples from the store
 *OpenFgaApi* | [**WriteAssertions**](docs/OpenFgaApi.md#writeassertions) | **Put** /stores/{store_id}/assertions/{authorization_model_id} | Upsert assertions for an authorization model ID
 *OpenFgaApi* | [**WriteAuthorizationModel**](docs/OpenFgaApi.md#writeauthorizationmodel) | **Post** /stores/{store_id}/authorization-models | Create a new authorization model
@@ -1166,6 +1166,8 @@ Class | Method | HTTP request | Description
  - [SourceInfo](docs/SourceInfo.md)
  - [Status](docs/Status.md)
  - [Store](docs/Store.md)
+ - [StreamResultOfStreamedListObjectsResponse](docs/StreamResultOfStreamedListObjectsResponse.md)
+ - [StreamedListObjectsResponse](docs/StreamedListObjectsResponse.md)
  - [Tuple](docs/Tuple.md)
  - [TupleChange](docs/TupleChange.md)
  - [TupleKey](docs/TupleKey.md)
