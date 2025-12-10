@@ -74,6 +74,12 @@ func (m *Metrics) PrepareAttributes(metric MetricInterface, attrs map[*Attribute
 		}
 
 		allowed = config.METRIC_HISTOGRAM_QUERY_DURATION
+	case METRIC_HISTOGRAM_HTTP_REQUEST_DURATION:
+		if config.METRIC_HISTOGRAM_HTTP_REQUEST_DURATION == nil {
+			return *attribute.EmptySet(), nil
+		}
+
+		allowed = config.METRIC_HISTOGRAM_HTTP_REQUEST_DURATION
 	}
 
 	if allowed == nil {

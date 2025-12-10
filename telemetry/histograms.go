@@ -1,8 +1,9 @@
 package telemetry
 
 const (
-	METRIC_HISTOGRAM_REQUEST_DURATION string = "fga-client.request.duration"
-	METRIC_HISTOGRAM_QUERY_DURATION   string = "fga-client.query.duration"
+	METRIC_HISTOGRAM_REQUEST_DURATION      string = "fga-client.request.duration"
+	METRIC_HISTOGRAM_QUERY_DURATION        string = "fga-client.query.duration"
+	METRIC_HISTOGRAM_HTTP_REQUEST_DURATION string = "fga-client.http_request.duration"
 )
 
 var (
@@ -16,5 +17,11 @@ var (
 		Name:        METRIC_HISTOGRAM_QUERY_DURATION,
 		Unit:        "milliseconds",
 		Description: "The total time it took (in milliseconds) for the FGA server to process and evaluate the request.",
+	}
+
+	HttpRequestDuration = &Histogram{
+		Name:        METRIC_HISTOGRAM_HTTP_REQUEST_DURATION,
+		Unit:        "milliseconds",
+		Description: "The time (in milliseconds) for a single HTTP request to complete.",
 	}
 )

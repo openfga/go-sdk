@@ -178,7 +178,25 @@ func (c *APIClient) callAPI(request *http.Request) (*http.Response, error) {
 		log.Printf("\n%s\n", string(dump))
 	}
 
+	// Track HTTP request duration
+	httpRequestStarted := time.Now()
 	resp, err := c.cfg.HTTPClient.Do(request)
+	httpRequestDuration := time.Since(httpRequestStarted).Seconds() * 1000
+
+	// Emit HTTP request duration metric
+	if resp != nil {
+		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: c.cfg.Telemetry})
+		httpRequestAttrs := map[*telemetry.Attribute]string{
+			telemetry.HTTPHost:               request.URL.Host,
+			telemetry.HTTPRequestMethod:      request.Method,
+			telemetry.URLFull:                request.URL.String(),
+			telemetry.URLScheme:              request.URL.Scheme,
+			telemetry.UserAgent:              request.UserAgent(),
+			telemetry.HTTPResponseStatusCode: fmt.Sprintf("%d", resp.StatusCode),
+		}
+		_, _ = metrics.HttpRequestDuration(httpRequestDuration, httpRequestAttrs)
+	}
+
 	if err != nil {
 		if resp != nil && resp.Request == nil {
 			resp.Request = request
