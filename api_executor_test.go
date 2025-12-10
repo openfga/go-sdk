@@ -975,7 +975,7 @@ func TestAPIExecutorResponse_Fields(t *testing.T) {
 		assert.Equal(t, httpResp.Header, resp.Headers)
 		// Note: Header comparison validates that all headers are preserved
 		assert.Contains(t, resp.Headers["Content-Type"], "application/json")
-		assert.Contains(t, resp.Headers["X-Request-ID"], "req-123")
+		assert.Contains(t, resp.Headers["X-Request-Id"], "req-123")
 	})
 
 	t.Run("access_body_directly", func(t *testing.T) {
