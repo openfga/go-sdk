@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 
 	openfga "github.com/openfga/go-sdk"
@@ -58,7 +60,8 @@ func mainInner() error {
 	fmt.Printf("Test Store ID: %v\n", store.Id)
 
 	// Set the store id
-	fgaClient.SetStoreId(store.Id)
+	storeID := store.Id
+	fgaClient.SetStoreId(storeID)
 
 	// ListStores after Create
 	fmt.Println("Listing Stores")
@@ -240,31 +243,27 @@ func mainInner() error {
 		Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 	}).Execute()
 	if err != nil {
-		fmt.Printf("Failed due to: %w\n", err.Error())
+		fmt.Printf("Failed due to: %s\n", err.Error())
 	} else {
 		fmt.Printf("Allowed: %v\n", failingCheckResponse.Allowed)
 	}
 
 	// Checking for access with context
 	fmt.Println("Checking for access with context")
-	checkResponse, err := fgaClient.Check(ctx).Body(client.ClientCheckRequest{
+	checkRequestWithContext := client.ClientCheckRequest{
 		User:     "user:anne",
 		Relation: "viewer",
 		Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 		Context:  &map[string]interface{}{"ViewCount": 100},
-	}).Execute()
+	}
+	checkResponse, err := fgaClient.Check(ctx).Body(checkRequestWithContext).Execute()
 	if err != nil {
 		return err
 	}
 	fmt.Printf("Allowed: %v\n", checkResponse.Allowed)
 
 	fmt.Println("Checking for access with custom headers")
-	checkWithHeadersResponse, err := fgaClient.Check(ctx).Body(client.ClientCheckRequest{
-		User:     "user:anne",
-		Relation: "viewer",
-		Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-		Context:  &map[string]interface{}{"ViewCount": 100},
-	}).Options(client.ClientCheckOptions{
+	checkWithHeadersResponse, err := fgaClient.Check(ctx).Body(checkRequestWithContext).Options(client.ClientCheckOptions{
 		RequestOptions: client.RequestOptions{
 			Headers: map[string]string{
 				"X-Request-ID": "example-request-123",
@@ -275,6 +274,39 @@ func mainInner() error {
 		return err
 	}
 	fmt.Printf("Allowed (with custom headers): %v\n", checkWithHeadersResponse.Allowed)
+
+	// Checking for access using the API executor
+	fmt.Println("Checking for access using the API executor")
+
+	// Get the API executor
+	executor := fgaClient.GetAPIExecutor()
+
+	customRequest := openfga.NewAPIExecutorRequestBuilder("Check", http.MethodPost, "/stores/{store_id}/check").
+		WithPathParameter("store_id", storeID).
+		WithBody(checkRequestWithContext).
+		WithHeader("X-Experimental-Feature", "enabled").
+		Build()
+
+	// custom executor + decoded response
+	var checkResponseCustomExecutorWithDecode openfga.CheckResponse
+	_, err = executor.ExecuteWithDecode(ctx, customRequest, &checkResponseCustomExecutorWithDecode)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Allowed (with custom executor + decode): %v\n", checkResponseCustomExecutorWithDecode.Allowed)
+
+	// custom executor + raw response
+	checkResponseCustomExecutorWithRawResponse, err := executor.Execute(ctx, customRequest)
+	if err != nil {
+		return err
+	}
+
+	var checkRawResponse openfga.CheckResponse
+	if err := json.Unmarshal(checkResponseCustomExecutorWithRawResponse.Body, &checkRawResponse); err != nil {
+		fmt.Printf("Failed to decode response: %v", err)
+	} else {
+		fmt.Printf("Allowed (with custom executor with raw response): %v\n", checkRawResponse.Allowed)
+	}
 
 	// BatchCheck
 	fmt.Println("Batch checking for access")
