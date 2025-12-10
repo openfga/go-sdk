@@ -961,7 +961,7 @@ func TestAPIExecutorResponse_Fields(t *testing.T) {
 			StatusCode: 201,
 			Header: http.Header{
 				"Content-Type":   []string{"application/json"},
-				"X-Request-ID":   []string{"req-123"},
+				"X-Request-Id":   []string{"req-123"},
 				"Content-Length": []string{"100"},
 			},
 		}
