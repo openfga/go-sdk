@@ -1,4344 +1,4471 @@
 package client_test
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"sync"
-	"testing"
-	"time"
+    "context"
+    "encoding/json"
+    "fmt"
+    "net/http"
+    "strings"
+    "sync"
+    "testing"
+    "time"
 
-	"github.com/jarcoal/httpmock"
+    "github.com/jarcoal/httpmock"
 
-	openfga "github.com/openfga/go-sdk"
-	. "github.com/openfga/go-sdk/client"
+    openfga "github.com/openfga/go-sdk"
+    . "github.com/openfga/go-sdk/client"
 )
 
 type TestDefinition struct {
-	Name           string
-	JsonResponse   string
-	ResponseStatus int
-	Method         string
-	RequestPath    string
+    Name           string
+    JsonResponse   string
+    ResponseStatus int
+    Method         string
+    RequestPath    string
 }
 
 func TestOpenFgaClient(t *testing.T) {
-	fgaClient, err := NewSdkClient(&ClientConfiguration{
-		ApiUrl:  "https://api.fga.example",
-		StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
-	})
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
-
-	t.Run("Allow client to have no store ID specified", func(t *testing.T) {
-		_, err := NewSdkClient(&ClientConfiguration{
-			ApiHost: "api.fga.example",
-		})
-		if err != nil {
-			t.Fatalf("Expect no error when store id is not specified but got %v", err)
-		}
-	})
-
-	t.Run("Allow client to have ApiUrl specified", func(t *testing.T) {
-		_, err := NewSdkClient(&ClientConfiguration{
-			ApiUrl: "https://api.fga.example",
-		})
-		if err != nil {
-			t.Fatalf("Expect no error when api url is specified but got %v", err)
-		}
-	})
-
-	t.Run("Ensure that ApiUrl is well formed", func(t *testing.T) {
-		urls := []string{
-			"api.fga.example",
-			"https//api.fga.example",
-			"https://api.fga.example:notavalidport",
-			"https://https://api.fga.example",
-			"notavalidscheme://api.fga.example",
-		}
-		for _, uri := range urls {
-			_, err := NewSdkClient(&ClientConfiguration{
-				ApiUrl: uri,
-			})
-			if err == nil {
-				t.Fatalf("Expected an error for invalid uri (%s) but got nil", uri)
-			}
-
-			expectedErrorString := fmt.Sprintf("Configuration.ApiUrl (%s) does not form a valid uri", uri)
-			if err.Error() != expectedErrorString {
-				t.Fatalf("Expected error (%s) but got (%s)", expectedErrorString, err.Error())
-			}
-		}
-	})
-
-	t.Run("Allow client to have empty store ID specified", func(t *testing.T) {
-		_, err := NewSdkClient(&ClientConfiguration{
-			ApiHost: "api.fga.example",
-			StoreId: "",
-		})
-		if err != nil {
-			t.Fatalf("Expect no error when store id is empty but has %v", err)
-		}
-	})
-
-	t.Run("Validate store ID when specified", func(t *testing.T) {
-		_, err := NewSdkClient(&ClientConfiguration{
-			ApiHost: "api.fga.example",
-			StoreId: "error",
-		})
-		if err == nil {
-			t.Fatalf("Expect invalid store ID to result in error but there is none")
-		}
-	})
-
-	t.Run("Validate auth model ID when specified", func(t *testing.T) {
-		_, err := NewSdkClient(&ClientConfiguration{
-			ApiHost:              "api.fga.example",
-			StoreId:              "01GXSB9YR785C4FYS3C0RTG7B2",
-			AuthorizationModelId: "BadAuthID",
-		})
-		if err == nil {
-			t.Fatalf("Expect invalid auth mode ID to result in error but there is none")
-		}
-	})
-
-	t.Run("Allow auth model ID to be empty when specified", func(t *testing.T) {
-		_, err := NewSdkClient(&ClientConfiguration{
-			ApiHost:              "api.fga.example",
-			StoreId:              "01GXSB9YR785C4FYS3C0RTG7B2",
-			AuthorizationModelId: "",
-		})
-		if err != nil {
-			t.Fatalf("Expect no error when auth model id is empty but has %v", err)
-		}
-	})
-
-	t.Run("Allow specifying an ApiUrl with a port and a base path", func(t *testing.T) {
-		_, err := NewSdkClient(&ClientConfiguration{
-			ApiUrl:  "https://api.fga.example:8080/fga",
-			StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
-		})
-		if err != nil {
-			t.Fatalf("Expect no error when auth model id is empty but has %v", err)
-		}
-
-		test := TestDefinition{
-			Name:           "ListStores",
-			JsonResponse:   `{"stores":[]}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodGet,
-		}
-
-		var expectedResponse openfga.ListStoresResponse
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores", fgaClient.GetConfig().ApiUrl),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		got, err := fgaClient.ListStores(context.Background()).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-		if len(got.Stores) != 0 {
-			t.Fatalf("expected stores of length 0, got %v", len(got.Stores))
-		}
-	})
-
-	/* Stores */
-	t.Run("ListStores", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "ListStores",
-			JsonResponse:   `{"stores":[{"id":"01GXSA8YR785C4FYS3C0RTG7B1","name":"Test Store","created_at":"2023-01-01T23:23:23.000000000Z","updated_at":"2023-01-01T23:23:23.000000000Z"}]}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodGet,
-		}
-
-		var expectedResponse openfga.ListStoresResponse
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores", fgaClient.GetConfig().ApiUrl),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		options := ClientListStoresOptions{
-			PageSize:          openfga.PtrInt32(10),
-			ContinuationToken: openfga.PtrString("..."),
-		}
-		got, err := fgaClient.ListStores(context.Background()).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		if len(got.Stores) != 1 {
-			t.Fatalf("%v", err)
-		}
-
-		if got.Stores[0].Id != expectedResponse.Stores[0].Id {
-			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, got.Stores[0].Id, expectedResponse.Stores[0].Id)
-		}
-		// ListStores without options should work
-		_, err = fgaClient.ListStores(context.Background()).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("ListStoresWithNameFilter", func(t *testing.T) {
-		filteredStoreName := "Filtered Store"
-		test := TestDefinition{
-			Name:           "ListStoresWithNameFilter",
-			JsonResponse:   fmt.Sprintf(`{"stores":[{"id":"01GXSA8YR785C4FYS3C0RTG7B1","name":"%s","created_at":"2023-01-01T23:23:23.000000000Z","updated_at":"2023-01-01T23:23:23.000000000Z"}]}`, filteredStoreName),
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodGet,
-		}
-
-		var expectedResponse openfga.ListStoresResponse
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores", fgaClient.GetConfig().ApiUrl),
-			func(req *http.Request) (*http.Response, error) {
-				// Verify that the name parameter is included in the query
-				if req.URL.Query().Get("name") != filteredStoreName {
-					t.Fatalf("expected name parameter to be '%s', got %s", filteredStoreName, req.URL.Query().Get("name"))
-				}
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		options := ClientListStoresOptions{
-			Name: openfga.PtrString(filteredStoreName),
-		}
-		got, err := fgaClient.ListStores(context.Background()).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		if len(got.Stores) != 1 {
-			t.Fatalf("expected stores of length 1, got %v", len(got.Stores))
-		}
-
-		if got.Stores[0].Name != filteredStoreName {
-			t.Fatalf("expected store name to be '%s', got %s", filteredStoreName, got.Stores[0].Name)
-		}
-	})
-
-	t.Run("CreateStore", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "CreateStore",
-			JsonResponse:   `{"id":"01GXSA8YR785C4FYS3C0RTG7B1","name":"Test Store","created_at":"2023-01-01T23:23:23.000000000Z","updated_at":"2023-01-01T23:23:23.000000000Z"}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-		}
-		requestBody := ClientCreateStoreRequest{
-			Name: "Test Store",
-		}
-
-		var expectedResponse openfga.CreateStoreResponse
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores", fgaClient.GetConfig().ApiUrl),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		got, err := fgaClient.CreateStore(context.Background()).Body(requestBody).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		_, err = got.MarshalJSON()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-		if got.Name != expectedResponse.Name {
-			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, got.Name, expectedResponse.Name)
-		}
-		// CreateStore without options should work
-		_, err = fgaClient.CreateStore(context.Background()).Body(requestBody).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("GetStore", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "GetStore",
-			JsonResponse:   `{"id":"01GXSA8YR785C4FYS3C0RTG7B1","name":"Test Store","created_at":"2023-01-01T23:23:23.000000000Z","updated_at":"2023-01-01T23:23:23.000000000Z"}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodGet,
-		}
-
-		var expectedResponse openfga.GetStoreResponse
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient)),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		got, err := fgaClient.GetStore(context.Background()).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		if got.Id != expectedResponse.Id {
-			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, got.Id, expectedResponse.Id)
-		}
-		// GetStore without options should work
-		_, err = fgaClient.GetStore(context.Background()).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		// invalid store id should result in error
-		badStoreOptions := ClientGetStoreOptions{
-			StoreId: openfga.PtrString("INVALID"),
-		}
-		_, err = fgaClient.GetStore(context.Background()).Options(badStoreOptions).Execute()
-		if err == nil {
-			t.Fatalf("Expect error with bad store id but there is none")
-		}
-
-		// store can be overridden
-		storeOverrideOptions := ClientGetStoreOptions{
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
-		}
-		httpmock.Reset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		_, err = fgaClient.GetStore(context.Background()).Options(storeOverrideOptions).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-	})
-
-	t.Run("GetStoreAfterSettingStoreId", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "GetStoreAfterSettingStoreId",
-			JsonResponse:   `{"id":"01GXSA8YR785C4FYS3C0RTG7B1","name":"Test Store","created_at":"2023-01-01T23:23:23.000000000Z","updated_at":"2023-01-01T23:23:23.000000000Z"}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-		}
-
-		requestBody := ClientCreateStoreRequest{
-			Name: "Test Store",
-		}
-
-		var expectedResponse openfga.CreateStoreResponse
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores", fgaClient.GetConfig().ApiUrl),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		got1, err1 := fgaClient.CreateStore(context.Background()).Body(requestBody).Execute()
-		if err1 != nil {
-			t.Fatalf("%v", err1)
-		}
-
-		_, err = got1.MarshalJSON()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-		if got1.Name != expectedResponse.Name {
-			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, got1.Name, expectedResponse.Name)
-		}
-
-		storeId := got1.Id
-		if err := fgaClient.SetStoreId(storeId); err != nil {
-			_ = err
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(http.MethodGet, fmt.Sprintf("%s/stores/%s", fgaClient.GetConfig().ApiUrl, storeId),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		got2, err2 := fgaClient.GetStore(context.Background()).Execute()
-		if err2 != nil {
-			t.Fatalf("%v", err2)
-		}
-
-		if got2.Id != storeId {
-			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, got2.Id, storeId)
-		}
-	})
-
-	t.Run("DeleteStore", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "DeleteStore",
-			JsonResponse:   ``,
-			ResponseStatus: http.StatusNoContent,
-			Method:         http.MethodDelete,
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient)),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, "{}")
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		_, err := fgaClient.DeleteStore(context.Background()).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-		// DeleteStore without options should work
-		_, err = fgaClient.DeleteStore(context.Background()).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		// invalid store id should result in error
-		badStoreOptions := ClientDeleteStoreOptions{
-			StoreId: openfga.PtrString("INVALID"),
-		}
-		_, err = fgaClient.DeleteStore(context.Background()).Options(badStoreOptions).Execute()
-		if err == nil {
-			t.Fatalf("Expect error with bad store id but there is none")
-		}
-
-		// store can be overridden
-		storeOverrideOptions := ClientDeleteStoreOptions{
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
-		}
-		httpmock.Reset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, "{}")
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		_, err = fgaClient.DeleteStore(context.Background()).Options(storeOverrideOptions).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	/* Authorization Models */
-	t.Run("ReadAuthorizationModels", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "ReadAuthorizationModels",
-			JsonResponse:   `{"authorization_models":[{"id":"01GXSA8YR785C4FYS3C0RTG7B1","schema_version":"1.1","type_definitions":[]}]}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodGet,
-			RequestPath:    "authorization-models",
-		}
-
-		var expectedResponse openfga.ReadAuthorizationModelsResponse
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		options := ClientReadAuthorizationModelsOptions{
-			PageSize:          openfga.PtrInt32(10),
-			ContinuationToken: openfga.PtrString("..."),
-		}
-		got, err := fgaClient.ReadAuthorizationModels(context.Background()).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		if len(got.AuthorizationModels) != 1 {
-			t.Fatalf("%v", err)
-		}
-
-		if got.AuthorizationModels[0].Id != expectedResponse.AuthorizationModels[0].Id {
-			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, got.AuthorizationModels[0].Id, expectedResponse.AuthorizationModels[0].Id)
-		}
-		// ReadAuthorizationModels without options should work
-		_, err = fgaClient.ReadAuthorizationModels(context.Background()).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		// invalid store id should result in error
-		badStoreOptions := ClientReadAuthorizationModelsOptions{
-			StoreId: openfga.PtrString("INVALID"),
-		}
-		_, err = fgaClient.ReadAuthorizationModels(context.Background()).Options(badStoreOptions).Execute()
-		if err == nil {
-			t.Fatalf("Expect error with bad store id but there is none")
-		}
-
-		// store can be overridden
-		storeOverrideOptions := ClientReadAuthorizationModelsOptions{
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
-		}
-		httpmock.Reset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		_, err = fgaClient.ReadAuthorizationModels(context.Background()).Options(storeOverrideOptions).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("WriteAuthorizationModel", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "WriteAuthorizationModel",
-			JsonResponse:   `{"authorization_model_id":"01GXSA8YR785C4FYS3C0RTG7B1"}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-			RequestPath:    "authorization-models",
-		}
-		requestBody := ClientWriteAuthorizationModelRequest{
-			SchemaVersion: "1.1",
-			TypeDefinitions: []openfga.TypeDefinition{
-				{Type: "user", Relations: &map[string]openfga.Userset{}},
-				{
-					Type: "document",
-					Relations: &map[string]openfga.Userset{
-						"writer": {
-							This: &map[string]interface{}{},
-						},
-						"viewer": {Union: &openfga.Usersets{
-							Child: []openfga.Userset{
-								{This: &map[string]interface{}{}},
-								{ComputedUserset: &openfga.ObjectRelation{
-									Object:   openfga.PtrString(""),
-									Relation: openfga.PtrString("writer"),
-								}},
-							},
-						}},
-					},
-					Metadata: &openfga.Metadata{
-						Relations: &map[string]openfga.RelationMetadata{
-							"writer": {
-								DirectlyRelatedUserTypes: &[]openfga.RelationReference{
-									{Type: "user"},
-								},
-							},
-							"viewer": {
-								DirectlyRelatedUserTypes: &[]openfga.RelationReference{
-									{Type: "user"},
-								},
-							},
-						},
-					},
-				}},
-		}
-
-		var expectedResponse openfga.WriteAuthorizationModelResponse
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		options := ClientWriteAuthorizationModelOptions{}
-		got, err := fgaClient.WriteAuthorizationModel(context.Background()).Body(requestBody).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		_, err = got.MarshalJSON()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		if got.GetAuthorizationModelId() != expectedResponse.GetAuthorizationModelId() {
-			t.Fatalf("OpenFgaClient.%v() / AuthorizationModelId = %v, want %v", test.Name, got.GetAuthorizationModelId(), expectedResponse.GetAuthorizationModelId())
-		}
-
-		// WriteAuthorizationModel without options should work
-		_, err = fgaClient.WriteAuthorizationModel(context.Background()).Body(requestBody).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		// invalid store id should result in error
-		badStoreOptions := ClientWriteAuthorizationModelOptions{
-			StoreId: openfga.PtrString("INVALID"),
-		}
-		_, err = fgaClient.WriteAuthorizationModel(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
-		if err == nil {
-			t.Fatalf("%v", err)
-		}
-
-		// store can be overridden
-		storeOverrideOptions := ClientWriteAuthorizationModelOptions{
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
-		}
-		httpmock.Reset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		_, err = fgaClient.WriteAuthorizationModel(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("WriteAuthorizationModelWithCondition", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "WriteAuthorizationModelWithCondition",
-			JsonResponse:   `{"authorization_model_id":"01GXSA8YR785C4FYS3C0RTG7B1"}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-			RequestPath:    "authorization-models",
-		}
-		requestBody := ClientWriteAuthorizationModelRequest{
-			SchemaVersion: "1.1",
-			TypeDefinitions: []openfga.TypeDefinition{
-				{
-					Type:      "user",
-					Relations: &map[string]openfga.Userset{},
-				},
-				{
-					Type: "document",
-					Relations: &map[string]openfga.Userset{
-						"writer": {This: &map[string]interface{}{}},
-						"viewer": {Union: &openfga.Usersets{
-							Child: []openfga.Userset{
-								{This: &map[string]interface{}{}},
-								{ComputedUserset: &openfga.ObjectRelation{
-									Object:   openfga.PtrString(""),
-									Relation: openfga.PtrString("writer"),
-								}},
-							},
-						}},
-					},
-					Metadata: &openfga.Metadata{
-						Relations: &map[string]openfga.RelationMetadata{
-							"writer": {
-								DirectlyRelatedUserTypes: &[]openfga.RelationReference{
-									{Type: "user"},
-									{Type: "user", Condition: openfga.PtrString("ViewCountLessThan200")},
-								},
-							},
-							"viewer": {
-								DirectlyRelatedUserTypes: &[]openfga.RelationReference{
-									{Type: "user"},
-								},
-							},
-						},
-					},
-				},
-			},
-			Conditions: &map[string]openfga.Condition{
-				"ViewCountLessThan200": {
-					Name:       "ViewCountLessThan200",
-					Expression: "ViewCount < 200",
-					Parameters: &map[string]openfga.ConditionParamTypeRef{
-						"ViewCount": {
-							TypeName: openfga.TYPENAME_INT,
-						},
-						"Type": {
-							TypeName: openfga.TYPENAME_STRING,
-						},
-						"Name": {
-							TypeName: openfga.TYPENAME_STRING,
-						},
-					},
-				},
-			},
-		}
-
-		var expectedResponse openfga.WriteAuthorizationModelResponse
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterMatcherResponder(
-			test.Method,
-			fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			httpmock.BodyContainsString(`"ViewCountLessThan200"`),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		options := ClientWriteAuthorizationModelOptions{}
-		got, err := fgaClient.WriteAuthorizationModel(context.Background()).Body(requestBody).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		_, err = got.MarshalJSON()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		if got.GetAuthorizationModelId() != expectedResponse.GetAuthorizationModelId() {
-			t.Fatalf("OpenFgaClient.%v() / AuthorizationModelId = %v, want %v", test.Name, got.GetAuthorizationModelId(), expectedResponse.GetAuthorizationModelId())
-		}
-
-		// WriteAuthorizationModel without options should work
-		_, err = fgaClient.WriteAuthorizationModel(context.Background()).Body(requestBody).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("WriteAuthorizationModelWithCondition2", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "WriteAuthorizationModelWithCondition2",
-			JsonResponse:   `{"authorization_model_id":"01GXSA8YR785C4FYS3C0RTG7B1"}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-			RequestPath:    "authorization-models",
-		}
-
-		schemaVersion := "1.1"
-		typeDefs := []openfga.TypeDefinition{
-			{
-				Type:      "user",
-				Relations: &map[string]openfga.Userset{},
-			},
-			{
-				Type: "document",
-				Relations: &map[string]openfga.Userset{
-					"writer": {This: &map[string]interface{}{}},
-					"viewer": {Union: &openfga.Usersets{
-						Child: []openfga.Userset{
-							{This: &map[string]interface{}{}},
-							{ComputedUserset: &openfga.ObjectRelation{
-								Object:   openfga.PtrString(""),
-								Relation: openfga.PtrString("writer"),
-							}},
-						},
-					}},
-				},
-				Metadata: &openfga.Metadata{
-					Relations: &map[string]openfga.RelationMetadata{
-						"writer": {
-							DirectlyRelatedUserTypes: &[]openfga.RelationReference{
-								{Type: "user"},
-								{Type: "user", Condition: openfga.PtrString("ViewCountLessThan200")},
-							},
-						},
-						"viewer": {
-							DirectlyRelatedUserTypes: &[]openfga.RelationReference{
-								{Type: "user"},
-							},
-						},
-					},
-				},
-			},
-		}
-		conditions := map[string]openfga.Condition{
-			"ViewCountLessThan200": {
-				Name:       "ViewCountLessThan200",
-				Expression: "ViewCount < 200",
-				Parameters: &map[string]openfga.ConditionParamTypeRef{
-					"ViewCount": {
-						TypeName: openfga.TYPENAME_INT,
-					},
-					"Type": {
-						TypeName: openfga.TYPENAME_STRING,
-					},
-					"Name": {
-						TypeName: openfga.TYPENAME_STRING,
-					},
-				},
-			},
-		}
-		requestBody := ClientWriteAuthorizationModelRequest{
-			SchemaVersion:   schemaVersion,
-			TypeDefinitions: typeDefs,
-			Conditions:      &conditions,
-		}
-
-		var expectedResponse openfga.WriteAuthorizationModelResponse
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterMatcherResponder(
-			test.Method,
-			fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			httpmock.BodyContainsString(`"ViewCountLessThan200"`),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		options := ClientWriteAuthorizationModelOptions{}
-		got, err := fgaClient.WriteAuthorizationModel(context.Background()).Body(requestBody).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		_, err = got.MarshalJSON()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		if got.GetAuthorizationModelId() != expectedResponse.GetAuthorizationModelId() {
-			t.Fatalf("OpenFgaClient.%v() / AuthorizationModelId = %v, want %v", test.Name, got.GetAuthorizationModelId(), expectedResponse.GetAuthorizationModelId())
-		}
-
-		// WriteAuthorizationModel without options should work
-		_, err = fgaClient.WriteAuthorizationModel(context.Background()).Body(requestBody).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("ReadAuthorizationModel", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "ReadAuthorizationModel",
-			JsonResponse:   `{"authorization_model":{"id":"01GXSA8YR785C4FYS3C0RTG7B1","schema_version":"1.1","type_definitions":[{"type":"github-repo", "relations":{"viewer":{"this":{}}}}]}}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodGet,
-			RequestPath:    "authorization-models",
-		}
-
-		var expectedResponse openfga.ReadAuthorizationModelResponse
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-		modelId := expectedResponse.AuthorizationModel.Id
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath, modelId),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		options := ClientReadAuthorizationModelOptions{
-			AuthorizationModelId: openfga.PtrString(modelId),
-		}
-		got, err := fgaClient.ReadAuthorizationModel(context.Background()).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		responseJson, err := got.MarshalJSON()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		if got.AuthorizationModel.Id != modelId {
-			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
-		}
-		// ReadAuthorizationModel without options should not work
-		_, err = fgaClient.ReadAuthorizationModel(context.Background()).Execute()
-		expectedError := "Required parameter AuthorizationModelId was not provided"
-		if err == nil || err.Error() != expectedError {
-			t.Fatalf("Expected error:%v, got: %v", expectedError, err)
-		}
-		// ReadAuthorizationModel with options of empty string should not work
-		badOptions := ClientReadAuthorizationModelOptions{
-			AuthorizationModelId: openfga.PtrString(""),
-		}
-		_, err = fgaClient.ReadAuthorizationModel(context.Background()).Options(badOptions).Execute()
-		if err == nil || err.Error() != expectedError {
-			t.Fatalf("Expected error:%v, got: %v", expectedError, err)
-		}
-
-		// invalid store id should result in error
-		badStoreOptions := ClientReadAuthorizationModelOptions{
-			StoreId: openfga.PtrString("INVALID"),
-		}
-		_, err = fgaClient.ReadAuthorizationModel(context.Background()).Options(badStoreOptions).Execute()
-		if err == nil {
-			t.Fatalf("Expect error with bad store id but there is none")
-		}
-
-		// store can be overridden
-		storeOverrideOptions := ClientReadAuthorizationModelOptions{
-			AuthorizationModelId: openfga.PtrString(modelId),
-			StoreId:              openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
-		}
-		httpmock.Reset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath, modelId),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		_, err = fgaClient.ReadAuthorizationModel(context.Background()).Options(storeOverrideOptions).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("ReadLatestAuthorizationModel", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "ReadAuthorizationModels",
-			JsonResponse:   `{"authorization_models":[{"id":"01GXSA8YR785C4FYS3C0RTG7B1","schema_version":"1.1","type_definitions":[{"type":"github-repo", "relations":{"viewer":{"this":{}}}}]}]}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodGet,
-			RequestPath:    "authorization-models",
-		}
-
-		var expectedResponse openfga.ReadAuthorizationModelsResponse
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-		modelId := expectedResponse.AuthorizationModels[0].Id
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		options := ClientReadLatestAuthorizationModelOptions{}
-		got, err := fgaClient.ReadLatestAuthorizationModel(context.Background()).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		responseJson, err := got.MarshalJSON()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		if got.AuthorizationModel.GetId() != modelId {
-			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
-		}
-		// ReadLatestAuthorizationModel without options should work
-		_, err = fgaClient.ReadLatestAuthorizationModel(context.Background()).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		// invalid store id should result in error
-		badStoreOptions := ClientReadLatestAuthorizationModelOptions{
-			StoreId: openfga.PtrString("INVALID"),
-		}
-		_, err = fgaClient.ReadLatestAuthorizationModel(context.Background()).Options(badStoreOptions).Execute()
-		if err == nil {
-			t.Fatalf("Expect error with bad store id but there is none")
-		}
-
-		// store can be overridden
-		storeOverrideOptions := ClientReadLatestAuthorizationModelOptions{
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
-		}
-		httpmock.Reset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		_, err = fgaClient.ReadLatestAuthorizationModel(context.Background()).Options(storeOverrideOptions).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	/* Relationship Tuples */
-	t.Run("ReadChanges", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "ReadChanges",
-			JsonResponse:   `{"changes":[{"tuple_key":{"user":"user:81684243-9356-4421-8fbf-a4f8d36aa31b","relation":"viewer","object":"document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"},"operation":"TUPLE_OPERATION_WRITE","timestamp": "2000-01-01T00:00:00Z"}],"continuation_token":"eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodGet,
-			RequestPath:    "changes",
-		}
-
-		var expectedResponse openfga.ReadChangesResponse
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		startTime, err := time.Parse(time.RFC3339, "2022-01-01T00:00:00Z")
-		if err != nil {
-			t.Fatalf("Failed to parse startTime: %v", err)
-		}
-		body := ClientReadChangesRequest{
-			Type:      "document",
-			StartTime: startTime,
-		}
-		options := ClientReadChangesOptions{ContinuationToken: openfga.PtrString("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="), PageSize: openfga.PtrInt32(25)}
-		got, err := fgaClient.ReadChanges(context.Background()).Body(body).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		responseJson, err := got.MarshalJSON()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		if len(got.Changes) != len(expectedResponse.Changes) {
-			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
-		}
-		// ReadChanges without options should work
-		_, err = fgaClient.ReadChanges(context.Background()).Body(body).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		// invalid store id should result in error
-		badStoreOptions := ClientReadChangesOptions{
-			StoreId: openfga.PtrString("INVALID"),
-		}
-		_, err = fgaClient.ReadChanges(context.Background()).Body(body).Options(badStoreOptions).Execute()
-		if err == nil {
-			t.Fatalf("Expect error with bad store id but there is none")
-		}
-
-		// store can be overridden
-		storeOverrideOptions := ClientReadChangesOptions{
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
-		}
-		httpmock.Reset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		_, err = fgaClient.ReadChanges(context.Background()).Body(body).Options(storeOverrideOptions).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("Read", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "Read",
-			JsonResponse:   `{"tuples":[{"key":{"user":"user:81684243-9356-4421-8fbf-a4f8d36aa31b","relation":"viewer","object":"document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"},"timestamp": "2000-01-01T00:00:00Z"}]}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-			RequestPath:    "read",
-		}
-
-		requestBody := ClientReadRequest{
-			User:     openfga.PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-			Relation: openfga.PtrString("viewer"),
-			Object:   openfga.PtrString("document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"),
-		}
-
-		var expectedResponse openfga.ReadResponse
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		options := ClientReadOptions{
-			PageSize:          openfga.PtrInt32(10),
-			ContinuationToken: openfga.PtrString("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="),
-		}
-		got, err := fgaClient.Read(context.Background()).Body(requestBody).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		responseJson, err := got.MarshalJSON()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		if len(got.Tuples) != len(expectedResponse.Tuples) {
-			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
-		}
-		// Read without options should work
-		_, err = fgaClient.Read(context.Background()).Body(requestBody).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		// invalid store id should result in error
-		badStoreOptions := ClientReadOptions{
-			StoreId: openfga.PtrString("INVALID"),
-		}
-		_, err = fgaClient.Read(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
-		if err == nil {
-			t.Fatalf("Expect error with bad store id but there is none")
-		}
-
-		// store can be overridden
-		storeOverrideOptions := ClientReadOptions{
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
-		}
-		httpmock.Reset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		_, err = fgaClient.Read(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("ReadWithConsistency", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "Read",
-			JsonResponse:   `{"tuples":[{"key":{"user":"user:81684243-9356-4421-8fbf-a4f8d36aa31b","relation":"viewer","object":"document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"},"timestamp": "2000-01-01T00:00:00Z"}]}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-			RequestPath:    "read",
-		}
-
-		requestBody := ClientReadRequest{
-			User:     openfga.PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
-			Relation: openfga.PtrString("viewer"),
-			Object:   openfga.PtrString("document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"),
-		}
-
-		var expectedResponse openfga.ReadResponse
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			httpmock.BodyContainsString(`"consistency":"MINIMIZE_LATENCY"`),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		options := ClientReadOptions{
-			PageSize:          openfga.PtrInt32(10),
-			ContinuationToken: openfga.PtrString("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="),
-			Consistency:       openfga.CONSISTENCYPREFERENCE_MINIMIZE_LATENCY.Ptr(),
-		}
-		_, err := fgaClient.Read(context.Background()).Body(requestBody).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("Write", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "Write",
-			JsonResponse:   `{}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-			RequestPath:    "write",
-		}
-		requestBody := ClientWriteRequest{
-			Writes: []ClientTupleKey{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "viewer",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			}},
-			Deletes: []ClientTupleKeyWithoutCondition{},
-		}
-		options := ClientWriteOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
-		}
-
-		var expectedResponse map[string]interface{}
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		data, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		if len(data.Writes) != 1 {
-			t.Fatalf("OpenFgaClient.%v() - expected %v Writes, got %v", test.Name, 1, len(data.Writes))
-		}
-
-		if len(data.Deletes) != 0 {
-			t.Fatalf("OpenFgaClient.%v() - expected %v Deletes, got %v", test.Name, 0, len(data.Deletes))
-		}
-
-		for index := 0; index < len(data.Writes); index++ {
-			response := data.Writes[index]
-			if response.Error != nil {
-				t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
-			}
-			if response.HttpResponse.StatusCode != test.ResponseStatus {
-				t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
-			}
-
-			_, err := response.MarshalJSON()
-			if err != nil {
-				t.Fatalf("%v", err)
-			}
-		}
-
-		for index := 0; index < len(data.Deletes); index++ {
-			response := data.Deletes[index]
-			if response.Error != nil {
-				t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
-			}
-			if response.HttpResponse.StatusCode != test.ResponseStatus {
-				t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
-			}
-
-			_, err := response.MarshalJSON()
-			if err != nil {
-				t.Fatalf("%v", err)
-			}
-		}
-		// Write without options should work
-		_, err = fgaClient.Write(context.Background()).Body(requestBody).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		// store ID can be overridden
-		storeOverrideOptions := ClientWriteOptions{
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
-		}
-		httpmock.Reset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		_, err = fgaClient.Write(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("Write with invalid auth model id", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "Write",
-			JsonResponse:   `{}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-			RequestPath:    "write",
-		}
-		requestBody := ClientWriteRequest{
-			Writes: []ClientTupleKey{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "viewer",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			}},
-		}
-		options := ClientWriteOptions{
-			AuthorizationModelId: openfga.PtrString("INVALID"),
-		}
-
-		var expectedResponse map[string]interface{}
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		_, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
-		if err == nil {
-			t.Fatalf("Expect error due to invalid auth model ID but there is none")
-		}
-	})
-
-	t.Run("Write with invalid store id", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "Write",
-			JsonResponse:   `{}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-			RequestPath:    "write",
-		}
-		requestBody := ClientWriteRequest{
-			Writes: []ClientTupleKey{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "viewer",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			}},
-		}
-		options := ClientWriteOptions{
-			StoreId: openfga.PtrString("INVALID"),
-		}
-
-		var expectedResponse map[string]interface{}
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		_, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
-		if err == nil {
-			t.Fatalf("Expect error due to invalid store ID but there is none")
-		}
-	})
-
-	t.Run("WriteNonTransaction", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "Write",
-			JsonResponse:   `{}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-			RequestPath:    "write",
-		}
-		requestBody := ClientWriteRequest{
-			Writes: []ClientTupleKey{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "viewer",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			}, {
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "viewer",
-				Object:   "document:budget",
-			}},
-			Deletes: []ClientTupleKeyWithoutCondition{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "viewer",
-				Object:   "document:planning",
-			}},
-		}
-		const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
-		options := ClientWriteOptions{
-			AuthorizationModelId: openfga.PtrString(authModelId),
-			Transaction: &TransactionOptions{
-				Disable:             true,
-				MaxParallelRequests: 5,
-				MaxPerChunk:         1,
-			},
-		}
-
-		var expectedResponse map[string]interface{}
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		data, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		if len(data.Writes) != 2 {
-			t.Fatalf("OpenFgaClient.%v() - expected %v Writes, got %v", test.Name, 2, len(data.Writes))
-		}
-
-		if len(data.Deletes) != 1 {
-			t.Fatalf("OpenFgaClient.%v() - expected %v Deletes, got %v", test.Name, 1, len(data.Deletes))
-		}
-
-		for index := 0; index < len(data.Writes); index++ {
-			response := data.Writes[index]
-			if response.Error != nil {
-				t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
-			}
-			if response.HttpResponse.StatusCode != test.ResponseStatus {
-				t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
-			}
-
-			_, err := response.MarshalJSON()
-			if err != nil {
-				t.Fatalf("%v", err)
-			}
-		}
-
-		for index := 0; index < len(data.Deletes); index++ {
-			response := data.Deletes[index]
-			if response.Error != nil {
-				t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
-			}
-			if response.HttpResponse.StatusCode != test.ResponseStatus {
-				t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
-			}
-
-			_, err := response.MarshalJSON()
-			if err != nil {
-				t.Fatalf("%v", err)
-			}
-		}
-
-		// store can be overridden
-		storeOverrideOptions := ClientWriteOptions{
-			AuthorizationModelId: openfga.PtrString(authModelId),
-			Transaction: &TransactionOptions{
-				Disable:             true,
-				MaxParallelRequests: 5,
-				MaxPerChunk:         1,
-			},
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
-		}
-		httpmock.Reset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		data, err = fgaClient.Write(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
-		if err != nil {
-			t.Fatalf("%v", data)
-		}
-
-		for index := 0; index < len(data.Writes); index++ {
-			response := data.Writes[index]
-			if response.Error != nil {
-				t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
-			}
-		}
-	})
-
-	t.Run("WriteNonTransaction only some options set", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "Write",
-			JsonResponse:   `{}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-			RequestPath:    "write",
-		}
-		requestBody := ClientWriteRequest{
-			Writes: []ClientTupleKey{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "viewer",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			}, {
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "viewer",
-				Object:   "document:budget",
-			}},
-			Deletes: []ClientTupleKeyWithoutCondition{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "viewer",
-				Object:   "document:planning",
-			}},
-		}
-		const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
-		options := ClientWriteOptions{
-			AuthorizationModelId: openfga.PtrString(authModelId),
-			Transaction: &TransactionOptions{
-				Disable:     true,
-				MaxPerChunk: 1,
-			},
-		}
-
-		var expectedResponse map[string]interface{}
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		data, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		if len(data.Writes) != 2 {
-			t.Fatalf("OpenFgaClient.%v() - expected %v Writes, got %v", test.Name, 2, len(data.Writes))
-		}
-
-		if len(data.Deletes) != 1 {
-			t.Fatalf("OpenFgaClient.%v() - expected %v Deletes, got %v", test.Name, 1, len(data.Deletes))
-		}
-
-		for index := 0; index < len(data.Writes); index++ {
-			response := data.Writes[index]
-			if response.Error != nil {
-				t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
-			}
-			if response.HttpResponse.StatusCode != test.ResponseStatus {
-				t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
-			}
-
-			_, err := response.MarshalJSON()
-			if err != nil {
-				t.Fatalf("%v", err)
-			}
-		}
-
-		for index := 0; index < len(data.Deletes); index++ {
-			response := data.Deletes[index]
-			if response.Error != nil {
-				t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
-			}
-			if response.HttpResponse.StatusCode != test.ResponseStatus {
-				t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
-			}
-
-			_, err := response.MarshalJSON()
-			if err != nil {
-				t.Fatalf("%v", err)
-			}
-		}
-
-		// store can be overridden
-		storeOverrideOptions := ClientWriteOptions{
-			AuthorizationModelId: openfga.PtrString(authModelId),
-			Transaction: &TransactionOptions{
-				Disable:             true,
-				MaxParallelRequests: 5,
-				MaxPerChunk:         1,
-			},
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
-		}
-		httpmock.Reset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		data, err = fgaClient.Write(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
-		if err != nil {
-			t.Fatalf("%v", data)
-		}
-
-		for index := 0; index < len(data.Writes); index++ {
-			response := data.Writes[index]
-			if response.Error != nil {
-				t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
-			}
-		}
-	})
-
-	t.Run("Write with invalid auth", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "Write",
-			JsonResponse:   `{}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-			RequestPath:    "write",
-		}
-		requestBody := ClientWriteRequest{
-			Writes: []ClientTupleKey{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "viewer",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			}},
-		}
-		options := ClientWriteOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				return httpmock.NewStringResponse(http.StatusUnauthorized, ""), nil
-			},
-		)
-		_, err = fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
-		if err == nil {
-			t.Fatalf("Expect error with invalid auth but there is none")
-		}
-
-		if _, ok := err.(openfga.FgaApiAuthenticationError); !ok {
-			t.Fatalf("Expected an api auth error")
-		}
-	})
-
-	t.Run("Write with invalid auth - transaction mode disabled", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "Write",
-			JsonResponse:   `{}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-			RequestPath:    "write",
-		}
-		requestBody := ClientWriteRequest{
-			Writes: []ClientTupleKey{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "viewer",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			}},
-		}
-		options := ClientWriteOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
-			Transaction: &TransactionOptions{
-				Disable:             true,
-				MaxPerChunk:         1,
-				MaxParallelRequests: 1,
-			},
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				return httpmock.NewStringResponse(http.StatusUnauthorized, ""), nil
-			},
-		)
-		_, err = fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
-		if err == nil {
-			t.Fatalf("Expect error with invalid auth but there is none")
-		}
-
-		if _, ok := err.(openfga.FgaApiAuthenticationError); !ok {
-			t.Fatalf("Expected an api auth error")
-		}
-
-		requestBody = ClientWriteRequest{
-			Deletes: []openfga.TupleKeyWithoutCondition{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "viewer",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			}},
-		}
-
-		// Now tests that deletes returns the error
-		_, err = fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
-		if err == nil {
-			t.Fatalf("Expect error with invalid auth but there is none")
-		}
-
-		if _, ok := err.(openfga.FgaApiAuthenticationError); !ok {
-			t.Fatalf("Expected an api auth error")
-		}
-	})
-
-	t.Run("Write with 400 error - transaction mode disabled", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "Write",
-			JsonResponse:   `{}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-			RequestPath:    "write",
-		}
-		requestBody := ClientWriteRequest{
-			Writes: []ClientTupleKey{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "viewer",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			}},
-		}
-		options := ClientWriteOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
-			Transaction: &TransactionOptions{
-				Disable:             true,
-				MaxPerChunk:         1,
-				MaxParallelRequests: 1,
-			},
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				return httpmock.NewStringResponse(http.StatusBadRequest, ""), nil
-			},
-		)
-		data, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("Expected no error")
-		}
-
-		if data.Writes[0].Error == nil {
-			t.Fatalf("Expected error to be in writes")
-		}
-
-		requestBody = ClientWriteRequest{
-			Deletes: []openfga.TupleKeyWithoutCondition{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "viewer",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			}},
-		}
-
-		// Now tests that deletes returns the error
-		data, err = fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("Expected no error")
-		}
-
-		if data.Deletes[0].Error == nil {
-			t.Fatalf("Expected error to be in deletes")
-		}
-	})
-
-	t.Run("WriteTuples", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "Write",
-			JsonResponse:   `{}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-			RequestPath:    "write",
-		}
-		requestBody := []ClientTupleKey{{
-			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-			Relation: "viewer",
-			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-		}}
-		options := ClientWriteOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
-		}
-
-		var expectedResponse map[string]interface{}
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		data, err := fgaClient.WriteTuples(context.Background()).Body(requestBody).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		if len(data.Writes) != 1 {
-			t.Fatalf("OpenFgaClient.%v() - expected %v Writes, got %v", test.Name, 1, len(data.Writes))
-		}
-
-		if len(data.Deletes) != 0 {
-			t.Fatalf("OpenFgaClient.%v() - expected %v Deletes, got %v", test.Name, 0, len(data.Deletes))
-		}
-
-		for index := 0; index < len(data.Writes); index++ {
-			response := data.Writes[index]
-			if response.Error != nil {
-				t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
-			}
-			if response.HttpResponse.StatusCode != test.ResponseStatus {
-				t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
-			}
-
-			_, err := response.MarshalJSON()
-			if err != nil {
-				t.Fatalf("%v", err)
-			}
-		}
-
-		for index := 0; index < len(data.Deletes); index++ {
-			response := data.Deletes[index]
-			if response.Error != nil {
-				t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
-			}
-			if response.HttpResponse.StatusCode != test.ResponseStatus {
-				t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
-			}
-
-			_, err := response.MarshalJSON()
-			if err != nil {
-				t.Fatalf("%v", err)
-			}
-		}
-		// WriteTuples without options should work
-		_, err = fgaClient.WriteTuples(context.Background()).Body(requestBody).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		// invalid store id should result in error
-		badStoreOptions := ClientWriteOptions{
-			StoreId: openfga.PtrString("INVALID"),
-		}
-		_, err = fgaClient.WriteTuples(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
-		if err == nil {
-			t.Fatalf("Expect error with bad store id but there is none")
-		}
-
-		// store can be overridden
-		storeOverrideOptions := ClientWriteOptions{
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
-		}
-		httpmock.Reset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		_, err = fgaClient.WriteTuples(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("DeleteTuples", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "Write",
-			JsonResponse:   `{}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-			RequestPath:    "write",
-		}
-
-		requestBody := []ClientTupleKeyWithoutCondition{{
-			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-			Relation: "viewer",
-			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-		}}
-		options := ClientWriteOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
-		}
-
-		var expectedResponse map[string]interface{}
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		data, err := fgaClient.DeleteTuples(context.Background()).Body(requestBody).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		if len(data.Writes) != 0 {
-			t.Fatalf("OpenFgaClient.%v() - expected no Writes, got %v", test.Name, len(data.Writes))
-		}
-
-		if len(data.Deletes) != 1 {
-			t.Fatalf("OpenFgaClient.%v() - expected no Deletes, got %v", test.Name, len(data.Deletes))
-		}
-
-		for index := 0; index < len(data.Writes); index++ {
-			response := data.Writes[index]
-			if response.Error != nil {
-				t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
-			}
-			if response.HttpResponse.StatusCode != test.ResponseStatus {
-				t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
-			}
-
-			_, err := response.MarshalJSON()
-			if err != nil {
-				t.Fatalf("%v", err)
-			}
-		}
-
-		for index := 0; index < len(data.Deletes); index++ {
-			response := data.Deletes[index]
-			if response.Error != nil {
-				t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
-			}
-			if response.HttpResponse.StatusCode != test.ResponseStatus {
-				t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
-			}
-
-			_, err := response.MarshalJSON()
-			if err != nil {
-				t.Fatalf("%v", err)
-			}
-		}
-		// DeleteTuples without options should work
-		_, err = fgaClient.DeleteTuples(context.Background()).Body(requestBody).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		// invalid store id should result in error
-		badStoreOptions := ClientWriteOptions{
-			StoreId: openfga.PtrString("INVALID"),
-		}
-		_, err = fgaClient.DeleteTuples(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
-		if err == nil {
-			t.Fatalf("Expect error with bad store id but there is none")
-		}
-
-		// store can be overridden
-		storeOverrideOptions := ClientWriteOptions{
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
-		}
-		httpmock.Reset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		_, err = fgaClient.DeleteTuples(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	/* Relationship Queries */
-	t.Run("Check", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "Check",
-			JsonResponse:   `{"allowed":true, "resolution":""}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-			RequestPath:    "check",
-		}
-		requestBody := ClientCheckRequest{
-			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-			Relation: "viewer",
-			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			ContextualTuples: []ClientContextualTupleKey{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "editor",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			}},
-		}
-
-		options := ClientCheckOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
-		}
-
-		var expectedResponse openfga.CheckResponse
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		got, err := fgaClient.Check(context.Background()).Body(requestBody).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		responseJson, err := got.MarshalJSON()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		if got.GetAllowed() != *expectedResponse.Allowed {
-			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
-		}
-		// Check without options should work
-		_, err = fgaClient.Check(context.Background()).Body(requestBody).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		// check with invalid auth model id should result in error
-		badOptions := ClientCheckOptions{
-			AuthorizationModelId: openfga.PtrString("INVALID"),
-		}
-		_, err = fgaClient.Check(context.Background()).Body(requestBody).Options(badOptions).Execute()
-		if err == nil {
-			t.Fatalf("Expect error with bad auth model id but there is none")
-		}
-		// invalid store id should result in error
-		badStoreOptions := ClientCheckOptions{
-			StoreId: openfga.PtrString("INVALID"),
-		}
-		_, err = fgaClient.Check(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
-		if err == nil {
-			t.Fatalf("Expect error with bad store id but there is none")
-		}
-
-		// store can be overridden
-		storeOverrideOptions := ClientCheckOptions{
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
-		}
-		httpmock.Reset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		_, err = fgaClient.Check(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-	})
-
-	t.Run("CheckWithConsistency", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "Check",
-			JsonResponse:   `{"allowed":true, "resolution":""}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-			RequestPath:    "check",
-		}
-		requestBody := ClientCheckRequest{
-			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-			Relation: "viewer",
-			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			ContextualTuples: []ClientContextualTupleKey{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "editor",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			}},
-		}
-
-		options := ClientCheckOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
-			Consistency:          openfga.CONSISTENCYPREFERENCE_HIGHER_CONSISTENCY.Ptr(),
-		}
-
-		var expectedResponse openfga.CheckResponse
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			httpmock.BodyContainsString(`"consistency":"HIGHER_CONSISTENCY"`),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		_, err := fgaClient.Check(context.Background()).Body(requestBody).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("ClientBatchCheck", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "Check",
-			JsonResponse:   `{"allowed":true, "resolution":""}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-			RequestPath:    "check",
-		}
-		requestBody := ClientBatchCheckClientBody{{
-			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-			Relation: "viewer",
-			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			ContextualTuples: []ClientContextualTupleKey{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "editor",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			}},
-		}, {
-			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-			Relation: "admin",
-			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			ContextualTuples: []ClientContextualTupleKey{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "editor",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			}},
-		}, {
-			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-			Relation: "creator",
-			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-		}, {
-			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-			Relation: "deleter",
-			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-		}}
-
-		const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
-
-		options := ClientBatchCheckClientOptions{
-			AuthorizationModelId: openfga.PtrString(authModelId),
-			MaxParallelRequests:  openfga.PtrInt32(5),
-		}
-
-		var expectedResponse openfga.CheckResponse
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		got, err := fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		if httpmock.GetTotalCallCount() != 4 {
-			t.Fatalf("OpenFgaClient.%v() - wanted %v calls to /check, got %v", test.Name, 4, httpmock.GetTotalCallCount())
-		}
-
-		if len(*got) != len(requestBody) {
-			t.Fatalf("OpenFgaClient.%v() - Response Length = %v, want %v", test.Name, len(*got), len(requestBody))
-		}
-
-		for index := 0; index < len(*got); index++ {
-			response := (*got)[index]
-			if response.Error != nil {
-				t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
-			}
-			if response.HttpResponse.StatusCode != test.ResponseStatus {
-				t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
-			}
-
-			responseJson, err := response.MarshalJSON()
-			if err != nil {
-				t.Fatalf("%v", err)
-			}
-
-			if *response.Allowed != *expectedResponse.Allowed {
-				t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
-			}
-		}
-		// ClientBatchCheck without options should work
-		_, err = fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.ZeroCallCounters()
-		// ClientBatchCheck with invalid auth model ID should fail
-		badOptions := ClientBatchCheckClientOptions{
-			AuthorizationModelId: openfga.PtrString("INVALID"),
-			MaxParallelRequests:  openfga.PtrInt32(5),
-		}
-		_, err = fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Options(badOptions).Execute()
-		if err == nil {
-			t.Fatalf("Expect error with invalid auth model id but there is none")
-		}
-		// invalid store ID should fail
-		badStoreOptions := ClientBatchCheckClientOptions{
-			StoreId:             openfga.PtrString("INVALID"),
-			MaxParallelRequests: openfga.PtrInt32(5),
-		}
-		_, err = fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
-		if err == nil {
-			t.Fatalf("Expect error with invalid auth model id but there is none")
-		}
-
-		if httpmock.GetTotalCallCount() != 0 {
-			t.Fatalf("Expected no calls to be made")
-		}
-
-		httpmock.ZeroCallCounters()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				return httpmock.NewStringResponse(http.StatusUnauthorized, ""), nil
-			},
-		)
-		// ClientBatchCheck with invalid auth should fail
-		_, err = fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Options(options).Execute()
-		if err == nil {
-			t.Fatalf("Expect error with invalid auth but there is none")
-		}
-
-		// store should be overridden
-		storeOverrideOptions := ClientBatchCheckClientOptions{
-			StoreId:             openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
-			MaxParallelRequests: openfga.PtrInt32(5),
-		}
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		_, err = fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("ClientBatchCheckWithConsistency", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "Check",
-			JsonResponse:   `{"allowed":true, "resolution":""}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-			RequestPath:    "check",
-		}
-		requestBody := ClientBatchCheckClientBody{{
-			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-			Relation: "viewer",
-			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			ContextualTuples: []ClientContextualTupleKey{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "editor",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			}},
-		}, {
-			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-			Relation: "admin",
-			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			ContextualTuples: []ClientContextualTupleKey{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "editor",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			}},
-		}, {
-			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-			Relation: "creator",
-			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-		}, {
-			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-			Relation: "deleter",
-			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-		}}
-
-		const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
-
-		options := ClientBatchCheckClientOptions{
-			AuthorizationModelId: openfga.PtrString(authModelId),
-			MaxParallelRequests:  openfga.PtrInt32(5),
-			Consistency:          openfga.CONSISTENCYPREFERENCE_HIGHER_CONSISTENCY.Ptr(),
-		}
-
-		var expectedResponse openfga.CheckResponse
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			httpmock.BodyContainsString(`"consistency":"HIGHER_CONSISTENCY"`),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		checks, err := fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		for _, check := range *checks {
-			if check.Error != nil {
-				t.Fatalf("a check failed %v", check.Error)
-			}
-		}
-	})
-
-	t.Run("BatchCheck", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "BatchCheck",
-			JsonResponse:   `{"result":{"test1":{"allowed":true},"test2":{"allowed":false}}}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-			RequestPath:    "batch-check",
-		}
-
-		requestBody := ClientBatchCheckRequest{
-			Checks: []ClientBatchCheckItem{
-				{
-					User:          "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-					Relation:      "viewer",
-					Object:        "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-					CorrelationId: "test1",
-					ContextualTuples: []ClientContextualTupleKey{
-						{
-							User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-							Relation: "editor",
-							Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-						},
-					},
-				},
-				{
-					User:          "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-					Relation:      "admin",
-					Object:        "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-					CorrelationId: "test2",
-				},
-			},
-		}
-
-		options := BatchCheckOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
-			MaxParallelRequests:  openfga.PtrInt32(5),
-			MaxBatchSize:         openfga.PtrInt32(10),
-		}
-
-		var expectedResponse openfga.BatchCheckResponse
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		ctxMain, cancelMain := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancelMain()
-		got, err := fgaClient.BatchCheck(ctxMain).Body(requestBody).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		if httpmock.GetTotalCallCount() != 1 {
-			t.Fatalf("OpenFgaClient.%v() - wanted %v call to /batch-check, got %v", test.Name, 1, httpmock.GetTotalCallCount())
-		}
-
-		if len(got.GetResult()) != len(requestBody.Checks) {
-			t.Fatalf("OpenFgaClient.%v() - Response Length = %v, want %v", test.Name, len(got.GetResult()), len(requestBody.Checks))
-		}
-
-		// BatchCheck without options should work
-		httpmock.ZeroCallCounters()
-		ctxNoOpts, cancelNoOpts := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancelNoOpts()
-		_, err = fgaClient.BatchCheck(ctxNoOpts).Body(requestBody).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.ZeroCallCounters()
-		// BatchCheck with invalid auth model ID should fail
-		badOptions := BatchCheckOptions{
-			AuthorizationModelId: openfga.PtrString("INVALID"),
-			MaxParallelRequests:  openfga.PtrInt32(5),
-		}
-		ctxBad, cancelBad := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancelBad()
-		_, err = fgaClient.BatchCheck(ctxBad).Body(requestBody).Options(badOptions).Execute()
-		if err == nil {
-			t.Fatalf("Expect error with invalid auth model id but there is none")
-		}
-
-		// Invalid store ID should fail
-		badStoreOptions := BatchCheckOptions{
-			StoreId:             openfga.PtrString("INVALID"),
-			MaxParallelRequests: openfga.PtrInt32(5),
-		}
-		ctxStore, cancelStore := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancelStore()
-		_, err = fgaClient.BatchCheck(ctxStore).Body(requestBody).Options(badStoreOptions).Execute()
-		if err == nil {
-			t.Fatalf("Expect error with invalid store id but there is none")
-		}
-
-		// Store should be overridden
-		storeOverrideOptions := BatchCheckOptions{
-			StoreId:             openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
-			MaxParallelRequests: openfga.PtrInt32(5),
-		}
-
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		ctxOverride, cancelOverride := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancelOverride()
-		_, err = fgaClient.BatchCheck(ctxOverride).Body(requestBody).Options(storeOverrideOptions).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("Expand", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "Expand",
-			JsonResponse:   `{"tree":{"root":{"name":"document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a#viewer","union":{"nodes":[{"name": "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a#viewer","leaf":{"users":{"users":["user:81684243-9356-4421-8fbf-a4f8d36aa31b"]}}}]}}}}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-			RequestPath:    "expand",
-		}
-
-		requestBody := ClientExpandRequest{
-			Relation: "viewer",
-			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-		}
-		options := ClientExpandOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
-		}
-
-		var expectedResponse openfga.ExpandResponse
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		got, err := fgaClient.Expand(context.Background()).Body(requestBody).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		_, err = got.MarshalJSON()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-		// Expand without options should work
-		_, err = fgaClient.Expand(context.Background()).Body(requestBody).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-		// Invalid auth model ID should result in error
-		badOptions := ClientExpandOptions{
-			AuthorizationModelId: openfga.PtrString("INVALID"),
-		}
-		_, err = fgaClient.Expand(context.Background()).Body(requestBody).Options(badOptions).Execute()
-		if err == nil {
-			t.Fatalf("Expect error for invalid auth model id but there is none")
-		}
-
-		// Invalid auth model ID should result in error
-		badStoreOptions := ClientExpandOptions{
-			StoreId: openfga.PtrString("INVALID"),
-		}
-		_, err = fgaClient.Expand(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
-		if err == nil {
-			t.Fatalf("Expect error for invalid auth model id but there is none")
-		}
-
-		// store can be overridden
-		storeOverrideOptions := ClientExpandOptions{
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
-		}
-		httpmock.Reset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		_, err = fgaClient.Expand(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("ExpandWithConsistency", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "Expand",
-			JsonResponse:   `{"tree":{"root":{"name":"document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a#viewer","union":{"nodes":[{"name": "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a#viewer","leaf":{"users":{"users":["user:81684243-9356-4421-8fbf-a4f8d36aa31b"]}}}]}}}}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-			RequestPath:    "expand",
-		}
-
-		requestBody := ClientExpandRequest{
-			Relation: "viewer",
-			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-		}
-		options := ClientExpandOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
-			Consistency:          openfga.CONSISTENCYPREFERENCE_MINIMIZE_LATENCY.Ptr(),
-		}
-
-		var expectedResponse openfga.ExpandResponse
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			httpmock.BodyContainsString(`"consistency":"MINIMIZE_LATENCY"`),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		_, err := fgaClient.Expand(context.Background()).Body(requestBody).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("ExpandWithContextualTuples", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "Expand",
-			JsonResponse:   `{"tree":{"root":{"name":"document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a#viewer","union":{"nodes":[{"name": "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a#viewer","leaf":{"users":{"users":["user:81684243-9356-4421-8fbf-a4f8d36aa31b"]}}}]}}}}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-			RequestPath:    "expand",
-		}
-
-		requestBody := ClientExpandRequest{
-			Relation: "viewer",
-			Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			ContextualTuples: []ClientContextualTupleKey{
-				{
-					User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-					Relation: "editor",
-					Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-				},
-			},
-		}
-		options := ClientExpandOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
-		}
-
-		var expectedResponse openfga.ExpandResponse
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			httpmock.BodyContainsString(`user:81684243-9356-4421-8fbf-a4f8d36aa31b`),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		got, err := fgaClient.Expand(context.Background()).Body(requestBody).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		_, err = got.MarshalJSON()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("ListObjects", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "ListObjects",
-			JsonResponse:   `{"objects":["document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"]}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-			RequestPath:    "list-objects",
-		}
-
-		requestBody := ClientListObjectsRequest{
-			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-			Relation: "can_read",
-			Type:     "document",
-			ContextualTuples: []ClientContextualTupleKey{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "editor",
-				Object:   "folder:product",
-			}, {
-				User:     "folder:product",
-				Relation: "parent",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			}},
-		}
-		options := ClientListObjectsOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
-		}
-
-		var expectedResponse openfga.ListObjectsResponse
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		got, err := fgaClient.ListObjects(context.Background()).
-			Body(requestBody).
-			Options(options).
-			Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		responseJson, err := got.MarshalJSON()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		if len(got.Objects) != len(expectedResponse.Objects) || (got.Objects)[0] != (expectedResponse.Objects)[0] {
-			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
-		}
-		// ListObjects without options should work
-		_, err = fgaClient.ListObjects(context.Background()).Body(requestBody).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		// Invalid auth model id should result in error
-		badOptions := ClientListObjectsOptions{
-			AuthorizationModelId: openfga.PtrString("INVALID"),
-		}
-		_, err = fgaClient.ListObjects(context.Background()).
-			Body(requestBody).
-			Options(badOptions).
-			Execute()
-		if err == nil {
-			t.Fatalf("Expect error with invalid auth model id but there is none")
-		}
-		// Invalid store id should result in error
-		badStoreOptions := ClientListObjectsOptions{
-			StoreId: openfga.PtrString("INVALID"),
-		}
-		_, err = fgaClient.ListObjects(context.Background()).
-			Body(requestBody).
-			Options(badStoreOptions).
-			Execute()
-		if err == nil {
-			t.Fatalf("Expect error with invalid auth model id but there is none")
-		}
-
-		// store can be overridden
-		storeOverrideOptions := ClientListObjectsOptions{
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
-		}
-		httpmock.Reset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		_, err = fgaClient.ListObjects(context.Background()).
-			Body(requestBody).
-			Options(storeOverrideOptions).
-			Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("ListObjectsWithConsistency", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "ListObjects",
-			JsonResponse:   `{"objects":["document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"]}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-			RequestPath:    "list-objects",
-		}
-
-		requestBody := ClientListObjectsRequest{
-			User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-			Relation: "can_read",
-			Type:     "document",
-			ContextualTuples: []ClientContextualTupleKey{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "editor",
-				Object:   "folder:product",
-			}, {
-				User:     "folder:product",
-				Relation: "parent",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			}},
-		}
-		options := ClientListObjectsOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
-			Consistency:          openfga.CONSISTENCYPREFERENCE_MINIMIZE_LATENCY.Ptr(),
-		}
-
-		var expectedResponse openfga.ListObjectsResponse
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			httpmock.BodyContainsString(`"consistency":"MINIMIZE_LATENCY"`),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		_, err := fgaClient.ListObjects(context.Background()).
-			Body(requestBody).
-			Options(options).
-			Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("ListRelations", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "ListRelations",
-			JsonResponse:   `{"allowed":true, "resolution":""}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-			RequestPath:    "check",
-		}
-
-		requestBody := ClientListRelationsRequest{
-			User:      "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-			Object:    "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			Relations: []string{"can_view", "can_edit", "can_delete", "can_rename"},
-			ContextualTuples: []ClientContextualTupleKey{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "editor",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			}},
-		}
-		const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
-		options := ClientListRelationsOptions{
-			AuthorizationModelId: openfga.PtrString(authModelId),
-		}
-
-		var expectedResponse openfga.CheckResponse
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			httpmock.BodyContainsString(`"relation":"can_delete"`),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, openfga.CheckResponse{Allowed: openfga.PtrBool(false)})
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		got, err := fgaClient.ListRelations(context.Background()).
-			Body(requestBody).
-			Options(options).
-			Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		if httpmock.GetTotalCallCount() != 4 {
-			t.Fatalf("OpenFgaClient.%v() - wanted %v calls to /check, got %v", test.Name, 4, httpmock.GetTotalCallCount())
-		}
-
-		_, err = got.MarshalJSON()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		if len(got.Relations) != 3 {
-			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, len(got.Relations), 3)
-		}
-		// ListRelations without options should work
-		_, err = fgaClient.ListRelations(context.Background()).Body(requestBody).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-		// Invalid auth model ID should result in error
-		badOptions := ClientListRelationsOptions{
-			AuthorizationModelId: openfga.PtrString("INVALID"),
-		}
-		_, err = fgaClient.ListRelations(context.Background()).
-			Body(requestBody).
-			Options(badOptions).
-			Execute()
-		if err == nil {
-			t.Fatalf("Expect error with invalid auth model id but there is none")
-		}
-
-		// invalid store ID should result in error
-		badStoreOptions := ClientListRelationsOptions{
-			AuthorizationModelId: openfga.PtrString(authModelId),
-			StoreId:              openfga.PtrString("INVALID"),
-		}
-		_, err = fgaClient.ListRelations(context.Background()).
-			Body(requestBody).
-			Options(badStoreOptions).
-			Execute()
-		if err == nil {
-			t.Fatalf("Expect error with invalid store id but there is none")
-		}
-
-		// store can be overridden
-		storeOverrideOptions := ClientListRelationsOptions{
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
-		}
-		httpmock.Reset()
-		httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
-			httpmock.BodyContainsString(`"relation":"can_delete"`),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, openfga.CheckResponse{Allowed: openfga.PtrBool(false)})
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		_, err = fgaClient.ListRelations(context.Background()).
-			Body(requestBody).
-			Options(storeOverrideOptions).
-			Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-	})
-
-	t.Run("ListRelationsWithConsistency", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "ListRelations",
-			JsonResponse:   `{"allowed":true, "resolution":""}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-			RequestPath:    "check",
-		}
-
-		requestBody := ClientListRelationsRequest{
-			User:      "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-			Object:    "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			Relations: []string{"can_view", "can_edit", "can_delete", "can_rename"},
-			ContextualTuples: []ClientContextualTupleKey{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "editor",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			}},
-		}
-		const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
-		options := ClientListRelationsOptions{
-			AuthorizationModelId: openfga.PtrString(authModelId),
-			Consistency:          openfga.CONSISTENCYPREFERENCE_HIGHER_CONSISTENCY.Ptr(),
-		}
-
-		var expectedResponse openfga.CheckResponse
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			httpmock.BodyContainsString(`"consistency":"HIGHER_CONSISTENCY"`),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, openfga.CheckResponse{Allowed: openfga.PtrBool(false)})
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		_, err := fgaClient.ListRelations(context.Background()).
-			Body(requestBody).
-			Options(options).
-			Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("ListRelationsNoRelationsProvided", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "ListRelations",
-			JsonResponse:   ``,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-			RequestPath:    "check",
-		}
-
-		requestBody := ClientListRelationsRequest{
-			User:      "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-			Object:    "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			Relations: []string{},
-			ContextualTuples: []ClientContextualTupleKey{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "editor",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			}},
-		}
-		options := ClientListRelationsOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		_, err := fgaClient.ListRelations(context.Background()).
-			Body(requestBody).
-			Options(options).
-			Execute()
-
-		if err == nil {
-			t.Fatalf("OpenFgaClient.%v() - expected an error but received none", test.Name)
-		}
-	})
-
-	t.Run("ListUsers", func(t *testing.T) {
-		test := TestDefinition{
-			Name: "ListUsers",
-			// A real API would not return all these for the filter provided, these are just for test purposes
-			JsonResponse:   `{"users":[{"object":{"id":"81684243-9356-4421-8fbf-a4f8d36aa31b","type":"user"}},{"userset":{"id":"fga","relation":"member","type":"team"}},{"wildcard":{"type":"user"}}]}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-			RequestPath:    "list-users",
-		}
-
-		requestBody := ClientListUsersRequest{
-			Object: openfga.FgaObject{
-				Type: "document",
-				Id:   "roadmap",
-			},
-			Relation: "can_read",
-			// API does not allow sending multiple filters, done here for testing purposes
-			UserFilters: []openfga.UserTypeFilter{{
-				Type: "user",
-			}, {
-				Type:     "team",
-				Relation: openfga.PtrString("member"),
-			}},
-			ContextualTuples: []ClientContextualTupleKey{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "editor",
-				Object:   "folder:product",
-			}, {
-				User:     "folder:product",
-				Relation: "parent",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			}},
-			Context: &map[string]interface{}{"ViewCount": 100},
-		}
-		options := ClientListUsersOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
-		}
-
-		var expectedResponse openfga.ListUsersResponse
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		got, _ := fgaClient.ListUsers(context.Background()).
-			Body(requestBody).
-			Options(options).
-			Execute()
-
-		_, err = got.MarshalJSON()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		if len(got.Users) != len(expectedResponse.Users) {
-			t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, got.GetUsers(), expectedResponse.GetUsers())
-		}
-
-		if got.Users[0].GetObject().Type != expectedResponse.Users[0].GetObject().Type || got.Users[0].GetObject().Id != expectedResponse.Users[0].GetObject().Id {
-			t.Fatalf("OpenFga%v().Execute() = %v, want %v (%v)", test.Name, got.Users[0], expectedResponse.Users[0], "object: { type: \"user\", id: \"81684243-9356-4421-8fbf-a4f8d36aa31b\" }")
-		}
-
-		if got.Users[1].GetUserset().Type != expectedResponse.Users[1].GetUserset().Type || got.Users[1].GetUserset().Id != expectedResponse.Users[1].GetUserset().Id || got.Users[1].GetUserset().Relation != expectedResponse.Users[1].GetUserset().Relation {
-			t.Fatalf("OpenFga%v().Execute() = %v, want %v (%v)", test.Name, got.Users[1], expectedResponse.Users[1], "wildcard: { type: \"team\", id: \"fga\", relation: \"member\" }")
-		}
-
-		if got.Users[2].GetWildcard().Type != expectedResponse.Users[2].GetWildcard().Type {
-			t.Fatalf("OpenFga%v().Execute() = %v, want %v (%v)", test.Name, got.Users[2], expectedResponse.Users[2], "wildcard: { type: \"user\" }")
-		}
-
-		// ListUsers without options should work
-		_, err = fgaClient.ListUsers(context.Background()).Body(requestBody).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		// Invalid auth model id should result in error
-		badOptions := ClientListUsersOptions{
-			AuthorizationModelId: openfga.PtrString("INVALID"),
-		}
-		_, err = fgaClient.ListUsers(context.Background()).
-			Body(requestBody).
-			Options(badOptions).
-			Execute()
-		if err == nil {
-			t.Fatalf("Expect error with invalid auth model id but there is none")
-		}
-		// Invalid store id should result in error
-		badStoreOptions := ClientListUsersOptions{
-			StoreId: openfga.PtrString("INVALID"),
-		}
-		_, err = fgaClient.ListUsers(context.Background()).
-			Body(requestBody).
-			Options(badStoreOptions).
-			Execute()
-		if err == nil {
-			t.Fatalf("Expect error with invalid store model id but there is none")
-		}
-
-		// StoreId can be overridden
-		storeOverrideOptions := ClientListUsersOptions{
-			StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
-		}
-		httpmock.Reset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		_, err = fgaClient.ListUsers(context.Background()).
-			Body(requestBody).
-			Options(storeOverrideOptions).
-			Execute()
-
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("ListUsersWithConsistency", func(t *testing.T) {
-		test := TestDefinition{
-			Name: "ListUsers",
-			// A real API would not return all these for the filter provided, these are just for test purposes
-			JsonResponse:   `{"users":[{"object":{"id":"81684243-9356-4421-8fbf-a4f8d36aa31b","type":"user"}},{"userset":{"id":"fga","relation":"member","type":"team"}},{"wildcard":{"type":"user"}}]}`,
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodPost,
-			RequestPath:    "list-users",
-		}
-
-		requestBody := ClientListUsersRequest{
-			Object: openfga.FgaObject{
-				Type: "document",
-				Id:   "roadmap",
-			},
-			Relation: "can_read",
-			// API does not allow sending multiple filters, done here for testing purposes
-			UserFilters: []openfga.UserTypeFilter{{
-				Type: "user",
-			}, {
-				Type:     "team",
-				Relation: openfga.PtrString("member"),
-			}},
-			ContextualTuples: []ClientContextualTupleKey{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "editor",
-				Object:   "folder:product",
-			}, {
-				User:     "folder:product",
-				Relation: "parent",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			}},
-			Context: &map[string]interface{}{"ViewCount": 100},
-		}
-		options := ClientListUsersOptions{
-			AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
-			Consistency:          openfga.CONSISTENCYPREFERENCE_MINIMIZE_LATENCY.Ptr(),
-		}
-
-		var expectedResponse openfga.ListUsersResponse
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			httpmock.BodyContainsString(`"consistency":"MINIMIZE_LATENCY"`),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		_, err := fgaClient.ListUsers(context.Background()).
-			Body(requestBody).
-			Options(options).
-			Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	/* Assertions */
-	t.Run("ReadAssertions", func(t *testing.T) {
-		modelId := "01GAHCE4YVKPQEKZQHT2R89MQV"
-		test := TestDefinition{
-			Name:           "ReadAssertions",
-			JsonResponse:   fmt.Sprintf(`{"assertions":[{"tuple_key":{"user":"user:anna","relation":"can_view","object":"document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"},"expectation":true}],"authorization_model_id":"%s","context":{"context":"value"},"contextual_tuples":[{"object":"document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a","relation":"can_view","user":"user:81684243-9356-4421-8fbf-a4f8d36aa31b"}]}`, modelId),
-			ResponseStatus: http.StatusOK,
-			Method:         http.MethodGet,
-			RequestPath:    "assertions",
-		}
-
-		options := ClientReadAssertionsOptions{
-			AuthorizationModelId: openfga.PtrString(modelId),
-		}
-
-		var expectedResponse openfga.ReadAssertionsResponse
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath, modelId),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		got, err := fgaClient.ReadAssertions(context.Background()).
-			Options(options).
-			Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		responseJson, err := got.MarshalJSON()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		if len(*got.Assertions) != len(*expectedResponse.Assertions) || (*got.Assertions)[0].Expectation != (*expectedResponse.Assertions)[0].Expectation {
-			t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
-		}
-		// ReadAssertions without options should work
-		_, err = fgaClient.ReadAssertions(context.Background()).Execute()
-		expectedError := "Required parameter AuthorizationModelId was not provided"
-		if err == nil || err.Error() != expectedError {
-			t.Fatalf("Expected error:%v, got: %v", expectedError, err)
-		}
-
-		// Invalid auth model id should result in error
-		badOptions := ClientReadAssertionsOptions{
-			AuthorizationModelId: openfga.PtrString("INVALID"),
-		}
-		_, err = fgaClient.ReadAssertions(context.Background()).
-			Options(badOptions).
-			Execute()
-		if err == nil {
-			t.Fatalf("Invalid auth model ID should result in error")
-		}
-
-		// Invalid store id should result in error
-		badStoreOptions := ClientReadAssertionsOptions{
-			StoreId: openfga.PtrString("INVALID"),
-		}
-		_, err = fgaClient.ReadAssertions(context.Background()).
-			Options(badStoreOptions).
-			Execute()
-		if err == nil {
-			t.Fatalf("Invalid store ID should result in error")
-		}
-
-		// store can be overriden
-		storeOverrideOptions := ClientReadAssertionsOptions{
-			AuthorizationModelId: openfga.PtrString(modelId),
-			StoreId:              openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
-		}
-		httpmock.Reset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath, modelId),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		_, err = fgaClient.ReadAssertions(context.Background()).
-			Options(storeOverrideOptions).
-			Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("WriteAssertions", func(t *testing.T) {
-		modelId := "01GAHCE4YVKPQEKZQHT2R89MQV"
-		test := TestDefinition{
-			Name:           "WriteAssertions",
-			JsonResponse:   "",
-			ResponseStatus: http.StatusNoContent,
-			Method:         http.MethodPut,
-			RequestPath:    "assertions",
-		}
-
-		requestBody := ClientWriteAssertionsRequest{
-			{
-				User:        "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation:    "can_view",
-				Object:      "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-				Expectation: true,
-				Context: &map[string]interface{}{
-					"context": "value",
-				},
-				ContextualTuples: []ClientContextualTupleKey{
-					{
-						User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-						Relation: "can_view",
-						Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-					},
-				},
-			},
-		}
-		options := ClientWriteAssertionsOptions{
-			AuthorizationModelId: openfga.PtrString(modelId),
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath, modelId),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, "")
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		_, err := fgaClient.WriteAssertions(context.Background()).
-			Body(requestBody).
-			Options(options).
-			Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-		// WriteAssertions without options should work
-		_, err = fgaClient.WriteAssertions(context.Background()).Body(requestBody).Execute()
-		expectedError := "Required parameter AuthorizationModelId was not provided"
-		if err == nil || err.Error() != expectedError {
-			t.Fatalf("Expected error:%v, got: %v", expectedError, err)
-		}
-		badOptions := ClientWriteAssertionsOptions{
-			AuthorizationModelId: openfga.PtrString("INVALID"),
-		}
-		_, err = fgaClient.WriteAssertions(context.Background()).
-			Body(requestBody).
-			Options(badOptions).
-			Execute()
-		if err == nil {
-			t.Fatalf("Invalid auth model id should result in error but there is none")
-		}
-
-		badStoreOptions := ClientWriteAssertionsOptions{
-			StoreId: openfga.PtrString("INVALID"),
-		}
-		_, err = fgaClient.WriteAssertions(context.Background()).
-			Body(requestBody).
-			Options(badStoreOptions).
-			Execute()
-		if err == nil {
-			t.Fatalf("Invalid store id should result in error but there is none")
-		}
-
-		// store can be overriden
-		storeOverrideOptions := ClientWriteAssertionsOptions{
-			AuthorizationModelId: openfga.PtrString(modelId),
-			StoreId:              openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
-		}
-		httpmock.Reset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath, modelId),
-			func(req *http.Request) (*http.Response, error) {
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, "")
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
-				}
-				return resp, nil
-			},
-		)
-		_, err = fgaClient.WriteAssertions(context.Background()).
-			Body(requestBody).
-			Options(storeOverrideOptions).
-			Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("BatchCheckMaxBatchSize", func(t *testing.T) {
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-
-		fgaClient, err := NewSdkClient(&ClientConfiguration{
-			ApiUrl:  "https://api.fga.example",
-			StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
-		})
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		result := map[string]openfga.BatchCheckSingleResult{
-			"test1": {Allowed: openfga.PtrBool(true)},
-		}
-		response := openfga.BatchCheckResponse{
-			Result: &result,
-		}
-
-		var callCountMu sync.Mutex
-		callCount := 0
-
-		httpmock.RegisterResponder(
-			http.MethodPost,
-			fmt.Sprintf("%s/stores/%s/batch-check", fgaClient.GetConfig().ApiUrl, "01GXSB9YR785C4FYS3C0RTG7B2"),
-			func(req *http.Request) (*http.Response, error) {
-				callCountMu.Lock()
-				callCount++
-				callCountMu.Unlock()
-				resp, err := httpmock.NewJsonResponse(http.StatusOK, response)
-				if err != nil {
-					return httpmock.NewStringResponse(http.StatusInternalServerError, err.Error()), nil
-				}
-				return resp, nil
-			},
-		)
-
-		// Create basic item template
-		createItem := func(i int) ClientBatchCheckItem {
-			return ClientBatchCheckItem{
-				User:          fmt.Sprintf("user:%d", i),
-				Relation:      "viewer",
-				Object:        fmt.Sprintf("document:%d", i),
-				CorrelationId: fmt.Sprintf("test%d", i),
-			}
-		}
-
-		t.Run("Simple case with MaxBatchSize=1", func(t *testing.T) {
-			callCountMu.Lock()
-			callCount = 0
-			callCountMu.Unlock()
-
-			items := []ClientBatchCheckItem{
-				createItem(1),
-				createItem(2),
-				createItem(3),
-			}
-
-			requestBody := ClientBatchCheckRequest{
-				Checks: items,
-			}
-
-			options := BatchCheckOptions{
-				MaxBatchSize: openfga.PtrInt32(1),
-			}
-
-			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-			defer cancel()
-
-			_, err = fgaClient.BatchCheck(ctx).
-				Body(requestBody).
-				Options(options).
-				Execute()
-
-			if err != nil {
-				t.Fatalf("BatchCheck error: %v", err)
-			}
-
-			expectedCallCount := len(items) // With MaxBatchSize=1, we expect one call per item
-			callCountMu.Lock()
-			actualCallCount := callCount
-			callCountMu.Unlock()
-			if actualCallCount != expectedCallCount {
-				t.Errorf("Expected exactly %d API calls with MaxBatchSize=1, got %d", expectedCallCount, actualCallCount)
-			}
-		})
-
-		t.Run("Edge case where MaxParallelRequests * MaxBatchSize < len(items)", func(t *testing.T) {
-			callCountMu.Lock()
-			callCount = 0
-			callCountMu.Unlock()
-
-			// Create 101 items
-			var items []ClientBatchCheckItem
-			for i := 1; i <= 101; i++ {
-				items = append(items, createItem(i))
-			}
-
-			requestBody := ClientBatchCheckRequest{
-				Checks: items,
-			}
-
-			options := BatchCheckOptions{
-				MaxParallelRequests: openfga.PtrInt32(2),  // 2 parallel requests
-				MaxBatchSize:        openfga.PtrInt32(50), // 50 items per batch
-			}
-			// Total capacity: 2*50 = 100, but we have 101 items
-
-			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-			defer cancel()
-
-			_, err = fgaClient.BatchCheck(ctx).
-				Body(requestBody).
-				Options(options).
-				Execute()
-
-			if err != nil {
-				t.Fatalf("BatchCheck error with MaxParallelRequests=2, MaxBatchSize=50, Items=101: %v", err)
-			}
-
-			// We expect 3 API calls (2 batches of 50 + 1 batch of 1)
-			expectedCallCount := 3
-			callCountMu.Lock()
-			actualCallCount := callCount
-			callCountMu.Unlock()
-			if actualCallCount != expectedCallCount {
-				t.Errorf("Expected exactly %d API calls with MaxParallelRequests=2, MaxBatchSize=50, Items=101, got %d",
-					expectedCallCount, actualCallCount)
-			}
-		})
-	})
+    fgaClient, err := NewSdkClient(&ClientConfiguration{
+        ApiUrl:  "https://api.fga.example",
+        StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
+    })
+    if err != nil {
+        t.Fatalf("%v", err)
+    }
+
+    t.Run("Allow client to have no store ID specified", func(t *testing.T) {
+        _, err := NewSdkClient(&ClientConfiguration{
+            ApiHost: "api.fga.example",
+        })
+        if err != nil {
+            t.Fatalf("Expect no error when store id is not specified but got %v", err)
+        }
+    })
+
+    t.Run("Allow client to have ApiUrl specified", func(t *testing.T) {
+        _, err := NewSdkClient(&ClientConfiguration{
+            ApiUrl: "https://api.fga.example",
+        })
+        if err != nil {
+            t.Fatalf("Expect no error when api url is specified but got %v", err)
+        }
+    })
+
+    t.Run("Ensure that ApiUrl is well formed", func(t *testing.T) {
+        urls := []string{
+            "api.fga.example",
+            "https//api.fga.example",
+            "https://api.fga.example:notavalidport",
+            "https://https://api.fga.example",
+            "notavalidscheme://api.fga.example",
+        }
+        for _, uri := range urls {
+            _, err := NewSdkClient(&ClientConfiguration{
+                ApiUrl: uri,
+            })
+            if err == nil {
+                t.Fatalf("Expected an error for invalid uri (%s) but got nil", uri)
+            }
+
+            expectedErrorString := fmt.Sprintf("Configuration.ApiUrl (%s) does not form a valid uri", uri)
+            if err.Error() != expectedErrorString {
+                t.Fatalf("Expected error (%s) but got (%s)", expectedErrorString, err.Error())
+            }
+        }
+    })
+
+    t.Run("Allow client to have empty store ID specified", func(t *testing.T) {
+        _, err := NewSdkClient(&ClientConfiguration{
+            ApiHost: "api.fga.example",
+            StoreId: "",
+        })
+        if err != nil {
+            t.Fatalf("Expect no error when store id is empty but has %v", err)
+        }
+    })
+
+    t.Run("Validate store ID when specified", func(t *testing.T) {
+        _, err := NewSdkClient(&ClientConfiguration{
+            ApiHost: "api.fga.example",
+            StoreId: "error",
+        })
+        if err == nil {
+            t.Fatalf("Expect invalid store ID to result in error but there is none")
+        }
+    })
+
+    t.Run("Validate auth model ID when specified", func(t *testing.T) {
+        _, err := NewSdkClient(&ClientConfiguration{
+            ApiHost:              "api.fga.example",
+            StoreId:              "01GXSB9YR785C4FYS3C0RTG7B2",
+            AuthorizationModelId: "BadAuthID",
+        })
+        if err == nil {
+            t.Fatalf("Expect invalid auth mode ID to result in error but there is none")
+        }
+    })
+
+    t.Run("Allow auth model ID to be empty when specified", func(t *testing.T) {
+        _, err := NewSdkClient(&ClientConfiguration{
+            ApiHost:              "api.fga.example",
+            StoreId:              "01GXSB9YR785C4FYS3C0RTG7B2",
+            AuthorizationModelId: "",
+        })
+        if err != nil {
+            t.Fatalf("Expect no error when auth model id is empty but has %v", err)
+        }
+    })
+
+    t.Run("Allow specifying an ApiUrl with a port and a base path", func(t *testing.T) {
+        _, err := NewSdkClient(&ClientConfiguration{
+            ApiUrl:  "https://api.fga.example:8080/fga",
+            StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
+        })
+        if err != nil {
+            t.Fatalf("Expect no error when auth model id is empty but has %v", err)
+        }
+
+        test := TestDefinition{
+            Name:           "ListStores",
+            JsonResponse:   `{"stores":[]}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodGet,
+        }
+
+        var expectedResponse openfga.ListStoresResponse
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores", fgaClient.GetConfig().ApiUrl),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        got, err := fgaClient.ListStores(context.Background()).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+        if len(got.Stores) != 0 {
+            t.Fatalf("expected stores of length 0, got %v", len(got.Stores))
+        }
+    })
+
+    /* Stores */
+    t.Run("ListStores", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "ListStores",
+            JsonResponse:   `{"stores":[{"id":"01GXSA8YR785C4FYS3C0RTG7B1","name":"Test Store","created_at":"2023-01-01T23:23:23.000000000Z","updated_at":"2023-01-01T23:23:23.000000000Z"}]}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodGet,
+        }
+
+        var expectedResponse openfga.ListStoresResponse
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores", fgaClient.GetConfig().ApiUrl),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        options := ClientListStoresOptions{
+            PageSize:          openfga.PtrInt32(10),
+            ContinuationToken: openfga.PtrString("..."),
+        }
+        got, err := fgaClient.ListStores(context.Background()).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        if len(got.Stores) != 1 {
+            t.Fatalf("%v", err)
+        }
+
+        if got.Stores[0].Id != expectedResponse.Stores[0].Id {
+            t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, got.Stores[0].Id, expectedResponse.Stores[0].Id)
+        }
+        // ListStores without options should work
+        _, err = fgaClient.ListStores(context.Background()).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("ListStoresWithNameFilter", func(t *testing.T) {
+        filteredStoreName := "Filtered Store"
+        test := TestDefinition{
+            Name:           "ListStoresWithNameFilter",
+            JsonResponse:   fmt.Sprintf(`{"stores":[{"id":"01GXSA8YR785C4FYS3C0RTG7B1","name":"%s","created_at":"2023-01-01T23:23:23.000000000Z","updated_at":"2023-01-01T23:23:23.000000000Z"}]}`, filteredStoreName),
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodGet,
+        }
+
+        var expectedResponse openfga.ListStoresResponse
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores", fgaClient.GetConfig().ApiUrl),
+            func(req *http.Request) (*http.Response, error) {
+                // Verify that the name parameter is included in the query
+                if req.URL.Query().Get("name") != filteredStoreName {
+                    t.Fatalf("expected name parameter to be '%s', got %s", filteredStoreName, req.URL.Query().Get("name"))
+                }
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        options := ClientListStoresOptions{
+            Name: openfga.PtrString(filteredStoreName),
+        }
+        got, err := fgaClient.ListStores(context.Background()).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        if len(got.Stores) != 1 {
+            t.Fatalf("expected stores of length 1, got %v", len(got.Stores))
+        }
+
+        if got.Stores[0].Name != filteredStoreName {
+            t.Fatalf("expected store name to be '%s', got %s", filteredStoreName, got.Stores[0].Name)
+        }
+    })
+
+    t.Run("CreateStore", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "CreateStore",
+            JsonResponse:   `{"id":"01GXSA8YR785C4FYS3C0RTG7B1","name":"Test Store","created_at":"2023-01-01T23:23:23.000000000Z","updated_at":"2023-01-01T23:23:23.000000000Z"}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+        }
+        requestBody := ClientCreateStoreRequest{
+            Name: "Test Store",
+        }
+
+        var expectedResponse openfga.CreateStoreResponse
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores", fgaClient.GetConfig().ApiUrl),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        got, err := fgaClient.CreateStore(context.Background()).Body(requestBody).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        _, err = got.MarshalJSON()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+        if got.Name != expectedResponse.Name {
+            t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, got.Name, expectedResponse.Name)
+        }
+        // CreateStore without options should work
+        _, err = fgaClient.CreateStore(context.Background()).Body(requestBody).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("GetStore", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "GetStore",
+            JsonResponse:   `{"id":"01GXSA8YR785C4FYS3C0RTG7B1","name":"Test Store","created_at":"2023-01-01T23:23:23.000000000Z","updated_at":"2023-01-01T23:23:23.000000000Z"}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodGet,
+        }
+
+        var expectedResponse openfga.GetStoreResponse
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient)),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        got, err := fgaClient.GetStore(context.Background()).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        if got.Id != expectedResponse.Id {
+            t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, got.Id, expectedResponse.Id)
+        }
+        // GetStore without options should work
+        _, err = fgaClient.GetStore(context.Background()).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        // invalid store id should result in error
+        badStoreOptions := ClientGetStoreOptions{
+            StoreId: openfga.PtrString("INVALID"),
+        }
+        _, err = fgaClient.GetStore(context.Background()).Options(badStoreOptions).Execute()
+        if err == nil {
+            t.Fatalf("Expect error with bad store id but there is none")
+        }
+
+        // store can be overridden
+        storeOverrideOptions := ClientGetStoreOptions{
+            StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+        }
+        httpmock.Reset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        _, err = fgaClient.GetStore(context.Background()).Options(storeOverrideOptions).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+    })
+
+    t.Run("GetStoreAfterSettingStoreId", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "GetStoreAfterSettingStoreId",
+            JsonResponse:   `{"id":"01GXSA8YR785C4FYS3C0RTG7B1","name":"Test Store","created_at":"2023-01-01T23:23:23.000000000Z","updated_at":"2023-01-01T23:23:23.000000000Z"}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+        }
+
+        requestBody := ClientCreateStoreRequest{
+            Name: "Test Store",
+        }
+
+        var expectedResponse openfga.CreateStoreResponse
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores", fgaClient.GetConfig().ApiUrl),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        got1, err1 := fgaClient.CreateStore(context.Background()).Body(requestBody).Execute()
+        if err1 != nil {
+            t.Fatalf("%v", err1)
+        }
+
+        _, err = got1.MarshalJSON()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+        if got1.Name != expectedResponse.Name {
+            t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, got1.Name, expectedResponse.Name)
+        }
+
+        storeId := got1.Id
+        if err := fgaClient.SetStoreId(storeId); err != nil {
+            _ = err
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(http.MethodGet, fmt.Sprintf("%s/stores/%s", fgaClient.GetConfig().ApiUrl, storeId),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        got2, err2 := fgaClient.GetStore(context.Background()).Execute()
+        if err2 != nil {
+            t.Fatalf("%v", err2)
+        }
+
+        if got2.Id != storeId {
+            t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, got2.Id, storeId)
+        }
+    })
+
+    t.Run("DeleteStore", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "DeleteStore",
+            JsonResponse:   ``,
+            ResponseStatus: http.StatusNoContent,
+            Method:         http.MethodDelete,
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient)),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, "{}")
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        _, err := fgaClient.DeleteStore(context.Background()).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+        // DeleteStore without options should work
+        _, err = fgaClient.DeleteStore(context.Background()).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        // invalid store id should result in error
+        badStoreOptions := ClientDeleteStoreOptions{
+            StoreId: openfga.PtrString("INVALID"),
+        }
+        _, err = fgaClient.DeleteStore(context.Background()).Options(badStoreOptions).Execute()
+        if err == nil {
+            t.Fatalf("Expect error with bad store id but there is none")
+        }
+
+        // store can be overridden
+        storeOverrideOptions := ClientDeleteStoreOptions{
+            StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+        }
+        httpmock.Reset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, "{}")
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        _, err = fgaClient.DeleteStore(context.Background()).Options(storeOverrideOptions).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    /* Authorization Models */
+    t.Run("ReadAuthorizationModels", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "ReadAuthorizationModels",
+            JsonResponse:   `{"authorization_models":[{"id":"01GXSA8YR785C4FYS3C0RTG7B1","schema_version":"1.1","type_definitions":[]}]}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodGet,
+            RequestPath:    "authorization-models",
+        }
+
+        var expectedResponse openfga.ReadAuthorizationModelsResponse
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        options := ClientReadAuthorizationModelsOptions{
+            PageSize:          openfga.PtrInt32(10),
+            ContinuationToken: openfga.PtrString("..."),
+        }
+        got, err := fgaClient.ReadAuthorizationModels(context.Background()).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        if len(got.AuthorizationModels) != 1 {
+            t.Fatalf("%v", err)
+        }
+
+        if got.AuthorizationModels[0].Id != expectedResponse.AuthorizationModels[0].Id {
+            t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, got.AuthorizationModels[0].Id, expectedResponse.AuthorizationModels[0].Id)
+        }
+        // ReadAuthorizationModels without options should work
+        _, err = fgaClient.ReadAuthorizationModels(context.Background()).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        // invalid store id should result in error
+        badStoreOptions := ClientReadAuthorizationModelsOptions{
+            StoreId: openfga.PtrString("INVALID"),
+        }
+        _, err = fgaClient.ReadAuthorizationModels(context.Background()).Options(badStoreOptions).Execute()
+        if err == nil {
+            t.Fatalf("Expect error with bad store id but there is none")
+        }
+
+        // store can be overridden
+        storeOverrideOptions := ClientReadAuthorizationModelsOptions{
+            StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+        }
+        httpmock.Reset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        _, err = fgaClient.ReadAuthorizationModels(context.Background()).Options(storeOverrideOptions).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("WriteAuthorizationModel", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "WriteAuthorizationModel",
+            JsonResponse:   `{"authorization_model_id":"01GXSA8YR785C4FYS3C0RTG7B1"}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+            RequestPath:    "authorization-models",
+        }
+        requestBody := ClientWriteAuthorizationModelRequest{
+            SchemaVersion: "1.1",
+            TypeDefinitions: []openfga.TypeDefinition{
+                {Type: "user", Relations: &map[string]openfga.Userset{}},
+                {
+                    Type: "document",
+                    Relations: &map[string]openfga.Userset{
+                        "writer": {
+                            This: &map[string]interface{}{},
+                        },
+                        "viewer": {Union: &openfga.Usersets{
+                            Child: []openfga.Userset{
+                                {This: &map[string]interface{}{}},
+                                {ComputedUserset: &openfga.ObjectRelation{
+                                    Object:   openfga.PtrString(""),
+                                    Relation: openfga.PtrString("writer"),
+                                }},
+                            },
+                        }},
+                    },
+                    Metadata: &openfga.Metadata{
+                        Relations: &map[string]openfga.RelationMetadata{
+                            "writer": {
+                                DirectlyRelatedUserTypes: &[]openfga.RelationReference{
+                                    {Type: "user"},
+                                },
+                            },
+                            "viewer": {
+                                DirectlyRelatedUserTypes: &[]openfga.RelationReference{
+                                    {Type: "user"},
+                                },
+                            },
+                        },
+                    },
+                }},
+        }
+
+        var expectedResponse openfga.WriteAuthorizationModelResponse
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        options := ClientWriteAuthorizationModelOptions{}
+        got, err := fgaClient.WriteAuthorizationModel(context.Background()).Body(requestBody).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        _, err = got.MarshalJSON()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        if got.GetAuthorizationModelId() != expectedResponse.GetAuthorizationModelId() {
+            t.Fatalf("OpenFgaClient.%v() / AuthorizationModelId = %v, want %v", test.Name, got.GetAuthorizationModelId(), expectedResponse.GetAuthorizationModelId())
+        }
+
+        // WriteAuthorizationModel without options should work
+        _, err = fgaClient.WriteAuthorizationModel(context.Background()).Body(requestBody).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        // invalid store id should result in error
+        badStoreOptions := ClientWriteAuthorizationModelOptions{
+            StoreId: openfga.PtrString("INVALID"),
+        }
+        _, err = fgaClient.WriteAuthorizationModel(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
+        if err == nil {
+            t.Fatalf("%v", err)
+        }
+
+        // store can be overridden
+        storeOverrideOptions := ClientWriteAuthorizationModelOptions{
+            StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+        }
+        httpmock.Reset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        _, err = fgaClient.WriteAuthorizationModel(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("WriteAuthorizationModelWithCondition", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "WriteAuthorizationModelWithCondition",
+            JsonResponse:   `{"authorization_model_id":"01GXSA8YR785C4FYS3C0RTG7B1"}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+            RequestPath:    "authorization-models",
+        }
+        requestBody := ClientWriteAuthorizationModelRequest{
+            SchemaVersion: "1.1",
+            TypeDefinitions: []openfga.TypeDefinition{
+                {
+                    Type:      "user",
+                    Relations: &map[string]openfga.Userset{},
+                },
+                {
+                    Type: "document",
+                    Relations: &map[string]openfga.Userset{
+                        "writer": {This: &map[string]interface{}{}},
+                        "viewer": {Union: &openfga.Usersets{
+                            Child: []openfga.Userset{
+                                {This: &map[string]interface{}{}},
+                                {ComputedUserset: &openfga.ObjectRelation{
+                                    Object:   openfga.PtrString(""),
+                                    Relation: openfga.PtrString("writer"),
+                                }},
+                            },
+                        }},
+                    },
+                    Metadata: &openfga.Metadata{
+                        Relations: &map[string]openfga.RelationMetadata{
+                            "writer": {
+                                DirectlyRelatedUserTypes: &[]openfga.RelationReference{
+                                    {Type: "user"},
+                                    {Type: "user", Condition: openfga.PtrString("ViewCountLessThan200")},
+                                },
+                            },
+                            "viewer": {
+                                DirectlyRelatedUserTypes: &[]openfga.RelationReference{
+                                    {Type: "user"},
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            Conditions: &map[string]openfga.Condition{
+                "ViewCountLessThan200": {
+                    Name:       "ViewCountLessThan200",
+                    Expression: "ViewCount < 200",
+                    Parameters: &map[string]openfga.ConditionParamTypeRef{
+                        "ViewCount": {
+                            TypeName: openfga.TYPENAME_INT,
+                        },
+                        "Type": {
+                            TypeName: openfga.TYPENAME_STRING,
+                        },
+                        "Name": {
+                            TypeName: openfga.TYPENAME_STRING,
+                        },
+                    },
+                },
+            },
+        }
+
+        var expectedResponse openfga.WriteAuthorizationModelResponse
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterMatcherResponder(
+            test.Method,
+            fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            httpmock.BodyContainsString(`"ViewCountLessThan200"`),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        options := ClientWriteAuthorizationModelOptions{}
+        got, err := fgaClient.WriteAuthorizationModel(context.Background()).Body(requestBody).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        _, err = got.MarshalJSON()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        if got.GetAuthorizationModelId() != expectedResponse.GetAuthorizationModelId() {
+            t.Fatalf("OpenFgaClient.%v() / AuthorizationModelId = %v, want %v", test.Name, got.GetAuthorizationModelId(), expectedResponse.GetAuthorizationModelId())
+        }
+
+        // WriteAuthorizationModel without options should work
+        _, err = fgaClient.WriteAuthorizationModel(context.Background()).Body(requestBody).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("WriteAuthorizationModelWithCondition2", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "WriteAuthorizationModelWithCondition2",
+            JsonResponse:   `{"authorization_model_id":"01GXSA8YR785C4FYS3C0RTG7B1"}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+            RequestPath:    "authorization-models",
+        }
+
+        schemaVersion := "1.1"
+        typeDefs := []openfga.TypeDefinition{
+            {
+                Type:      "user",
+                Relations: &map[string]openfga.Userset{},
+            },
+            {
+                Type: "document",
+                Relations: &map[string]openfga.Userset{
+                    "writer": {This: &map[string]interface{}{}},
+                    "viewer": {Union: &openfga.Usersets{
+                        Child: []openfga.Userset{
+                            {This: &map[string]interface{}{}},
+                            {ComputedUserset: &openfga.ObjectRelation{
+                                Object:   openfga.PtrString(""),
+                                Relation: openfga.PtrString("writer"),
+                            }},
+                        },
+                    }},
+                },
+                Metadata: &openfga.Metadata{
+                    Relations: &map[string]openfga.RelationMetadata{
+                        "writer": {
+                            DirectlyRelatedUserTypes: &[]openfga.RelationReference{
+                                {Type: "user"},
+                                {Type: "user", Condition: openfga.PtrString("ViewCountLessThan200")},
+                            },
+                        },
+                        "viewer": {
+                            DirectlyRelatedUserTypes: &[]openfga.RelationReference{
+                                {Type: "user"},
+                            },
+                        },
+                    },
+                },
+            },
+        }
+        conditions := map[string]openfga.Condition{
+            "ViewCountLessThan200": {
+                Name:       "ViewCountLessThan200",
+                Expression: "ViewCount < 200",
+                Parameters: &map[string]openfga.ConditionParamTypeRef{
+                    "ViewCount": {
+                        TypeName: openfga.TYPENAME_INT,
+                    },
+                    "Type": {
+                        TypeName: openfga.TYPENAME_STRING,
+                    },
+                    "Name": {
+                        TypeName: openfga.TYPENAME_STRING,
+                    },
+                },
+            },
+        }
+        requestBody := ClientWriteAuthorizationModelRequest{
+            SchemaVersion:   schemaVersion,
+            TypeDefinitions: typeDefs,
+            Conditions:      &conditions,
+        }
+
+        var expectedResponse openfga.WriteAuthorizationModelResponse
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterMatcherResponder(
+            test.Method,
+            fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            httpmock.BodyContainsString(`"ViewCountLessThan200"`),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        options := ClientWriteAuthorizationModelOptions{}
+        got, err := fgaClient.WriteAuthorizationModel(context.Background()).Body(requestBody).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        _, err = got.MarshalJSON()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        if got.GetAuthorizationModelId() != expectedResponse.GetAuthorizationModelId() {
+            t.Fatalf("OpenFgaClient.%v() / AuthorizationModelId = %v, want %v", test.Name, got.GetAuthorizationModelId(), expectedResponse.GetAuthorizationModelId())
+        }
+
+        // WriteAuthorizationModel without options should work
+        _, err = fgaClient.WriteAuthorizationModel(context.Background()).Body(requestBody).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("ReadAuthorizationModel", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "ReadAuthorizationModel",
+            JsonResponse:   `{"authorization_model":{"id":"01GXSA8YR785C4FYS3C0RTG7B1","schema_version":"1.1","type_definitions":[{"type":"github-repo", "relations":{"viewer":{"this":{}}}}]}}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodGet,
+            RequestPath:    "authorization-models",
+        }
+
+        var expectedResponse openfga.ReadAuthorizationModelResponse
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+        modelId := expectedResponse.AuthorizationModel.Id
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath, modelId),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        options := ClientReadAuthorizationModelOptions{
+            AuthorizationModelId: openfga.PtrString(modelId),
+        }
+        got, err := fgaClient.ReadAuthorizationModel(context.Background()).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        responseJson, err := got.MarshalJSON()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        if got.AuthorizationModel.Id != modelId {
+            t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
+        }
+        // ReadAuthorizationModel without options should not work
+        _, err = fgaClient.ReadAuthorizationModel(context.Background()).Execute()
+        expectedError := "Required parameter AuthorizationModelId was not provided"
+        if err == nil || err.Error() != expectedError {
+            t.Fatalf("Expected error:%v, got: %v", expectedError, err)
+        }
+        // ReadAuthorizationModel with options of empty string should not work
+        badOptions := ClientReadAuthorizationModelOptions{
+            AuthorizationModelId: openfga.PtrString(""),
+        }
+        _, err = fgaClient.ReadAuthorizationModel(context.Background()).Options(badOptions).Execute()
+        if err == nil || err.Error() != expectedError {
+            t.Fatalf("Expected error:%v, got: %v", expectedError, err)
+        }
+
+        // invalid store id should result in error
+        badStoreOptions := ClientReadAuthorizationModelOptions{
+            StoreId: openfga.PtrString("INVALID"),
+        }
+        _, err = fgaClient.ReadAuthorizationModel(context.Background()).Options(badStoreOptions).Execute()
+        if err == nil {
+            t.Fatalf("Expect error with bad store id but there is none")
+        }
+
+        // store can be overridden
+        storeOverrideOptions := ClientReadAuthorizationModelOptions{
+            AuthorizationModelId: openfga.PtrString(modelId),
+            StoreId:              openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+        }
+        httpmock.Reset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath, modelId),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        _, err = fgaClient.ReadAuthorizationModel(context.Background()).Options(storeOverrideOptions).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("ReadLatestAuthorizationModel", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "ReadAuthorizationModels",
+            JsonResponse:   `{"authorization_models":[{"id":"01GXSA8YR785C4FYS3C0RTG7B1","schema_version":"1.1","type_definitions":[{"type":"github-repo", "relations":{"viewer":{"this":{}}}}]}]}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodGet,
+            RequestPath:    "authorization-models",
+        }
+
+        var expectedResponse openfga.ReadAuthorizationModelsResponse
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+        modelId := expectedResponse.AuthorizationModels[0].Id
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        options := ClientReadLatestAuthorizationModelOptions{}
+        got, err := fgaClient.ReadLatestAuthorizationModel(context.Background()).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        responseJson, err := got.MarshalJSON()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        if got.AuthorizationModel.GetId() != modelId {
+            t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
+        }
+        // ReadLatestAuthorizationModel without options should work
+        _, err = fgaClient.ReadLatestAuthorizationModel(context.Background()).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        // invalid store id should result in error
+        badStoreOptions := ClientReadLatestAuthorizationModelOptions{
+            StoreId: openfga.PtrString("INVALID"),
+        }
+        _, err = fgaClient.ReadLatestAuthorizationModel(context.Background()).Options(badStoreOptions).Execute()
+        if err == nil {
+            t.Fatalf("Expect error with bad store id but there is none")
+        }
+
+        // store can be overridden
+        storeOverrideOptions := ClientReadLatestAuthorizationModelOptions{
+            StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+        }
+        httpmock.Reset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        _, err = fgaClient.ReadLatestAuthorizationModel(context.Background()).Options(storeOverrideOptions).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    /* Relationship Tuples */
+    t.Run("ReadChanges", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "ReadChanges",
+            JsonResponse:   `{"changes":[{"tuple_key":{"user":"user:81684243-9356-4421-8fbf-a4f8d36aa31b","relation":"viewer","object":"document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"},"operation":"TUPLE_OPERATION_WRITE","timestamp": "2000-01-01T00:00:00Z"}],"continuation_token":"eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodGet,
+            RequestPath:    "changes",
+        }
+
+        var expectedResponse openfga.ReadChangesResponse
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        startTime, err := time.Parse(time.RFC3339, "2022-01-01T00:00:00Z")
+        if err != nil {
+            t.Fatalf("Failed to parse startTime: %v", err)
+        }
+        body := ClientReadChangesRequest{
+            Type:      "document",
+            StartTime: startTime,
+        }
+        options := ClientReadChangesOptions{ContinuationToken: openfga.PtrString("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="), PageSize: openfga.PtrInt32(25)}
+        got, err := fgaClient.ReadChanges(context.Background()).Body(body).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        responseJson, err := got.MarshalJSON()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        if len(got.Changes) != len(expectedResponse.Changes) {
+            t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
+        }
+        // ReadChanges without options should work
+        _, err = fgaClient.ReadChanges(context.Background()).Body(body).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        // invalid store id should result in error
+        badStoreOptions := ClientReadChangesOptions{
+            StoreId: openfga.PtrString("INVALID"),
+        }
+        _, err = fgaClient.ReadChanges(context.Background()).Body(body).Options(badStoreOptions).Execute()
+        if err == nil {
+            t.Fatalf("Expect error with bad store id but there is none")
+        }
+
+        // store can be overridden
+        storeOverrideOptions := ClientReadChangesOptions{
+            StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+        }
+        httpmock.Reset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        _, err = fgaClient.ReadChanges(context.Background()).Body(body).Options(storeOverrideOptions).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("Read", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "Read",
+            JsonResponse:   `{"tuples":[{"key":{"user":"user:81684243-9356-4421-8fbf-a4f8d36aa31b","relation":"viewer","object":"document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"},"timestamp": "2000-01-01T00:00:00Z"}]}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+            RequestPath:    "read",
+        }
+
+        requestBody := ClientReadRequest{
+            User:     openfga.PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
+            Relation: openfga.PtrString("viewer"),
+            Object:   openfga.PtrString("document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"),
+        }
+
+        var expectedResponse openfga.ReadResponse
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        options := ClientReadOptions{
+            PageSize:          openfga.PtrInt32(10),
+            ContinuationToken: openfga.PtrString("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="),
+        }
+        got, err := fgaClient.Read(context.Background()).Body(requestBody).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        responseJson, err := got.MarshalJSON()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        if len(got.Tuples) != len(expectedResponse.Tuples) {
+            t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
+        }
+        // Read without options should work
+        _, err = fgaClient.Read(context.Background()).Body(requestBody).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        // invalid store id should result in error
+        badStoreOptions := ClientReadOptions{
+            StoreId: openfga.PtrString("INVALID"),
+        }
+        _, err = fgaClient.Read(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
+        if err == nil {
+            t.Fatalf("Expect error with bad store id but there is none")
+        }
+
+        // store can be overridden
+        storeOverrideOptions := ClientReadOptions{
+            StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+        }
+        httpmock.Reset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        _, err = fgaClient.Read(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("ReadWithConsistency", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "Read",
+            JsonResponse:   `{"tuples":[{"key":{"user":"user:81684243-9356-4421-8fbf-a4f8d36aa31b","relation":"viewer","object":"document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"},"timestamp": "2000-01-01T00:00:00Z"}]}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+            RequestPath:    "read",
+        }
+
+        requestBody := ClientReadRequest{
+            User:     openfga.PtrString("user:81684243-9356-4421-8fbf-a4f8d36aa31b"),
+            Relation: openfga.PtrString("viewer"),
+            Object:   openfga.PtrString("document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"),
+        }
+
+        var expectedResponse openfga.ReadResponse
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            httpmock.BodyContainsString(`"consistency":"MINIMIZE_LATENCY"`),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        options := ClientReadOptions{
+            PageSize:          openfga.PtrInt32(10),
+            ContinuationToken: openfga.PtrString("eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="),
+            Consistency:       openfga.CONSISTENCYPREFERENCE_MINIMIZE_LATENCY.Ptr(),
+        }
+        _, err := fgaClient.Read(context.Background()).Body(requestBody).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("Write", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "Write",
+            JsonResponse:   `{}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+            RequestPath:    "write",
+        }
+        requestBody := ClientWriteRequest{
+            Writes: []ClientTupleKey{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "viewer",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            }},
+            Deletes: []ClientTupleKeyWithoutCondition{},
+        }
+        options := ClientWriteOptions{
+            AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+        }
+
+        var expectedResponse map[string]interface{}
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        data, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        if len(data.Writes) != 1 {
+            t.Fatalf("OpenFgaClient.%v() - expected %v Writes, got %v", test.Name, 1, len(data.Writes))
+        }
+
+        if len(data.Deletes) != 0 {
+            t.Fatalf("OpenFgaClient.%v() - expected %v Deletes, got %v", test.Name, 0, len(data.Deletes))
+        }
+
+        for index := 0; index < len(data.Writes); index++ {
+            response := data.Writes[index]
+            if response.Error != nil {
+                t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
+            }
+            if response.HttpResponse.StatusCode != test.ResponseStatus {
+                t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
+            }
+
+            _, err := response.MarshalJSON()
+            if err != nil {
+                t.Fatalf("%v", err)
+            }
+        }
+
+        for index := 0; index < len(data.Deletes); index++ {
+            response := data.Deletes[index]
+            if response.Error != nil {
+                t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
+            }
+            if response.HttpResponse.StatusCode != test.ResponseStatus {
+                t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
+            }
+
+            _, err := response.MarshalJSON()
+            if err != nil {
+                t.Fatalf("%v", err)
+            }
+        }
+        // Write without options should work
+        _, err = fgaClient.Write(context.Background()).Body(requestBody).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        // store ID can be overridden
+        storeOverrideOptions := ClientWriteOptions{
+            StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+        }
+        httpmock.Reset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        _, err = fgaClient.Write(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("Write with invalid auth model id", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "Write",
+            JsonResponse:   `{}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+            RequestPath:    "write",
+        }
+        requestBody := ClientWriteRequest{
+            Writes: []ClientTupleKey{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "viewer",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            }},
+        }
+        options := ClientWriteOptions{
+            AuthorizationModelId: openfga.PtrString("INVALID"),
+        }
+
+        var expectedResponse map[string]interface{}
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        _, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
+        if err == nil {
+            t.Fatalf("Expect error due to invalid auth model ID but there is none")
+        }
+    })
+
+    t.Run("Write with invalid store id", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "Write",
+            JsonResponse:   `{}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+            RequestPath:    "write",
+        }
+        requestBody := ClientWriteRequest{
+            Writes: []ClientTupleKey{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "viewer",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            }},
+        }
+        options := ClientWriteOptions{
+            StoreId: openfga.PtrString("INVALID"),
+        }
+
+        var expectedResponse map[string]interface{}
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        _, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
+        if err == nil {
+            t.Fatalf("Expect error due to invalid store ID but there is none")
+        }
+    })
+
+    t.Run("WriteNonTransaction", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "Write",
+            JsonResponse:   `{}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+            RequestPath:    "write",
+        }
+        requestBody := ClientWriteRequest{
+            Writes: []ClientTupleKey{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "viewer",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            }, {
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "viewer",
+                Object:   "document:budget",
+            }},
+            Deletes: []ClientTupleKeyWithoutCondition{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "viewer",
+                Object:   "document:planning",
+            }},
+        }
+        const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
+        options := ClientWriteOptions{
+            AuthorizationModelId: openfga.PtrString(authModelId),
+            Transaction: &TransactionOptions{
+                Disable:             true,
+                MaxParallelRequests: 5,
+                MaxPerChunk:         1,
+            },
+        }
+
+        var expectedResponse map[string]interface{}
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        data, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        if len(data.Writes) != 2 {
+            t.Fatalf("OpenFgaClient.%v() - expected %v Writes, got %v", test.Name, 2, len(data.Writes))
+        }
+
+        if len(data.Deletes) != 1 {
+            t.Fatalf("OpenFgaClient.%v() - expected %v Deletes, got %v", test.Name, 1, len(data.Deletes))
+        }
+
+        for index := 0; index < len(data.Writes); index++ {
+            response := data.Writes[index]
+            if response.Error != nil {
+                t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
+            }
+            if response.HttpResponse.StatusCode != test.ResponseStatus {
+                t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
+            }
+
+            _, err := response.MarshalJSON()
+            if err != nil {
+                t.Fatalf("%v", err)
+            }
+        }
+
+        for index := 0; index < len(data.Deletes); index++ {
+            response := data.Deletes[index]
+            if response.Error != nil {
+                t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
+            }
+            if response.HttpResponse.StatusCode != test.ResponseStatus {
+                t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
+            }
+
+            _, err := response.MarshalJSON()
+            if err != nil {
+                t.Fatalf("%v", err)
+            }
+        }
+
+        // store can be overridden
+        storeOverrideOptions := ClientWriteOptions{
+            AuthorizationModelId: openfga.PtrString(authModelId),
+            Transaction: &TransactionOptions{
+                Disable:             true,
+                MaxParallelRequests: 5,
+                MaxPerChunk:         1,
+            },
+            StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+        }
+        httpmock.Reset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        data, err = fgaClient.Write(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
+        if err != nil {
+            t.Fatalf("%v", data)
+        }
+
+        for index := 0; index < len(data.Writes); index++ {
+            response := data.Writes[index]
+            if response.Error != nil {
+                t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
+            }
+        }
+    })
+
+    t.Run("WriteNonTransaction only some options set", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "Write",
+            JsonResponse:   `{}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+            RequestPath:    "write",
+        }
+        requestBody := ClientWriteRequest{
+            Writes: []ClientTupleKey{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "viewer",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            }, {
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "viewer",
+                Object:   "document:budget",
+            }},
+            Deletes: []ClientTupleKeyWithoutCondition{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "viewer",
+                Object:   "document:planning",
+            }},
+        }
+        const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
+        options := ClientWriteOptions{
+            AuthorizationModelId: openfga.PtrString(authModelId),
+            Transaction: &TransactionOptions{
+                Disable:     true,
+                MaxPerChunk: 1,
+            },
+        }
+
+        var expectedResponse map[string]interface{}
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        data, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        if len(data.Writes) != 2 {
+            t.Fatalf("OpenFgaClient.%v() - expected %v Writes, got %v", test.Name, 2, len(data.Writes))
+        }
+
+        if len(data.Deletes) != 1 {
+            t.Fatalf("OpenFgaClient.%v() - expected %v Deletes, got %v", test.Name, 1, len(data.Deletes))
+        }
+
+        for index := 0; index < len(data.Writes); index++ {
+            response := data.Writes[index]
+            if response.Error != nil {
+                t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
+            }
+            if response.HttpResponse.StatusCode != test.ResponseStatus {
+                t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
+            }
+
+            _, err := response.MarshalJSON()
+            if err != nil {
+                t.Fatalf("%v", err)
+            }
+        }
+
+        for index := 0; index < len(data.Deletes); index++ {
+            response := data.Deletes[index]
+            if response.Error != nil {
+                t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
+            }
+            if response.HttpResponse.StatusCode != test.ResponseStatus {
+                t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
+            }
+
+            _, err := response.MarshalJSON()
+            if err != nil {
+                t.Fatalf("%v", err)
+            }
+        }
+
+        // store can be overridden
+        storeOverrideOptions := ClientWriteOptions{
+            AuthorizationModelId: openfga.PtrString(authModelId),
+            Transaction: &TransactionOptions{
+                Disable:             true,
+                MaxParallelRequests: 5,
+                MaxPerChunk:         1,
+            },
+            StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+        }
+        httpmock.Reset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        data, err = fgaClient.Write(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
+        if err != nil {
+            t.Fatalf("%v", data)
+        }
+
+        for index := 0; index < len(data.Writes); index++ {
+            response := data.Writes[index]
+            if response.Error != nil {
+                t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
+            }
+        }
+    })
+
+    t.Run("Write with invalid auth", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "Write",
+            JsonResponse:   `{}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+            RequestPath:    "write",
+        }
+        requestBody := ClientWriteRequest{
+            Writes: []ClientTupleKey{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "viewer",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            }},
+        }
+        options := ClientWriteOptions{
+            AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                return httpmock.NewStringResponse(http.StatusUnauthorized, ""), nil
+            },
+        )
+        _, err = fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
+        if err == nil {
+            t.Fatalf("Expect error with invalid auth but there is none")
+        }
+
+        if _, ok := err.(openfga.FgaApiAuthenticationError); !ok {
+            t.Fatalf("Expected an api auth error")
+        }
+    })
+
+    t.Run("Write with invalid auth - transaction mode disabled", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "Write",
+            JsonResponse:   `{}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+            RequestPath:    "write",
+        }
+        requestBody := ClientWriteRequest{
+            Writes: []ClientTupleKey{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "viewer",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            }},
+        }
+        options := ClientWriteOptions{
+            AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+            Transaction: &TransactionOptions{
+                Disable:             true,
+                MaxPerChunk:         1,
+                MaxParallelRequests: 1,
+            },
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                return httpmock.NewStringResponse(http.StatusUnauthorized, ""), nil
+            },
+        )
+        _, err = fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
+        if err == nil {
+            t.Fatalf("Expect error with invalid auth but there is none")
+        }
+
+        if _, ok := err.(openfga.FgaApiAuthenticationError); !ok {
+            t.Fatalf("Expected an api auth error")
+        }
+
+        requestBody = ClientWriteRequest{
+            Deletes: []openfga.TupleKeyWithoutCondition{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "viewer",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            }},
+        }
+
+        // Now tests that deletes returns the error
+        _, err = fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
+        if err == nil {
+            t.Fatalf("Expect error with invalid auth but there is none")
+        }
+
+        if _, ok := err.(openfga.FgaApiAuthenticationError); !ok {
+            t.Fatalf("Expected an api auth error")
+        }
+    })
+
+    t.Run("Write with 400 error - transaction mode disabled", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "Write",
+            JsonResponse:   `{}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+            RequestPath:    "write",
+        }
+        requestBody := ClientWriteRequest{
+            Writes: []ClientTupleKey{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "viewer",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            }},
+        }
+        options := ClientWriteOptions{
+            AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+            Transaction: &TransactionOptions{
+                Disable:             true,
+                MaxPerChunk:         1,
+                MaxParallelRequests: 1,
+            },
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                return httpmock.NewStringResponse(http.StatusBadRequest, ""), nil
+            },
+        )
+        data, err := fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("Expected no error")
+        }
+
+        if data.Writes[0].Error == nil {
+            t.Fatalf("Expected error to be in writes")
+        }
+
+        requestBody = ClientWriteRequest{
+            Deletes: []openfga.TupleKeyWithoutCondition{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "viewer",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            }},
+        }
+
+        // Now tests that deletes returns the error
+        data, err = fgaClient.Write(context.Background()).Body(requestBody).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("Expected no error")
+        }
+
+        if data.Deletes[0].Error == nil {
+            t.Fatalf("Expected error to be in deletes")
+        }
+    })
+
+    t.Run("WriteTuples", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "Write",
+            JsonResponse:   `{}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+            RequestPath:    "write",
+        }
+        requestBody := []ClientTupleKey{{
+            User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+            Relation: "viewer",
+            Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+        }}
+        options := ClientWriteOptions{
+            AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+        }
+
+        var expectedResponse map[string]interface{}
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        data, err := fgaClient.WriteTuples(context.Background()).Body(requestBody).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        if len(data.Writes) != 1 {
+            t.Fatalf("OpenFgaClient.%v() - expected %v Writes, got %v", test.Name, 1, len(data.Writes))
+        }
+
+        if len(data.Deletes) != 0 {
+            t.Fatalf("OpenFgaClient.%v() - expected %v Deletes, got %v", test.Name, 0, len(data.Deletes))
+        }
+
+        for index := 0; index < len(data.Writes); index++ {
+            response := data.Writes[index]
+            if response.Error != nil {
+                t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
+            }
+            if response.HttpResponse.StatusCode != test.ResponseStatus {
+                t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
+            }
+
+            _, err := response.MarshalJSON()
+            if err != nil {
+                t.Fatalf("%v", err)
+            }
+        }
+
+        for index := 0; index < len(data.Deletes); index++ {
+            response := data.Deletes[index]
+            if response.Error != nil {
+                t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
+            }
+            if response.HttpResponse.StatusCode != test.ResponseStatus {
+                t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
+            }
+
+            _, err := response.MarshalJSON()
+            if err != nil {
+                t.Fatalf("%v", err)
+            }
+        }
+        // WriteTuples without options should work
+        _, err = fgaClient.WriteTuples(context.Background()).Body(requestBody).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        // invalid store id should result in error
+        badStoreOptions := ClientWriteOptions{
+            StoreId: openfga.PtrString("INVALID"),
+        }
+        _, err = fgaClient.WriteTuples(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
+        if err == nil {
+            t.Fatalf("Expect error with bad store id but there is none")
+        }
+
+        // store can be overridden
+        storeOverrideOptions := ClientWriteOptions{
+            StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+        }
+        httpmock.Reset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        _, err = fgaClient.WriteTuples(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("DeleteTuples", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "Write",
+            JsonResponse:   `{}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+            RequestPath:    "write",
+        }
+
+        requestBody := []ClientTupleKeyWithoutCondition{{
+            User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+            Relation: "viewer",
+            Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+        }}
+        options := ClientWriteOptions{
+            AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+        }
+
+        var expectedResponse map[string]interface{}
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        data, err := fgaClient.DeleteTuples(context.Background()).Body(requestBody).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        if len(data.Writes) != 0 {
+            t.Fatalf("OpenFgaClient.%v() - expected no Writes, got %v", test.Name, len(data.Writes))
+        }
+
+        if len(data.Deletes) != 1 {
+            t.Fatalf("OpenFgaClient.%v() - expected no Deletes, got %v", test.Name, len(data.Deletes))
+        }
+
+        for index := 0; index < len(data.Writes); index++ {
+            response := data.Writes[index]
+            if response.Error != nil {
+                t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
+            }
+            if response.HttpResponse.StatusCode != test.ResponseStatus {
+                t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
+            }
+
+            _, err := response.MarshalJSON()
+            if err != nil {
+                t.Fatalf("%v", err)
+            }
+        }
+
+        for index := 0; index < len(data.Deletes); index++ {
+            response := data.Deletes[index]
+            if response.Error != nil {
+                t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
+            }
+            if response.HttpResponse.StatusCode != test.ResponseStatus {
+                t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
+            }
+
+            _, err := response.MarshalJSON()
+            if err != nil {
+                t.Fatalf("%v", err)
+            }
+        }
+        // DeleteTuples without options should work
+        _, err = fgaClient.DeleteTuples(context.Background()).Body(requestBody).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        // invalid store id should result in error
+        badStoreOptions := ClientWriteOptions{
+            StoreId: openfga.PtrString("INVALID"),
+        }
+        _, err = fgaClient.DeleteTuples(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
+        if err == nil {
+            t.Fatalf("Expect error with bad store id but there is none")
+        }
+
+        // store can be overridden
+        storeOverrideOptions := ClientWriteOptions{
+            StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+        }
+        httpmock.Reset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        _, err = fgaClient.DeleteTuples(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    /* Relationship Queries */
+    t.Run("Check", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "Check",
+            JsonResponse:   `{"allowed":true, "resolution":""}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+            RequestPath:    "check",
+        }
+        requestBody := ClientCheckRequest{
+            User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+            Relation: "viewer",
+            Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            ContextualTuples: []ClientContextualTupleKey{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "editor",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            }},
+        }
+
+        options := ClientCheckOptions{
+            AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+        }
+
+        var expectedResponse openfga.CheckResponse
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        got, err := fgaClient.Check(context.Background()).Body(requestBody).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        responseJson, err := got.MarshalJSON()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        if got.GetAllowed() != *expectedResponse.Allowed {
+            t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
+        }
+        // Check without options should work
+        _, err = fgaClient.Check(context.Background()).Body(requestBody).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        // check with invalid auth model id should result in error
+        badOptions := ClientCheckOptions{
+            AuthorizationModelId: openfga.PtrString("INVALID"),
+        }
+        _, err = fgaClient.Check(context.Background()).Body(requestBody).Options(badOptions).Execute()
+        if err == nil {
+            t.Fatalf("Expect error with bad auth model id but there is none")
+        }
+        // invalid store id should result in error
+        badStoreOptions := ClientCheckOptions{
+            StoreId: openfga.PtrString("INVALID"),
+        }
+        _, err = fgaClient.Check(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
+        if err == nil {
+            t.Fatalf("Expect error with bad store id but there is none")
+        }
+
+        // store can be overridden
+        storeOverrideOptions := ClientCheckOptions{
+            StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+        }
+        httpmock.Reset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        _, err = fgaClient.Check(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+    })
+
+    t.Run("CheckWithConsistency", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "Check",
+            JsonResponse:   `{"allowed":true, "resolution":""}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+            RequestPath:    "check",
+        }
+        requestBody := ClientCheckRequest{
+            User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+            Relation: "viewer",
+            Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            ContextualTuples: []ClientContextualTupleKey{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "editor",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            }},
+        }
+
+        options := ClientCheckOptions{
+            AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+            Consistency:          openfga.CONSISTENCYPREFERENCE_HIGHER_CONSISTENCY.Ptr(),
+        }
+
+        var expectedResponse openfga.CheckResponse
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            httpmock.BodyContainsString(`"consistency":"HIGHER_CONSISTENCY"`),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        _, err := fgaClient.Check(context.Background()).Body(requestBody).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("ClientBatchCheck", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "Check",
+            JsonResponse:   `{"allowed":true, "resolution":""}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+            RequestPath:    "check",
+        }
+        requestBody := ClientBatchCheckClientBody{{
+            User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+            Relation: "viewer",
+            Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            ContextualTuples: []ClientContextualTupleKey{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "editor",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            }},
+        }, {
+            User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+            Relation: "admin",
+            Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            ContextualTuples: []ClientContextualTupleKey{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "editor",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            }},
+        }, {
+            User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+            Relation: "creator",
+            Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+        }, {
+            User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+            Relation: "deleter",
+            Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+        }}
+
+        const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
+
+        options := ClientBatchCheckClientOptions{
+            AuthorizationModelId: openfga.PtrString(authModelId),
+            MaxParallelRequests:  openfga.PtrInt32(5),
+        }
+
+        var expectedResponse openfga.CheckResponse
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        got, err := fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        if httpmock.GetTotalCallCount() != 4 {
+            t.Fatalf("OpenFgaClient.%v() - wanted %v calls to /check, got %v", test.Name, 4, httpmock.GetTotalCallCount())
+        }
+
+        if len(*got) != len(requestBody) {
+            t.Fatalf("OpenFgaClient.%v() - Response Length = %v, want %v", test.Name, len(*got), len(requestBody))
+        }
+
+        for index := 0; index < len(*got); index++ {
+            response := (*got)[index]
+            if response.Error != nil {
+                t.Fatalf("OpenFgaClient.%v()|%d/ %v", test.Name, index, response.Error)
+            }
+            if response.HttpResponse.StatusCode != test.ResponseStatus {
+                t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, response.HttpResponse.StatusCode, test.ResponseStatus)
+            }
+
+            responseJson, err := response.MarshalJSON()
+            if err != nil {
+                t.Fatalf("%v", err)
+            }
+
+            if *response.Allowed != *expectedResponse.Allowed {
+                t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
+            }
+        }
+        // ClientBatchCheck without options should work
+        _, err = fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.ZeroCallCounters()
+        // ClientBatchCheck with invalid auth model ID should fail
+        badOptions := ClientBatchCheckClientOptions{
+            AuthorizationModelId: openfga.PtrString("INVALID"),
+            MaxParallelRequests:  openfga.PtrInt32(5),
+        }
+        _, err = fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Options(badOptions).Execute()
+        if err == nil {
+            t.Fatalf("Expect error with invalid auth model id but there is none")
+        }
+        // invalid store ID should fail
+        badStoreOptions := ClientBatchCheckClientOptions{
+            StoreId:             openfga.PtrString("INVALID"),
+            MaxParallelRequests: openfga.PtrInt32(5),
+        }
+        _, err = fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
+        if err == nil {
+            t.Fatalf("Expect error with invalid auth model id but there is none")
+        }
+
+        if httpmock.GetTotalCallCount() != 0 {
+            t.Fatalf("Expected no calls to be made")
+        }
+
+        httpmock.ZeroCallCounters()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                return httpmock.NewStringResponse(http.StatusUnauthorized, ""), nil
+            },
+        )
+        // ClientBatchCheck with invalid auth should fail
+        _, err = fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Options(options).Execute()
+        if err == nil {
+            t.Fatalf("Expect error with invalid auth but there is none")
+        }
+
+        // store should be overridden
+        storeOverrideOptions := ClientBatchCheckClientOptions{
+            StoreId:             openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+            MaxParallelRequests: openfga.PtrInt32(5),
+        }
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        _, err = fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("ClientBatchCheckWithConsistency", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "Check",
+            JsonResponse:   `{"allowed":true, "resolution":""}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+            RequestPath:    "check",
+        }
+        requestBody := ClientBatchCheckClientBody{{
+            User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+            Relation: "viewer",
+            Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            ContextualTuples: []ClientContextualTupleKey{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "editor",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            }},
+        }, {
+            User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+            Relation: "admin",
+            Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            ContextualTuples: []ClientContextualTupleKey{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "editor",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            }},
+        }, {
+            User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+            Relation: "creator",
+            Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+        }, {
+            User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+            Relation: "deleter",
+            Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+        }}
+
+        const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
+
+        options := ClientBatchCheckClientOptions{
+            AuthorizationModelId: openfga.PtrString(authModelId),
+            MaxParallelRequests:  openfga.PtrInt32(5),
+            Consistency:          openfga.CONSISTENCYPREFERENCE_HIGHER_CONSISTENCY.Ptr(),
+        }
+
+        var expectedResponse openfga.CheckResponse
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            httpmock.BodyContainsString(`"consistency":"HIGHER_CONSISTENCY"`),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        checks, err := fgaClient.ClientBatchCheck(context.Background()).Body(requestBody).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        for _, check := range *checks {
+            if check.Error != nil {
+                t.Fatalf("a check failed %v", check.Error)
+            }
+        }
+    })
+
+    t.Run("BatchCheck", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "BatchCheck",
+            JsonResponse:   `{"result":{"test1":{"allowed":true},"test2":{"allowed":false}}}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+            RequestPath:    "batch-check",
+        }
+
+        requestBody := ClientBatchCheckRequest{
+            Checks: []ClientBatchCheckItem{
+                {
+                    User:          "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                    Relation:      "viewer",
+                    Object:        "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+                    CorrelationId: "test1",
+                    ContextualTuples: []ClientContextualTupleKey{
+                        {
+                            User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                            Relation: "editor",
+                            Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+                        },
+                    },
+                },
+                {
+                    User:          "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                    Relation:      "admin",
+                    Object:        "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+                    CorrelationId: "test2",
+                },
+            },
+        }
+
+        options := BatchCheckOptions{
+            AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+            MaxParallelRequests:  openfga.PtrInt32(5),
+            MaxBatchSize:         openfga.PtrInt32(10),
+        }
+
+        var expectedResponse openfga.BatchCheckResponse
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        ctxMain, cancelMain := context.WithTimeout(context.Background(), 5*time.Second)
+        defer cancelMain()
+        got, err := fgaClient.BatchCheck(ctxMain).Body(requestBody).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        if httpmock.GetTotalCallCount() != 1 {
+            t.Fatalf("OpenFgaClient.%v() - wanted %v call to /batch-check, got %v", test.Name, 1, httpmock.GetTotalCallCount())
+        }
+
+        if len(got.GetResult()) != len(requestBody.Checks) {
+            t.Fatalf("OpenFgaClient.%v() - Response Length = %v, want %v", test.Name, len(got.GetResult()), len(requestBody.Checks))
+        }
+
+        // BatchCheck without options should work
+        httpmock.ZeroCallCounters()
+        ctxNoOpts, cancelNoOpts := context.WithTimeout(context.Background(), 5*time.Second)
+        defer cancelNoOpts()
+        _, err = fgaClient.BatchCheck(ctxNoOpts).Body(requestBody).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.ZeroCallCounters()
+        // BatchCheck with invalid auth model ID should fail
+        badOptions := BatchCheckOptions{
+            AuthorizationModelId: openfga.PtrString("INVALID"),
+            MaxParallelRequests:  openfga.PtrInt32(5),
+        }
+        ctxBad, cancelBad := context.WithTimeout(context.Background(), 5*time.Second)
+        defer cancelBad()
+        _, err = fgaClient.BatchCheck(ctxBad).Body(requestBody).Options(badOptions).Execute()
+        if err == nil {
+            t.Fatalf("Expect error with invalid auth model id but there is none")
+        }
+
+        // Invalid store ID should fail
+        badStoreOptions := BatchCheckOptions{
+            StoreId:             openfga.PtrString("INVALID"),
+            MaxParallelRequests: openfga.PtrInt32(5),
+        }
+        ctxStore, cancelStore := context.WithTimeout(context.Background(), 5*time.Second)
+        defer cancelStore()
+        _, err = fgaClient.BatchCheck(ctxStore).Body(requestBody).Options(badStoreOptions).Execute()
+        if err == nil {
+            t.Fatalf("Expect error with invalid store id but there is none")
+        }
+
+        // Store should be overridden
+        storeOverrideOptions := BatchCheckOptions{
+            StoreId:             openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+            MaxParallelRequests: openfga.PtrInt32(5),
+        }
+
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        ctxOverride, cancelOverride := context.WithTimeout(context.Background(), 5*time.Second)
+        defer cancelOverride()
+        _, err = fgaClient.BatchCheck(ctxOverride).Body(requestBody).Options(storeOverrideOptions).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("Expand", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "Expand",
+            JsonResponse:   `{"tree":{"root":{"name":"document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a#viewer","union":{"nodes":[{"name": "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a#viewer","leaf":{"users":{"users":["user:81684243-9356-4421-8fbf-a4f8d36aa31b"]}}}]}}}}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+            RequestPath:    "expand",
+        }
+
+        requestBody := ClientExpandRequest{
+            Relation: "viewer",
+            Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+        }
+        options := ClientExpandOptions{
+            AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+        }
+
+        var expectedResponse openfga.ExpandResponse
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        got, err := fgaClient.Expand(context.Background()).Body(requestBody).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        _, err = got.MarshalJSON()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+        // Expand without options should work
+        _, err = fgaClient.Expand(context.Background()).Body(requestBody).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+        // Invalid auth model ID should result in error
+        badOptions := ClientExpandOptions{
+            AuthorizationModelId: openfga.PtrString("INVALID"),
+        }
+        _, err = fgaClient.Expand(context.Background()).Body(requestBody).Options(badOptions).Execute()
+        if err == nil {
+            t.Fatalf("Expect error for invalid auth model id but there is none")
+        }
+
+        // Invalid auth model ID should result in error
+        badStoreOptions := ClientExpandOptions{
+            StoreId: openfga.PtrString("INVALID"),
+        }
+        _, err = fgaClient.Expand(context.Background()).Body(requestBody).Options(badStoreOptions).Execute()
+        if err == nil {
+            t.Fatalf("Expect error for invalid auth model id but there is none")
+        }
+
+        // store can be overridden
+        storeOverrideOptions := ClientExpandOptions{
+            StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+        }
+        httpmock.Reset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        _, err = fgaClient.Expand(context.Background()).Body(requestBody).Options(storeOverrideOptions).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("ExpandWithConsistency", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "Expand",
+            JsonResponse:   `{"tree":{"root":{"name":"document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a#viewer","union":{"nodes":[{"name": "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a#viewer","leaf":{"users":{"users":["user:81684243-9356-4421-8fbf-a4f8d36aa31b"]}}}]}}}}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+            RequestPath:    "expand",
+        }
+
+        requestBody := ClientExpandRequest{
+            Relation: "viewer",
+            Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+        }
+        options := ClientExpandOptions{
+            AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+            Consistency:          openfga.CONSISTENCYPREFERENCE_MINIMIZE_LATENCY.Ptr(),
+        }
+
+        var expectedResponse openfga.ExpandResponse
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            httpmock.BodyContainsString(`"consistency":"MINIMIZE_LATENCY"`),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        _, err := fgaClient.Expand(context.Background()).Body(requestBody).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("ExpandWithContextualTuples", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "Expand",
+            JsonResponse:   `{"tree":{"root":{"name":"document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a#viewer","union":{"nodes":[{"name": "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a#viewer","leaf":{"users":{"users":["user:81684243-9356-4421-8fbf-a4f8d36aa31b"]}}}]}}}}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+            RequestPath:    "expand",
+        }
+
+        requestBody := ClientExpandRequest{
+            Relation: "viewer",
+            Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            ContextualTuples: []ClientContextualTupleKey{
+                {
+                    User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                    Relation: "editor",
+                    Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+                },
+            },
+        }
+        options := ClientExpandOptions{
+            AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+        }
+
+        var expectedResponse openfga.ExpandResponse
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            httpmock.BodyContainsString(`user:81684243-9356-4421-8fbf-a4f8d36aa31b`),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        got, err := fgaClient.Expand(context.Background()).Body(requestBody).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        _, err = got.MarshalJSON()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("ListObjects", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "ListObjects",
+            JsonResponse:   `{"objects":["document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"]}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+            RequestPath:    "list-objects",
+        }
+
+        requestBody := ClientListObjectsRequest{
+            User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+            Relation: "can_read",
+            Type:     "document",
+            ContextualTuples: []ClientContextualTupleKey{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "editor",
+                Object:   "folder:product",
+            }, {
+                User:     "folder:product",
+                Relation: "parent",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            }},
+        }
+        options := ClientListObjectsOptions{
+            AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+        }
+
+        var expectedResponse openfga.ListObjectsResponse
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        got, err := fgaClient.ListObjects(context.Background()).
+            Body(requestBody).
+            Options(options).
+            Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        responseJson, err := got.MarshalJSON()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        if len(got.Objects) != len(expectedResponse.Objects) || (got.Objects)[0] != (expectedResponse.Objects)[0] {
+            t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
+        }
+        // ListObjects without options should work
+        _, err = fgaClient.ListObjects(context.Background()).Body(requestBody).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        // Invalid auth model id should result in error
+        badOptions := ClientListObjectsOptions{
+            AuthorizationModelId: openfga.PtrString("INVALID"),
+        }
+        _, err = fgaClient.ListObjects(context.Background()).
+            Body(requestBody).
+            Options(badOptions).
+            Execute()
+        if err == nil {
+            t.Fatalf("Expect error with invalid auth model id but there is none")
+        }
+        // Invalid store id should result in error
+        badStoreOptions := ClientListObjectsOptions{
+            StoreId: openfga.PtrString("INVALID"),
+        }
+        _, err = fgaClient.ListObjects(context.Background()).
+            Body(requestBody).
+            Options(badStoreOptions).
+            Execute()
+        if err == nil {
+            t.Fatalf("Expect error with invalid auth model id but there is none")
+        }
+
+        // store can be overridden
+        storeOverrideOptions := ClientListObjectsOptions{
+            StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+        }
+        httpmock.Reset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        _, err = fgaClient.ListObjects(context.Background()).
+            Body(requestBody).
+            Options(storeOverrideOptions).
+            Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("ListObjectsWithConsistency", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "ListObjects",
+            JsonResponse:   `{"objects":["document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"]}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+            RequestPath:    "list-objects",
+        }
+
+        requestBody := ClientListObjectsRequest{
+            User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+            Relation: "can_read",
+            Type:     "document",
+            ContextualTuples: []ClientContextualTupleKey{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "editor",
+                Object:   "folder:product",
+            }, {
+                User:     "folder:product",
+                Relation: "parent",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            }},
+        }
+        options := ClientListObjectsOptions{
+            AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+            Consistency:          openfga.CONSISTENCYPREFERENCE_MINIMIZE_LATENCY.Ptr(),
+        }
+
+        var expectedResponse openfga.ListObjectsResponse
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            httpmock.BodyContainsString(`"consistency":"MINIMIZE_LATENCY"`),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        _, err := fgaClient.ListObjects(context.Background()).
+            Body(requestBody).
+            Options(options).
+            Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("ListRelations", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "ListRelations",
+            JsonResponse:   `{"allowed":true, "resolution":""}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+            RequestPath:    "check",
+        }
+
+        requestBody := ClientListRelationsRequest{
+            User:      "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+            Object:    "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            Relations: []string{"can_view", "can_edit", "can_delete", "can_rename"},
+            ContextualTuples: []ClientContextualTupleKey{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "editor",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            }},
+        }
+        const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
+        options := ClientListRelationsOptions{
+            AuthorizationModelId: openfga.PtrString(authModelId),
+        }
+
+        var expectedResponse openfga.CheckResponse
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            httpmock.BodyContainsString(`"relation":"can_delete"`),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, openfga.CheckResponse{Allowed: openfga.PtrBool(false)})
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        got, err := fgaClient.ListRelations(context.Background()).
+            Body(requestBody).
+            Options(options).
+            Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        if httpmock.GetTotalCallCount() != 4 {
+            t.Fatalf("OpenFgaClient.%v() - wanted %v calls to /check, got %v", test.Name, 4, httpmock.GetTotalCallCount())
+        }
+
+        _, err = got.MarshalJSON()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        if len(got.Relations) != 3 {
+            t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, len(got.Relations), 3)
+        }
+        // ListRelations without options should work
+        _, err = fgaClient.ListRelations(context.Background()).Body(requestBody).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+        // Invalid auth model ID should result in error
+        badOptions := ClientListRelationsOptions{
+            AuthorizationModelId: openfga.PtrString("INVALID"),
+        }
+        _, err = fgaClient.ListRelations(context.Background()).
+            Body(requestBody).
+            Options(badOptions).
+            Execute()
+        if err == nil {
+            t.Fatalf("Expect error with invalid auth model id but there is none")
+        }
+
+        // invalid store ID should result in error
+        badStoreOptions := ClientListRelationsOptions{
+            AuthorizationModelId: openfga.PtrString(authModelId),
+            StoreId:              openfga.PtrString("INVALID"),
+        }
+        _, err = fgaClient.ListRelations(context.Background()).
+            Body(requestBody).
+            Options(badStoreOptions).
+            Execute()
+        if err == nil {
+            t.Fatalf("Expect error with invalid store id but there is none")
+        }
+
+        // store can be overridden
+        storeOverrideOptions := ClientListRelationsOptions{
+            StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+        }
+        httpmock.Reset()
+        httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+            httpmock.BodyContainsString(`"relation":"can_delete"`),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, openfga.CheckResponse{Allowed: openfga.PtrBool(false)})
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        _, err = fgaClient.ListRelations(context.Background()).
+            Body(requestBody).
+            Options(storeOverrideOptions).
+            Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+    })
+
+    t.Run("ListRelationsWithConsistency", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "ListRelations",
+            JsonResponse:   `{"allowed":true, "resolution":""}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+            RequestPath:    "check",
+        }
+
+        requestBody := ClientListRelationsRequest{
+            User:      "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+            Object:    "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            Relations: []string{"can_view", "can_edit", "can_delete", "can_rename"},
+            ContextualTuples: []ClientContextualTupleKey{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "editor",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            }},
+        }
+        const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
+        options := ClientListRelationsOptions{
+            AuthorizationModelId: openfga.PtrString(authModelId),
+            Consistency:          openfga.CONSISTENCYPREFERENCE_HIGHER_CONSISTENCY.Ptr(),
+        }
+
+        var expectedResponse openfga.CheckResponse
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            httpmock.BodyContainsString(`"consistency":"HIGHER_CONSISTENCY"`),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, openfga.CheckResponse{Allowed: openfga.PtrBool(false)})
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        _, err := fgaClient.ListRelations(context.Background()).
+            Body(requestBody).
+            Options(options).
+            Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("ListRelationsNoRelationsProvided", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "ListRelations",
+            JsonResponse:   ``,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+            RequestPath:    "check",
+        }
+
+        requestBody := ClientListRelationsRequest{
+            User:      "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+            Object:    "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            Relations: []string{},
+            ContextualTuples: []ClientContextualTupleKey{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "editor",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            }},
+        }
+        options := ClientListRelationsOptions{
+            AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        _, err := fgaClient.ListRelations(context.Background()).
+            Body(requestBody).
+            Options(options).
+            Execute()
+
+        if err == nil {
+            t.Fatalf("OpenFgaClient.%v() - expected an error but received none", test.Name)
+        }
+    })
+
+    t.Run("ListRelationsSurfacesCheckErrors", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "ListRelations",
+            JsonResponse:   `{"allowed":true, "resolution":""}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+            RequestPath:    "check",
+        }
+
+        requestBody := ClientListRelationsRequest{
+            User:      "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+            Object:    "workspace:1",
+            Relations: []string{"admin", "guest", "reader", "viewer", "can_read"},
+        }
+        const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
+        options := ClientListRelationsOptions{
+            AuthorizationModelId: openfga.PtrString(authModelId),
+        }
+
+        var expectedResponse openfga.CheckResponse
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        // Track which responders were called
+        adminCalled := false
+        guestCalled := false
+        readerCalled := false
+        viewerCalled := false
+        canReadCalled := false
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+
+        // First check: admin - returns true
+        httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            httpmock.BodyContainsString(`"relation":"admin"`),
+            func(req *http.Request) (*http.Response, error) {
+                adminCalled = true
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, openfga.CheckResponse{Allowed: openfga.PtrBool(true)})
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        // Second check: guest - returns false
+        httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            httpmock.BodyContainsString(`"relation":"guest"`),
+            func(req *http.Request) (*http.Response, error) {
+                guestCalled = true
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, openfga.CheckResponse{Allowed: openfga.PtrBool(false)})
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        // Third check: reader - returns true
+        httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            httpmock.BodyContainsString(`"relation":"reader"`),
+            func(req *http.Request) (*http.Response, error) {
+                readerCalled = true
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, openfga.CheckResponse{Allowed: openfga.PtrBool(true)})
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        // Fourth check: viewer - returns 500 error (first error)
+        httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            httpmock.BodyContainsString(`"relation":"viewer"`),
+            func(req *http.Request) (*http.Response, error) {
+                viewerCalled = true
+                return httpmock.NewStringResponse(http.StatusInternalServerError, `{"code":"internal_error","message":"Internal Server Error"}`), nil
+            },
+        )
+
+        // Fifth check: can_read - returns 400 error
+        httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            httpmock.BodyContainsString(`"relation":"can_read"`),
+            func(req *http.Request) (*http.Response, error) {
+                canReadCalled = true
+                return httpmock.NewStringResponse(http.StatusBadRequest, `{"code":"validation_error","message":"relation 'workspace#can_read' not found"}`), nil
+            },
+        )
+
+        // Verify responders are not called initially
+        if adminCalled || guestCalled || readerCalled || viewerCalled || canReadCalled {
+            t.Fatalf("Responders should not be called before Execute()")
+        }
+
+        _, err := fgaClient.ListRelations(context.Background()).
+            Body(requestBody).
+            Options(options).
+            Execute()
+
+        // Should return an error from the fourth check (500)
+        if err == nil {
+            t.Fatalf("OpenFgaClient.%v() - expected an error but received none", test.Name)
+        }
+
+        // Verify the error is from the 500 response
+        if !strings.Contains(err.Error(), "Internal Server Error") && !strings.Contains(err.Error(), "internal_error") {
+            t.Logf("Error received: %v", err)
+        }
+
+        // Verify which responders were called
+        if !adminCalled {
+            t.Errorf("Expected admin check to be called")
+        }
+        if !guestCalled {
+            t.Errorf("Expected guest check to be called")
+        }
+        if !readerCalled {
+            t.Errorf("Expected reader check to be called")
+        }
+        if !viewerCalled {
+            t.Errorf("Expected viewer check to be called (where error occurs)")
+        }
+    })
+
+    t.Run("ListUsers", func(t *testing.T) {
+        test := TestDefinition{
+            Name: "ListUsers",
+            // A real API would not return all these for the filter provided, these are just for test purposes
+            JsonResponse:   `{"users":[{"object":{"id":"81684243-9356-4421-8fbf-a4f8d36aa31b","type":"user"}},{"userset":{"id":"fga","relation":"member","type":"team"}},{"wildcard":{"type":"user"}}]}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+            RequestPath:    "list-users",
+        }
+
+        requestBody := ClientListUsersRequest{
+            Object: openfga.FgaObject{
+                Type: "document",
+                Id:   "roadmap",
+            },
+            Relation: "can_read",
+            // API does not allow sending multiple filters, done here for testing purposes
+            UserFilters: []openfga.UserTypeFilter{{
+                Type: "user",
+            }, {
+                Type:     "team",
+                Relation: openfga.PtrString("member"),
+            }},
+            ContextualTuples: []ClientContextualTupleKey{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "editor",
+                Object:   "folder:product",
+            }, {
+                User:     "folder:product",
+                Relation: "parent",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            }},
+            Context: &map[string]interface{}{"ViewCount": 100},
+        }
+        options := ClientListUsersOptions{
+            AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+        }
+
+        var expectedResponse openfga.ListUsersResponse
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        got, _ := fgaClient.ListUsers(context.Background()).
+            Body(requestBody).
+            Options(options).
+            Execute()
+
+        _, err = got.MarshalJSON()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        if len(got.Users) != len(expectedResponse.Users) {
+            t.Fatalf("OpenFga%v().Execute() = %v, want %v", test.Name, got.GetUsers(), expectedResponse.GetUsers())
+        }
+
+        if got.Users[0].GetObject().Type != expectedResponse.Users[0].GetObject().Type || got.Users[0].GetObject().Id != expectedResponse.Users[0].GetObject().Id {
+            t.Fatalf("OpenFga%v().Execute() = %v, want %v (%v)", test.Name, got.Users[0], expectedResponse.Users[0], "object: { type: \"user\", id: \"81684243-9356-4421-8fbf-a4f8d36aa31b\" }")
+        }
+
+        if got.Users[1].GetUserset().Type != expectedResponse.Users[1].GetUserset().Type || got.Users[1].GetUserset().Id != expectedResponse.Users[1].GetUserset().Id || got.Users[1].GetUserset().Relation != expectedResponse.Users[1].GetUserset().Relation {
+            t.Fatalf("OpenFga%v().Execute() = %v, want %v (%v)", test.Name, got.Users[1], expectedResponse.Users[1], "wildcard: { type: \"team\", id: \"fga\", relation: \"member\" }")
+        }
+
+        if got.Users[2].GetWildcard().Type != expectedResponse.Users[2].GetWildcard().Type {
+            t.Fatalf("OpenFga%v().Execute() = %v, want %v (%v)", test.Name, got.Users[2], expectedResponse.Users[2], "wildcard: { type: \"user\" }")
+        }
+
+        // ListUsers without options should work
+        _, err = fgaClient.ListUsers(context.Background()).Body(requestBody).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        // Invalid auth model id should result in error
+        badOptions := ClientListUsersOptions{
+            AuthorizationModelId: openfga.PtrString("INVALID"),
+        }
+        _, err = fgaClient.ListUsers(context.Background()).
+            Body(requestBody).
+            Options(badOptions).
+            Execute()
+        if err == nil {
+            t.Fatalf("Expect error with invalid auth model id but there is none")
+        }
+        // Invalid store id should result in error
+        badStoreOptions := ClientListUsersOptions{
+            StoreId: openfga.PtrString("INVALID"),
+        }
+        _, err = fgaClient.ListUsers(context.Background()).
+            Body(requestBody).
+            Options(badStoreOptions).
+            Execute()
+        if err == nil {
+            t.Fatalf("Expect error with invalid store model id but there is none")
+        }
+
+        // StoreId can be overridden
+        storeOverrideOptions := ClientListUsersOptions{
+            StoreId: openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+        }
+        httpmock.Reset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        _, err = fgaClient.ListUsers(context.Background()).
+            Body(requestBody).
+            Options(storeOverrideOptions).
+            Execute()
+
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("ListUsersWithConsistency", func(t *testing.T) {
+        test := TestDefinition{
+            Name: "ListUsers",
+            // A real API would not return all these for the filter provided, these are just for test purposes
+            JsonResponse:   `{"users":[{"object":{"id":"81684243-9356-4421-8fbf-a4f8d36aa31b","type":"user"}},{"userset":{"id":"fga","relation":"member","type":"team"}},{"wildcard":{"type":"user"}}]}`,
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodPost,
+            RequestPath:    "list-users",
+        }
+
+        requestBody := ClientListUsersRequest{
+            Object: openfga.FgaObject{
+                Type: "document",
+                Id:   "roadmap",
+            },
+            Relation: "can_read",
+            // API does not allow sending multiple filters, done here for testing purposes
+            UserFilters: []openfga.UserTypeFilter{{
+                Type: "user",
+            }, {
+                Type:     "team",
+                Relation: openfga.PtrString("member"),
+            }},
+            ContextualTuples: []ClientContextualTupleKey{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "editor",
+                Object:   "folder:product",
+            }, {
+                User:     "folder:product",
+                Relation: "parent",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            }},
+            Context: &map[string]interface{}{"ViewCount": 100},
+        }
+        options := ClientListUsersOptions{
+            AuthorizationModelId: openfga.PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+            Consistency:          openfga.CONSISTENCYPREFERENCE_MINIMIZE_LATENCY.Ptr(),
+        }
+
+        var expectedResponse openfga.ListUsersResponse
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            httpmock.BodyContainsString(`"consistency":"MINIMIZE_LATENCY"`),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        _, err := fgaClient.ListUsers(context.Background()).
+            Body(requestBody).
+            Options(options).
+            Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    /* Assertions */
+    t.Run("ReadAssertions", func(t *testing.T) {
+        modelId := "01GAHCE4YVKPQEKZQHT2R89MQV"
+        test := TestDefinition{
+            Name:           "ReadAssertions",
+            JsonResponse:   fmt.Sprintf(`{"assertions":[{"tuple_key":{"user":"user:anna","relation":"can_view","object":"document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"},"expectation":true}],"authorization_model_id":"%s","context":{"context":"value"},"contextual_tuples":[{"object":"document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a","relation":"can_view","user":"user:81684243-9356-4421-8fbf-a4f8d36aa31b"}]}`, modelId),
+            ResponseStatus: http.StatusOK,
+            Method:         http.MethodGet,
+            RequestPath:    "assertions",
+        }
+
+        options := ClientReadAssertionsOptions{
+            AuthorizationModelId: openfga.PtrString(modelId),
+        }
+
+        var expectedResponse openfga.ReadAssertionsResponse
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath, modelId),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        got, err := fgaClient.ReadAssertions(context.Background()).
+            Options(options).
+            Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        responseJson, err := got.MarshalJSON()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        if len(*got.Assertions) != len(*expectedResponse.Assertions) || (*got.Assertions)[0].Expectation != (*expectedResponse.Assertions)[0].Expectation {
+            t.Fatalf("OpenFgaClient.%v() = %v, want %v", test.Name, string(responseJson), test.JsonResponse)
+        }
+        // ReadAssertions without options should work
+        _, err = fgaClient.ReadAssertions(context.Background()).Execute()
+        expectedError := "Required parameter AuthorizationModelId was not provided"
+        if err == nil || err.Error() != expectedError {
+            t.Fatalf("Expected error:%v, got: %v", expectedError, err)
+        }
+
+        // Invalid auth model id should result in error
+        badOptions := ClientReadAssertionsOptions{
+            AuthorizationModelId: openfga.PtrString("INVALID"),
+        }
+        _, err = fgaClient.ReadAssertions(context.Background()).
+            Options(badOptions).
+            Execute()
+        if err == nil {
+            t.Fatalf("Invalid auth model ID should result in error")
+        }
+
+        // Invalid store id should result in error
+        badStoreOptions := ClientReadAssertionsOptions{
+            StoreId: openfga.PtrString("INVALID"),
+        }
+        _, err = fgaClient.ReadAssertions(context.Background()).
+            Options(badStoreOptions).
+            Execute()
+        if err == nil {
+            t.Fatalf("Invalid store ID should result in error")
+        }
+
+        // store can be overriden
+        storeOverrideOptions := ClientReadAssertionsOptions{
+            AuthorizationModelId: openfga.PtrString(modelId),
+            StoreId:              openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+        }
+        httpmock.Reset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath, modelId),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        _, err = fgaClient.ReadAssertions(context.Background()).
+            Options(storeOverrideOptions).
+            Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("WriteAssertions", func(t *testing.T) {
+        modelId := "01GAHCE4YVKPQEKZQHT2R89MQV"
+        test := TestDefinition{
+            Name:           "WriteAssertions",
+            JsonResponse:   "",
+            ResponseStatus: http.StatusNoContent,
+            Method:         http.MethodPut,
+            RequestPath:    "assertions",
+        }
+
+        requestBody := ClientWriteAssertionsRequest{
+            {
+                User:        "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation:    "can_view",
+                Object:      "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+                Expectation: true,
+                Context: &map[string]interface{}{
+                    "context": "value",
+                },
+                ContextualTuples: []ClientContextualTupleKey{
+                    {
+                        User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                        Relation: "can_view",
+                        Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+                    },
+                },
+            },
+        }
+        options := ClientWriteAssertionsOptions{
+            AuthorizationModelId: openfga.PtrString(modelId),
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath, modelId),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, "")
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        _, err := fgaClient.WriteAssertions(context.Background()).
+            Body(requestBody).
+            Options(options).
+            Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+        // WriteAssertions without options should work
+        _, err = fgaClient.WriteAssertions(context.Background()).Body(requestBody).Execute()
+        expectedError := "Required parameter AuthorizationModelId was not provided"
+        if err == nil || err.Error() != expectedError {
+            t.Fatalf("Expected error:%v, got: %v", expectedError, err)
+        }
+        badOptions := ClientWriteAssertionsOptions{
+            AuthorizationModelId: openfga.PtrString("INVALID"),
+        }
+        _, err = fgaClient.WriteAssertions(context.Background()).
+            Body(requestBody).
+            Options(badOptions).
+            Execute()
+        if err == nil {
+            t.Fatalf("Invalid auth model id should result in error but there is none")
+        }
+
+        badStoreOptions := ClientWriteAssertionsOptions{
+            StoreId: openfga.PtrString("INVALID"),
+        }
+        _, err = fgaClient.WriteAssertions(context.Background()).
+            Body(requestBody).
+            Options(badStoreOptions).
+            Execute()
+        if err == nil {
+            t.Fatalf("Invalid store id should result in error but there is none")
+        }
+
+        // store can be overriden
+        storeOverrideOptions := ClientWriteAssertionsOptions{
+            AuthorizationModelId: openfga.PtrString(modelId),
+            StoreId:              openfga.PtrString("7777HCE4YVKPQEKZQHT2R89MQV"),
+        }
+        httpmock.Reset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s/%s", fgaClient.GetConfig().ApiUrl, *storeOverrideOptions.StoreId, test.RequestPath, modelId),
+            func(req *http.Request) (*http.Response, error) {
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, "")
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+                }
+                return resp, nil
+            },
+        )
+        _, err = fgaClient.WriteAssertions(context.Background()).
+            Body(requestBody).
+            Options(storeOverrideOptions).
+            Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("BatchCheckMaxBatchSize", func(t *testing.T) {
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+
+        fgaClient, err := NewSdkClient(&ClientConfiguration{
+            ApiUrl:  "https://api.fga.example",
+            StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
+        })
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        result := map[string]openfga.BatchCheckSingleResult{
+            "test1": {Allowed: openfga.PtrBool(true)},
+        }
+        response := openfga.BatchCheckResponse{
+            Result: &result,
+        }
+
+        var callCountMu sync.Mutex
+        callCount := 0
+
+        httpmock.RegisterResponder(
+            http.MethodPost,
+            fmt.Sprintf("%s/stores/%s/batch-check", fgaClient.GetConfig().ApiUrl, "01GXSB9YR785C4FYS3C0RTG7B2"),
+            func(req *http.Request) (*http.Response, error) {
+                callCountMu.Lock()
+                callCount++
+                callCountMu.Unlock()
+                resp, err := httpmock.NewJsonResponse(http.StatusOK, response)
+                if err != nil {
+                    return httpmock.NewStringResponse(http.StatusInternalServerError, err.Error()), nil
+                }
+                return resp, nil
+            },
+        )
+
+        // Create basic item template
+        createItem := func(i int) ClientBatchCheckItem {
+            return ClientBatchCheckItem{
+                User:          fmt.Sprintf("user:%d", i),
+                Relation:      "viewer",
+                Object:        fmt.Sprintf("document:%d", i),
+                CorrelationId: fmt.Sprintf("test%d", i),
+            }
+        }
+
+        t.Run("Simple case with MaxBatchSize=1", func(t *testing.T) {
+            callCountMu.Lock()
+            callCount = 0
+            callCountMu.Unlock()
+
+            items := []ClientBatchCheckItem{
+                createItem(1),
+                createItem(2),
+                createItem(3),
+            }
+
+            requestBody := ClientBatchCheckRequest{
+                Checks: items,
+            }
+
+            options := BatchCheckOptions{
+                MaxBatchSize: openfga.PtrInt32(1),
+            }
+
+            ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+            defer cancel()
+
+            _, err = fgaClient.BatchCheck(ctx).
+                Body(requestBody).
+                Options(options).
+                Execute()
+
+            if err != nil {
+                t.Fatalf("BatchCheck error: %v", err)
+            }
+
+            expectedCallCount := len(items) // With MaxBatchSize=1, we expect one call per item
+            callCountMu.Lock()
+            actualCallCount := callCount
+            callCountMu.Unlock()
+            if actualCallCount != expectedCallCount {
+                t.Errorf("Expected exactly %d API calls with MaxBatchSize=1, got %d", expectedCallCount, actualCallCount)
+            }
+        })
+
+        t.Run("Edge case where MaxParallelRequests * MaxBatchSize < len(items)", func(t *testing.T) {
+            callCountMu.Lock()
+            callCount = 0
+            callCountMu.Unlock()
+
+            // Create 101 items
+            var items []ClientBatchCheckItem
+            for i := 1; i <= 101; i++ {
+                items = append(items, createItem(i))
+            }
+
+            requestBody := ClientBatchCheckRequest{
+                Checks: items,
+            }
+
+            options := BatchCheckOptions{
+                MaxParallelRequests: openfga.PtrInt32(2),  // 2 parallel requests
+                MaxBatchSize:        openfga.PtrInt32(50), // 50 items per batch
+            }
+            // Total capacity: 2*50 = 100, but we have 101 items
+
+            ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+            defer cancel()
+
+            _, err = fgaClient.BatchCheck(ctx).
+                Body(requestBody).
+                Options(options).
+                Execute()
+
+            if err != nil {
+                t.Fatalf("BatchCheck error with MaxParallelRequests=2, MaxBatchSize=50, Items=101: %v", err)
+            }
+
+            // We expect 3 API calls (2 batches of 50 + 1 batch of 1)
+            expectedCallCount := 3
+            callCountMu.Lock()
+            actualCallCount := callCount
+            callCountMu.Unlock()
+            if actualCallCount != expectedCallCount {
+                t.Errorf("Expected exactly %d API calls with MaxParallelRequests=2, MaxBatchSize=50, Items=101, got %d",
+                    expectedCallCount, actualCallCount)
+            }
+        })
+    })
 }
 
 func TestOpenFgaClientWriteClientWriteConflictOptions(t *testing.T) {
-	fgaClient, err := NewSdkClient(&ClientConfiguration{
-		ApiUrl:  "https://api.fga.example",
-		StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
-	})
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
-
-	t.Run("Client Write with OnDuplicateWrites ignore option", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "Write",
-			JsonResponse:   `{}`,
-			ResponseStatus: 200,
-			Method:         "POST",
-			RequestPath:    "write",
-		}
-
-		body := ClientWriteRequest{
-			Writes: []ClientTupleKey{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "viewer",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			}},
-		}
-
-		var expectedResponse map[string]interface{}
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				// Verify the request body contains the OnDuplicate field set to "ignore"
-				var requestBody openfga.WriteRequest
-				if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
-					t.Errorf("Failed to decode request body: %v", err)
-				}
-				if requestBody.Writes == nil || requestBody.Writes.OnDuplicate == nil || *requestBody.Writes.OnDuplicate != "ignore" {
-					t.Errorf("Expected OnDuplicate to be 'ignore', got %v", requestBody.Writes.OnDuplicate)
-				}
-
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		options := ClientWriteOptions{
-			Conflict: ClientWriteConflictOptions{
-				OnDuplicateWrites: CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_IGNORE,
-			},
-		}
-		_, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("Client Write with OnDuplicateWrites error option", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "Write",
-			JsonResponse:   `{}`,
-			ResponseStatus: 200,
-			Method:         "POST",
-			RequestPath:    "write",
-		}
-
-		body := ClientWriteRequest{
-			Writes: []ClientTupleKey{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "viewer",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			}},
-		}
-
-		var expectedResponse map[string]interface{}
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				// Verify the request body contains the OnDuplicate field set to "error"
-				var requestBody openfga.WriteRequest
-				if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
-					t.Errorf("Failed to decode request body: %v", err)
-				}
-				if requestBody.Writes == nil || requestBody.Writes.OnDuplicate == nil || *requestBody.Writes.OnDuplicate != "error" {
-					t.Errorf("Expected OnDuplicate to be 'error', got %v", requestBody.Writes.OnDuplicate)
-				}
-
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		options := ClientWriteOptions{
-			Conflict: ClientWriteConflictOptions{
-				OnDuplicateWrites: CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_ERROR,
-			},
-		}
-		_, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("Client Write with OnMissingDeletes ignore option", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "Write",
-			JsonResponse:   `{}`,
-			ResponseStatus: 200,
-			Method:         "POST",
-			RequestPath:    "write",
-		}
-
-		body := ClientWriteRequest{
-			Deletes: []ClientTupleKeyWithoutCondition{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "viewer",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			}},
-		}
-
-		var expectedResponse map[string]interface{}
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				// Verify the request body contains the OnMissing field set to "ignore"
-				var requestBody openfga.WriteRequest
-				if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
-					t.Errorf("Failed to decode request body: %v", err)
-				}
-				if requestBody.Deletes == nil || requestBody.Deletes.OnMissing == nil || *requestBody.Deletes.OnMissing != "ignore" {
-					t.Errorf("Expected OnMissing to be 'ignore', got %v", requestBody.Deletes.OnMissing)
-				}
-
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		options := ClientWriteOptions{
-			Conflict: ClientWriteConflictOptions{
-				OnMissingDeletes: CLIENT_WRITE_REQUEST_ON_MISSING_DELETES_IGNORE,
-			},
-		}
-		_, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("Client Write with OnMissingDeletes error option", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "Write",
-			JsonResponse:   `{}`,
-			ResponseStatus: 200,
-			Method:         "POST",
-			RequestPath:    "write",
-		}
-
-		body := ClientWriteRequest{
-			Deletes: []ClientTupleKeyWithoutCondition{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "viewer",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			}},
-		}
-
-		var expectedResponse map[string]interface{}
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				// Verify the request body contains the OnMissing field set to "error"
-				var requestBody openfga.WriteRequest
-				if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
-					t.Errorf("Failed to decode request body: %v", err)
-				}
-				if requestBody.Deletes == nil || requestBody.Deletes.OnMissing == nil || *requestBody.Deletes.OnMissing != "error" {
-					t.Errorf("Expected OnMissing to be 'error', got %v", requestBody.Deletes.OnMissing)
-				}
-
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		options := ClientWriteOptions{
-			Conflict: ClientWriteConflictOptions{
-				OnMissingDeletes: CLIENT_WRITE_REQUEST_ON_MISSING_DELETES_ERROR,
-			},
-		}
-		_, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("Client Write with both OnDuplicateWrites and OnMissingDeletes options", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "Write",
-			JsonResponse:   `{}`,
-			ResponseStatus: 200,
-			Method:         "POST",
-			RequestPath:    "write",
-		}
-
-		body := ClientWriteRequest{
-			Writes: []ClientTupleKey{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "viewer",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			}},
-			Deletes: []ClientTupleKeyWithoutCondition{{
-				User:     "user:another-user",
-				Relation: "viewer",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			}},
-		}
-
-		var expectedResponse map[string]interface{}
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				// Verify the request body contains both OnDuplicate and OnMissing fields
-				var requestBody openfga.WriteRequest
-				if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
-					t.Errorf("Failed to decode request body: %v", err)
-				}
-				if requestBody.Writes == nil || requestBody.Writes.OnDuplicate == nil || *requestBody.Writes.OnDuplicate != "ignore" {
-					t.Errorf("Expected OnDuplicate to be 'ignore', got %v", requestBody.Writes.OnDuplicate)
-				}
-				if requestBody.Deletes == nil || requestBody.Deletes.OnMissing == nil || *requestBody.Deletes.OnMissing != "ignore" {
-					t.Errorf("Expected OnMissing to be 'ignore', got %v", requestBody.Deletes.OnMissing)
-				}
-
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		options := ClientWriteOptions{
-			Conflict: ClientWriteConflictOptions{
-				OnDuplicateWrites: CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_IGNORE,
-				OnMissingDeletes:  CLIENT_WRITE_REQUEST_ON_MISSING_DELETES_IGNORE,
-			},
-		}
-		_, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("Client Write with conflict options and transaction disabled", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "Write",
-			JsonResponse:   `{}`,
-			ResponseStatus: 200,
-			Method:         "POST",
-			RequestPath:    "write",
-		}
-
-		body := ClientWriteRequest{
-			Writes: []ClientTupleKey{
-				{
-					User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-					Relation: "viewer",
-					Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-				},
-				{
-					User:     "user:another-user",
-					Relation: "viewer",
-					Object:   "document:another-doc",
-				},
-			},
-		}
-
-		var expectedResponse map[string]interface{}
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				// Verify each chunked request contains the OnDuplicate field
-				var requestBody openfga.WriteRequest
-				if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
-					t.Errorf("Failed to decode request body: %v", err)
-				}
-				if requestBody.Writes == nil || requestBody.Writes.OnDuplicate == nil || *requestBody.Writes.OnDuplicate != "ignore" {
-					t.Errorf("Expected OnDuplicate to be 'ignore' in chunked request, got %v", requestBody.Writes.OnDuplicate)
-				}
-
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		options := ClientWriteOptions{
-			Conflict: ClientWriteConflictOptions{
-				OnDuplicateWrites: CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_IGNORE,
-			},
-			Transaction: &TransactionOptions{
-				Disable:             true,
-				MaxPerChunk:         1,
-				MaxParallelRequests: 2,
-			},
-		}
-		_, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("Client Write with conflict options and authorization model", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "Write",
-			JsonResponse:   `{}`,
-			ResponseStatus: 200,
-			Method:         "POST",
-			RequestPath:    "write",
-		}
-
-		body := ClientWriteRequest{
-			Writes: []ClientTupleKey{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "viewer",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			}},
-		}
-
-		var expectedResponse map[string]interface{}
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		modelId := "01GAHCE4YVKPQEKZQHT2R89MQV"
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				// Verify the request contains both conflict options and authorization model
-				var requestBody openfga.WriteRequest
-				if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
-					t.Errorf("Failed to decode request body: %v", err)
-				}
-				if requestBody.Writes == nil || requestBody.Writes.OnDuplicate == nil || *requestBody.Writes.OnDuplicate != "ignore" {
-					t.Errorf("Expected OnDuplicate to be 'ignore', got %v", requestBody.Writes.OnDuplicate)
-				}
-				if requestBody.AuthorizationModelId == nil || *requestBody.AuthorizationModelId != modelId {
-					t.Errorf("Expected AuthorizationModelId to be %s, got %v", modelId, requestBody.AuthorizationModelId)
-				}
-
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		options := ClientWriteOptions{
-			Conflict: ClientWriteConflictOptions{
-				OnDuplicateWrites: CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_IGNORE,
-			},
-			AuthorizationModelId: &modelId,
-		}
-		_, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("Client Write with store override and conflict options", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "Write",
-			JsonResponse:   `{}`,
-			ResponseStatus: 200,
-			Method:         "POST",
-			RequestPath:    "write",
-		}
-
-		body := ClientWriteRequest{
-			Writes: []ClientTupleKey{{
-				User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-				Relation: "viewer",
-				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-			}},
-		}
-
-		var expectedResponse map[string]interface{}
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		overrideStoreId := "01GXSB9YR785C4FYS3C0RTG7B3"
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, overrideStoreId, test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				// Verify the request contains conflict options
-				var requestBody openfga.WriteRequest
-				if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
-					t.Errorf("Failed to decode request body: %v", err)
-				}
-				if requestBody.Writes == nil || requestBody.Writes.OnDuplicate == nil || *requestBody.Writes.OnDuplicate != "ignore" {
-					t.Errorf("Expected OnDuplicate to be 'ignore', got %v", requestBody.Writes.OnDuplicate)
-				}
-
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		options := ClientWriteOptions{
-			Conflict: ClientWriteConflictOptions{
-				OnDuplicateWrites: CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_IGNORE,
-			},
-			StoreId: &overrideStoreId,
-		}
-		_, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	})
-
-	t.Run("Client Write conflict options precedence test", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "Write",
-			JsonResponse:   `{}`,
-			ResponseStatus: 200,
-			Method:         "POST",
-			RequestPath:    "write",
-		}
-
-		body := ClientWriteRequest{
-			Writes: []ClientTupleKey{
-				{
-					User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-					Relation: "viewer",
-					Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-				},
-				{
-					User:     "user:another-user",
-					Relation: "editor",
-					Object:   "document:another-doc",
-				},
-			},
-			Deletes: []ClientTupleKeyWithoutCondition{
-				{
-					User:     "user:old-user",
-					Relation: "viewer",
-					Object:   "document:old-doc",
-				},
-			},
-		}
-
-		var expectedResponse map[string]interface{}
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				// Verify that client options override any default values
-				var requestBody openfga.WriteRequest
-				if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
-					t.Errorf("Failed to decode request body: %v", err)
-				}
-
-				if requestBody.Writes == nil || requestBody.Writes.OnDuplicate == nil || *requestBody.Writes.OnDuplicate != "ignore" {
-					t.Errorf("Expected client OnDuplicateWrites option to override defaults, got %v", requestBody.Writes.OnDuplicate)
-				}
-
-				if requestBody.Deletes == nil || requestBody.Deletes.OnMissing == nil || *requestBody.Deletes.OnMissing != "ignore" {
-					t.Errorf("Expected client OnMissingDeletes option to override defaults, got %v", requestBody.Deletes.OnMissing)
-				}
-
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		options := ClientWriteOptions{
-			Conflict: ClientWriteConflictOptions{
-				OnDuplicateWrites: CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_IGNORE,
-				OnMissingDeletes:  CLIENT_WRITE_REQUEST_ON_MISSING_DELETES_IGNORE,
-			},
-		}
-
-		result, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		if result == nil {
-			t.Fatalf("Expected non-nil result")
-		}
-
-		if len(result.Writes) != 2 {
-			t.Fatalf("Expected 2 write results, got %d", len(result.Writes))
-		}
-
-		if len(result.Deletes) != 1 {
-			t.Fatalf("Expected 1 delete result, got %d", len(result.Deletes))
-		}
-	})
-
-	t.Run("Client Write mixed conflict options with chunked requests", func(t *testing.T) {
-		test := TestDefinition{
-			Name:           "Write",
-			JsonResponse:   `{}`,
-			ResponseStatus: 200,
-			Method:         "POST",
-			RequestPath:    "write",
-		}
-
-		body := ClientWriteRequest{
-			Writes: []ClientTupleKey{
-				{
-					User:     "user:writer1",
-					Relation: "viewer",
-					Object:   "document:doc1",
-				},
-				{
-					User:     "user:writer2",
-					Relation: "viewer",
-					Object:   "document:doc2",
-				},
-			},
-			Deletes: []ClientTupleKeyWithoutCondition{
-				{
-					User:     "user:deleter1",
-					Relation: "viewer",
-					Object:   "document:doc3",
-				},
-				{
-					User:     "user:deleter2",
-					Relation: "viewer",
-					Object:   "document:doc4",
-				},
-			},
-		}
-
-		var expectedResponse map[string]interface{}
-		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		httpmock.Activate()
-		defer httpmock.DeactivateAndReset()
-		httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
-			func(req *http.Request) (*http.Response, error) {
-				var requestBody openfga.WriteRequest
-				if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
-					t.Errorf("Failed to decode request body: %v", err)
-				}
-
-				if requestBody.Writes != nil && len(requestBody.Writes.TupleKeys) > 0 {
-					if requestBody.Writes.OnDuplicate == nil || *requestBody.Writes.OnDuplicate != "ignore" {
-						t.Errorf("Expected OnDuplicate to be 'ignore' in write chunk, got %v", requestBody.Writes.OnDuplicate)
-					}
-				}
-
-				if requestBody.Deletes != nil && len(requestBody.Deletes.TupleKeys) > 0 {
-					if requestBody.Deletes.OnMissing == nil || *requestBody.Deletes.OnMissing != "ignore" {
-						t.Errorf("Expected OnMissing to be 'ignore' in delete chunk, got %v", requestBody.Deletes.OnMissing)
-					}
-				}
-
-				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
-				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
-				}
-				return resp, nil
-			},
-		)
-
-		options := ClientWriteOptions{
-			Conflict: ClientWriteConflictOptions{
-				OnDuplicateWrites: CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_IGNORE,
-				OnMissingDeletes:  CLIENT_WRITE_REQUEST_ON_MISSING_DELETES_IGNORE,
-			},
-			Transaction: &TransactionOptions{
-				Disable:             true,
-				MaxPerChunk:         1,
-				MaxParallelRequests: 4,
-			},
-		}
-
-		result, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-
-		if result == nil {
-			t.Fatalf("Expected non-nil result")
-		}
-
-		if len(result.Writes) != 2 {
-			t.Fatalf("Expected 2 write results, got %d", len(result.Writes))
-		}
-
-		if len(result.Deletes) != 2 {
-			t.Fatalf("Expected 2 delete results, got %d", len(result.Deletes))
-		}
-	})
+    fgaClient, err := NewSdkClient(&ClientConfiguration{
+        ApiUrl:  "https://api.fga.example",
+        StoreId: "01GXSB9YR785C4FYS3C0RTG7B2",
+    })
+    if err != nil {
+        t.Fatalf("%v", err)
+    }
+
+    t.Run("Client Write with OnDuplicateWrites ignore option", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "Write",
+            JsonResponse:   `{}`,
+            ResponseStatus: 200,
+            Method:         "POST",
+            RequestPath:    "write",
+        }
+
+        body := ClientWriteRequest{
+            Writes: []ClientTupleKey{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "viewer",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            }},
+        }
+
+        var expectedResponse map[string]interface{}
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                // Verify the request body contains the OnDuplicate field set to "ignore"
+                var requestBody openfga.WriteRequest
+                if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
+                    t.Errorf("Failed to decode request body: %v", err)
+                }
+                if requestBody.Writes == nil || requestBody.Writes.OnDuplicate == nil || *requestBody.Writes.OnDuplicate != "ignore" {
+                    t.Errorf("Expected OnDuplicate to be 'ignore', got %v", requestBody.Writes.OnDuplicate)
+                }
+
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(500, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        options := ClientWriteOptions{
+            Conflict: ClientWriteConflictOptions{
+                OnDuplicateWrites: CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_IGNORE,
+            },
+        }
+        _, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("Client Write with OnDuplicateWrites error option", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "Write",
+            JsonResponse:   `{}`,
+            ResponseStatus: 200,
+            Method:         "POST",
+            RequestPath:    "write",
+        }
+
+        body := ClientWriteRequest{
+            Writes: []ClientTupleKey{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "viewer",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            }},
+        }
+
+        var expectedResponse map[string]interface{}
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                // Verify the request body contains the OnDuplicate field set to "error"
+                var requestBody openfga.WriteRequest
+                if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
+                    t.Errorf("Failed to decode request body: %v", err)
+                }
+                if requestBody.Writes == nil || requestBody.Writes.OnDuplicate == nil || *requestBody.Writes.OnDuplicate != "error" {
+                    t.Errorf("Expected OnDuplicate to be 'error', got %v", requestBody.Writes.OnDuplicate)
+                }
+
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(500, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        options := ClientWriteOptions{
+            Conflict: ClientWriteConflictOptions{
+                OnDuplicateWrites: CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_ERROR,
+            },
+        }
+        _, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("Client Write with OnMissingDeletes ignore option", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "Write",
+            JsonResponse:   `{}`,
+            ResponseStatus: 200,
+            Method:         "POST",
+            RequestPath:    "write",
+        }
+
+        body := ClientWriteRequest{
+            Deletes: []ClientTupleKeyWithoutCondition{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "viewer",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            }},
+        }
+
+        var expectedResponse map[string]interface{}
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                // Verify the request body contains the OnMissing field set to "ignore"
+                var requestBody openfga.WriteRequest
+                if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
+                    t.Errorf("Failed to decode request body: %v", err)
+                }
+                if requestBody.Deletes == nil || requestBody.Deletes.OnMissing == nil || *requestBody.Deletes.OnMissing != "ignore" {
+                    t.Errorf("Expected OnMissing to be 'ignore', got %v", requestBody.Deletes.OnMissing)
+                }
+
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(500, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        options := ClientWriteOptions{
+            Conflict: ClientWriteConflictOptions{
+                OnMissingDeletes: CLIENT_WRITE_REQUEST_ON_MISSING_DELETES_IGNORE,
+            },
+        }
+        _, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("Client Write with OnMissingDeletes error option", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "Write",
+            JsonResponse:   `{}`,
+            ResponseStatus: 200,
+            Method:         "POST",
+            RequestPath:    "write",
+        }
+
+        body := ClientWriteRequest{
+            Deletes: []ClientTupleKeyWithoutCondition{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "viewer",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            }},
+        }
+
+        var expectedResponse map[string]interface{}
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                // Verify the request body contains the OnMissing field set to "error"
+                var requestBody openfga.WriteRequest
+                if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
+                    t.Errorf("Failed to decode request body: %v", err)
+                }
+                if requestBody.Deletes == nil || requestBody.Deletes.OnMissing == nil || *requestBody.Deletes.OnMissing != "error" {
+                    t.Errorf("Expected OnMissing to be 'error', got %v", requestBody.Deletes.OnMissing)
+                }
+
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(500, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        options := ClientWriteOptions{
+            Conflict: ClientWriteConflictOptions{
+                OnMissingDeletes: CLIENT_WRITE_REQUEST_ON_MISSING_DELETES_ERROR,
+            },
+        }
+        _, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("Client Write with both OnDuplicateWrites and OnMissingDeletes options", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "Write",
+            JsonResponse:   `{}`,
+            ResponseStatus: 200,
+            Method:         "POST",
+            RequestPath:    "write",
+        }
+
+        body := ClientWriteRequest{
+            Writes: []ClientTupleKey{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "viewer",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            }},
+            Deletes: []ClientTupleKeyWithoutCondition{{
+                User:     "user:another-user",
+                Relation: "viewer",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            }},
+        }
+
+        var expectedResponse map[string]interface{}
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                // Verify the request body contains both OnDuplicate and OnMissing fields
+                var requestBody openfga.WriteRequest
+                if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
+                    t.Errorf("Failed to decode request body: %v", err)
+                }
+                if requestBody.Writes == nil || requestBody.Writes.OnDuplicate == nil || *requestBody.Writes.OnDuplicate != "ignore" {
+                    t.Errorf("Expected OnDuplicate to be 'ignore', got %v", requestBody.Writes.OnDuplicate)
+                }
+                if requestBody.Deletes == nil || requestBody.Deletes.OnMissing == nil || *requestBody.Deletes.OnMissing != "ignore" {
+                    t.Errorf("Expected OnMissing to be 'ignore', got %v", requestBody.Deletes.OnMissing)
+                }
+
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(500, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        options := ClientWriteOptions{
+            Conflict: ClientWriteConflictOptions{
+                OnDuplicateWrites: CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_IGNORE,
+                OnMissingDeletes:  CLIENT_WRITE_REQUEST_ON_MISSING_DELETES_IGNORE,
+            },
+        }
+        _, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("Client Write with conflict options and transaction disabled", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "Write",
+            JsonResponse:   `{}`,
+            ResponseStatus: 200,
+            Method:         "POST",
+            RequestPath:    "write",
+        }
+
+        body := ClientWriteRequest{
+            Writes: []ClientTupleKey{
+                {
+                    User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                    Relation: "viewer",
+                    Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+                },
+                {
+                    User:     "user:another-user",
+                    Relation: "viewer",
+                    Object:   "document:another-doc",
+                },
+            },
+        }
+
+        var expectedResponse map[string]interface{}
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                // Verify each chunked request contains the OnDuplicate field
+                var requestBody openfga.WriteRequest
+                if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
+                    t.Errorf("Failed to decode request body: %v", err)
+                }
+                if requestBody.Writes == nil || requestBody.Writes.OnDuplicate == nil || *requestBody.Writes.OnDuplicate != "ignore" {
+                    t.Errorf("Expected OnDuplicate to be 'ignore' in chunked request, got %v", requestBody.Writes.OnDuplicate)
+                }
+
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(500, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        options := ClientWriteOptions{
+            Conflict: ClientWriteConflictOptions{
+                OnDuplicateWrites: CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_IGNORE,
+            },
+            Transaction: &TransactionOptions{
+                Disable:             true,
+                MaxPerChunk:         1,
+                MaxParallelRequests: 2,
+            },
+        }
+        _, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("Client Write with conflict options and authorization model", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "Write",
+            JsonResponse:   `{}`,
+            ResponseStatus: 200,
+            Method:         "POST",
+            RequestPath:    "write",
+        }
+
+        body := ClientWriteRequest{
+            Writes: []ClientTupleKey{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "viewer",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            }},
+        }
+
+        var expectedResponse map[string]interface{}
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        modelId := "01GAHCE4YVKPQEKZQHT2R89MQV"
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                // Verify the request contains both conflict options and authorization model
+                var requestBody openfga.WriteRequest
+                if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
+                    t.Errorf("Failed to decode request body: %v", err)
+                }
+                if requestBody.Writes == nil || requestBody.Writes.OnDuplicate == nil || *requestBody.Writes.OnDuplicate != "ignore" {
+                    t.Errorf("Expected OnDuplicate to be 'ignore', got %v", requestBody.Writes.OnDuplicate)
+                }
+                if requestBody.AuthorizationModelId == nil || *requestBody.AuthorizationModelId != modelId {
+                    t.Errorf("Expected AuthorizationModelId to be %s, got %v", modelId, requestBody.AuthorizationModelId)
+                }
+
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(500, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        options := ClientWriteOptions{
+            Conflict: ClientWriteConflictOptions{
+                OnDuplicateWrites: CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_IGNORE,
+            },
+            AuthorizationModelId: &modelId,
+        }
+        _, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("Client Write with store override and conflict options", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "Write",
+            JsonResponse:   `{}`,
+            ResponseStatus: 200,
+            Method:         "POST",
+            RequestPath:    "write",
+        }
+
+        body := ClientWriteRequest{
+            Writes: []ClientTupleKey{{
+                User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                Relation: "viewer",
+                Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+            }},
+        }
+
+        var expectedResponse map[string]interface{}
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        overrideStoreId := "01GXSB9YR785C4FYS3C0RTG7B3"
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, overrideStoreId, test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                // Verify the request contains conflict options
+                var requestBody openfga.WriteRequest
+                if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
+                    t.Errorf("Failed to decode request body: %v", err)
+                }
+                if requestBody.Writes == nil || requestBody.Writes.OnDuplicate == nil || *requestBody.Writes.OnDuplicate != "ignore" {
+                    t.Errorf("Expected OnDuplicate to be 'ignore', got %v", requestBody.Writes.OnDuplicate)
+                }
+
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(500, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        options := ClientWriteOptions{
+            Conflict: ClientWriteConflictOptions{
+                OnDuplicateWrites: CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_IGNORE,
+            },
+            StoreId: &overrideStoreId,
+        }
+        _, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+    })
+
+    t.Run("Client Write conflict options precedence test", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "Write",
+            JsonResponse:   `{}`,
+            ResponseStatus: 200,
+            Method:         "POST",
+            RequestPath:    "write",
+        }
+
+        body := ClientWriteRequest{
+            Writes: []ClientTupleKey{
+                {
+                    User:     "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                    Relation: "viewer",
+                    Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+                },
+                {
+                    User:     "user:another-user",
+                    Relation: "editor",
+                    Object:   "document:another-doc",
+                },
+            },
+            Deletes: []ClientTupleKeyWithoutCondition{
+                {
+                    User:     "user:old-user",
+                    Relation: "viewer",
+                    Object:   "document:old-doc",
+                },
+            },
+        }
+
+        var expectedResponse map[string]interface{}
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                // Verify that client options override any default values
+                var requestBody openfga.WriteRequest
+                if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
+                    t.Errorf("Failed to decode request body: %v", err)
+                }
+
+                if requestBody.Writes == nil || requestBody.Writes.OnDuplicate == nil || *requestBody.Writes.OnDuplicate != "ignore" {
+                    t.Errorf("Expected client OnDuplicateWrites option to override defaults, got %v", requestBody.Writes.OnDuplicate)
+                }
+
+                if requestBody.Deletes == nil || requestBody.Deletes.OnMissing == nil || *requestBody.Deletes.OnMissing != "ignore" {
+                    t.Errorf("Expected client OnMissingDeletes option to override defaults, got %v", requestBody.Deletes.OnMissing)
+                }
+
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(500, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        options := ClientWriteOptions{
+            Conflict: ClientWriteConflictOptions{
+                OnDuplicateWrites: CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_IGNORE,
+                OnMissingDeletes:  CLIENT_WRITE_REQUEST_ON_MISSING_DELETES_IGNORE,
+            },
+        }
+
+        result, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        if result == nil {
+            t.Fatalf("Expected non-nil result")
+        }
+
+        if len(result.Writes) != 2 {
+            t.Fatalf("Expected 2 write results, got %d", len(result.Writes))
+        }
+
+        if len(result.Deletes) != 1 {
+            t.Fatalf("Expected 1 delete result, got %d", len(result.Deletes))
+        }
+    })
+
+    t.Run("Client Write mixed conflict options with chunked requests", func(t *testing.T) {
+        test := TestDefinition{
+            Name:           "Write",
+            JsonResponse:   `{}`,
+            ResponseStatus: 200,
+            Method:         "POST",
+            RequestPath:    "write",
+        }
+
+        body := ClientWriteRequest{
+            Writes: []ClientTupleKey{
+                {
+                    User:     "user:writer1",
+                    Relation: "viewer",
+                    Object:   "document:doc1",
+                },
+                {
+                    User:     "user:writer2",
+                    Relation: "viewer",
+                    Object:   "document:doc2",
+                },
+            },
+            Deletes: []ClientTupleKeyWithoutCondition{
+                {
+                    User:     "user:deleter1",
+                    Relation: "viewer",
+                    Object:   "document:doc3",
+                },
+                {
+                    User:     "user:deleter2",
+                    Relation: "viewer",
+                    Object:   "document:doc4",
+                },
+            },
+        }
+
+        var expectedResponse map[string]interface{}
+        if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        httpmock.Activate()
+        defer httpmock.DeactivateAndReset()
+        httpmock.RegisterResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+            func(req *http.Request) (*http.Response, error) {
+                var requestBody openfga.WriteRequest
+                if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
+                    t.Errorf("Failed to decode request body: %v", err)
+                }
+
+                if requestBody.Writes != nil && len(requestBody.Writes.TupleKeys) > 0 {
+                    if requestBody.Writes.OnDuplicate == nil || *requestBody.Writes.OnDuplicate != "ignore" {
+                        t.Errorf("Expected OnDuplicate to be 'ignore' in write chunk, got %v", requestBody.Writes.OnDuplicate)
+                    }
+                }
+
+                if requestBody.Deletes != nil && len(requestBody.Deletes.TupleKeys) > 0 {
+                    if requestBody.Deletes.OnMissing == nil || *requestBody.Deletes.OnMissing != "ignore" {
+                        t.Errorf("Expected OnMissing to be 'ignore' in delete chunk, got %v", requestBody.Deletes.OnMissing)
+                    }
+                }
+
+                resp, err := httpmock.NewJsonResponse(test.ResponseStatus, expectedResponse)
+                if err != nil {
+                    return httpmock.NewStringResponse(500, ""), nil
+                }
+                return resp, nil
+            },
+        )
+
+        options := ClientWriteOptions{
+            Conflict: ClientWriteConflictOptions{
+                OnDuplicateWrites: CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_IGNORE,
+                OnMissingDeletes:  CLIENT_WRITE_REQUEST_ON_MISSING_DELETES_IGNORE,
+            },
+            Transaction: &TransactionOptions{
+                Disable:             true,
+                MaxPerChunk:         1,
+                MaxParallelRequests: 4,
+            },
+        }
+
+        result, err := fgaClient.Write(context.Background()).Body(body).Options(options).Execute()
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+
+        if result == nil {
+            t.Fatalf("Expected non-nil result")
+        }
+
+        if len(result.Writes) != 2 {
+            t.Fatalf("Expected 2 write results, got %d", len(result.Writes))
+        }
+
+        if len(result.Deletes) != 2 {
+            t.Fatalf("Expected 2 delete results, got %d", len(result.Deletes))
+        }
+    })
 }
 
 func getStoreId(t *testing.T, fgaClient *OpenFgaClient) string {
-	storeId, err := fgaClient.GetStoreId()
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
-	return storeId
+    storeId, err := fgaClient.GetStoreId()
+    if err != nil {
+        t.Fatalf("%v", err)
+    }
+    return storeId
 }
