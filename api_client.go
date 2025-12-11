@@ -234,6 +234,12 @@ func (c *APIClient) GetConfig() *Configuration {
 	return c.cfg
 }
 
+// GetAPIExecutor returns an APIExecutor that can be used to call any OpenFGA API endpoint
+// This is useful for calling endpoints that are not yet supported by the SDK
+func (c *APIClient) GetAPIExecutor() APIExecutor {
+	return NewAPIExecutor(c)
+}
+
 // prepareRequest build the request
 func (c *APIClient) prepareRequest(
 	ctx context.Context,

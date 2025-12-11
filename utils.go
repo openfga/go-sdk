@@ -340,3 +340,17 @@ func IsWellFormedUri(uriString string) bool {
 
 	return true
 }
+
+func validatePathParameter(name string, value string) error {
+	if value == "" {
+		return reportError("%s is required and must be specified", name)
+	}
+	return nil
+}
+
+func validateParameter(name string, value interface{}) error {
+	if value == nil {
+		return reportError("%s is required and must be specified", name)
+	}
+	return nil
+}
