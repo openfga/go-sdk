@@ -1,10 +1,12 @@
 # Changelog
 
 ## [Unreleased](https://github.com/openfga/go-sdk/compare/v0.7.3...HEAD)
+
+- feat: add a generic API Executor `fgaClient.GetAPIExecutor()` to allow calling any OpenFGA API method. See [Calling Other Endpoints](./README.md#calling-other-endpoints) for more.
 - feat: add generic `ToPtr[T any](v T) *T` function for creating pointers to any type
 - deprecation: `PtrBool`, `PtrInt`, `PtrInt32`, `PtrInt64`, `PtrFloat32`, `PtrFloat64`, `PtrString`, and `PtrTime` are now deprecated in favor of the generic `ToPtr` function
-- feat: add a top-level makefile in go-sdk to simplify running tests and linters: (#250)
-- feat: add support for StreamedListObjects endpoint (#252)
+- chore: add a top-level makefile in go-sdk to simplify running tests and linters: (#250)
+
 ## v0.7.3
 
 ### [0.7.3](https://github.com/openfga/go-sdk/compare/v0.7.2...v0.7.3) (2025-10-08)
