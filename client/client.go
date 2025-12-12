@@ -2912,6 +2912,10 @@ func (client *OpenFgaClient) ListRelationsExecute(request SdkClientListRelations
 
 	var relations []string
 	for index := 0; index < len(*batchResponse); index++ {
+		// If any check encountered an error, return immediately
+		if (*batchResponse)[index].Error != nil {
+			return nil, (*batchResponse)[index].Error
+		}
 		if (*batchResponse)[index].GetAllowed() {
 			relations = append(relations, (*batchResponse)[index].Request.Relation)
 		}

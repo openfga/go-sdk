@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -3139,6 +3140,132 @@ func TestOpenFgaClient(t *testing.T) {
 
 		if err == nil {
 			t.Fatalf("OpenFgaClient.%v() - expected an error but received none", test.Name)
+		}
+	})
+
+	t.Run("ListRelationsSurfacesCheckErrors", func(t *testing.T) {
+		test := TestDefinition{
+			Name:           "ListRelations",
+			JsonResponse:   `{"allowed":true, "resolution":""}`,
+			ResponseStatus: http.StatusOK,
+			Method:         http.MethodPost,
+			RequestPath:    "check",
+		}
+
+		requestBody := ClientListRelationsRequest{
+			User:      "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+			Object:    "workspace:1",
+			Relations: []string{"admin", "guest", "reader", "viewer", "can_read"},
+		}
+		const authModelId = "01GAHCE4YVKPQEKZQHT2R89MQV"
+		options := ClientListRelationsOptions{
+			AuthorizationModelId: openfga.PtrString(authModelId),
+		}
+
+		var expectedResponse openfga.CheckResponse
+		if err := json.Unmarshal([]byte(test.JsonResponse), &expectedResponse); err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		// Track which responders were called
+		adminCalled := false
+		guestCalled := false
+		readerCalled := false
+		viewerCalled := false
+		canReadCalled := false
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+
+		// First check: admin - returns true
+		httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+			httpmock.BodyContainsString(`"relation":"admin"`),
+			func(req *http.Request) (*http.Response, error) {
+				adminCalled = true
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, openfga.CheckResponse{Allowed: openfga.PtrBool(true)})
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+
+		// Second check: guest - returns false
+		httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+			httpmock.BodyContainsString(`"relation":"guest"`),
+			func(req *http.Request) (*http.Response, error) {
+				guestCalled = true
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, openfga.CheckResponse{Allowed: openfga.PtrBool(false)})
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+
+		// Third check: reader - returns true
+		httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+			httpmock.BodyContainsString(`"relation":"reader"`),
+			func(req *http.Request) (*http.Response, error) {
+				readerCalled = true
+				resp, err := httpmock.NewJsonResponse(test.ResponseStatus, openfga.CheckResponse{Allowed: openfga.PtrBool(true)})
+				if err != nil {
+					return httpmock.NewStringResponse(http.StatusInternalServerError, ""), nil
+				}
+				return resp, nil
+			},
+		)
+
+		// Fourth check: viewer - returns 500 error (first error)
+		httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+			httpmock.BodyContainsString(`"relation":"viewer"`),
+			func(req *http.Request) (*http.Response, error) {
+				viewerCalled = true
+				return httpmock.NewStringResponse(http.StatusInternalServerError, `{"code":"internal_error","message":"Internal Server Error"}`), nil
+			},
+		)
+
+		// Fifth check: can_read - returns 400 error
+		httpmock.RegisterMatcherResponder(test.Method, fmt.Sprintf("%s/stores/%s/%s", fgaClient.GetConfig().ApiUrl, getStoreId(t, fgaClient), test.RequestPath),
+			httpmock.BodyContainsString(`"relation":"can_read"`),
+			func(req *http.Request) (*http.Response, error) {
+				canReadCalled = true
+				return httpmock.NewStringResponse(http.StatusBadRequest, `{"code":"validation_error","message":"relation 'workspace#can_read' not found"}`), nil
+			},
+		)
+
+		// Verify responders are not called initially
+		if adminCalled || guestCalled || readerCalled || viewerCalled || canReadCalled {
+			t.Fatalf("Responders should not be called before Execute()")
+		}
+
+		_, err := fgaClient.ListRelations(context.Background()).
+			Body(requestBody).
+			Options(options).
+			Execute()
+
+		// Should return an error from the fourth check (500)
+		if err == nil {
+			t.Fatalf("OpenFgaClient.%v() - expected an error but received none", test.Name)
+		}
+
+		// Verify the error is from the 500 response
+		if !strings.Contains(err.Error(), "Internal Server Error") && !strings.Contains(err.Error(), "internal_error") {
+			t.Logf("Error received: %v", err)
+		}
+
+		// Verify which responders were called
+		if !adminCalled {
+			t.Errorf("Expected admin check to be called")
+		}
+		if !guestCalled {
+			t.Errorf("Expected guest check to be called")
+		}
+		if !readerCalled {
+			t.Errorf("Expected reader check to be called")
+		}
+		if !viewerCalled {
+			t.Errorf("Expected viewer check to be called (where error occurs)")
 		}
 	})
 
