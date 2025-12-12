@@ -257,3 +257,30 @@ func TestQueryDuration(t *testing.T) {
 		t.Fatalf("Expected Record method to be called on histogram")
 	}
 }
+
+func TestHTTPRequestDuration(t *testing.T) {
+	mockMeter := &MockMeter{
+		counters:   make(map[string]metric.Int64Counter),
+		histograms: make(map[string]metric.Float64Histogram),
+	}
+	metrics := &Metrics{
+		Meter:      mockMeter,
+		Histograms: make(map[string]metric.Float64Histogram),
+	}
+
+	attrs := make(map[*Attribute]string)
+
+	histogram, err := metrics.HTTPRequestDuration(1.0, attrs)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err)
+	}
+
+	if histogram == nil {
+		t.Fatalf("Expected a non-nil histogram, but got nil")
+	}
+
+	mockHistogram, ok := histogram.(*MockFloat64Histogram)
+	if !ok || !mockHistogram.recordCalled {
+		t.Fatalf("Expected Record method to be called on histogram")
+	}
+}

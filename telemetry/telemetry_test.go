@@ -49,6 +49,11 @@ func (m *MockMetrics) QueryDuration(value float64, attrs map[*Attribute]string) 
 	return histogram, nil
 }
 
+func (m *MockMetrics) HTTPRequestDuration(value float64, attrs map[*Attribute]string) (metric.Float64Histogram, error) {
+	histogram, _ := m.GetHistogram("http_request_duration", "An HTTP request duration", "ms")
+	return histogram, nil
+}
+
 func (m *MockMetrics) BuildTelemetryAttributes(requestMethod string, methodParameters map[string]interface{}, req *http.Request, res *http.Response, requestStarted time.Time, resendCount int) (map[*Attribute]string, float64, float64, error) {
 	attrs := map[*Attribute]string{
 		HTTPRequestMethod: requestMethod,
@@ -58,6 +63,18 @@ func (m *MockMetrics) BuildTelemetryAttributes(requestMethod string, methodParam
 	queryDuration := float64(50)
 
 	return attrs, queryDuration, requestDuration, nil
+}
+
+func (m *MockMetrics) AttributesFromRequest(req *http.Request, params map[string]interface{}) (map[*Attribute]string, error) {
+	return map[*Attribute]string{}, nil
+}
+
+func (m *MockMetrics) AttributesFromResponse(res *http.Response, attrs map[*Attribute]string) (map[*Attribute]string, error) {
+	return attrs, nil
+}
+
+func (m *MockMetrics) AttributesFromResendCount(resendCount int, attrs map[*Attribute]string) (map[*Attribute]string, error) {
+	return attrs, nil
 }
 
 func TestConfigure(t *testing.T) {
