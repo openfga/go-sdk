@@ -196,7 +196,7 @@ func (c *APIClient) callAPI(request *http.Request) (*http.Response, error) {
 		if resp != nil {
 			httpRequestAttrs[telemetry.HTTPResponseStatusCode] = fmt.Sprintf("%d", resp.StatusCode)
 		}
-		_, _ = metrics.HttpRequestDuration(httpRequestDuration, httpRequestAttrs)
+		_, _ = metrics.HTTPRequestDuration(httpRequestDuration, httpRequestAttrs)
 	}
 
 	if err != nil {

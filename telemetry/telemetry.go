@@ -120,12 +120,12 @@ func QueryDurationMetric(factory QueryDurationMetricParameters) (metric.Float64H
 	return GetMetrics(TelemetryFactoryParameters{Configuration: factory.Configuration}).QueryDuration(factory.Value, factory.Attrs)
 }
 
-type HttpRequestDurationMetricParameters struct {
+type HTTPRequestDurationMetricParameters struct {
 	Value float64
 	Attrs map[*Attribute]string
 	TelemetryFactoryParameters
 }
 
-func HttpRequestDurationMetric(factory HttpRequestDurationMetricParameters) (metric.Float64Histogram, error) {
-	return GetMetrics(TelemetryFactoryParameters{Configuration: factory.Configuration}).HttpRequestDuration(factory.Value, factory.Attrs)
+func HTTPRequestDurationMetric(factory HTTPRequestDurationMetricParameters) (metric.Float64Histogram, error) {
+	return GetMetrics(TelemetryFactoryParameters{Configuration: factory.Configuration}).HTTPRequestDuration(factory.Value, factory.Attrs)
 }

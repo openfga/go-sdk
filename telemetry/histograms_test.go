@@ -48,24 +48,24 @@ func TestQueryDurationHistogram(t *testing.T) {
 	}
 }
 
-func TestHttpRequestDurationHistogram(t *testing.T) {
+func TestHTTPRequestDurationHistogram(t *testing.T) {
 	expectedName := METRIC_HISTOGRAM_HTTP_REQUEST_DURATION
 	expectedUnit := "milliseconds"
 	expectedDescription := "The time (in milliseconds) for a single HTTP request to complete."
 
-	if HttpRequestDuration == nil {
-		t.Fatalf("Expected HttpRequestDuration to be initialized, but got nil")
+	if HTTPRequestDuration == nil {
+		t.Fatalf("Expected HTTPRequestDuration to be initialized, but got nil")
 	}
 
-	if HttpRequestDuration.GetName() != expectedName {
-		t.Errorf("Expected HttpRequestDuration Name to be '%s', but got '%s'", expectedName, HttpRequestDuration.GetName())
+	if HTTPRequestDuration.GetName() != expectedName {
+		t.Errorf("Expected HTTPRequestDuration Name to be '%s', but got '%s'", expectedName, HTTPRequestDuration.GetName())
 	}
 
-	if HttpRequestDuration.GetUnit() != expectedUnit {
-		t.Errorf("Expected HttpRequestDuration Unit to be '%s', but got '%s'", expectedUnit, HttpRequestDuration.GetUnit())
+	if HTTPRequestDuration.GetUnit() != expectedUnit {
+		t.Errorf("Expected HTTPRequestDuration Unit to be '%s', but got '%s'", expectedUnit, HTTPRequestDuration.GetUnit())
 	}
 
-	if HttpRequestDuration.GetDescription() != expectedDescription {
-		t.Errorf("Expected HttpRequestDuration Description to be '%s', but got '%s'", expectedDescription, HttpRequestDuration.GetDescription())
+	if HTTPRequestDuration.GetDescription() != expectedDescription {
+		t.Errorf("Expected HTTPRequestDuration Description to be '%s', but got '%s'", expectedDescription, HTTPRequestDuration.GetDescription())
 	}
 }

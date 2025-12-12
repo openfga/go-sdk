@@ -49,7 +49,7 @@ func (m *MockMetrics) QueryDuration(value float64, attrs map[*Attribute]string) 
 	return histogram, nil
 }
 
-func (m *MockMetrics) HttpRequestDuration(value float64, attrs map[*Attribute]string) (metric.Float64Histogram, error) {
+func (m *MockMetrics) HTTPRequestDuration(value float64, attrs map[*Attribute]string) (metric.Float64Histogram, error) {
 	histogram, _ := m.GetHistogram("http_request_duration", "An HTTP request duration", "ms")
 	return histogram, nil
 }

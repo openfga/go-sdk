@@ -258,7 +258,7 @@ func TestQueryDuration(t *testing.T) {
 	}
 }
 
-func TestHttpRequestDuration(t *testing.T) {
+func TestHTTPRequestDuration(t *testing.T) {
 	mockMeter := &MockMeter{
 		counters:   make(map[string]metric.Int64Counter),
 		histograms: make(map[string]metric.Float64Histogram),
@@ -270,7 +270,7 @@ func TestHttpRequestDuration(t *testing.T) {
 
 	attrs := make(map[*Attribute]string)
 
-	histogram, err := metrics.HttpRequestDuration(1.0, attrs)
+	histogram, err := metrics.HTTPRequestDuration(1.0, attrs)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err)
 	}

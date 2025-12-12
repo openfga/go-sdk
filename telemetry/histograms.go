@@ -19,7 +19,7 @@ var (
 		Description: "The total time it took (in milliseconds) for the FGA server to process and evaluate the request.",
 	}
 
-	HttpRequestDuration = &Histogram{
+	HTTPRequestDuration = &Histogram{
 		Name:        METRIC_HISTOGRAM_HTTP_REQUEST_DURATION,
 		Unit:        "milliseconds",
 		Description: "The time (in milliseconds) for a single HTTP request to complete.",
