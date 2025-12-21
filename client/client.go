@@ -2269,11 +2269,17 @@ func (client *OpenFgaClient) ClientBatchCheckExecute(request SdkClientBatchCheck
 				return nil, err
 			}
 
+			// Handle nil response
+			var checkResponse ClientCheckResponse
+			if singleResponse != nil {
+				checkResponse = *singleResponse
+			}
+
 			return &batchCheckResult{
 				Index: index,
 				Response: ClientBatchCheckClientSingleResponse{
 					Request:             checkBody,
-					ClientCheckResponse: *singleResponse,
+					ClientCheckResponse: checkResponse,
 					Error:               err,
 				},
 			}, nil
