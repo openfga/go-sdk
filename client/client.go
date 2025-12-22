@@ -1795,9 +1795,17 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 				},
 			})
 			var authErr fgaSdk.FgaApiAuthenticationError
-			// If an error was returned then it will be an authentication error so we want to return
+			// If an authentication error was returned, we want to return it immediately
 			if errors.As(err, &authErr) {
 				return nil, err
+			}
+
+			// Handle nil response - create zero value if singleResponse is nil
+			if singleResponse == nil {
+				return &ClientWriteResponse{
+					Writes:  []ClientWriteRequestWriteResponse{},
+					Deletes: []ClientWriteRequestDeleteResponse{},
+				}, nil
 			}
 
 			return singleResponse, nil
@@ -1837,25 +1845,39 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 			})
 
 			var authErr fgaSdk.FgaApiAuthenticationError
+			// If an authentication error was returned, we want to return it immediately
 			if errors.As(err, &authErr) {
 				return nil, err
 			}
+
+			// Handle nil response - create zero value if singleResponse is nil
+			if singleResponse == nil {
+				return &ClientWriteResponse{
+					Writes:  []ClientWriteRequestWriteResponse{},
+					Deletes: []ClientWriteRequestDeleteResponse{},
+				}, nil
+			}
+
 			return singleResponse, nil
 		})
 	}
 
 	deleteResponses, err := deletePool.Wait()
-	// If an error was returned then it will be an authentication error so we want to return
+	// If authencication error was returned, we want to return it immediately
 	if err != nil {
 		return &response, err
 	}
 
 	for _, writeResponse := range writeResponses {
-		response.Writes = append(response.Writes, writeResponse.Writes...)
+		if writeResponse != nil {
+			response.Writes = append(response.Writes, writeResponse.Writes...)
+		}
 	}
 
 	for _, deleteResponse := range deleteResponses {
-		response.Deletes = append(response.Deletes, deleteResponse.Deletes...)
+		if deleteResponse != nil {
+			response.Deletes = append(response.Deletes, deleteResponse.Deletes...)
+		}
 	}
 
 	return &response, nil
