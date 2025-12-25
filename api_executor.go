@@ -426,6 +426,11 @@ func (e *apiExecutor) determineRetry(
 		return false, 0
 	}
 
+	// Context cancellation errors are not retryable - return immediately
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+		return false, 0
+	}
+
 	// Check for rate limit or internal server errors that support retry
 	var rateLimitErr FgaApiRateLimitExceededError
 	var internalErr FgaApiInternalError
