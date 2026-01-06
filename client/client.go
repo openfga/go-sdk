@@ -2286,7 +2286,8 @@ func (client *OpenFgaClient) ClientBatchCheckExecute(request SdkClientBatchCheck
 			})
 
 			var authErr fgaSdk.FgaApiAuthenticationError
-			// If an error was returned then it will be an authentication error so we want to return
+			// If the error is an authentication error, propagate it so the batch fails fast.
+			// Non-authentication errors are captured in the per-request response below.
 			if errors.As(err, &authErr) {
 				return nil, err
 			}
