@@ -801,6 +801,16 @@ func TestAPIExecutor_DetermineRetry(t *testing.T) {
 			expectShouldRetry:  false,
 			expectWaitDuration: false,
 		},
+		{
+			name:               "wrapped_context_deadline_exceeded_no_retry",
+			err:                fmt.Errorf("operation failed: %w", context.DeadlineExceeded),
+			response:           nil,
+			attemptNum:         0,
+			retryParams:        RetryParams{MaxRetry: 3, MinWaitInMs: 50},
+			operationName:      "Test",
+			expectShouldRetry:  false,
+			expectWaitDuration: false,
+		},
 	}
 
 	for _, tc := range testCases {
