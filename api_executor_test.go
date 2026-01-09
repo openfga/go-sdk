@@ -3,6 +3,7 @@ package openfga
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -769,6 +770,46 @@ func TestAPIExecutor_DetermineRetry(t *testing.T) {
 			expectShouldRetry:   true,
 			expectWaitDuration:  true,
 			minExpectedDuration: 50,
+		},
+		{
+			name:               "context_canceled_no_retry",
+			err:                context.Canceled,
+			response:           nil,
+			attemptNum:         0,
+			retryParams:        RetryParams{MaxRetry: 3, MinWaitInMs: 50},
+			operationName:      "Test",
+			expectShouldRetry:  false,
+			expectWaitDuration: false,
+		},
+		{
+			name:               "context_deadline_exceeded_no_retry",
+			err:                context.DeadlineExceeded,
+			response:           nil,
+			attemptNum:         0,
+			retryParams:        RetryParams{MaxRetry: 3, MinWaitInMs: 50},
+			operationName:      "Test",
+			expectShouldRetry:  false,
+			expectWaitDuration: false,
+		},
+		{
+			name:               "wrapped_context_canceled_no_retry",
+			err:                fmt.Errorf("operation failed: %w", context.Canceled),
+			response:           nil,
+			attemptNum:         0,
+			retryParams:        RetryParams{MaxRetry: 3, MinWaitInMs: 50},
+			operationName:      "Test",
+			expectShouldRetry:  false,
+			expectWaitDuration: false,
+		},
+		{
+			name:               "wrapped_context_deadline_exceeded_no_retry",
+			err:                fmt.Errorf("operation failed: %w", context.DeadlineExceeded),
+			response:           nil,
+			attemptNum:         0,
+			retryParams:        RetryParams{MaxRetry: 3, MinWaitInMs: 50},
+			operationName:      "Test",
+			expectShouldRetry:  false,
+			expectWaitDuration: false,
 		},
 	}
 
