@@ -439,6 +439,19 @@ type SdkClient interface {
 	 */
 	ListUsersExecute(r SdkClientListUsersRequestInterface) (*ClientListUsersResponse, error)
 
+	/*
+	 * StreamedListObjects Stream all objects of the given type that the user has a relation with
+	 * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return SdkClientStreamedListObjectsRequestInterface
+	 */
+	StreamedListObjects(ctx _context.Context) SdkClientStreamedListObjectsRequestInterface
+
+	/*
+	 * StreamedListObjectsExecute executes the StreamedListObjects request and returns a channel
+	 * @return *ClientStreamedListObjectsResponse
+	 */
+	StreamedListObjectsExecute(request SdkClientStreamedListObjectsRequestInterface) (*ClientStreamedListObjectsResponse, error)
+
 	/* Assertions */
 
 	/*
@@ -3340,7 +3353,7 @@ func (r *ClientStreamedListObjectsResponse) Close() {
 	}
 }
 
-func (client *OpenFgaClient) streamedListObjects(ctx _context.Context) SdkClientStreamedListObjectsRequestInterface {
+func (client *OpenFgaClient) StreamedListObjects(ctx _context.Context) SdkClientStreamedListObjectsRequestInterface {
 	return &SdkClientStreamedListObjectsRequest{
 		Client: client,
 		ctx:    ctx,
@@ -3372,7 +3385,7 @@ func (request *SdkClientStreamedListObjectsRequest) Body(body ClientStreamedList
 }
 
 func (request *SdkClientStreamedListObjectsRequest) Execute() (*ClientStreamedListObjectsResponse, error) {
-	return request.Client.streamedListObjectsExecute(request)
+	return request.Client.StreamedListObjectsExecute(request)
 }
 
 func (request *SdkClientStreamedListObjectsRequest) GetContext() _context.Context {
@@ -3387,7 +3400,7 @@ func (request *SdkClientStreamedListObjectsRequest) GetOptions() *ClientStreamed
 	return request.options
 }
 
-func (client *OpenFgaClient) streamedListObjectsExecute(request SdkClientStreamedListObjectsRequestInterface) (*ClientStreamedListObjectsResponse, error) {
+func (client *OpenFgaClient) StreamedListObjectsExecute(request SdkClientStreamedListObjectsRequestInterface) (*ClientStreamedListObjectsResponse, error) {
 	if request.GetBody() == nil {
 		return nil, FgaRequiredParamError{param: "body"}
 	}

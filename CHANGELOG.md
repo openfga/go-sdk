@@ -7,6 +7,7 @@
 - feat: add generic `ToPtr[T any](v T) *T` function for creating pointers to any type
 - deprecation: `PtrBool`, `PtrInt`, `PtrInt32`, `PtrInt64`, `PtrFloat32`, `PtrFloat64`, `PtrString`, and `PtrTime` are now deprecated in favor of the generic `ToPtr` function
 - chore: add a top-level makefile in go-sdk to simplify running tests and linters: (#250)
+- feat: add support for StreamedListObjects endpoint (#271)
 
 ## v0.7.3
 
