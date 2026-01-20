@@ -13,82 +13,82 @@
 package constants
 
 const (
-    // SdkVersion is the version of the OpenFGA Go SDK.
-    SdkVersion = "0.7.4"
+	// SdkVersion is the version of the OpenFGA Go SDK.
+	SdkVersion = "0.7.4"
 
-    // UserAgent is the user agent used in HTTP requests.
-    UserAgent = "openfga-sdk go/0.7.4"
+	// UserAgent is the user agent used in HTTP requests.
+	UserAgent = "openfga-sdk go/0.7.4"
 
-    // SampleBaseDomain is the example API domain for documentation/tests.
-    SampleBaseDomain = "fga.example"
+	// SampleBaseDomain is the example API domain for documentation/tests.
+	SampleBaseDomain = "fga.example"
 
-    // TestApiUrl is the API URL used for tests.
-    TestApiUrl = "https://api." + SampleBaseDomain
+	// TestApiUrl is the API URL used for tests.
+	TestApiUrl = "https://api." + SampleBaseDomain
 
-    // TestIssuerUrl is the API Token Issuer URL used for tests.
-    TestIssuerUrl = "https://issuer." + SampleBaseDomain
+	// TestIssuerUrl is the API Token Issuer URL used for tests.
+	TestIssuerUrl = "https://issuer." + SampleBaseDomain
 
-    // DefaultApiUrl is the default API URL.
-    DefaultApiUrl = "http://localhost:8080"
+	// DefaultApiUrl is the default API URL.
+	DefaultApiUrl = "http://localhost:8080"
 
-    // Retry configuration
+	// Retry configuration
 
-    // RetryMaxAllowedNumber is the maximum allowed number of retries for HTTP requests.
-    RetryMaxAllowedNumber = 15
+	// RetryMaxAllowedNumber is the maximum allowed number of retries for HTTP requests.
+	RetryMaxAllowedNumber = 15
 
-    // DefaultMaxRetry is the default maximum number of retries for HTTP requests.
-    DefaultMaxRetry = 3
+	// DefaultMaxRetry is the default maximum number of retries for HTTP requests.
+	DefaultMaxRetry = 3
 
-    // DefaultMinWaitInMs is the default minimum wait time between retries in milliseconds.
-    DefaultMinWaitInMs = 100
+	// DefaultMinWaitInMs is the default minimum wait time between retries in milliseconds.
+	DefaultMinWaitInMs = 100
 
-    // MaxBackoffTimeInSec is the maximum backoff time in seconds.
-    MaxBackoffTimeInSec = 120
+	// MaxBackoffTimeInSec is the maximum backoff time in seconds.
+	MaxBackoffTimeInSec = 120
 
-    // RetryHeaderMaxAllowableDurationInSec is the maximum allowable duration for retry headers in seconds.
-    RetryHeaderMaxAllowableDurationInSec = 1800
+	// RetryHeaderMaxAllowableDurationInSec is the maximum allowable duration for retry headers in seconds.
+	RetryHeaderMaxAllowableDurationInSec = 1800
 
-    // RetryAfterHeaderName is the standard HTTP header for retry-after.
-    RetryAfterHeaderName = "Retry-After"
+	// RetryAfterHeaderName is the standard HTTP header for retry-after.
+	RetryAfterHeaderName = "Retry-After"
 
-    // RateLimitResetHeaderName is the rate limit reset header name.
-    RateLimitResetHeaderName = "X-RateLimit-Reset"
+	// RateLimitResetHeaderName is the rate limit reset header name.
+	RateLimitResetHeaderName = "X-RateLimit-Reset"
 
-    // RateLimitResetAltHeaderName is the alternative rate limit reset header name.
-    RateLimitResetAltHeaderName = "X-Rate-Limit-Reset"
+	// RateLimitResetAltHeaderName is the alternative rate limit reset header name.
+	RateLimitResetAltHeaderName = "X-Rate-Limit-Reset"
 
-    // Client methods
+	// Client methods
 
-    // ClientMaxMethodParallelRequests is the maximum number of parallel requests for a single method.
-    ClientMaxMethodParallelRequests = 10
+	// ClientMaxMethodParallelRequests is the maximum number of parallel requests for a single method.
+	ClientMaxMethodParallelRequests = 10
 
-    // ClientMaxBatchSize is the maximum batch size for batch requests.
-    ClientMaxBatchSize = 50
+	// ClientMaxBatchSize is the maximum batch size for batch requests.
+	ClientMaxBatchSize = 50
 
-    // ClientMethodHeader is the header used to identify the client method.
-    ClientMethodHeader = "X-OpenFGA-Client-Method"
+	// ClientMethodHeader is the header used to identify the client method.
+	ClientMethodHeader = "X-OpenFGA-Client-Method"
 
-    // ClientBulkRequestIdHeader is the header used to identify bulk requests.
-    ClientBulkRequestIdHeader = "X-OpenFGA-Client-Bulk-Request-Id"
+	// ClientBulkRequestIdHeader is the header used to identify bulk requests.
+	ClientBulkRequestIdHeader = "X-OpenFGA-Client-Bulk-Request-Id"
 
-    // Connection options
+	// Connection options
 
-    // DefaultRequestTimeoutInMs is the default timeout for HTTP requests in milliseconds.
-    DefaultRequestTimeoutInMs = 10000
+	// DefaultRequestTimeoutInMs is the default timeout for HTTP requests in milliseconds.
+	DefaultRequestTimeoutInMs = 10000
 
-    // DefaultConnectionTimeoutInMs is the default connection timeout in milliseconds.
-    DefaultConnectionTimeoutInMs = 10000
+	// DefaultConnectionTimeoutInMs is the default connection timeout in milliseconds.
+	DefaultConnectionTimeoutInMs = 10000
 
-    // Token management
+	// Token management
 
-    // TokenExpiryThresholdBufferInSec is the buffer time in seconds before token expiry to consider it expired.
-    TokenExpiryThresholdBufferInSec = 300
+	// TokenExpiryThresholdBufferInSec is the buffer time in seconds before token expiry to consider it expired.
+	TokenExpiryThresholdBufferInSec = 300
 
-    // TokenExpiryJitterInSec is the jitter time in seconds to add randomness to token expiry checks.
-    TokenExpiryJitterInSec = 300
+	// TokenExpiryJitterInSec is the jitter time in seconds to add randomness to token expiry checks.
+	TokenExpiryJitterInSec = 300
 
-    // FGA Response Headers
+	// FGA Response Headers
 
-    // QueryDurationHeaderName is the response header name for query duration in milliseconds.
-    QueryDurationHeaderName = "fga-query-duration-ms"
+	// QueryDurationHeaderName is the response header name for query duration in milliseconds.
+	QueryDurationHeaderName = "fga-query-duration-ms"
 )
