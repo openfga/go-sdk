@@ -3,6 +3,7 @@ package client_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -1764,7 +1765,8 @@ func TestOpenFgaClient(t *testing.T) {
 			t.Fatalf("Expect error with invalid auth but there is none")
 		}
 
-		if _, ok := err.(openfga.FgaApiAuthenticationError); !ok {
+		var authErr openfga.FgaApiAuthenticationError
+		if !errors.As(err, &authErr) {
 			t.Fatalf("Expected an api auth error")
 		}
 
@@ -1782,7 +1784,7 @@ func TestOpenFgaClient(t *testing.T) {
 			t.Fatalf("Expect error with invalid auth but there is none")
 		}
 
-		if _, ok := err.(openfga.FgaApiAuthenticationError); !ok {
+		if !errors.As(err, &authErr) {
 			t.Fatalf("Expected an api auth error")
 		}
 	})
