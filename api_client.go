@@ -57,21 +57,37 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 	if cfg.Telemetry == nil {
 		cfg.Telemetry = telemetry.DefaultTelemetryConfiguration()
 	}
+
+	// Set default HTTP client if none provided
 	if cfg.HTTPClient == nil {
-		if cfg.Credentials == nil {
-			cfg.HTTPClient = http.DefaultClient
-		} else {
-			cfg.Credentials.Context = context.Background()
-			telemetry.Bind(cfg.Credentials.Context, telemetry.Get(telemetry.TelemetryFactoryParameters{Configuration: cfg.Telemetry}))
-			var httpClient, headers = cfg.Credentials.GetHttpClientAndHeaderOverrides(retryutils.GetRetryParamsOrDefault(cfg.RetryParams), cfg.Debug)
-			if len(headers) > 0 {
-				for idx := range headers {
-					cfg.AddDefaultHeader(headers[idx].Key, headers[idx].Value)
+		cfg.HTTPClient = http.DefaultClient
+	}
+
+	// Process credentials if provided
+	if cfg.Credentials != nil {
+		cfg.Credentials.Context = context.Background()
+		telemetry.Bind(cfg.Credentials.Context, telemetry.Get(telemetry.TelemetryFactoryParameters{Configuration: cfg.Telemetry}))
+		var httpClient, headers = cfg.Credentials.GetHttpClientAndHeaderOverrides(retryutils.GetRetryParamsOrDefault(cfg.RetryParams), cfg.Debug)
+
+		// Always apply header overrides (works for ApiToken and other header-based auth)
+		if len(headers) > 0 {
+			for idx := range headers {
+				cfg.AddDefaultHeader(headers[idx].Key, headers[idx].Value)
+			}
+		}
+
+		// Handle potential conflict between custom HTTPClient and OAuth2 client
+		if httpClient != nil {
+			// httpClient is non-nil only for ClientCredentials method (OAuth2)
+			if cfg.HTTPClient != http.DefaultClient {
+				// User provided both a custom HTTPClient and ClientCredentials
+				// We cannot merge them, so we override with the OAuth2 client
+				// and log a warning if debug is enabled
+				if cfg.Debug {
+					log.Printf("Warning: Custom HTTPClient provided with ClientCredentials authentication. The custom HTTPClient will be replaced with an OAuth2-enabled client. If you need custom transport settings with ClientCredentials, consider configuring the transport through the OAuth2 client or use ApiToken authentication method instead.")
 				}
 			}
-			if httpClient != nil {
-				cfg.HTTPClient = httpClient
-			}
+			cfg.HTTPClient = httpClient
 		}
 	}
 
