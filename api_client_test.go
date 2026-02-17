@@ -10,6 +10,7 @@ import (
 	"github.com/jarcoal/httpmock"
 	"github.com/openfga/go-sdk/credentials"
 	"github.com/openfga/go-sdk/internal/constants"
+	"github.com/openfga/go-sdk/oauth2"
 	"github.com/openfga/go-sdk/telemetry"
 )
 
@@ -130,6 +131,27 @@ func TestApiClientWithCredentials(t *testing.T) {
 		// Verify the client was created successfully
 		if apiClient == nil {
 			t.Error("APIClient should not be nil")
+		}
+
+		// Verify that the OAuth2 transport actually wraps the custom client's transport
+		if configuration.HTTPClient.Transport != nil {
+			oauthTransport, ok := configuration.HTTPClient.Transport.(*oauth2.Transport)
+			if !ok {
+				t.Error("HTTPClient.Transport should be an *oauth2.Transport")
+			} else {
+				// customHTTPClient.Transport is nil, so Base should be nil or http.DefaultTransport
+				if customHTTPClient.Transport == nil {
+					// When custom transport is nil, OAuth2 uses http.DefaultTransport
+					if oauthTransport.Base != nil && oauthTransport.Base != http.DefaultTransport {
+						t.Errorf("OAuth2 transport Base should be nil or http.DefaultTransport when custom transport is nil, got: %T", oauthTransport.Base)
+					}
+				} else {
+					// When custom transport is not nil, OAuth2 should wrap it
+					if oauthTransport.Base != customHTTPClient.Transport {
+						t.Errorf("OAuth2 transport Base does not match custom transport. Expected: %v, Got: %v", customHTTPClient.Transport, oauthTransport.Base)
+					}
+				}
+			}
 		}
 	})
 
@@ -276,6 +298,22 @@ func TestApiClientWithCredentials(t *testing.T) {
 		// This means both credentials AND custom transport settings work together
 		if apiClient.GetConfig().HTTPClient == customHTTPClient {
 			t.Error("HTTPClient should be the OAuth2 wrapper, not the original custom client")
+		}
+
+		// Verify that the OAuth2 transport actually wraps the customTransport
+		finalClient := apiClient.GetConfig().HTTPClient
+		if finalClient.Transport != nil {
+			oauthTransport, ok := finalClient.Transport.(*oauth2.Transport)
+			if !ok {
+				t.Errorf("HTTPClient.Transport should be an *oauth2.Transport, got: %T", finalClient.Transport)
+			} else {
+				// Verify that the Base transport matches the customTransport
+				if oauthTransport.Base != customTransport {
+					t.Errorf("OAuth2 transport Base does not match customTransport. Expected: %p, Got: %p", customTransport, oauthTransport.Base)
+				}
+			}
+		} else {
+			t.Error("HTTPClient.Transport should not be nil")
 		}
 	})
 
