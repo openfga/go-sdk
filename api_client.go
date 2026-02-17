@@ -76,9 +76,11 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 			}
 		}
 
-		// Handle potential conflict between custom HTTPClient and OAuth2 client
-		if httpClient != nil {
-			// httpClient is non-nil only for ClientCredentials method (OAuth2)
+		// Handle OAuth2 client for ClientCredentials
+		// GetHttpClientAndHeaderOverrides returns http.DefaultClient for ApiToken/None
+		// and returns an OAuth2-enabled client for ClientCredentials
+		if httpClient != nil && httpClient != http.DefaultClient {
+			// An OAuth2 client was returned (ClientCredentials method)
 			if cfg.HTTPClient != http.DefaultClient {
 				// User provided both a custom HTTPClient and ClientCredentials
 				// We cannot merge them, so we override with the OAuth2 client

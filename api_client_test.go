@@ -86,6 +86,11 @@ func TestApiClientWithCredentials(t *testing.T) {
 		if !authHeaderReceived {
 			t.Errorf("Authorization header was not sent when custom HTTPClient was provided")
 		}
+
+		// Verify that the custom HTTPClient is preserved (not replaced)
+		if apiClient.GetConfig().HTTPClient != customHTTPClient {
+			t.Error("Custom HTTPClient was replaced when it should have been preserved for ApiToken")
+		}
 	})
 
 	t.Run("ClientCredentials should be processed with custom HTTPClient", func(t *testing.T) {
@@ -200,6 +205,11 @@ func TestApiClientWithCredentials(t *testing.T) {
 		authHeader, exists := apiClient.GetConfig().DefaultHeaders["Authorization"]
 		if !exists || authHeader != "Bearer production-token" {
 			t.Error("Authorization header not properly set with custom HTTPClient")
+		}
+
+		// Verify that the custom HTTPClient with custom Transport is preserved
+		if apiClient.GetConfig().HTTPClient != customClient {
+			t.Error("Custom HTTPClient was not preserved")
 		}
 	})
 }
