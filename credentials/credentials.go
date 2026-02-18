@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/openfga/go-sdk/internal/utils/retryutils"
+	"github.com/openfga/go-sdk/oauth2"
 	"github.com/openfga/go-sdk/oauth2/clientcredentials"
 )
 
@@ -100,7 +101,7 @@ func (c *Credentials) GetApiTokenHeader() *HeaderParams {
 // GetHttpClientAndHeaderOverrides
 // The main export the client uses to get a configuration with the necessary
 // httpClient and header overrides based on the chosen credential method
-func (c *Credentials) GetHttpClientAndHeaderOverrides(retryParams retryutils.RetryParams, debug bool) (*http.Client, []*HeaderParams) {
+func (c *Credentials) GetHttpClientAndHeaderOverrides(retryParams retryutils.RetryParams, debug bool, baseClient *http.Client) (*http.Client, []*HeaderParams) {
 	var headers []*HeaderParams
 	var client = http.DefaultClient
 	switch c.Method {
@@ -125,10 +126,16 @@ func (c *Credentials) GetHttpClientAndHeaderOverrides(retryParams retryutils.Ret
 			scopes := strings.Split(strings.TrimSpace(c.Config.ClientCredentialsScopes), " ")
 			ccConfig.Scopes = append(ccConfig.Scopes, scopes...)
 		}
-		if c.Context == nil {
-			c.Context = context.Background()
+		ctx := c.Context
+		if ctx == nil {
+			ctx = context.Background()
 		}
-		client = ccConfig.Client(c.Context)
+		// Inject the base client into the OAuth2 context if provided
+		// This allows the OAuth2 client to wrap the custom client's transport
+		if baseClient != nil && baseClient != http.DefaultClient {
+			ctx = context.WithValue(ctx, oauth2.HTTPClient, baseClient)
+		}
+		client = ccConfig.Client(ctx)
 	case CredentialsMethodApiToken:
 		var header = c.GetApiTokenHeader()
 		if header != nil {

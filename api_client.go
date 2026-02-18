@@ -57,21 +57,32 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 	if cfg.Telemetry == nil {
 		cfg.Telemetry = telemetry.DefaultTelemetryConfiguration()
 	}
+
+	// Set default HTTP client if none provided
 	if cfg.HTTPClient == nil {
-		if cfg.Credentials == nil {
-			cfg.HTTPClient = http.DefaultClient
-		} else {
-			cfg.Credentials.Context = context.Background()
-			telemetry.Bind(cfg.Credentials.Context, telemetry.Get(telemetry.TelemetryFactoryParameters{Configuration: cfg.Telemetry}))
-			var httpClient, headers = cfg.Credentials.GetHttpClientAndHeaderOverrides(retryutils.GetRetryParamsOrDefault(cfg.RetryParams), cfg.Debug)
-			if len(headers) > 0 {
-				for idx := range headers {
-					cfg.AddDefaultHeader(headers[idx].Key, headers[idx].Value)
-				}
+		cfg.HTTPClient = http.DefaultClient
+	}
+
+	// Process credentials if provided
+	if cfg.Credentials != nil {
+		cfg.Credentials.Context = context.Background()
+		telemetry.Bind(cfg.Credentials.Context, telemetry.Get(telemetry.TelemetryFactoryParameters{Configuration: cfg.Telemetry}))
+		var httpClient, headers = cfg.Credentials.GetHttpClientAndHeaderOverrides(retryutils.GetRetryParamsOrDefault(cfg.RetryParams), cfg.Debug, cfg.HTTPClient)
+
+		// Always apply header overrides (works for ApiToken and other header-based auth)
+		if len(headers) > 0 {
+			for idx := range headers {
+				cfg.AddDefaultHeader(headers[idx].Key, headers[idx].Value)
 			}
-			if httpClient != nil {
-				cfg.HTTPClient = httpClient
-			}
+		}
+
+		// Handle OAuth2 client for ClientCredentials
+		// GetHttpClientAndHeaderOverrides returns http.DefaultClient for ApiToken/None
+		// and returns an OAuth2-enabled client for ClientCredentials
+		if httpClient != nil && httpClient != http.DefaultClient {
+			// An OAuth2 client was returned (ClientCredentials method)
+			// The custom HTTPClient (if provided) is now wrapped by the OAuth2 client
+			cfg.HTTPClient = httpClient
 		}
 	}
 
