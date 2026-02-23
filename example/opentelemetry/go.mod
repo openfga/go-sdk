@@ -9,7 +9,7 @@ replace github.com/openfga/go-sdk v0.7.5 => ../../
 
 require (
 	github.com/joho/godotenv v1.5.1
-	github.com/openfga/go-sdk v0.7.4
+	github.com/openfga/go-sdk v0.7.5
 	go.opentelemetry.io/otel v1.40.0
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v1.39.0
 	go.opentelemetry.io/otel/sdk v1.39.0
