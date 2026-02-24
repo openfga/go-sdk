@@ -10,7 +10,6 @@ require (
 	github.com/stretchr/testify v1.11.1
 	go.opentelemetry.io/otel v1.40.0
 	go.opentelemetry.io/otel/metric v1.40.0
-	golang.org/x/sync v0.19.0
 )
 
 require (
