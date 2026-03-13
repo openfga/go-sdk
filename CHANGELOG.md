@@ -8,6 +8,8 @@
 
 - feat: replace errgroup with conc pool in WriteExecute method (#249) - thanks @AltuisticIsopod
 
+- fix: process credentials when custom HTTPClient is provided (#276)
+
 ## v0.7.4
 
 ### [0.7.4](https://github.com/openfga/go-sdk/compare/v0.7.3...v0.7.4) (2026-01-21)
