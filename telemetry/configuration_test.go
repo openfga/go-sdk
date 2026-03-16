@@ -56,6 +56,7 @@ func TestDefaultTelemetryConfiguration(t *testing.T) {
 	}
 
 	testMetricConfiguration(config.Metrics.METRIC_COUNTER_CREDENTIALS_REQUEST, "METRIC_COUNTER_CREDENTIALS_REQUEST")
+	testMetricConfiguration(config.Metrics.METRIC_COUNTER_REQUEST_COUNT, "METRIC_COUNTER_REQUEST_COUNT")
 	testMetricConfiguration(config.Metrics.METRIC_HISTOGRAM_REQUEST_DURATION, "METRIC_HISTOGRAM_REQUEST_DURATION")
 	testMetricConfiguration(config.Metrics.METRIC_HISTOGRAM_QUERY_DURATION, "METRIC_HISTOGRAM_QUERY_DURATION")
 }

@@ -39,6 +39,11 @@ func (m *MockMetrics) CredentialsRequest(value int64, attrs map[*Attribute]strin
 	return counter, nil
 }
 
+func (m *MockMetrics) RequestCount(value int64, attrs map[*Attribute]string) (metric.Int64Counter, error) {
+	counter, _ := m.GetCounter("request_count", "A request count")
+	return counter, nil
+}
+
 func (m *MockMetrics) RequestDuration(value float64, attrs map[*Attribute]string) (metric.Float64Histogram, error) {
 	histogram, _ := m.GetHistogram("request_duration", "A request duration", "ms")
 	return histogram, nil
@@ -154,6 +159,31 @@ func TestCredentialsRequestMetric(t *testing.T) {
 	}
 
 	counter, err := CredentialsRequestMetric(factoryParams)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err)
+	}
+
+	if counter == nil {
+		t.Fatalf("Expected counter to be non-nil")
+	}
+}
+
+func TestRequestCountMetric(t *testing.T) {
+	config := &Configuration{}
+	metrics := &MockMetrics{
+		counters:   make(map[string]metric.Int64Counter),
+		histograms: make(map[string]metric.Float64Histogram),
+	}
+	telemetry := &Telemetry{Metrics: metrics, Configuration: config}
+	Bind(context.Background(), telemetry)
+
+	factoryParams := RequestCountMetricParameters{
+		Value:                      1,
+		Attrs:                      make(map[*Attribute]string),
+		TelemetryFactoryParameters: TelemetryFactoryParameters{Configuration: config},
+	}
+
+	counter, err := RequestCountMetric(factoryParams)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err)
 	}
