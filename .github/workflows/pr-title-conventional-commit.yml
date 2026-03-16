@@ -1,0 +1,21 @@
+name: PR Title Conventional Commit Check
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, edited]
+    branches:
+      - main
+
+jobs:
+  validate-pr-title:
+    name: Validate PR Title
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      - name: PR Conventional Commit Validation
+        uses: ytanikin/pr-conventional-commits@fda730cb152c05a849d6d84325e50c6182d9d1e9 # v1.5.1
+        with:
+          task_types: '["feat","fix","docs","test","refactor","ci","perf","chore","revert"]'
+          add_label: 'false'
+
