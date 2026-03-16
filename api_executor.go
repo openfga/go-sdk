@@ -360,6 +360,8 @@ func (e *apiExecutor) recordTelemetry(operationName string, storeID string, body
 		attemptNum,
 	)
 
+	_, _ = metrics.RequestCount(1, attrs)
+
 	if requestDuration > 0 {
 		_, _ = metrics.RequestDuration(requestDuration, attrs)
 	}
