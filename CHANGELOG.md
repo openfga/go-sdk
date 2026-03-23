@@ -2,6 +2,12 @@
 
 ## [Unreleased](https://github.com/openfga/go-sdk/compare/v0.7.5...HEAD)
 
+- fix: The `fga-client.http_request.duration` metric is now disabled by default. Users can enable it via telemetry configuration if needed.
+
+[!WARNING] 
+BREAKING CHANGE: 
+The default behavior changed, and fga-client.http_request.duration is now disabled unless explicitly enabled.
+
 ## v0.7.5
 
 ### [0.7.5](https://github.com/openfga/go-sdk/compare/v0.7.4...v0.7.5) (2026-02-23)

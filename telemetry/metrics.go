@@ -59,6 +59,10 @@ func (m *Metrics) GetHistogram(name string, description string, unit string) (me
 }
 
 func (m *Metrics) CredentialsRequest(value int64, attrs map[*Attribute]string) (metric.Int64Counter, error) {
+	if m.Configuration != nil && m.Configuration.METRIC_COUNTER_CREDENTIALS_REQUEST == nil {
+		return nil, nil
+	}
+
 	var counter, err = m.GetCounter(CredentialsRequest.Name, CredentialsRequest.Description)
 
 	if err == nil {
@@ -87,6 +91,10 @@ func (m *Metrics) RequestCount(value int64, attrs map[*Attribute]string) (metric
 }
 
 func (m *Metrics) RequestDuration(value float64, attrs map[*Attribute]string) (metric.Float64Histogram, error) {
+	if m.Configuration != nil && m.Configuration.METRIC_HISTOGRAM_REQUEST_DURATION == nil {
+		return nil, nil
+	}
+
 	var histogram, err = m.GetHistogram(RequestDuration.Name, RequestDuration.Description, RequestDuration.Unit)
 
 	if err == nil {
@@ -101,6 +109,10 @@ func (m *Metrics) RequestDuration(value float64, attrs map[*Attribute]string) (m
 }
 
 func (m *Metrics) QueryDuration(value float64, attrs map[*Attribute]string) (metric.Float64Histogram, error) {
+	if m.Configuration != nil && m.Configuration.METRIC_HISTOGRAM_QUERY_DURATION == nil {
+		return nil, nil
+	}
+
 	var histogram, err = m.GetHistogram(QueryDuration.Name, QueryDuration.Description, QueryDuration.Unit)
 
 	if err == nil {
@@ -115,6 +127,11 @@ func (m *Metrics) QueryDuration(value float64, attrs map[*Attribute]string) (met
 }
 
 func (m *Metrics) HTTPRequestDuration(value float64, attrs map[*Attribute]string) (metric.Float64Histogram, error) {
+	// If the metric is not configured (nil), skip recording entirely — it is disabled by default.
+	if m.Configuration == nil || m.Configuration.METRIC_HISTOGRAM_HTTP_REQUEST_DURATION == nil {
+		return nil, nil
+	}
+
 	var histogram, err = m.GetHistogram(HTTPRequestDuration.Name, HTTPRequestDuration.Description, HTTPRequestDuration.Unit)
 
 	if err == nil {
