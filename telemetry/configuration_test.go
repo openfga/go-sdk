@@ -58,4 +58,9 @@ func TestDefaultTelemetryConfiguration(t *testing.T) {
 	testMetricConfiguration(config.Metrics.METRIC_COUNTER_CREDENTIALS_REQUEST, "METRIC_COUNTER_CREDENTIALS_REQUEST")
 	testMetricConfiguration(config.Metrics.METRIC_HISTOGRAM_REQUEST_DURATION, "METRIC_HISTOGRAM_REQUEST_DURATION")
 	testMetricConfiguration(config.Metrics.METRIC_HISTOGRAM_QUERY_DURATION, "METRIC_HISTOGRAM_QUERY_DURATION")
+
+	// fga-client.http_request.duration must be disabled (nil) by default so users explicitly opt-in.
+	if config.Metrics.METRIC_HISTOGRAM_HTTP_REQUEST_DURATION != nil {
+		t.Errorf("Expected METRIC_HISTOGRAM_HTTP_REQUEST_DURATION to be nil (disabled by default), but it was not nil")
+	}
 }

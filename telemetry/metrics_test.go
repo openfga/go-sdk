@@ -5,6 +5,7 @@ import (
 	"sync"
 	"testing"
 
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 )
 
@@ -21,11 +22,13 @@ func (m *MockInt64Counter) Add(ctx context.Context, value int64, opts ...metric.
 // Mock Float64Histogram implementation
 type MockFloat64Histogram struct {
 	metric.Float64Histogram
-	recordCalled bool
+	recordCalled  bool
+	recordedAttrs attribute.Set
 }
 
 func (m *MockFloat64Histogram) Record(ctx context.Context, value float64, opts ...metric.RecordOption) {
 	m.recordCalled = true
+	m.recordedAttrs = metric.NewRecordConfig(opts).Attributes()
 }
 
 // Mock Meter implementation
@@ -185,6 +188,9 @@ func TestCredentialsRequest(t *testing.T) {
 	metrics := &Metrics{
 		Meter:    mockMeter,
 		Counters: make(map[string]metric.Int64Counter),
+		Configuration: &MetricsConfiguration{
+			METRIC_COUNTER_CREDENTIALS_REQUEST: &MetricConfiguration{},
+		},
 	}
 
 	attrs := make(map[*Attribute]string)
@@ -212,6 +218,9 @@ func TestRequestDuration(t *testing.T) {
 	metrics := &Metrics{
 		Meter:      mockMeter,
 		Histograms: make(map[string]metric.Float64Histogram),
+		Configuration: &MetricsConfiguration{
+			METRIC_HISTOGRAM_REQUEST_DURATION: &MetricConfiguration{},
+		},
 	}
 
 	attrs := make(map[*Attribute]string)
@@ -239,6 +248,9 @@ func TestQueryDuration(t *testing.T) {
 	metrics := &Metrics{
 		Meter:      mockMeter,
 		Histograms: make(map[string]metric.Float64Histogram),
+		Configuration: &MetricsConfiguration{
+			METRIC_HISTOGRAM_QUERY_DURATION: &MetricConfiguration{},
+		},
 	}
 
 	attrs := make(map[*Attribute]string)
@@ -266,6 +278,10 @@ func TestHTTPRequestDuration(t *testing.T) {
 	metrics := &Metrics{
 		Meter:      mockMeter,
 		Histograms: make(map[string]metric.Float64Histogram),
+		// Explicitly enable the metric so Record is called.
+		Configuration: &MetricsConfiguration{
+			METRIC_HISTOGRAM_HTTP_REQUEST_DURATION: &MetricConfiguration{},
+		},
 	}
 
 	attrs := make(map[*Attribute]string)
@@ -283,4 +299,161 @@ func TestHTTPRequestDuration(t *testing.T) {
 	if !ok || !mockHistogram.recordCalled {
 		t.Fatalf("Expected Record method to be called on histogram")
 	}
+}
+
+func TestQueryDuration_DisabledByDefault(t *testing.T) {
+	mockMeter := &MockMeter{
+		counters:   make(map[string]metric.Int64Counter),
+		histograms: make(map[string]metric.Float64Histogram),
+	}
+
+	t.Run("nil configuration", func(t *testing.T) {
+		metrics := &Metrics{
+			Meter:         mockMeter,
+			Histograms:    make(map[string]metric.Float64Histogram),
+			Configuration: nil,
+		}
+		histogram, err := metrics.QueryDuration(1.0, make(map[*Attribute]string))
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err)
+		}
+		if histogram == nil {
+			t.Fatalf("Expected non-nil histogram when configuration is not provided (enabled by default)")
+		}
+	})
+
+	t.Run("nil metric config (disabled)", func(t *testing.T) {
+		metrics := &Metrics{
+			Meter:      mockMeter,
+			Histograms: make(map[string]metric.Float64Histogram),
+			Configuration: &MetricsConfiguration{
+				METRIC_HISTOGRAM_QUERY_DURATION: nil,
+			},
+		}
+		histogram, err := metrics.QueryDuration(1.0, make(map[*Attribute]string))
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err)
+		}
+		if histogram != nil {
+			t.Fatalf("Expected nil histogram when metric is disabled, but got non-nil")
+		}
+	})
+}
+
+func TestRequestDuration_DisabledByDefault(t *testing.T) {
+	mockMeter := &MockMeter{
+		counters:   make(map[string]metric.Int64Counter),
+		histograms: make(map[string]metric.Float64Histogram),
+	}
+
+	t.Run("nil configuration", func(t *testing.T) {
+		metrics := &Metrics{
+			Meter:         mockMeter,
+			Histograms:    make(map[string]metric.Float64Histogram),
+			Configuration: nil,
+		}
+		histogram, err := metrics.RequestDuration(1.0, make(map[*Attribute]string))
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err)
+		}
+		if histogram == nil {
+			t.Fatalf("Expected non-nil histogram when configuration is not provided (enabled by default)")
+		}
+	})
+
+	t.Run("nil metric config (disabled)", func(t *testing.T) {
+		metrics := &Metrics{
+			Meter:      mockMeter,
+			Histograms: make(map[string]metric.Float64Histogram),
+			Configuration: &MetricsConfiguration{
+				METRIC_HISTOGRAM_REQUEST_DURATION: nil,
+			},
+		}
+		histogram, err := metrics.RequestDuration(1.0, make(map[*Attribute]string))
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err)
+		}
+		if histogram != nil {
+			t.Fatalf("Expected nil histogram when metric is disabled, but got non-nil")
+		}
+	})
+}
+
+func TestCredentialsRequest_DisabledByDefault(t *testing.T) {
+	mockMeter := &MockMeter{
+		counters:   make(map[string]metric.Int64Counter),
+		histograms: make(map[string]metric.Float64Histogram),
+	}
+
+	t.Run("nil configuration", func(t *testing.T) {
+		metrics := &Metrics{
+			Meter:         mockMeter,
+			Counters:      make(map[string]metric.Int64Counter),
+			Configuration: nil,
+		}
+		counter, err := metrics.CredentialsRequest(1, make(map[*Attribute]string))
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err)
+		}
+		if counter == nil {
+			t.Fatalf("Expected non-nil counter when configuration is not provided (enabled by default)")
+		}
+	})
+
+	t.Run("nil metric config (disabled)", func(t *testing.T) {
+		metrics := &Metrics{
+			Meter:    mockMeter,
+			Counters: make(map[string]metric.Int64Counter),
+			Configuration: &MetricsConfiguration{
+				METRIC_COUNTER_CREDENTIALS_REQUEST: nil,
+			},
+		}
+		counter, err := metrics.CredentialsRequest(1, make(map[*Attribute]string))
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err)
+		}
+		if counter != nil {
+			t.Fatalf("Expected nil counter when metric is disabled, but got non-nil")
+		}
+	})
+}
+
+func TestHTTPRequestDuration_DisabledByDefault(t *testing.T) {
+	mockMeter := &MockMeter{
+		counters:   make(map[string]metric.Int64Counter),
+		histograms: make(map[string]metric.Float64Histogram),
+	}
+
+	t.Run("nil configuration", func(t *testing.T) {
+		metrics := &Metrics{
+			Meter:         mockMeter,
+			Histograms:    make(map[string]metric.Float64Histogram),
+			Configuration: nil,
+		}
+		histogram, err := metrics.HTTPRequestDuration(1.0, make(map[*Attribute]string))
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err)
+		}
+		if histogram != nil {
+			t.Fatalf("Expected nil histogram when metric is disabled (nil config), but got non-nil")
+		}
+	})
+
+	t.Run("nil metric config (disabled by default)", func(t *testing.T) {
+		metrics := &Metrics{
+			Meter:      mockMeter,
+			Histograms: make(map[string]metric.Float64Histogram),
+			// METRIC_HISTOGRAM_HTTP_REQUEST_DURATION is nil — this is the default.
+			Configuration: &MetricsConfiguration{
+				METRIC_HISTOGRAM_HTTP_REQUEST_DURATION: nil,
+			},
+		}
+		histogram, err := metrics.HTTPRequestDuration(1.0, make(map[*Attribute]string))
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err)
+		}
+		if histogram != nil {
+			t.Fatalf("Expected nil histogram when metric is disabled, but got non-nil")
+		}
+	})
 }
