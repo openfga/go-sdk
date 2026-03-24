@@ -22,6 +22,7 @@ type MetricsInterface interface {
 	GetCounter(name string, description string) (metric.Int64Counter, error)
 	GetHistogram(name string, description string, unit string) (metric.Float64Histogram, error)
 	CredentialsRequest(value int64, attrs map[*Attribute]string) (metric.Int64Counter, error)
+	RequestCount(value int64, attrs map[*Attribute]string) (metric.Int64Counter, error)
 	RequestDuration(value float64, attrs map[*Attribute]string) (metric.Float64Histogram, error)
 	QueryDuration(value float64, attrs map[*Attribute]string) (metric.Float64Histogram, error)
 	HTTPRequestDuration(value float64, attrs map[*Attribute]string) (metric.Float64Histogram, error)
@@ -66,6 +67,20 @@ func (m *Metrics) CredentialsRequest(value int64, attrs map[*Attribute]string) (
 
 	if err == nil {
 		attrs, err := m.PrepareAttributes(CredentialsRequest, attrs, m.Configuration)
+
+		if err == nil {
+			counter.Add(context.Background(), value, metric.WithAttributeSet(attrs))
+		}
+	}
+
+	return counter, err
+}
+
+func (m *Metrics) RequestCount(value int64, attrs map[*Attribute]string) (metric.Int64Counter, error) {
+	var counter, err = m.GetCounter(RequestCount.Name, RequestCount.Description)
+
+	if err == nil {
+		attrs, err := m.PrepareAttributes(RequestCount, attrs, m.Configuration)
 
 		if err == nil {
 			counter.Add(context.Background(), value, metric.WithAttributeSet(attrs))

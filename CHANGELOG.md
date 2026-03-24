@@ -2,6 +2,7 @@
 
 ## [Unreleased](https://github.com/openfga/go-sdk/compare/v0.7.5...HEAD)
 
+- feat(telemetry): add `fga-client.request.count` metric to track total HTTP requests made by the SDK
 - fix: The `fga-client.http_request.duration` metric is now disabled by default. Users can enable it via telemetry configuration if needed.
 
 [!WARNING] 

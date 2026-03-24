@@ -210,6 +210,33 @@ func TestCredentialsRequest(t *testing.T) {
 	}
 }
 
+func TestRequestCount(t *testing.T) {
+	mockMeter := &MockMeter{
+		counters:   make(map[string]metric.Int64Counter),
+		histograms: make(map[string]metric.Float64Histogram),
+	}
+	metrics := &Metrics{
+		Meter:    mockMeter,
+		Counters: make(map[string]metric.Int64Counter),
+	}
+
+	attrs := make(map[*Attribute]string)
+
+	counter, err := metrics.RequestCount(1, attrs)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err)
+	}
+
+	if counter == nil {
+		t.Fatalf("Expected a non-nil counter, but got nil")
+	}
+
+	mockCounter, ok := counter.(*MockInt64Counter)
+	if !ok || !mockCounter.addCalled {
+		t.Fatalf("Expected Add method to be called on counter")
+	}
+}
+
 func TestRequestDuration(t *testing.T) {
 	mockMeter := &MockMeter{
 		counters:   make(map[string]metric.Int64Counter),

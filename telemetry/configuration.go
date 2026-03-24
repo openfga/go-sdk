@@ -25,6 +25,7 @@ type MetricConfiguration struct {
 
 type MetricsConfiguration struct {
 	METRIC_COUNTER_CREDENTIALS_REQUEST     *MetricConfiguration `json:"fga_client_credentials_request,omitempty"`
+	METRIC_COUNTER_REQUEST_COUNT           *MetricConfiguration `json:"fga_client_request_count,omitempty"`
 	METRIC_HISTOGRAM_REQUEST_DURATION      *MetricConfiguration `json:"fga_client_request_duration,omitempty"`
 	METRIC_HISTOGRAM_QUERY_DURATION        *MetricConfiguration `json:"fga_client_query_duration,omitempty"`
 	METRIC_HISTOGRAM_HTTP_REQUEST_DURATION *MetricConfiguration `json:"fga_client_http_request_duration,omitempty"`
@@ -38,6 +39,20 @@ func DefaultTelemetryConfiguration() *Configuration {
 	return &Configuration{
 		Metrics: &MetricsConfiguration{
 			METRIC_COUNTER_CREDENTIALS_REQUEST: &MetricConfiguration{
+				ATTR_FGA_CLIENT_REQUEST_CLIENT_ID:        &AttributeConfiguration{Enabled: true},
+				ATTR_HTTP_REQUEST_METHOD:                 &AttributeConfiguration{Enabled: true},
+				ATTR_FGA_CLIENT_REQUEST_MODEL_ID:         &AttributeConfiguration{Enabled: true},
+				ATTR_FGA_CLIENT_REQUEST_STORE_ID:         &AttributeConfiguration{Enabled: true},
+				ATTR_FGA_CLIENT_REQUEST_BATCH_CHECK_SIZE: &AttributeConfiguration{Enabled: false},
+				ATTR_FGA_CLIENT_RESPONSE_MODEL_ID:        &AttributeConfiguration{Enabled: true},
+				ATTR_HTTP_HOST:                           &AttributeConfiguration{Enabled: true},
+				ATTR_HTTP_REQUEST_RESEND_COUNT:           &AttributeConfiguration{Enabled: true},
+				ATTR_HTTP_RESPONSE_STATUS_CODE:           &AttributeConfiguration{Enabled: true},
+				ATTR_URL_FULL:                            &AttributeConfiguration{Enabled: true},
+				ATTR_URL_SCHEME:                          &AttributeConfiguration{Enabled: true},
+				ATTR_USER_AGENT_ORIGINAL:                 &AttributeConfiguration{Enabled: true},
+			},
+			METRIC_COUNTER_REQUEST_COUNT: &MetricConfiguration{
 				ATTR_FGA_CLIENT_REQUEST_CLIENT_ID:        &AttributeConfiguration{Enabled: true},
 				ATTR_HTTP_REQUEST_METHOD:                 &AttributeConfiguration{Enabled: true},
 				ATTR_FGA_CLIENT_REQUEST_MODEL_ID:         &AttributeConfiguration{Enabled: true},

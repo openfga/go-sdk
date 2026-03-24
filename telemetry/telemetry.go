@@ -40,6 +40,12 @@ type QueryDurationMetricParameters struct {
 	TelemetryFactoryParameters
 }
 
+type RequestCountMetricParameters struct {
+	Value int64
+	Attrs map[*Attribute]string
+	TelemetryFactoryParameters
+}
+
 type TelemetryContextKey struct{}
 
 var (
@@ -110,6 +116,10 @@ func GetMetrics(factory TelemetryFactoryParameters) MetricsInterface {
 
 func CredentialsRequestMetric(factory CredentialsRequestMetricParameters) (metric.Int64Counter, error) {
 	return GetMetrics(TelemetryFactoryParameters{Configuration: factory.Configuration}).CredentialsRequest(factory.Value, factory.Attrs)
+}
+
+func RequestCountMetric(factory RequestCountMetricParameters) (metric.Int64Counter, error) {
+	return GetMetrics(TelemetryFactoryParameters{Configuration: factory.Configuration}).RequestCount(factory.Value, factory.Attrs)
 }
 
 func RequestDurationMetric(factory RequestDurationMetricParameters) (metric.Float64Histogram, error) {
