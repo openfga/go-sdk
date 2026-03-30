@@ -1939,3 +1939,350 @@ func TestOpenFgaApi(t *testing.T) {
 		}
 	})
 }
+
+func TestStreamedListObjectsExecute(t *testing.T) {
+	t.Parallel()
+
+	configuration, err := NewConfiguration(Configuration{
+		ApiUrl: constants.TestApiUrl,
+	})
+	if err != nil {
+		t.Fatalf("failed to create configuration: %v", err)
+	}
+	apiClient := NewAPIClient(configuration)
+	storeID := "01GXSB9YR785C4FYS3C0RTG7B2"
+
+	t.Run("successful streaming with multiple objects", func(t *testing.T) {
+		// NDJSON response with multiple streamed objects
+		ndjsonResponse := `{"result":{"object":"document:doc1"}}` + "\n" +
+			`{"result":{"object":"document:doc2"}}` + "\n" +
+			`{"result":{"object":"document:doc3"}}` + "\n"
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+
+		httpmock.RegisterResponder("POST", fmt.Sprintf("%s/stores/%s/streamed-list-objects", configuration.ApiUrl, storeID),
+			func(req *http.Request) (*http.Response, error) {
+				resp := httpmock.NewStringResponse(200, ndjsonResponse)
+				resp.Header.Set("Content-Type", "application/x-ndjson")
+				return resp, nil
+			},
+		)
+
+		requestBody := ListObjectsRequest{
+			AuthorizationModelId: PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			User:                 "user:anne",
+			Relation:             "viewer",
+			Type:                 "document",
+		}
+
+		channel, err := apiClient.OpenFgaApi.StreamedListObjects(context.Background(), storeID).
+			Body(requestBody).
+			Execute()
+		if err != nil {
+			t.Fatalf("StreamedListObjects failed: %v", err)
+		}
+		defer channel.Close()
+
+		var objects []string
+		for obj := range channel.Objects {
+			objects = append(objects, obj.Object)
+		}
+
+		// Check for errors
+		select {
+		case err := <-channel.Errors:
+			if err != nil {
+				t.Fatalf("unexpected stream error: %v", err)
+			}
+		default:
+		}
+
+		if len(objects) != 3 {
+			t.Fatalf("expected 3 objects, got %d", len(objects))
+		}
+		if objects[0] != "document:doc1" || objects[1] != "document:doc2" || objects[2] != "document:doc3" {
+			t.Fatalf("unexpected objects: %v", objects)
+		}
+	})
+
+	t.Run("streaming with single object", func(t *testing.T) {
+		ndjsonResponse := `{"result":{"object":"document:single"}}` + "\n"
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+
+		httpmock.RegisterResponder("POST", fmt.Sprintf("%s/stores/%s/streamed-list-objects", configuration.ApiUrl, storeID),
+			func(req *http.Request) (*http.Response, error) {
+				resp := httpmock.NewStringResponse(200, ndjsonResponse)
+				resp.Header.Set("Content-Type", "application/x-ndjson")
+				return resp, nil
+			},
+		)
+
+		requestBody := ListObjectsRequest{
+			User:     "user:bob",
+			Relation: "editor",
+			Type:     "document",
+		}
+
+		channel, err := apiClient.OpenFgaApi.StreamedListObjects(context.Background(), storeID).
+			Body(requestBody).
+			Execute()
+		if err != nil {
+			t.Fatalf("StreamedListObjects failed: %v", err)
+		}
+		defer channel.Close()
+
+		var objects []string
+		for obj := range channel.Objects {
+			objects = append(objects, obj.Object)
+		}
+
+		if len(objects) != 1 || objects[0] != "document:single" {
+			t.Fatalf("expected [document:single], got %v", objects)
+		}
+	})
+
+	t.Run("streaming with empty result", func(t *testing.T) {
+		// Empty NDJSON response (no objects match)
+		ndjsonResponse := ""
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+
+		httpmock.RegisterResponder("POST", fmt.Sprintf("%s/stores/%s/streamed-list-objects", configuration.ApiUrl, storeID),
+			func(req *http.Request) (*http.Response, error) {
+				resp := httpmock.NewStringResponse(200, ndjsonResponse)
+				resp.Header.Set("Content-Type", "application/x-ndjson")
+				return resp, nil
+			},
+		)
+
+		requestBody := ListObjectsRequest{
+			User:     "user:nobody",
+			Relation: "viewer",
+			Type:     "document",
+		}
+
+		channel, err := apiClient.OpenFgaApi.StreamedListObjects(context.Background(), storeID).
+			Body(requestBody).
+			Execute()
+		if err != nil {
+			t.Fatalf("StreamedListObjects failed: %v", err)
+		}
+		defer channel.Close()
+
+		var objects []string
+		for obj := range channel.Objects {
+			objects = append(objects, obj.Object)
+		}
+
+		if len(objects) != 0 {
+			t.Fatalf("expected 0 objects, got %d", len(objects))
+		}
+	})
+
+	t.Run("streaming with stream error", func(t *testing.T) {
+		// NDJSON response with an error in the stream
+		ndjsonResponse := `{"result":{"object":"document:doc1"}}` + "\n" +
+			`{"error":{"message":"Internal stream error occurred"}}` + "\n"
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+
+		httpmock.RegisterResponder("POST", fmt.Sprintf("%s/stores/%s/streamed-list-objects", configuration.ApiUrl, storeID),
+			func(req *http.Request) (*http.Response, error) {
+				resp := httpmock.NewStringResponse(200, ndjsonResponse)
+				resp.Header.Set("Content-Type", "application/x-ndjson")
+				return resp, nil
+			},
+		)
+
+		requestBody := ListObjectsRequest{
+			User:     "user:anne",
+			Relation: "viewer",
+			Type:     "document",
+		}
+
+		channel, err := apiClient.OpenFgaApi.StreamedListObjects(context.Background(), storeID).
+			Body(requestBody).
+			Execute()
+		if err != nil {
+			t.Fatalf("StreamedListObjects failed: %v", err)
+		}
+		defer channel.Close()
+
+		// First object should come through
+		obj := <-channel.Objects
+		if obj.Object != "document:doc1" {
+			t.Fatalf("expected first object document:doc1, got %s", obj.Object)
+		}
+
+		// Then we should get an error
+		streamErr := <-channel.Errors
+		if streamErr == nil {
+			t.Fatal("expected stream error, got nil")
+		}
+		if streamErr.Error() != "Internal stream error occurred" {
+			t.Fatalf("expected 'Internal stream error occurred', got %v", streamErr)
+		}
+	})
+
+	t.Run("HTTP error response", func(t *testing.T) {
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+
+		httpmock.RegisterResponder("POST", fmt.Sprintf("%s/stores/%s/streamed-list-objects", configuration.ApiUrl, storeID),
+			func(req *http.Request) (*http.Response, error) {
+				return httpmock.NewJsonResponse(400, map[string]interface{}{
+					"code":    "validation_error",
+					"message": "Invalid request body",
+				})
+			},
+		)
+
+		requestBody := ListObjectsRequest{
+			User:     "invalid",
+			Relation: "viewer",
+			Type:     "document",
+		}
+
+		channel, err := apiClient.OpenFgaApi.StreamedListObjects(context.Background(), storeID).
+			Body(requestBody).
+			Execute()
+
+		if err == nil {
+			if channel != nil {
+				channel.Close()
+			}
+			t.Fatal("expected error for 400 response, got nil")
+		}
+		if channel != nil {
+			t.Fatal("expected nil channel on error")
+		}
+	})
+
+	t.Run("missing store ID validation", func(t *testing.T) {
+		requestBody := ListObjectsRequest{
+			User:     "user:anne",
+			Relation: "viewer",
+			Type:     "document",
+		}
+
+		channel, err := apiClient.OpenFgaApi.StreamedListObjects(context.Background(), "").
+			Body(requestBody).
+			Execute()
+
+		if err == nil {
+			if channel != nil {
+				channel.Close()
+			}
+			t.Fatal("expected error for missing store ID, got nil")
+		}
+	})
+
+	t.Run("missing body validation", func(t *testing.T) {
+		channel, err := apiClient.OpenFgaApi.StreamedListObjects(context.Background(), storeID).
+			Execute()
+
+		if err == nil {
+			if channel != nil {
+				channel.Close()
+			}
+			t.Fatal("expected error for missing body, got nil")
+		}
+	})
+
+	t.Run("context cancellation", func(t *testing.T) {
+		// Create a slow response that will be cancelled
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+
+		httpmock.RegisterResponder("POST", fmt.Sprintf("%s/stores/%s/streamed-list-objects", configuration.ApiUrl, storeID),
+			func(req *http.Request) (*http.Response, error) {
+				// Return first result, then the response will be closed when context is cancelled
+				ndjsonResponse := `{"result":{"object":"document:doc1"}}` + "\n"
+				resp := httpmock.NewStringResponse(200, ndjsonResponse)
+				resp.Header.Set("Content-Type", "application/x-ndjson")
+				return resp, nil
+			},
+		)
+
+		ctx, cancel := context.WithCancel(context.Background())
+
+		requestBody := ListObjectsRequest{
+			User:     "user:anne",
+			Relation: "viewer",
+			Type:     "document",
+		}
+
+		channel, err := apiClient.OpenFgaApi.StreamedListObjects(ctx, storeID).
+			Body(requestBody).
+			Execute()
+		if err != nil {
+			t.Fatalf("StreamedListObjects failed: %v", err)
+		}
+
+		// Read first object
+		obj := <-channel.Objects
+		if obj.Object != "document:doc1" {
+			t.Fatalf("expected document:doc1, got %s", obj.Object)
+		}
+
+		// Cancel the context
+		cancel()
+
+		// Channel should close
+		channel.Close()
+	})
+
+	t.Run("with custom headers", func(t *testing.T) {
+		var capturedHeaders http.Header
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+
+		httpmock.RegisterResponder("POST", fmt.Sprintf("%s/stores/%s/streamed-list-objects", configuration.ApiUrl, storeID),
+			func(req *http.Request) (*http.Response, error) {
+				capturedHeaders = req.Header.Clone()
+				ndjsonResponse := `{"result":{"object":"document:doc1"}}` + "\n"
+				resp := httpmock.NewStringResponse(200, ndjsonResponse)
+				resp.Header.Set("Content-Type", "application/x-ndjson")
+				return resp, nil
+			},
+		)
+
+		requestBody := ListObjectsRequest{
+			User:     "user:anne",
+			Relation: "viewer",
+			Type:     "document",
+		}
+
+		channel, err := apiClient.OpenFgaApi.StreamedListObjects(context.Background(), storeID).
+			Body(requestBody).
+			Options(RequestOptions{
+				Headers: map[string]string{
+					"X-Custom-Header": "custom-value",
+					"X-Request-ID":    "req-123",
+				},
+			}).
+			Execute()
+		if err != nil {
+			t.Fatalf("StreamedListObjects failed: %v", err)
+		}
+		defer channel.Close()
+
+		// Drain the channel
+		for range channel.Objects {
+		}
+
+		if capturedHeaders.Get("X-Custom-Header") != "custom-value" {
+			t.Fatalf("expected X-Custom-Header to be 'custom-value', got '%s'", capturedHeaders.Get("X-Custom-Header"))
+		}
+		if capturedHeaders.Get("X-Request-ID") != "req-123" {
+			t.Fatalf("expected X-Request-ID to be 'req-123', got '%s'", capturedHeaders.Get("X-Request-ID"))
+		}
+	})
+}
+

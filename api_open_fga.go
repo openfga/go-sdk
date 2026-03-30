@@ -14,6 +14,7 @@ package openfga
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"time"
@@ -26,6 +27,11 @@ var (
 
 type RequestOptions struct {
 	Headers map[string]string `json:"headers,omitempty"`
+}
+
+type StreamingRequestOptions struct {
+    RequestOptions
+    BufferSize int `json:"buffer_size,omitempty"`
 }
 
 type OpenFgaApi interface {
@@ -777,9 +783,9 @@ type OpenFgaApi interface {
 
 	/*
 	 * StreamedListObjectsExecute executes the request
-	 * @return StreamResultOfStreamedListObjectsResponse
+	 * @return *StreamedListObjectsChannel
 	 */
-	StreamedListObjectsExecute(r ApiStreamedListObjectsRequest) (StreamResultOfStreamedListObjectsResponse, *http.Response, error)
+	StreamedListObjectsExecute(r ApiStreamedListObjectsRequest) (*StreamedListObjectsChannel, error)
 
 	/*
 			 * Write Add or delete tuples from the store
@@ -2448,7 +2454,7 @@ type ApiStreamedListObjectsRequest struct {
 	ApiService OpenFgaApi
 	storeId    string
 	body       *ListObjectsRequest
-	options    RequestOptions
+	options    StreamingRequestOptions
 }
 
 func (r ApiStreamedListObjectsRequest) Body(body ListObjectsRequest) ApiStreamedListObjectsRequest {
@@ -2456,13 +2462,62 @@ func (r ApiStreamedListObjectsRequest) Body(body ListObjectsRequest) ApiStreamed
 	return r
 }
 
-func (r ApiStreamedListObjectsRequest) Options(options RequestOptions) ApiStreamedListObjectsRequest {
+func (r ApiStreamedListObjectsRequest) Options(options StreamingRequestOptions) ApiStreamedListObjectsRequest {
 	r.options = options
 	return r
 }
 
-func (r ApiStreamedListObjectsRequest) Execute() (StreamResultOfStreamedListObjectsResponse, *http.Response, error) {
+// Execute executes the StreamedListObjects request and returns a streaming channel.
+// The returned StreamedListObjectsChannel provides Objects and Errors channels for consuming
+// the streamed results. The caller must call Close() on the channel when done.
+//
+// Example usage:
+//
+//	channel, err := client.OpenFgaApi.StreamedListObjects(ctx, storeId).
+//	    Body(body).
+//	    Execute()
+//	if err != nil {
+//	    return err
+//	}
+//	defer channel.Close()
+//
+//	for {
+//	    select {
+//	    case obj, ok := <-channel.Objects:
+//	        if !ok {
+//	            return nil // Stream completed
+//	        }
+//	        fmt.Printf("Object: %s\n", obj.Object)
+//	    case err := <-channel.Errors:
+//	        if err != nil {
+//	            return err
+//	        }
+//	    }
+//	}
+func (r ApiStreamedListObjectsRequest) Execute() (*StreamedListObjectsChannel, error) {
 	return r.ApiService.StreamedListObjectsExecute(r)
+}
+
+// StreamedListObjectsChannel provides channels for consuming StreamedListObjects results.
+// It maintains backward compatibility with the streaming response structure.
+type StreamedListObjectsChannel struct {
+	// Objects channel receives StreamedListObjectsResponse for each streamed object.
+	// The channel is closed when the stream ends or an error occurs.
+	Objects chan StreamedListObjectsResponse
+	// Errors channel receives any errors that occur during streaming.
+	// Only one error will be sent before the channel is closed.
+	Errors chan error
+	// cancel is the function to cancel the streaming context
+	cancel context.CancelFunc
+}
+
+// Close cancels the streaming context and cleans up resources.
+// It is safe to call Close multiple times.
+// Always defer Close() after successfully creating a streaming channel.
+func (s *StreamedListObjectsChannel) Close() {
+	if s.cancel != nil {
+		s.cancel()
+	}
 }
 
 /*
@@ -2486,31 +2541,90 @@ func (a *OpenFgaApiService) StreamedListObjects(ctx context.Context, storeId str
 
 /*
  * Execute executes the request
- * @return StreamResultOfStreamedListObjectsResponse
+ * @return *StreamedListObjectsChannel
  */
-func (a *OpenFgaApiService) StreamedListObjectsExecute(r ApiStreamedListObjectsRequest) (StreamResultOfStreamedListObjectsResponse, *http.Response, error) {
-	var returnValue StreamResultOfStreamedListObjectsResponse
+func (a *OpenFgaApiService) StreamedListObjectsExecute(r ApiStreamedListObjectsRequest) (*StreamedListObjectsChannel, error) {
 	if err := validatePathParameter("storeId", r.storeId); err != nil {
-		return returnValue, nil, err
+		return nil, err
 	}
 	if err := validateParameter("body", r.body); err != nil {
-		return returnValue, nil, err
+		return nil, err
 	}
 
-	executor := a.client.GetAPIExecutor()
+	// Use the APIExecutor to execute the streaming request
+	executor := a.client.GetAPIExecutor().(*apiExecutor)
 
 	request := NewAPIExecutorRequestBuilder("StreamedListObjects", http.MethodPost, "/stores/{store_id}/streamed-list-objects").
 		WithPathParameter("store_id", r.storeId).
 		WithBody(r.body).
 		WithHeaders(r.options.Headers).
 		Build()
-	response, err := executor.ExecuteWithDecode(r.ctx, request, &returnValue)
 
-	if response != nil {
-		return returnValue, response.HTTPResponse, err
+	rawChannel, err := executor.ExecuteStreaming(r.ctx, request, r.options.BufferSize)
+	if err != nil {
+		return nil, err
 	}
 
-	return returnValue, nil, err
+	// Convert raw JSON bytes to typed StreamedListObjectsResponse
+	return convertToStreamedListObjectsChannel(r.ctx, rawChannel), nil
+}
+
+// convertToStreamedListObjectsChannel converts an APIExecutorStreamingChannel (raw bytes) to
+// a typed StreamedListObjectsChannel.
+func convertToStreamedListObjectsChannel(ctx context.Context, rawChannel *APIExecutorStreamingChannel) *StreamedListObjectsChannel {
+	streamCtx, cancel := context.WithCancel(ctx)
+
+	typedChannel := &StreamedListObjectsChannel{
+		Objects: make(chan StreamedListObjectsResponse, cap(rawChannel.Results)),
+		Errors:  make(chan error, 1),
+		cancel:  cancel,
+	}
+
+	go func() {
+		defer close(typedChannel.Objects)
+		defer close(typedChannel.Errors)
+		defer cancel()
+
+		for {
+			select {
+			case <-streamCtx.Done():
+				typedChannel.Errors <- streamCtx.Err()
+				return
+			case rawResult, ok := <-rawChannel.Results:
+				if !ok {
+					// Raw channel closed, check for errors
+					select {
+					case err := <-rawChannel.Errors:
+						if err != nil {
+							typedChannel.Errors <- err
+						}
+					default:
+					}
+					return
+				}
+
+				var response StreamedListObjectsResponse
+				if err := json.Unmarshal(rawResult, &response); err != nil {
+					typedChannel.Errors <- err
+					return
+				}
+
+				select {
+				case <-streamCtx.Done():
+					typedChannel.Errors <- streamCtx.Err()
+					return
+				case typedChannel.Objects <- response:
+				}
+			case err := <-rawChannel.Errors:
+				if err != nil {
+					typedChannel.Errors <- err
+					return
+				}
+			}
+		}
+	}()
+
+	return typedChannel
 }
 
 type ApiWriteRequest struct {

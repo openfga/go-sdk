@@ -1,8 +1,10 @@
 package openfga
 
 import (
+	"bufio"
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"io"
 	"log"
@@ -152,17 +154,7 @@ type APIExecutor interface {
 	// Execute performs an API request with automatic retry logic, telemetry, and error handling.
 	// It returns the raw response that can be decoded manually.
 	//
-	// Example using struct literal:
-	//    openfga.APIExecutorRequest{
-	//       OperationName: "Check",
-	//       Method:        "POST",
-	//       Path:          "/stores/{store_id}/check",
-	//       PathParameters: map[string]string{"store_id": storeID},
-	//       Body:          checkRequest,
-	//   }
-	//   response, err := executor.Execute(ctx, request)
-	//
-	// Example using builder pattern:
+	// Example:
 	//   request := openfga.NewAPIExecutorRequestBuilder("Check", "POST", "/stores/{store_id}/check").
 	//       WithPathParameter("store_id", storeID).
 	//       WithBody(checkRequest).
@@ -173,18 +165,7 @@ type APIExecutor interface {
 	// ExecuteWithDecode performs an API request and decodes the response into the provided result pointer.
 	// The result parameter must be a pointer to the type you want to decode into.
 	//
-	// Example using struct literal:
-	//   var response openfga.CheckResponse
-	//   openfga.APIExecutorRequest{
-	//       OperationName: "Check",
-	//       Method:        "POST",
-	//       Path:          "/stores/{store_id}/check",
-	//       PathParameters: map[string]string{"store_id": storeID},
-	//       Body:          checkRequest,
-	//   }
-	//   _, err := executor.ExecuteWithDecode(ctx, request, &response)
-	//
-	// Example using builder pattern:
+	// Example:
 	//   var response openfga.CheckResponse
 	//   request := openfga.NewAPIExecutorRequestBuilder("Check", "POST", "/stores/{store_id}/check").
 	//       WithPathParameter("store_id", storeID).
@@ -192,6 +173,58 @@ type APIExecutor interface {
 	//       Build()
 	//   _, err := executor.ExecuteWithDecode(ctx, request, &response)
 	ExecuteWithDecode(ctx context.Context, request APIExecutorRequest, result interface{}) (*APIExecutorResponse, error)
+
+	// ExecuteStreaming performs an API request that returns a streaming NDJSON response.
+	// It returns an APIExecutorStreamingChannel that provides results and errors through channels.
+	// The caller is responsible for closing the channel when done using defer channel.Close().
+	//
+	// This method is useful for streaming API endpoints like StreamedListObjects that return
+	// NDJSON (Newline Delimited JSON) responses where each line is a separate JSON object.
+	//
+	// Parameters:
+	//   - ctx: Context for cancellation. When cancelled, the streaming will stop.
+	//   - request: The API request configuration. The Accept header is automatically set to
+	//     "application/x-ndjson" unless explicitly overridden.
+	//   - bufferSize: The buffer size for the results channel. Use DefaultStreamBufferSize (10) for most cases.
+	//
+	// Example - Calling StreamedListObjects:
+	//
+	//   executor := openfga.NewAPIExecutor(client)
+	//
+	//   request := openfga.NewAPIExecutorRequestBuilder("StreamedListObjects", "POST", "/stores/{store_id}/streamed-list-objects").
+	//       WithPathParameter("store_id", storeID).
+	//       WithBody(openfga.ListObjectsRequest{
+	//           AuthorizationModelId: openfga.PtrString(modelID),
+	//           Type:                 "document",
+	//           Relation:             "viewer",
+	//           User:                 "user:alice",
+	//       }).
+	//       Build()
+	//
+	//   channel, err := executor.ExecuteStreaming(ctx, request, openfga.DefaultStreamBufferSize)
+	//   if err != nil {
+	//       return err
+	//   }
+	//   defer channel.Close()
+	//
+	//   for {
+	//       select {
+	//       case result, ok := <-channel.Results:
+	//           if !ok {
+	//               return nil // Stream completed
+	//           }
+	//           var response openfga.StreamedListObjectsResponse
+	//           if err := json.Unmarshal(result, &response); err != nil {
+	//               return err
+	//           }
+	//           fmt.Printf("Object: %s\n", response.Object)
+	//       case err := <-channel.Errors:
+	//           if err != nil {
+	//               return err
+	//           }
+	//       }
+	//   }
+	ExecuteStreaming(ctx context.Context, request APIExecutorRequest, bufferSize int) (*APIExecutorStreamingChannel, error)
 }
 
 // validateRequest checks that required fields are present in the request.
@@ -465,3 +498,379 @@ func (e *apiExecutor) logRetry(request APIExecutorRequest, err error, response *
 			waitDuration, request.OperationName, attemptNum, err, request.Body)
 	}
 }
+
+// ============================================================================
+// Streaming API Support
+// ============================================================================
+
+// DefaultStreamBufferSize is the default buffer size for streaming channels.
+const DefaultStreamBufferSize = 10
+
+// StreamResult represents a generic streaming result wrapper with either a result or an error.
+// This is the format used by OpenFGA's streaming NDJSON responses.
+type StreamResult[T any] struct {
+	Result *T      `json:"result,omitempty" yaml:"result,omitempty"`
+	Error  *Status `json:"error,omitempty" yaml:"error,omitempty"`
+}
+
+// StreamingChannel represents a generic channel for streaming responses.
+// It provides typed results directly decoded from the NDJSON stream.
+type StreamingChannel[T any] struct {
+	Results chan T
+	Errors  chan error
+	cancel  context.CancelFunc
+}
+
+// Close cancels the streaming context and cleans up resources.
+func (s *StreamingChannel[T]) Close() {
+	if s.cancel != nil {
+		s.cancel()
+	}
+}
+
+// ProcessStreamingResponse processes an HTTP response as a streaming NDJSON response
+// and returns a StreamingChannel with typed results and errors.
+//
+// Parameters:
+//   - ctx: The context for cancellation
+//   - httpResponse: The HTTP response to process
+//   - bufferSize: The buffer size for the channels (default 10 if <= 0)
+//
+// Returns:
+//   - *StreamingChannel[T]: A channel containing streaming results and errors
+//   - error: An error if the response is invalid
+func ProcessStreamingResponse[T any](ctx context.Context, httpResponse *http.Response, bufferSize int) (*StreamingChannel[T], error) {
+	streamCtx, cancel := context.WithCancel(ctx)
+
+	// Use default buffer size of 10 if not specified or invalid
+	if bufferSize <= 0 {
+		bufferSize = DefaultStreamBufferSize
+	}
+
+	channel := &StreamingChannel[T]{
+		Results: make(chan T, bufferSize),
+		Errors:  make(chan error, 1),
+		cancel:  cancel,
+	}
+
+	if httpResponse == nil || httpResponse.Body == nil {
+		cancel()
+		return nil, errors.New("response or response body is nil")
+	}
+
+	go func() {
+		defer close(channel.Results)
+		defer close(channel.Errors)
+		defer cancel()
+		defer func() { _ = httpResponse.Body.Close() }()
+
+		scanner := bufio.NewScanner(httpResponse.Body)
+		// Allow large NDJSON entries (up to 10MB). Tune as needed.
+		buf := make([]byte, 0, 64*1024)
+		scanner.Buffer(buf, 10*1024*1024)
+
+		for scanner.Scan() {
+			select {
+			case <-streamCtx.Done():
+				channel.Errors <- streamCtx.Err()
+				return
+			default:
+				line := scanner.Bytes()
+				if len(line) == 0 {
+					continue
+				}
+
+				var streamResult StreamResult[T]
+				if err := json.Unmarshal(line, &streamResult); err != nil {
+					channel.Errors <- err
+					return
+				}
+
+				if streamResult.Error != nil {
+					msg := "stream error"
+					if streamResult.Error.Message != nil {
+						msg = *streamResult.Error.Message
+					}
+					channel.Errors <- errors.New(msg)
+					return
+				}
+
+				if streamResult.Result != nil {
+					select {
+					case <-streamCtx.Done():
+						channel.Errors <- streamCtx.Err()
+						return
+					case channel.Results <- *streamResult.Result:
+					}
+				}
+			}
+		}
+
+		if err := scanner.Err(); err != nil {
+			// Prefer context error if we were canceled to avoid surfacing net/http "use of closed network connection".
+			if streamCtx.Err() != nil {
+				channel.Errors <- streamCtx.Err()
+				return
+			}
+			channel.Errors <- err
+		}
+	}()
+
+	return channel, nil
+}
+
+// APIExecutorStreamingChannel represents a generic channel for streaming API responses.
+// It provides two channels: Results for successful responses and Errors for any errors encountered.
+// The streaming channel processes NDJSON (Newline Delimited JSON) responses from the API.
+//
+// Usage pattern:
+//
+//	channel, err := executor.ExecuteStreaming(ctx, request, 10)
+//	if err != nil {
+//	    return err
+//	}
+//	defer channel.Close()
+//
+//	for {
+//	    select {
+//	    case result, ok := <-channel.Results:
+//	        if !ok {
+//	            // Channel closed, check for errors
+//	            select {
+//	            case err := <-channel.Errors:
+//	                if err != nil {
+//	                    return err
+//	                }
+//	            default:
+//	            }
+//	            return nil
+//	        }
+//	        // Process result (raw JSON bytes)
+//	        var response YourResponseType
+//	        json.Unmarshal(result, &response)
+//	    case err := <-channel.Errors:
+//	        if err != nil {
+//	            return err
+//	        }
+//	    }
+//	}
+type APIExecutorStreamingChannel struct {
+	// Results channel receives raw JSON bytes for each streamed result.
+	// The channel is closed when the stream ends or an error occurs.
+	Results chan []byte
+
+	// Errors channel receives any errors that occur during streaming.
+	// Only one error will be sent before the channel is closed.
+	Errors chan error
+
+	// cancel is the function to cancel the streaming context
+	cancel context.CancelFunc
+}
+
+// Close cancels the streaming context and cleans up resources.
+// It is safe to call Close multiple times.
+// Always defer Close() after successfully creating a streaming channel.
+func (s *APIExecutorStreamingChannel) Close() {
+	if s.cancel != nil {
+		s.cancel()
+	}
+}
+
+// ExecuteStreaming performs an API request that returns a streaming NDJSON response.
+// It returns an APIExecutorStreamingChannel that provides results and errors through channels.
+// The caller is responsible for closing the channel when done using defer channel.Close().
+//
+// Streaming responses are NDJSON (Newline Delimited JSON) where each line is a JSON object.
+// Each line is expected to have either a "result" or "error" field wrapped in a StreamResult structure.
+//
+// Parameters:
+//   - ctx: Context for cancellation. When cancelled, the streaming will stop.
+//   - request: The API request configuration. Headers should include "Accept": "application/x-ndjson".
+//   - bufferSize: The buffer size for the results channel. Use DefaultStreamBufferSize (10) for most cases.
+//     A larger buffer can improve throughput but uses more memory.
+//
+// Example - Calling StreamedListObjects:
+//
+//	executor := openfga.NewAPIExecutor(client)
+//
+//	request := openfga.NewAPIExecutorRequestBuilder("StreamedListObjects", "POST", "/stores/{store_id}/streamed-list-objects").
+//	    WithPathParameter("store_id", storeID).
+//	    WithHeader("Accept", "application/x-ndjson").
+//	    WithBody(openfga.ListObjectsRequest{
+//	        AuthorizationModelId: openfga.PtrString(modelID),
+//	        Type:                 "document",
+//	        Relation:             "viewer",
+//	        User:                 "user:alice",
+//	    }).
+//	    Build()
+//
+//	channel, err := executor.ExecuteStreaming(ctx, request, openfga.DefaultStreamBufferSize)
+//	if err != nil {
+//	    return err
+//	}
+//	defer channel.Close()
+//
+//	for {
+//	    select {
+//	    case result, ok := <-channel.Results:
+//	        if !ok {
+//	            // Stream completed
+//	            return nil
+//	        }
+//	        var response openfga.StreamedListObjectsResponse
+//	        if err := json.Unmarshal(result, &response); err != nil {
+//	            return err
+//	        }
+//	        fmt.Printf("Object: %s\n", response.Object)
+//	    case err := <-channel.Errors:
+//	        if err != nil {
+//	            return err
+//	        }
+//	    }
+//	}
+func (e *apiExecutor) ExecuteStreaming(ctx context.Context, request APIExecutorRequest, bufferSize int) (*APIExecutorStreamingChannel, error) {
+	// Validate required fields
+	if err := validateRequest(request); err != nil {
+		return nil, err
+	}
+
+	// Build request parameters
+	path := buildPath(request.Path, request.PathParameters)
+
+	if strings.Contains(path, "{") || strings.Contains(path, "}") {
+		return nil, reportError("not all path parameters were provided for path: %s", path)
+	}
+
+	headerParams := prepareHeaders(request.Headers)
+	// Ensure Accept header is set for NDJSON streaming
+	if _, ok := request.Headers["Accept"]; !ok {
+		headerParams["Accept"] = "application/x-ndjson"
+	}
+
+	queryParams := request.QueryParameters
+	if queryParams == nil {
+		queryParams = url.Values{}
+	}
+
+	storeID := request.PathParameters["store_id"]
+
+	// Prepare HTTP request
+	req, err := e.client.prepareRequest(ctx, path, request.Method, request.Body, headerParams, queryParams)
+	if err != nil {
+		return nil, err
+	}
+
+	// Execute HTTP request
+	httpResponse, err := e.client.callAPI(req)
+	if err != nil {
+		return nil, err
+	}
+	if httpResponse == nil {
+		return nil, reportError("nil HTTP response from API client")
+	}
+
+	// Handle HTTP errors (status >= 300)
+	if httpResponse.StatusCode >= http.StatusMultipleChoices {
+		responseBody, readErr := io.ReadAll(httpResponse.Body)
+		_ = httpResponse.Body.Close()
+		if readErr != nil {
+			return nil, readErr
+		}
+		return nil, e.client.handleAPIError(httpResponse, responseBody, request.Body, request.OperationName, storeID)
+	}
+
+	// Process streaming response
+	return processStreamingResponseRaw(ctx, httpResponse, bufferSize)
+}
+
+// processStreamingResponseRaw processes an HTTP response as a streaming NDJSON response.
+// It returns an APIExecutorStreamingChannel with raw JSON bytes for each result.
+// This is an internal function used by ExecuteStreaming.
+func processStreamingResponseRaw(ctx context.Context, httpResponse *http.Response, bufferSize int) (*APIExecutorStreamingChannel, error) {
+	streamCtx, cancel := context.WithCancel(ctx)
+
+	// Use default buffer size if not specified or invalid
+	if bufferSize <= 0 {
+		bufferSize = DefaultStreamBufferSize
+	}
+
+	channel := &APIExecutorStreamingChannel{
+		Results: make(chan []byte, bufferSize),
+		Errors:  make(chan error, 1),
+		cancel:  cancel,
+	}
+
+	if httpResponse == nil || httpResponse.Body == nil {
+		cancel()
+		return nil, reportError("response or response body is nil")
+	}
+
+	go func() {
+		defer close(channel.Results)
+		defer close(channel.Errors)
+		defer cancel()
+		defer func() { _ = httpResponse.Body.Close() }()
+
+		scanner := bufio.NewScanner(httpResponse.Body)
+		// Allow large NDJSON entries (up to 10MB). Tune as needed.
+		buf := make([]byte, 0, 64*1024)
+		scanner.Buffer(buf, 10*1024*1024)
+
+		for scanner.Scan() {
+			select {
+			case <-streamCtx.Done():
+				channel.Errors <- streamCtx.Err()
+				return
+			default:
+				line := scanner.Bytes()
+				if len(line) == 0 {
+					continue
+				}
+
+				// Parse the StreamResult wrapper to check for errors
+				var streamResult struct {
+					Result json.RawMessage `json:"result,omitempty"`
+					Error  *Status         `json:"error,omitempty"`
+				}
+				if err := json.Unmarshal(line, &streamResult); err != nil {
+					channel.Errors <- err
+					return
+				}
+
+				if streamResult.Error != nil {
+					msg := "stream error"
+					if streamResult.Error.Message != nil {
+						msg = *streamResult.Error.Message
+					}
+					channel.Errors <- errors.New(msg)
+					return
+				}
+
+				if streamResult.Result != nil {
+					// Make a copy of the raw JSON to send through the channel
+					resultCopy := make([]byte, len(streamResult.Result))
+					copy(resultCopy, streamResult.Result)
+
+					select {
+					case <-streamCtx.Done():
+						channel.Errors <- streamCtx.Err()
+						return
+					case channel.Results <- resultCopy:
+					}
+				}
+			}
+		}
+
+		if err := scanner.Err(); err != nil {
+			// Prefer context error if we were canceled to avoid surfacing net/http "use of closed network connection".
+			if streamCtx.Err() != nil {
+				channel.Errors <- streamCtx.Err()
+				return
+			}
+			channel.Errors <- err
+		}
+	}()
+
+	return channel, nil
+}
+

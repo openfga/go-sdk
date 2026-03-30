@@ -1,14 +1,18 @@
+// This example demonstrates how to use the ExecuteStreaming method from the API executor
+// to call the StreamedListObjects endpoint with raw NDJSON streaming.
+
 package main
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
-	"os"
+    "context"
+    "encoding/json"
+    "fmt"
+    "os"
 
-	openfga "github.com/openfga/go-sdk"
-	"github.com/openfga/go-sdk/client"
-	"github.com/openfga/language/pkg/go/transformer"
+    "github.com/openfga/language/pkg/go/transformer"
+
+    openfga "github.com/openfga/go-sdk"
+    "github.com/openfga/go-sdk/client"
 )
 
 func main() {
@@ -161,33 +165,66 @@ func writeTuples(ctx context.Context, fga *client.OpenFgaClient) error {
 func streamObjects(ctx context.Context, fga *client.OpenFgaClient) error {
 	consistencyPreference := openfga.CONSISTENCYPREFERENCE_HIGHER_CONSISTENCY
 
-	response, err := fga.StreamedListObjects(ctx).Body(client.ClientStreamedListObjectsRequest{
-		User:     "user:anne",
-		Relation: "can_read", // Computed: owner OR viewer
-		Type:     "document",
-	}).Options(client.ClientStreamedListObjectsOptions{
-		Consistency: &consistencyPreference,
-	}).Execute()
+	// Get the API executor for raw streaming
+	executor := fga.GetAPIExecutor()
+
+    storeId, err := fga.GetStoreId()
+    if err != nil {
+		return fmt.Errorf("GetStoreId failed: %w", err)
+	}
+
+	// Build the streaming request using the API executor
+	request := openfga.NewAPIExecutorRequestBuilder("StreamedListObjects", "POST", "/stores/{store_id}/streamed-list-objects").
+		WithPathParameter("store_id", storeId).
+		WithBody(openfga.ListObjectsRequest{
+			User:        "user:anne",
+			Relation:    "can_read", // Computed: owner OR viewer
+			Type:        "document",
+			Consistency: &consistencyPreference,
+		}).
+		Build()
+
+	// Execute the streaming request
+	channel, err := executor.ExecuteStreaming(ctx, request, openfga.DefaultStreamBufferSize)
 	if err != nil {
 		return fmt.Errorf("StreamedListObjects failed: %w", err)
 	}
-	defer response.Close()
+	defer channel.Close()
 
 	count := 0
-	for obj := range response.Objects {
-		count++
-		if count <= 3 || count%500 == 0 {
-			fmt.Printf("- %s\n", obj.Object)
+	for {
+		select {
+		case result, ok := <-channel.Results:
+			if !ok {
+				// Channel closed, check for errors
+				select {
+				case err := <-channel.Errors:
+					if err != nil {
+						return fmt.Errorf("error during streaming: %w", err)
+					}
+				default:
+				}
+				fmt.Printf("✓ Streamed %d objects\n", count)
+				return nil
+			}
+
+			// Decode the raw JSON bytes into StreamedListObjectsResponse
+			var response openfga.StreamedListObjectsResponse
+			if err := json.Unmarshal(result, &response); err != nil {
+				return fmt.Errorf("failed to decode stream result: %w", err)
+			}
+
+			count++
+			if count <= 3 || count%500 == 0 {
+				fmt.Printf("- %s\n", response.Object)
+			}
+
+		case err := <-channel.Errors:
+			if err != nil {
+				return fmt.Errorf("error during streaming: %w", err)
+			}
 		}
 	}
-
-	// Check for streaming errors
-	if err := <-response.Errors; err != nil {
-		return fmt.Errorf("error during streaming: %w", err)
-	}
-
-	fmt.Printf("✓ Streamed %d objects\n", count)
-	return nil
 }
 
 func handleError(err error) {

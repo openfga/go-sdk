@@ -1177,6 +1177,108 @@ fmt.Printf("Status Code: %d\n", rawResponse.StatusCode)
 fmt.Printf("Headers: %+v\n", rawResponse.Headers)
 ```
 
+#### Example: Calling streaming endpoints (e.g., StreamedListObjects)
+
+For streaming API endpoints that return NDJSON (Newline Delimited JSON) responses, use the `ExecuteStreaming` method. This is useful for endpoints like `StreamedListObjects` that stream results as they are computed rather than waiting for all results before responding.
+
+```go
+// Get the generic API executor
+executor := fgaClient.GetAPIExecutor()
+
+// Build a streaming request for StreamedListObjects
+request := openfga.NewAPIExecutorRequestBuilder("StreamedListObjects", http.MethodPost, "/stores/{store_id}/streamed-list-objects").
+    WithPathParameter("store_id", storeID).
+    WithBody(openfga.ListObjectsRequest{
+        AuthorizationModelId: openfga.PtrString(modelID),
+        Type:                 "document",
+        Relation:             "viewer",
+        User:                 "user:alice",
+    }).
+    Build()
+
+// Execute the streaming request
+// The bufferSize parameter controls how many results can be buffered in the channel
+channel, err := executor.ExecuteStreaming(ctx, request, openfga.DefaultStreamBufferSize)
+if err != nil {
+    log.Fatalf("Streaming request failed: %v", err)
+}
+defer channel.Close() // Always close the channel when done
+
+// Process results as they stream in
+for {
+    select {
+    case result, ok := <-channel.Results:
+        if !ok {
+            // Results channel closed, stream completed
+            // Check for any final errors
+            select {
+            case err := <-channel.Errors:
+                if err != nil {
+                    log.Fatalf("Stream error: %v", err)
+                }
+            default:
+            }
+            fmt.Println("Stream completed successfully")
+            return
+        }
+        // Decode the raw JSON bytes into a typed response
+        var response openfga.StreamedListObjectsResponse
+        if err := json.Unmarshal(result, &response); err != nil {
+            log.Fatalf("Failed to decode stream result: %v", err)
+        }
+        fmt.Printf("Received object: %s\n", response.Object)
+    case err := <-channel.Errors:
+        if err != nil {
+            log.Fatalf("Stream error: %v", err)
+        }
+    }
+}
+```
+
+The `ExecuteStreaming` method returns an `APIExecutorStreamingChannel` with:
+- `Results chan []byte`: Raw JSON bytes for each streamed result
+- `Errors chan error`: Any errors that occur during streaming
+- `Close()`: Method to cancel streaming and cleanup resources
+
+**Note:** For the `StreamedListObjects` endpoint specifically, you can also use the higher-level `ExecuteStreamedListObjects` or `ExecuteStreamedListObjectsWithBufferSize` functions which provide typed responses:
+
+```go
+import openfga "github.com/openfga/go-sdk"
+
+// Using the typed streaming helper
+channel, err := openfga.ExecuteStreamedListObjects(
+    client,           // *openfga.APIClient
+    ctx,              // context.Context
+    storeID,          // string
+    openfga.ListObjectsRequest{
+        AuthorizationModelId: openfga.PtrString(modelID),
+        Type:                 "document",
+        Relation:             "viewer",
+        User:                 "user:alice",
+    },
+    openfga.RequestOptions{}, // optional headers
+)
+if err != nil {
+    log.Fatalf("Failed to start streaming: %v", err)
+}
+defer channel.Close()
+
+// Process typed responses directly
+for {
+    select {
+    case obj, ok := <-channel.Objects:
+        if !ok {
+            return // Stream completed
+        }
+        fmt.Printf("Object: %s\n", obj.Object)
+    case err := <-channel.Errors:
+        if err != nil {
+            log.Fatalf("Error: %v", err)
+        }
+    }
+}
+```
+
 ### Retries
 
 If a network request fails with a 429 or 5xx error from the server, the SDK will automatically retry the request up to 3 times with a minimum wait time of 100 milliseconds between each attempt.

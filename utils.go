@@ -3,6 +3,7 @@ package openfga
 import (
 	"encoding/json"
 	"net/url"
+	"reflect"
 	"time"
 )
 
@@ -350,6 +351,11 @@ func validatePathParameter(name string, value string) error {
 
 func validateParameter(name string, value interface{}) error {
 	if value == nil {
+		return reportError("%s is required and must be specified", name)
+	}
+	// Check for nil pointer wrapped in interface
+	v := reflect.ValueOf(value)
+	if v.Kind() == reflect.Ptr && v.IsNil() {
 		return reportError("%s is required and must be specified", name)
 	}
 	return nil
