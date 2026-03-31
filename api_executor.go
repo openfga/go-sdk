@@ -768,33 +768,86 @@ func (e *apiExecutor) ExecuteStreaming(ctx context.Context, request APIExecutorR
 
 	storeID := request.PathParameters["store_id"]
 
-	// Prepare HTTP request
-	req, err := e.client.prepareRequest(ctx, path, request.Method, request.Body, headerParams, queryParams)
-	if err != nil {
-		return nil, err
-	}
+	// Get retry configuration — same retry logic as executeInternal for the initial connection phase
+	retryParams := e.getRetryParams()
 
-	// Execute HTTP request
-	httpResponse, err := e.client.callAPI(req)
-	if err != nil {
-		return nil, err
-	}
-	if httpResponse == nil {
-		return nil, reportError("nil HTTP response from API client")
-	}
+	var lastErr error
 
-	// Handle HTTP errors (status >= 300)
-	if httpResponse.StatusCode >= http.StatusMultipleChoices {
-		responseBody, readErr := io.ReadAll(httpResponse.Body)
-		_ = httpResponse.Body.Close()
-		if readErr != nil {
-			return nil, readErr
+	for attemptNum := 0; attemptNum < retryParams.MaxRetry+1; attemptNum++ {
+		// Prepare HTTP request (must be rebuilt each attempt as the body reader is consumed)
+		req, err := e.client.prepareRequest(ctx, path, request.Method, request.Body, headerParams, queryParams)
+		if err != nil {
+			return nil, err
 		}
-		return nil, e.client.handleAPIError(httpResponse, responseBody, request.Body, request.OperationName, storeID)
+
+		// Execute HTTP request
+		httpResponse, err := e.client.callAPI(req)
+		if err != nil {
+			lastErr = err
+			if attemptNum >= retryParams.MaxRetry {
+				return nil, lastErr
+			}
+			if shouldRetry, waitDuration := e.determineRetry(err, nil, attemptNum, retryParams, request.OperationName); shouldRetry {
+				if e.client.cfg.Debug {
+					log.Printf("\nWaiting %v to retry streaming %v (attempt %d, error=%v)\n",
+						waitDuration, request.OperationName, attemptNum, err)
+				}
+				time.Sleep(waitDuration)
+				continue
+			}
+			return nil, lastErr
+		}
+		if httpResponse == nil {
+			lastErr = reportError("nil HTTP response from API client")
+			if attemptNum >= retryParams.MaxRetry {
+				return nil, lastErr
+			}
+			if shouldRetry, waitDuration := e.determineRetry(lastErr, nil, attemptNum, retryParams, request.OperationName); shouldRetry {
+				if e.client.cfg.Debug {
+					log.Printf("\nWaiting %v to retry streaming %v (attempt %d, error=%v)\n",
+						waitDuration, request.OperationName, attemptNum, lastErr)
+				}
+				time.Sleep(waitDuration)
+				continue
+			}
+			return nil, lastErr
+		}
+
+		// Handle HTTP errors (status >= 300) — these may be retryable (e.g. 429, 500)
+		if httpResponse.StatusCode >= http.StatusMultipleChoices {
+			responseBody, readErr := io.ReadAll(httpResponse.Body)
+			_ = httpResponse.Body.Close()
+			if readErr != nil {
+				return nil, readErr
+			}
+			apiErr := e.client.handleAPIError(httpResponse, responseBody, request.Body, request.OperationName, storeID)
+			lastErr = apiErr
+
+			if attemptNum >= retryParams.MaxRetry {
+				return nil, lastErr
+			}
+
+			resp := makeAPIExecutorResponse(httpResponse, responseBody)
+			if shouldRetry, waitDuration := e.determineRetry(apiErr, resp, attemptNum, retryParams, request.OperationName); shouldRetry {
+				if e.client.cfg.Debug {
+					log.Printf("\nWaiting %v to retry streaming %v (attempt %d, status=%d, error=%v)\n",
+						waitDuration, request.OperationName, attemptNum, httpResponse.StatusCode, apiErr)
+				}
+				time.Sleep(waitDuration)
+				continue
+			}
+			return nil, lastErr
+		}
+
+		// Success — process streaming response (no retries once the stream is established)
+		return processStreamingResponseRaw(ctx, httpResponse, bufferSize)
 	}
 
-	// Process streaming response
-	return processStreamingResponseRaw(ctx, httpResponse, bufferSize)
+	// All retries exhausted
+	if lastErr != nil {
+		return nil, lastErr
+	}
+	return nil, reportError("request failed without response")
 }
 
 // processStreamingResponseRaw processes an HTTP streaming response.

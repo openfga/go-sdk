@@ -3461,9 +3461,9 @@ func (client *OpenFgaClient) StreamedListObjectsExecute(request SdkClientStreame
 	if request.GetOptions() != nil {
 		requestOptions.RequestOptions = request.GetOptions().RequestOptions
 		body.Consistency = request.GetOptions().Consistency
-        if request.GetOptions().StreamBufferSize != nil {
-            requestOptions.BufferSize = *request.GetOptions().StreamBufferSize
-        }
+		if request.GetOptions().StreamBufferSize != nil {
+			requestOptions.BufferSize = *request.GetOptions().StreamBufferSize
+		}
 	}
 
 	channel, err := client.OpenFgaApi.StreamedListObjects(request.GetContext(), *storeId).

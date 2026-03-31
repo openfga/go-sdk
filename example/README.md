@@ -11,8 +11,10 @@ Demonstrates how to use the concrete `StreamedListObjects` client method with ty
 This is the recommended approach for calling the StreamedListObjects API.
 Includes support for configurable buffer sizes to optimize throughput vs memory usage.
 
-**API Executor Streaming Example:**
-Demonstrates how to use the low-level `APIExecutor.ExecuteStreaming` method to call streaming endpoints.
+**API Executor Example:**
+Demonstrates how to use the low-level `APIExecutor` to call all major OpenFGA endpoints
+(ListStores, CreateStore, GetStore, WriteAuthorizationModel, Write, Read, Check, ListObjects,
+StreamedListObjects, DeleteStore) using `Execute`, `ExecuteWithDecode`, and `ExecuteStreaming`.
 This is useful for custom or unsupported endpoints where you need full control over the request and response.
 
 ### Running the Examples

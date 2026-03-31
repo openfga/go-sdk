@@ -1639,11 +1639,8 @@ func TestProcessStreamingResponseRaw(t *testing.T) {
 		// The channel should close after context is cancelled and pipe is closed
 		// Wait for channels to close
 		select {
-		case _, ok := <-channel.Results:
-			if ok {
-				// Got another result, that's fine
-			}
-			// Channel closed, success
+		case <-channel.Results:
+			// Either got another result or channel closed — both are fine
 		case <-time.After(2 * time.Second):
 			t.Fatal("timeout waiting for channel to close")
 		}
@@ -1924,6 +1921,347 @@ func TestAPIExecutor_ExecuteStreaming_ServerError(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Nil(t, channel)
+}
+
+// ============================================================================
+// Streaming Retry Tests
+// ============================================================================
+
+func TestAPIExecutor_ExecuteStreaming_RetriesOnTransportError(t *testing.T) {
+	t.Parallel()
+
+	attemptCount := 0
+	client := newTestClient(t, &testRoundTripper{fn: func(req *http.Request) (*http.Response, error) {
+		attemptCount++
+		if attemptCount <= 2 {
+			return nil, errors.New("connection refused")
+		}
+		return &http.Response{
+			StatusCode: 200,
+			Body:       io.NopCloser(strings.NewReader(`{"result":{"object":"doc:1"}}` + "\n")),
+			Header:     http.Header{},
+		}, nil
+	}}, &RetryParams{MaxRetry: 3, MinWaitInMs: 1})
+
+	executor := NewAPIExecutor(client)
+
+	channel, err := executor.ExecuteStreaming(context.Background(), APIExecutorRequest{
+		OperationName:  "StreamedListObjects",
+		Method:         "POST",
+		Path:           "/stores/{store_id}/streamed-list-objects",
+		PathParameters: map[string]string{"store_id": "123"},
+		Body:           map[string]string{"type": "document"},
+	}, 10)
+
+	require.NoError(t, err)
+	require.NotNil(t, channel)
+	defer channel.Close()
+
+	var results [][]byte
+	for result := range channel.Results {
+		results = append(results, result)
+	}
+
+	assert.Equal(t, 3, attemptCount, "expected 3 attempts (2 failures + 1 success)")
+	assert.Len(t, results, 1)
+	assert.JSONEq(t, `{"object":"doc:1"}`, string(results[0]))
+}
+
+func TestAPIExecutor_ExecuteStreaming_RetriesOnRateLimitError(t *testing.T) {
+	t.Parallel()
+
+	attemptCount := 0
+	client := newTestClient(t, &testRoundTripper{fn: func(req *http.Request) (*http.Response, error) {
+		attemptCount++
+		if attemptCount <= 1 {
+			return &http.Response{
+				StatusCode: 429,
+				Body:       io.NopCloser(strings.NewReader(`{"code":"rate_limit_exceeded","message":"Rate limit exceeded"}`)),
+				Header:     http.Header{"Content-Type": []string{"application/json"}},
+			}, nil
+		}
+		return &http.Response{
+			StatusCode: 200,
+			Body:       io.NopCloser(strings.NewReader(`{"result":{"object":"doc:1"}}` + "\n")),
+			Header:     http.Header{},
+		}, nil
+	}}, &RetryParams{MaxRetry: 3, MinWaitInMs: 1})
+
+	executor := NewAPIExecutor(client)
+
+	channel, err := executor.ExecuteStreaming(context.Background(), APIExecutorRequest{
+		OperationName:  "StreamedListObjects",
+		Method:         "POST",
+		Path:           "/stores/{store_id}/streamed-list-objects",
+		PathParameters: map[string]string{"store_id": "123"},
+		Body:           map[string]string{"type": "document"},
+	}, 10)
+
+	require.NoError(t, err)
+	require.NotNil(t, channel)
+	defer channel.Close()
+
+	var results [][]byte
+	for result := range channel.Results {
+		results = append(results, result)
+	}
+
+	assert.Equal(t, 2, attemptCount, "expected 2 attempts (1 rate limit + 1 success)")
+	assert.Len(t, results, 1)
+}
+
+func TestAPIExecutor_ExecuteStreaming_RetriesOnInternalServerError(t *testing.T) {
+	t.Parallel()
+
+	attemptCount := 0
+	client := newTestClient(t, &testRoundTripper{fn: func(req *http.Request) (*http.Response, error) {
+		attemptCount++
+		if attemptCount <= 2 {
+			return &http.Response{
+				StatusCode: 500,
+				Body:       io.NopCloser(strings.NewReader(`{"code":"internal_error","message":"Internal Server Error"}`)),
+				Header:     http.Header{"Content-Type": []string{"application/json"}},
+			}, nil
+		}
+		return &http.Response{
+			StatusCode: 200,
+			Body:       io.NopCloser(strings.NewReader(`{"result":{"object":"doc:1"}}` + "\n")),
+			Header:     http.Header{},
+		}, nil
+	}}, &RetryParams{MaxRetry: 3, MinWaitInMs: 1})
+
+	executor := NewAPIExecutor(client)
+
+	channel, err := executor.ExecuteStreaming(context.Background(), APIExecutorRequest{
+		OperationName:  "StreamedListObjects",
+		Method:         "POST",
+		Path:           "/stores/{store_id}/streamed-list-objects",
+		PathParameters: map[string]string{"store_id": "123"},
+		Body:           map[string]string{"type": "document"},
+	}, 10)
+
+	require.NoError(t, err)
+	require.NotNil(t, channel)
+	defer channel.Close()
+
+	var results [][]byte
+	for result := range channel.Results {
+		results = append(results, result)
+	}
+
+	assert.Equal(t, 3, attemptCount, "expected 3 attempts (2 server errors + 1 success)")
+	assert.Len(t, results, 1)
+}
+
+func TestAPIExecutor_ExecuteStreaming_ExhaustsRetriesOnPersistentTransportError(t *testing.T) {
+	t.Parallel()
+
+	attemptCount := 0
+	client := newTestClient(t, &testRoundTripper{fn: func(req *http.Request) (*http.Response, error) {
+		attemptCount++
+		return nil, errors.New("connection refused")
+	}}, &RetryParams{MaxRetry: 2, MinWaitInMs: 1})
+
+	executor := NewAPIExecutor(client)
+
+	channel, err := executor.ExecuteStreaming(context.Background(), APIExecutorRequest{
+		OperationName:  "StreamedListObjects",
+		Method:         "POST",
+		Path:           "/stores/{store_id}/streamed-list-objects",
+		PathParameters: map[string]string{"store_id": "123"},
+		Body:           map[string]string{"type": "document"},
+	}, 10)
+
+	assert.Error(t, err)
+	assert.Nil(t, channel)
+	assert.Contains(t, err.Error(), "connection refused")
+	assert.Equal(t, 3, attemptCount, "expected 3 attempts (1 initial + 2 retries)")
+}
+
+func TestAPIExecutor_ExecuteStreaming_ExhaustsRetriesOnPersistentServerError(t *testing.T) {
+	t.Parallel()
+
+	attemptCount := 0
+	client := newTestClient(t, &testRoundTripper{fn: func(req *http.Request) (*http.Response, error) {
+		attemptCount++
+		return &http.Response{
+			StatusCode: 500,
+			Body:       io.NopCloser(strings.NewReader(`{"code":"internal_error","message":"Internal Server Error"}`)),
+			Header:     http.Header{"Content-Type": []string{"application/json"}},
+		}, nil
+	}}, &RetryParams{MaxRetry: 2, MinWaitInMs: 1})
+
+	executor := NewAPIExecutor(client)
+
+	channel, err := executor.ExecuteStreaming(context.Background(), APIExecutorRequest{
+		OperationName:  "StreamedListObjects",
+		Method:         "POST",
+		Path:           "/stores/{store_id}/streamed-list-objects",
+		PathParameters: map[string]string{"store_id": "123"},
+		Body:           map[string]string{"type": "document"},
+	}, 10)
+
+	assert.Error(t, err)
+	assert.Nil(t, channel)
+	assert.Equal(t, 3, attemptCount, "expected 3 attempts (1 initial + 2 retries)")
+}
+
+func TestAPIExecutor_ExecuteStreaming_RetriesOnNonSpecificHTTPErrors(t *testing.T) {
+	// 400 errors fall through to determineRetry's default case, which retries them
+	// just like the non-streaming executeInternal path. This test verifies that
+	// streaming matches the same behavior as non-streaming endpoints.
+	t.Parallel()
+
+	attemptCount := 0
+	client := newTestClient(t, &testRoundTripper{fn: func(req *http.Request) (*http.Response, error) {
+		attemptCount++
+		if attemptCount <= 2 {
+			return &http.Response{
+				StatusCode: 400,
+				Body:       io.NopCloser(strings.NewReader(`{"code":"validation_error","message":"Invalid request"}`)),
+				Header:     http.Header{"Content-Type": []string{"application/json"}},
+			}, nil
+		}
+		return &http.Response{
+			StatusCode: 200,
+			Body:       io.NopCloser(strings.NewReader(`{"result":{"object":"doc:1"}}` + "\n")),
+			Header:     http.Header{},
+		}, nil
+	}}, &RetryParams{MaxRetry: 3, MinWaitInMs: 1})
+
+	executor := NewAPIExecutor(client)
+
+	channel, err := executor.ExecuteStreaming(context.Background(), APIExecutorRequest{
+		OperationName:  "StreamedListObjects",
+		Method:         "POST",
+		Path:           "/stores/{store_id}/streamed-list-objects",
+		PathParameters: map[string]string{"store_id": "123"},
+		Body:           map[string]string{"type": "document"},
+	}, 10)
+
+	require.NoError(t, err)
+	require.NotNil(t, channel)
+	defer channel.Close()
+
+	var results [][]byte
+	for result := range channel.Results {
+		results = append(results, result)
+	}
+
+	assert.Equal(t, 3, attemptCount, "400 errors are retried via default case, matching non-streaming behavior")
+	assert.Len(t, results, 1)
+}
+
+func TestAPIExecutor_ExecuteStreaming_DoesNotRetryContextCancellation(t *testing.T) {
+	t.Parallel()
+
+	attemptCount := 0
+	client := newTestClient(t, &testRoundTripper{fn: func(req *http.Request) (*http.Response, error) {
+		attemptCount++
+		return nil, context.Canceled
+	}}, &RetryParams{MaxRetry: 3, MinWaitInMs: 1})
+
+	executor := NewAPIExecutor(client)
+
+	channel, err := executor.ExecuteStreaming(context.Background(), APIExecutorRequest{
+		OperationName:  "StreamedListObjects",
+		Method:         "POST",
+		Path:           "/stores/{store_id}/streamed-list-objects",
+		PathParameters: map[string]string{"store_id": "123"},
+		Body:           map[string]string{"type": "document"},
+	}, 10)
+
+	assert.Error(t, err)
+	assert.Nil(t, channel)
+	assert.Equal(t, 1, attemptCount, "should not retry context cancellation")
+}
+
+func TestAPIExecutor_ExecuteStreaming_DoesNotRetryContextDeadlineExceeded(t *testing.T) {
+	t.Parallel()
+
+	attemptCount := 0
+	client := newTestClient(t, &testRoundTripper{fn: func(req *http.Request) (*http.Response, error) {
+		attemptCount++
+		return nil, context.DeadlineExceeded
+	}}, &RetryParams{MaxRetry: 3, MinWaitInMs: 1})
+
+	executor := NewAPIExecutor(client)
+
+	channel, err := executor.ExecuteStreaming(context.Background(), APIExecutorRequest{
+		OperationName:  "StreamedListObjects",
+		Method:         "POST",
+		Path:           "/stores/{store_id}/streamed-list-objects",
+		PathParameters: map[string]string{"store_id": "123"},
+		Body:           map[string]string{"type": "document"},
+	}, 10)
+
+	assert.Error(t, err)
+	assert.Nil(t, channel)
+	assert.Equal(t, 1, attemptCount, "should not retry context deadline exceeded")
+}
+
+func TestAPIExecutor_ExecuteStreaming_NoRetryWhenMaxRetryIsZero(t *testing.T) {
+	t.Parallel()
+
+	attemptCount := 0
+	client := newTestClient(t, &testRoundTripper{fn: func(req *http.Request) (*http.Response, error) {
+		attemptCount++
+		return nil, errors.New("connection refused")
+	}}, &RetryParams{MaxRetry: 0, MinWaitInMs: 1})
+
+	executor := NewAPIExecutor(client)
+
+	channel, err := executor.ExecuteStreaming(context.Background(), APIExecutorRequest{
+		OperationName:  "StreamedListObjects",
+		Method:         "POST",
+		Path:           "/stores/{store_id}/streamed-list-objects",
+		PathParameters: map[string]string{"store_id": "123"},
+		Body:           map[string]string{"type": "document"},
+	}, 10)
+
+	assert.Error(t, err)
+	assert.Nil(t, channel)
+	assert.Contains(t, err.Error(), "connection refused")
+	assert.Equal(t, 1, attemptCount, "should only attempt once with MaxRetry=0")
+}
+
+func TestAPIExecutor_ExecuteStreaming_RetriesOnNilHTTPResponseThenSucceeds(t *testing.T) {
+	t.Parallel()
+
+	attemptCount := 0
+	client := newTestClient(t, &testRoundTripper{fn: func(req *http.Request) (*http.Response, error) {
+		attemptCount++
+		if attemptCount <= 1 {
+			return nil, nil
+		}
+		return &http.Response{
+			StatusCode: 200,
+			Body:       io.NopCloser(strings.NewReader(`{"result":{"object":"doc:1"}}` + "\n")),
+			Header:     http.Header{},
+		}, nil
+	}}, &RetryParams{MaxRetry: 2, MinWaitInMs: 1})
+
+	executor := NewAPIExecutor(client)
+
+	channel, err := executor.ExecuteStreaming(context.Background(), APIExecutorRequest{
+		OperationName:  "StreamedListObjects",
+		Method:         "POST",
+		Path:           "/stores/{store_id}/streamed-list-objects",
+		PathParameters: map[string]string{"store_id": "123"},
+		Body:           map[string]string{"type": "document"},
+	}, 10)
+
+	require.NoError(t, err)
+	require.NotNil(t, channel)
+	defer channel.Close()
+
+	var results [][]byte
+	for result := range channel.Results {
+		results = append(results, result)
+	}
+
+	assert.Equal(t, 2, attemptCount, "expected 2 attempts (1 nil response + 1 success)")
+	assert.Len(t, results, 1)
 }
 
 func TestProcessStreamingResponseRaw_StreamErrorWithNilMessage(t *testing.T) {

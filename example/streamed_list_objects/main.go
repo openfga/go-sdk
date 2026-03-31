@@ -6,7 +6,7 @@
 // manual JSON unmarshalling.
 //
 // For an example using the low-level APIExecutor with raw NDJSON streaming,
-// see the api_executor_streaming example.
+// see the api_executor example.
 
 package main
 

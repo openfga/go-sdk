@@ -4,7 +4,7 @@ Demonstrates using the **concrete `StreamedListObjects` client method** to retri
 
 This is the **recommended approach** for calling `StreamedListObjects` — it provides typed `StreamedListObjectsResponse` objects directly, without requiring manual JSON unmarshalling.
 
-> For an example using the low-level `APIExecutor` with raw NDJSON streaming, see the [`api_executor_streaming`](../api_executor_streaming/) example.
+> For an example using the low-level `APIExecutor` with raw NDJSON streaming, see the [`api_executor_streaming`](../api_executor/) example.
 
 ## What is StreamedListObjects?
 
