@@ -30,8 +30,8 @@ type RequestOptions struct {
 }
 
 type StreamingRequestOptions struct {
-    RequestOptions
-    BufferSize int `json:"buffer_size,omitempty"`
+	RequestOptions
+	BufferSize int `json:"buffer_size,omitempty"`
 }
 
 type OpenFgaApi interface {
@@ -2552,7 +2552,7 @@ func (a *OpenFgaApiService) StreamedListObjectsExecute(r ApiStreamedListObjectsR
 	}
 
 	// Use the APIExecutor to execute the streaming request
-	executor := a.client.GetAPIExecutor().(*apiExecutor)
+	executor := a.client.GetAPIExecutor()
 
 	request := NewAPIExecutorRequestBuilder("StreamedListObjects", http.MethodPost, "/stores/{store_id}/streamed-list-objects").
 		WithPathParameter("store_id", r.storeId).

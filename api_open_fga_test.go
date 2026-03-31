@@ -1953,8 +1953,8 @@ func TestStreamedListObjectsExecute(t *testing.T) {
 	storeID := "01GXSB9YR785C4FYS3C0RTG7B2"
 
 	t.Run("successful streaming with multiple objects", func(t *testing.T) {
-		// NDJSON response with multiple streamed objects
-		ndjsonResponse := `{"result":{"object":"document:doc1"}}` + "\n" +
+		// Streaming response with multiple streamed objects
+		responseBody := `{"result":{"object":"document:doc1"}}` + "\n" +
 			`{"result":{"object":"document:doc2"}}` + "\n" +
 			`{"result":{"object":"document:doc3"}}` + "\n"
 
@@ -1963,7 +1963,7 @@ func TestStreamedListObjectsExecute(t *testing.T) {
 
 		httpmock.RegisterResponder("POST", fmt.Sprintf("%s/stores/%s/streamed-list-objects", configuration.ApiUrl, storeID),
 			func(req *http.Request) (*http.Response, error) {
-				resp := httpmock.NewStringResponse(200, ndjsonResponse)
+				resp := httpmock.NewStringResponse(200, responseBody)
 				resp.Header.Set("Content-Type", "application/x-ndjson")
 				return resp, nil
 			},
@@ -2007,14 +2007,14 @@ func TestStreamedListObjectsExecute(t *testing.T) {
 	})
 
 	t.Run("streaming with single object", func(t *testing.T) {
-		ndjsonResponse := `{"result":{"object":"document:single"}}` + "\n"
+		responseBody := `{"result":{"object":"document:single"}}` + "\n"
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
 
 		httpmock.RegisterResponder("POST", fmt.Sprintf("%s/stores/%s/streamed-list-objects", configuration.ApiUrl, storeID),
 			func(req *http.Request) (*http.Response, error) {
-				resp := httpmock.NewStringResponse(200, ndjsonResponse)
+				resp := httpmock.NewStringResponse(200, responseBody)
 				resp.Header.Set("Content-Type", "application/x-ndjson")
 				return resp, nil
 			},
@@ -2045,15 +2045,15 @@ func TestStreamedListObjectsExecute(t *testing.T) {
 	})
 
 	t.Run("streaming with empty result", func(t *testing.T) {
-		// Empty NDJSON response (no objects match)
-		ndjsonResponse := ""
+		// Empty streaming response (no objects match)
+		responseBody := ""
 
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
 
 		httpmock.RegisterResponder("POST", fmt.Sprintf("%s/stores/%s/streamed-list-objects", configuration.ApiUrl, storeID),
 			func(req *http.Request) (*http.Response, error) {
-				resp := httpmock.NewStringResponse(200, ndjsonResponse)
+				resp := httpmock.NewStringResponse(200, responseBody)
 				resp.Header.Set("Content-Type", "application/x-ndjson")
 				return resp, nil
 			},
@@ -2084,8 +2084,8 @@ func TestStreamedListObjectsExecute(t *testing.T) {
 	})
 
 	t.Run("streaming with stream error", func(t *testing.T) {
-		// NDJSON response with an error in the stream
-		ndjsonResponse := `{"result":{"object":"document:doc1"}}` + "\n" +
+		// Streaming response with an error in the stream
+		responseBody := `{"result":{"object":"document:doc1"}}` + "\n" +
 			`{"error":{"message":"Internal stream error occurred"}}` + "\n"
 
 		httpmock.Activate()
@@ -2093,7 +2093,7 @@ func TestStreamedListObjectsExecute(t *testing.T) {
 
 		httpmock.RegisterResponder("POST", fmt.Sprintf("%s/stores/%s/streamed-list-objects", configuration.ApiUrl, storeID),
 			func(req *http.Request) (*http.Response, error) {
-				resp := httpmock.NewStringResponse(200, ndjsonResponse)
+				resp := httpmock.NewStringResponse(200, responseBody)
 				resp.Header.Set("Content-Type", "application/x-ndjson")
 				return resp, nil
 			},
@@ -2202,8 +2202,8 @@ func TestStreamedListObjectsExecute(t *testing.T) {
 		httpmock.RegisterResponder("POST", fmt.Sprintf("%s/stores/%s/streamed-list-objects", configuration.ApiUrl, storeID),
 			func(req *http.Request) (*http.Response, error) {
 				// Return first result, then the response will be closed when context is cancelled
-				ndjsonResponse := `{"result":{"object":"document:doc1"}}` + "\n"
-				resp := httpmock.NewStringResponse(200, ndjsonResponse)
+				responseBody := `{"result":{"object":"document:doc1"}}` + "\n"
+				resp := httpmock.NewStringResponse(200, responseBody)
 				resp.Header.Set("Content-Type", "application/x-ndjson")
 				return resp, nil
 			},
@@ -2246,8 +2246,8 @@ func TestStreamedListObjectsExecute(t *testing.T) {
 		httpmock.RegisterResponder("POST", fmt.Sprintf("%s/stores/%s/streamed-list-objects", configuration.ApiUrl, storeID),
 			func(req *http.Request) (*http.Response, error) {
 				capturedHeaders = req.Header.Clone()
-				ndjsonResponse := `{"result":{"object":"document:doc1"}}` + "\n"
-				resp := httpmock.NewStringResponse(200, ndjsonResponse)
+				responseBody := `{"result":{"object":"document:doc1"}}` + "\n"
+				resp := httpmock.NewStringResponse(200, responseBody)
 				resp.Header.Set("Content-Type", "application/x-ndjson")
 				return resp, nil
 			},
@@ -2261,10 +2261,12 @@ func TestStreamedListObjectsExecute(t *testing.T) {
 
 		channel, err := apiClient.OpenFgaApi.StreamedListObjects(context.Background(), storeID).
 			Body(requestBody).
-			Options(RequestOptions{
-				Headers: map[string]string{
-					"X-Custom-Header": "custom-value",
-					"X-Request-ID":    "req-123",
+			Options(StreamingRequestOptions{
+				RequestOptions: RequestOptions{
+					Headers: map[string]string{
+						"X-Custom-Header": "custom-value",
+						"X-Request-ID":    "req-123",
+					},
 				},
 			}).
 			Execute()
@@ -2285,4 +2287,3 @@ func TestStreamedListObjectsExecute(t *testing.T) {
 		}
 	})
 }
-

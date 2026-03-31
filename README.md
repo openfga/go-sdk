@@ -1179,7 +1179,7 @@ fmt.Printf("Headers: %+v\n", rawResponse.Headers)
 
 #### Example: Calling streaming endpoints (e.g., StreamedListObjects)
 
-For streaming API endpoints that return NDJSON (Newline Delimited JSON) responses, use the `ExecuteStreaming` method. This is useful for endpoints like `StreamedListObjects` that stream results as they are computed rather than waiting for all results before responding.
+For streaming API endpoints, use the `ExecuteStreaming` method. This is useful for endpoints like `StreamedListObjects` that stream results as they are computed rather than waiting for all results before responding.
 
 ```go
 // Get the generic API executor
@@ -1240,24 +1240,18 @@ The `ExecuteStreaming` method returns an `APIExecutorStreamingChannel` with:
 - `Errors chan error`: Any errors that occur during streaming
 - `Close()`: Method to cancel streaming and cleanup resources
 
-**Note:** For the `StreamedListObjects` endpoint specifically, you can also use the higher-level `ExecuteStreamedListObjects` or `ExecuteStreamedListObjectsWithBufferSize` functions which provide typed responses:
+**Note:** For the `StreamedListObjects` endpoint specifically, you can also use the higher-level typed API which handles decoding for you:
 
 ```go
-import openfga "github.com/openfga/go-sdk"
-
-// Using the typed streaming helper
-channel, err := openfga.ExecuteStreamedListObjects(
-    client,           // *openfga.APIClient
-    ctx,              // context.Context
-    storeID,          // string
-    openfga.ListObjectsRequest{
+// Using the typed StreamedListObjects API
+channel, err := fgaClient.OpenFgaApi.StreamedListObjects(ctx, storeID).
+    Body(openfga.ListObjectsRequest{
         AuthorizationModelId: openfga.PtrString(modelID),
         Type:                 "document",
         Relation:             "viewer",
         User:                 "user:alice",
-    },
-    openfga.RequestOptions{}, // optional headers
-)
+    }).
+    Execute()
 if err != nil {
     log.Fatalf("Failed to start streaming: %v", err)
 }

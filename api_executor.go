@@ -83,8 +83,11 @@ func (b *APIExecutorRequestBuilder) WithPathParameter(key, value string) *APIExe
 }
 
 // WithPathParameters sets all path parameters at once.
-// Replaces any previously set path parameters.
+// Replaces any previously set path parameters. If params is nil, this is a no-op.
 func (b *APIExecutorRequestBuilder) WithPathParameters(params map[string]string) *APIExecutorRequestBuilder {
+	if params == nil {
+		return b
+	}
 	b.request.PathParameters = params
 	return b
 }
@@ -100,8 +103,11 @@ func (b *APIExecutorRequestBuilder) WithQueryParameter(key, value string) *APIEx
 }
 
 // WithQueryParameters sets all query parameters at once.
-// Replaces any previously set query parameters.
+// Replaces any previously set query parameters. If params is nil, this is a no-op.
 func (b *APIExecutorRequestBuilder) WithQueryParameters(params url.Values) *APIExecutorRequestBuilder {
+	if params == nil {
+		return b
+	}
 	b.request.QueryParameters = params
 	return b
 }
@@ -123,8 +129,11 @@ func (b *APIExecutorRequestBuilder) WithHeader(key, value string) *APIExecutorRe
 }
 
 // WithHeaders sets all custom headers at once.
-// Replaces any previously set headers.
+// Replaces any previously set headers. If headers is nil, this is a no-op.
 func (b *APIExecutorRequestBuilder) WithHeaders(headers map[string]string) *APIExecutorRequestBuilder {
+	if headers == nil {
+		return b
+	}
 	b.request.Headers = headers
 	return b
 }
@@ -174,12 +183,12 @@ type APIExecutor interface {
 	//   _, err := executor.ExecuteWithDecode(ctx, request, &response)
 	ExecuteWithDecode(ctx context.Context, request APIExecutorRequest, result interface{}) (*APIExecutorResponse, error)
 
-	// ExecuteStreaming performs an API request that returns a streaming NDJSON response.
+	// ExecuteStreaming performs an API request that returns a streaming response.
 	// It returns an APIExecutorStreamingChannel that provides results and errors through channels.
 	// The caller is responsible for closing the channel when done using defer channel.Close().
 	//
-	// This method is useful for streaming API endpoints like StreamedListObjects that return
-	// NDJSON (Newline Delimited JSON) responses where each line is a separate JSON object.
+	// This method is useful for streaming API endpoints like StreamedListObjects where
+	// each line in the response body is a separate JSON object.
 	//
 	// Parameters:
 	//   - ctx: Context for cancellation. When cancelled, the streaming will stop.
@@ -279,6 +288,9 @@ func makeAPIExecutorResponse(httpResponse *http.Response, body []byte) *APIExecu
 type apiExecutor struct {
 	client *APIClient
 }
+
+// Compile-time check that apiExecutor implements APIExecutor.
+var _ APIExecutor = (*apiExecutor)(nil)
 
 // NewAPIExecutor creates a new APIExecutor instance.
 // This allows users to call any OpenFGA API endpoint, including those not yet supported by the SDK.
@@ -506,15 +518,15 @@ func (e *apiExecutor) logRetry(request APIExecutorRequest, err error, response *
 // DefaultStreamBufferSize is the default buffer size for streaming channels.
 const DefaultStreamBufferSize = 10
 
-// StreamResult represents a generic streaming result wrapper with either a result or an error.
-// This is the format used by OpenFGA's streaming NDJSON responses.
+// StreamResult represents a streaming result wrapper with either a result or an error.
+// This is the format used by OpenFGA's streaming responses.
 type StreamResult[T any] struct {
 	Result *T      `json:"result,omitempty" yaml:"result,omitempty"`
 	Error  *Status `json:"error,omitempty" yaml:"error,omitempty"`
 }
 
 // StreamingChannel represents a generic channel for streaming responses.
-// It provides typed results directly decoded from the NDJSON stream.
+// It provides typed results directly decoded from the stream.
 type StreamingChannel[T any] struct {
 	Results chan T
 	Errors  chan error
@@ -528,8 +540,11 @@ func (s *StreamingChannel[T]) Close() {
 	}
 }
 
-// ProcessStreamingResponse processes an HTTP response as a streaming NDJSON response
+// ProcessStreamingResponse processes an HTTP streaming response
 // and returns a StreamingChannel with typed results and errors.
+//
+// This is a convenience wrapper around processStreamingResponseRaw that adds automatic
+// JSON unmarshalling of the raw bytes into the target type T.
 //
 // Parameters:
 //   - ctx: The context for cancellation
@@ -619,9 +634,8 @@ func ProcessStreamingResponse[T any](ctx context.Context, httpResponse *http.Res
 	return channel, nil
 }
 
-// APIExecutorStreamingChannel represents a generic channel for streaming API responses.
+// APIExecutorStreamingChannel represents a channel for streaming API responses.
 // It provides two channels: Results for successful responses and Errors for any errors encountered.
-// The streaming channel processes NDJSON (Newline Delimited JSON) responses from the API.
 //
 // Usage pattern:
 //
@@ -676,16 +690,16 @@ func (s *APIExecutorStreamingChannel) Close() {
 	}
 }
 
-// ExecuteStreaming performs an API request that returns a streaming NDJSON response.
+// ExecuteStreaming performs an API request that returns a streaming response.
 // It returns an APIExecutorStreamingChannel that provides results and errors through channels.
 // The caller is responsible for closing the channel when done using defer channel.Close().
 //
-// Streaming responses are NDJSON (Newline Delimited JSON) where each line is a JSON object.
+// Streaming responses are line-delimited JSON where each line is a JSON object.
 // Each line is expected to have either a "result" or "error" field wrapped in a StreamResult structure.
 //
 // Parameters:
 //   - ctx: Context for cancellation. When cancelled, the streaming will stop.
-//   - request: The API request configuration. Headers should include "Accept": "application/x-ndjson".
+//   - request: The API request configuration. Headers should include "Accept": "application/x-ndjson" for streaming.
 //   - bufferSize: The buffer size for the results channel. Use DefaultStreamBufferSize (10) for most cases.
 //     A larger buffer can improve throughput but uses more memory.
 //
@@ -742,8 +756,8 @@ func (e *apiExecutor) ExecuteStreaming(ctx context.Context, request APIExecutorR
 	}
 
 	headerParams := prepareHeaders(request.Headers)
-	// Ensure Accept header is set for NDJSON streaming
-	if _, ok := request.Headers["Accept"]; !ok {
+	// Ensure Accept header is set for streaming unless already overridden
+	if headerParams["Accept"] == "application/json" {
 		headerParams["Accept"] = "application/x-ndjson"
 	}
 
@@ -783,9 +797,8 @@ func (e *apiExecutor) ExecuteStreaming(ctx context.Context, request APIExecutorR
 	return processStreamingResponseRaw(ctx, httpResponse, bufferSize)
 }
 
-// processStreamingResponseRaw processes an HTTP response as a streaming NDJSON response.
+// processStreamingResponseRaw processes an HTTP streaming response.
 // It returns an APIExecutorStreamingChannel with raw JSON bytes for each result.
-// This is an internal function used by ExecuteStreaming.
 func processStreamingResponseRaw(ctx context.Context, httpResponse *http.Response, bufferSize int) (*APIExecutorStreamingChannel, error) {
 	streamCtx, cancel := context.WithCancel(ctx)
 
@@ -873,4 +886,3 @@ func processStreamingResponseRaw(ctx context.Context, httpResponse *http.Respons
 
 	return channel, nil
 }
-
