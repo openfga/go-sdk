@@ -2584,6 +2584,7 @@ func convertToStreamedListObjectsChannel(ctx context.Context, rawChannel *APIExe
 		defer close(typedChannel.Objects)
 		defer close(typedChannel.Errors)
 		defer cancel()
+		defer rawChannel.Close()
 
 		for {
 			select {
