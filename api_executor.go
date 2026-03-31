@@ -771,6 +771,9 @@ func (e *apiExecutor) ExecuteStreaming(ctx context.Context, request APIExecutorR
 	// Get retry configuration — same retry logic as executeInternal for the initial connection phase
 	retryParams := e.getRetryParams()
 
+	// Track from before the retry loop so telemetry captures total time to connection including any retry waits.
+	requestStarted := time.Now()
+
 	var lastErr error
 
 	for attemptNum := 0; attemptNum < retryParams.MaxRetry+1; attemptNum++ {
@@ -838,6 +841,10 @@ func (e *apiExecutor) ExecuteStreaming(ctx context.Context, request APIExecutorR
 			}
 			return nil, lastErr
 		}
+
+		// Record telemetry at connection establishment (not stream completion) so that
+		// streaming latency remains comparable to non-streaming request durations.
+		e.recordTelemetry(request.OperationName, storeID, request.Body, req, httpResponse, requestStarted, attemptNum)
 
 		// Success — process streaming response (no retries once the stream is established)
 		return processStreamingResponseRaw(ctx, httpResponse, bufferSize)
