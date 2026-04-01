@@ -6,9 +6,11 @@
 - feat(telemetry): add `fga-client.request.count` metric to track total HTTP requests made by the SDK
 - fix: The `fga-client.http_request.duration` metric is now disabled by default. Users can enable it via telemetry configuration if needed.
 
-[!WARNING]
-BREAKING CHANGE:
-The default behavior changed, and fga-client.http_request.duration is now disabled unless explicitly enabled.
+> [!WARNING]
+> BREAKING CHANGES (pre-v1, semver allows):
+> - `ApiStreamedListObjectsRequest.Execute()` now returns `(*StreamedListObjectsChannel, error)` instead of `(StreamResultOfStreamedListObjectsResponse, *http.Response, error)`
+> - `ApiStreamedListObjectsRequest.Options()` now takes `StreamingRequestOptions` instead of `RequestOptions`
+> - `fga-client.http_request.duration` metric is now disabled by default; enable it via telemetry configuration if needed
 
 ## v0.7.5
 
