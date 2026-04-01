@@ -525,6 +525,19 @@ type StreamResult[T any] struct {
 	Error  *Status `json:"error,omitempty" yaml:"error,omitempty"`
 }
 
+// StreamStatusError is returned when the server sends an error object inside a streaming response.
+// Callers can type-assert to access the full Status (code, message, details) for classification.
+type StreamStatusError struct {
+	Status *Status
+}
+
+func (e *StreamStatusError) Error() string {
+	if e.Status != nil && e.Status.Message != nil {
+		return *e.Status.Message
+	}
+	return "stream error"
+}
+
 // StreamingChannel represents a generic channel for streaming responses.
 // It provides typed results directly decoded from the stream.
 type StreamingChannel[T any] struct {
@@ -614,11 +627,7 @@ func ProcessStreamingResponse[T any](ctx context.Context, httpResponse *http.Res
 				}
 
 				if streamResult.Error != nil {
-					msg := "stream error"
-					if streamResult.Error.Message != nil {
-						msg = *streamResult.Error.Message
-					}
-					channel.Errors <- errors.New(msg)
+					channel.Errors <- &StreamStatusError{Status: streamResult.Error}
 					return
 				}
 
@@ -949,11 +958,7 @@ func processStreamingResponseRaw(ctx context.Context, httpResponse *http.Respons
 				}
 
 				if streamResult.Error != nil {
-					msg := "stream error"
-					if streamResult.Error.Message != nil {
-						msg = *streamResult.Error.Message
-					}
-					channel.Errors <- errors.New(msg)
+					channel.Errors <- &StreamStatusError{Status: streamResult.Error}
 					return
 				}
 

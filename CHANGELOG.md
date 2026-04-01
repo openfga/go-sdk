@@ -2,11 +2,12 @@
 
 ## [Unreleased](https://github.com/openfga/go-sdk/compare/v0.7.5...HEAD)
 
+- feat: add `ExecuteStreaming` to `APIExecutor` for streaming any OpenFGA endpoint via the generic executor
 - feat(telemetry): add `fga-client.request.count` metric to track total HTTP requests made by the SDK
 - fix: The `fga-client.http_request.duration` metric is now disabled by default. Users can enable it via telemetry configuration if needed.
 
-[!WARNING] 
-BREAKING CHANGE: 
+[!WARNING]
+BREAKING CHANGE:
 The default behavior changed, and fga-client.http_request.duration is now disabled unless explicitly enabled.
 
 ## v0.7.5
