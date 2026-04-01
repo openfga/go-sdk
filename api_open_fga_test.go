@@ -2406,7 +2406,7 @@ func TestStreamedListObjectsExecute(t *testing.T) {
 		}
 	})
 
-	t.Run("no retry on 400 validation error", func(t *testing.T) {
+	t.Run("retry on 400 validation error via default case", func(t *testing.T) {
 		// Note: 400 errors fall through to determineRetry's default case, which retries
 		// them just like the non-streaming Check endpoint does. This is consistent behavior.
 		var attempts int32

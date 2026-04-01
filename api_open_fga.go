@@ -2485,7 +2485,13 @@ func (r ApiStreamedListObjectsRequest) Options(options StreamingRequestOptions) 
 //	    select {
 //	    case obj, ok := <-channel.Objects:
 //	        if !ok {
-//	            return nil // Stream completed
+//	            // Objects channel closed; drain any terminal error before returning.
+//	            select {
+//	            case err := <-channel.Errors:
+//	                return err // nil on clean EOF, non-nil on stream error
+//	            default:
+//	                return nil
+//	            }
 //	        }
 //	        fmt.Printf("Object: %s\n", obj.Object)
 //	    case err := <-channel.Errors:
@@ -2616,8 +2622,11 @@ func convertToStreamedListObjectsChannel(ctx context.Context, rawChannel *APIExe
 					return
 				case typedChannel.Objects <- response:
 				}
-			case err := <-rawChannel.Errors:
-				if err != nil {
+			case err, ok := <-rawChannel.Errors:
+				if !ok {
+					// Errors channel closed; nil it out to prevent spinning on a closed channel.
+					rawChannel.Errors = nil
+				} else if err != nil {
 					typedChannel.Errors <- err
 					return
 				}

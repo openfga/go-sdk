@@ -573,10 +573,22 @@ func ProcessStreamingResponse[T any](ctx context.Context, httpResponse *http.Res
 		return nil, errors.New("response or response body is nil")
 	}
 
+	doneCh := make(chan struct{})
+
+	// Interrupt blocking scanner.Scan() when the context is cancelled.
+	go func() {
+		select {
+		case <-streamCtx.Done():
+			_ = httpResponse.Body.Close()
+		case <-doneCh:
+		}
+	}()
+
 	go func() {
 		defer close(channel.Results)
 		defer close(channel.Errors)
 		defer cancel()
+		defer close(doneCh)
 		defer func() { _ = httpResponse.Body.Close() }()
 
 		scanner := bufio.NewScanner(httpResponse.Body)
@@ -795,7 +807,11 @@ func (e *apiExecutor) ExecuteStreaming(ctx context.Context, request APIExecutorR
 					log.Printf("\nWaiting %v to retry streaming %v (attempt %d, error=%v)\n",
 						waitDuration, request.OperationName, attemptNum, err)
 				}
-				time.Sleep(waitDuration)
+				select {
+				case <-time.After(waitDuration):
+				case <-ctx.Done():
+					return nil, ctx.Err()
+				}
 				continue
 			}
 			return nil, lastErr
@@ -810,7 +826,11 @@ func (e *apiExecutor) ExecuteStreaming(ctx context.Context, request APIExecutorR
 					log.Printf("\nWaiting %v to retry streaming %v (attempt %d, error=%v)\n",
 						waitDuration, request.OperationName, attemptNum, lastErr)
 				}
-				time.Sleep(waitDuration)
+				select {
+				case <-time.After(waitDuration):
+				case <-ctx.Done():
+					return nil, ctx.Err()
+				}
 				continue
 			}
 			return nil, lastErr
@@ -836,7 +856,11 @@ func (e *apiExecutor) ExecuteStreaming(ctx context.Context, request APIExecutorR
 					log.Printf("\nWaiting %v to retry streaming %v (attempt %d, status=%d, error=%v)\n",
 						waitDuration, request.OperationName, attemptNum, httpResponse.StatusCode, apiErr)
 				}
-				time.Sleep(waitDuration)
+				select {
+				case <-time.After(waitDuration):
+				case <-ctx.Done():
+					return nil, ctx.Err()
+				}
 				continue
 			}
 			return nil, lastErr
@@ -878,10 +902,24 @@ func processStreamingResponseRaw(ctx context.Context, httpResponse *http.Respons
 		return nil, reportError("response or response body is nil")
 	}
 
+	doneCh := make(chan struct{})
+
+	// Interrupt blocking scanner.Scan() when the context is cancelled.
+	// scanner.Scan() blocks on network I/O and only checks context between lines,
+	// so we must close the body to unblock it immediately.
+	go func() {
+		select {
+		case <-streamCtx.Done():
+			_ = httpResponse.Body.Close()
+		case <-doneCh:
+		}
+	}()
+
 	go func() {
 		defer close(channel.Results)
 		defer close(channel.Errors)
 		defer cancel()
+		defer close(doneCh)
 		defer func() { _ = httpResponse.Body.Close() }()
 
 		scanner := bufio.NewScanner(httpResponse.Body)
