@@ -7,8 +7,15 @@ Example 1:
 A bare bones example. It creates a store, and runs a set of calls against it including creating a model, writing tuples and checking for access.
 
 **StreamedListObjects Example:**
-Demonstrates how to use the `StreamedListObjects` API with both synchronous and asynchronous consumption patterns.
+Demonstrates how to use the concrete `StreamedListObjects` client method with typed responses.
+This is the recommended approach for calling the StreamedListObjects API.
 Includes support for configurable buffer sizes to optimize throughput vs memory usage.
+
+**API Executor Example:**
+Demonstrates how to use the low-level `APIExecutor` to call all major OpenFGA endpoints
+(ListStores, CreateStore, GetStore, WriteAuthorizationModel, Write, Read, Check, ListObjects,
+StreamedListObjects, DeleteStore) using `Execute`, `ExecuteWithDecode`, and `ExecuteStreaming`.
+This is useful for custom or unsupported endpoints where you need full control over the request and response.
 
 ### Running the Examples
 

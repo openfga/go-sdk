@@ -1,3 +1,13 @@
+// This example demonstrates how to use the concrete StreamedListObjects client method
+// to stream objects via the typed high-level API.
+//
+// This is the recommended approach for calling StreamedListObjects - it provides
+// typed responses (StreamedListObjectsResponse) directly, without requiring
+// manual JSON unmarshalling.
+//
+// For an example using the low-level APIExecutor with raw NDJSON streaming,
+// see the api_executor example.
+
 package main
 
 import (
@@ -6,9 +16,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/openfga/language/pkg/go/transformer"
+
 	openfga "github.com/openfga/go-sdk"
 	"github.com/openfga/go-sdk/client"
-	"github.com/openfga/language/pkg/go/transformer"
 )
 
 func main() {
@@ -21,10 +32,9 @@ func main() {
 	}
 
 	// Create initial client for store creation
-	config := client.ClientConfiguration{
+	fgaClient, err := client.NewSdkClient(&client.ClientConfiguration{
 		ApiUrl: apiUrl,
-	}
-	fgaClient, err := client.NewSdkClient(&config)
+	})
 	if err != nil {
 		handleError(err)
 		return
@@ -73,18 +83,57 @@ func main() {
 		return
 	}
 
-	fmt.Println("Streaming objects via computed 'can_read' relation...")
-	if err := streamObjects(ctx, fga); err != nil {
+	// =========================================================================
+	// Using the concrete StreamedListObjects client method (recommended)
+	// =========================================================================
+	fmt.Println("\nStreaming objects via computed 'can_read' relation...")
+	if err := streamObjectsViaClient(ctx, fga); err != nil {
 		handleError(err)
 		return
 	}
 
-	fmt.Println("Cleaning up...")
+	fmt.Println("\nCleaning up...")
 	if _, err := fga.DeleteStore(ctx).Execute(); err != nil {
 		fmt.Printf("Failed to delete store: %v\n", err)
 	}
 
 	fmt.Println("Done")
+}
+
+// streamObjectsViaClient demonstrates using the typed StreamedListObjects client method.
+// This is the recommended approach - it provides typed responses directly.
+func streamObjectsViaClient(ctx context.Context, fga *client.OpenFgaClient) error {
+	consistency := openfga.CONSISTENCYPREFERENCE_HIGHER_CONSISTENCY
+
+	// Call StreamedListObjects using the fluent client API
+	response, err := fga.StreamedListObjects(ctx).Body(client.ClientStreamedListObjectsRequest{
+		User:     "user:anne",
+		Relation: "can_read", // Computed: owner OR viewer
+		Type:     "document",
+	}).Options(client.ClientStreamedListObjectsOptions{
+		Consistency: &consistency,
+	}).Execute()
+	if err != nil {
+		return fmt.Errorf("StreamedListObjects failed: %w", err)
+	}
+	defer response.Close()
+
+	// Process typed responses directly - no manual JSON unmarshalling needed!
+	count := 0
+	for obj := range response.Objects {
+		count++
+		if count <= 3 || count%500 == 0 {
+			fmt.Printf("  Object: %s\n", obj.Object)
+		}
+	}
+
+	// Check for errors after the stream completes
+	if err := <-response.Errors; err != nil {
+		return fmt.Errorf("error during streaming: %w", err)
+	}
+
+	fmt.Printf("✓ Streamed %d objects via client method\n", count)
+	return nil
 }
 
 func writeAuthorizationModel(ctx context.Context, fgaClient *client.OpenFgaClient) (*client.ClientWriteAuthorizationModelResponse, error) {
@@ -155,38 +204,6 @@ func writeTuples(ctx context.Context, fga *client.OpenFgaClient) error {
 	}
 
 	fmt.Printf("Wrote %d tuples\n", totalWritten)
-	return nil
-}
-
-func streamObjects(ctx context.Context, fga *client.OpenFgaClient) error {
-	consistencyPreference := openfga.CONSISTENCYPREFERENCE_HIGHER_CONSISTENCY
-
-	response, err := fga.StreamedListObjects(ctx).Body(client.ClientStreamedListObjectsRequest{
-		User:     "user:anne",
-		Relation: "can_read", // Computed: owner OR viewer
-		Type:     "document",
-	}).Options(client.ClientStreamedListObjectsOptions{
-		Consistency: &consistencyPreference,
-	}).Execute()
-	if err != nil {
-		return fmt.Errorf("StreamedListObjects failed: %w", err)
-	}
-	defer response.Close()
-
-	count := 0
-	for obj := range response.Objects {
-		count++
-		if count <= 3 || count%500 == 0 {
-			fmt.Printf("- %s\n", obj.Object)
-		}
-	}
-
-	// Check for streaming errors
-	if err := <-response.Errors; err != nil {
-		return fmt.Errorf("error during streaming: %w", err)
-	}
-
-	fmt.Printf("✓ Streamed %d objects\n", count)
 	return nil
 }
 

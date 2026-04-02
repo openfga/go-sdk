@@ -1939,3 +1939,634 @@ func TestOpenFgaApi(t *testing.T) {
 		}
 	})
 }
+
+func TestStreamedListObjectsExecute(t *testing.T) {
+	t.Parallel()
+
+	configuration, err := NewConfiguration(Configuration{
+		ApiUrl: constants.TestApiUrl,
+	})
+	if err != nil {
+		t.Fatalf("failed to create configuration: %v", err)
+	}
+	apiClient := NewAPIClient(configuration)
+	storeID := "01GXSB9YR785C4FYS3C0RTG7B2"
+
+	t.Run("successful streaming with multiple objects", func(t *testing.T) {
+		// Streaming response with multiple streamed objects
+		responseBody := `{"result":{"object":"document:doc1"}}` + "\n" +
+			`{"result":{"object":"document:doc2"}}` + "\n" +
+			`{"result":{"object":"document:doc3"}}` + "\n"
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+
+		httpmock.RegisterResponder("POST", fmt.Sprintf("%s/stores/%s/streamed-list-objects", configuration.ApiUrl, storeID),
+			func(req *http.Request) (*http.Response, error) {
+				resp := httpmock.NewStringResponse(200, responseBody)
+				resp.Header.Set("Content-Type", "application/x-ndjson")
+				return resp, nil
+			},
+		)
+
+		requestBody := ListObjectsRequest{
+			AuthorizationModelId: PtrString("01GAHCE4YVKPQEKZQHT2R89MQV"),
+			User:                 "user:anne",
+			Relation:             "viewer",
+			Type:                 "document",
+		}
+
+		channel, err := apiClient.OpenFgaApi.StreamedListObjects(context.Background(), storeID).
+			Body(requestBody).
+			Execute()
+		if err != nil {
+			t.Fatalf("StreamedListObjects failed: %v", err)
+		}
+		defer channel.Close()
+
+		var objects []string
+		for obj := range channel.Objects {
+			objects = append(objects, obj.Object)
+		}
+
+		// Check for errors
+		select {
+		case err := <-channel.Errors:
+			if err != nil {
+				t.Fatalf("unexpected stream error: %v", err)
+			}
+		default:
+		}
+
+		if len(objects) != 3 {
+			t.Fatalf("expected 3 objects, got %d", len(objects))
+		}
+		if objects[0] != "document:doc1" || objects[1] != "document:doc2" || objects[2] != "document:doc3" {
+			t.Fatalf("unexpected objects: %v", objects)
+		}
+	})
+
+	t.Run("streaming with single object", func(t *testing.T) {
+		responseBody := `{"result":{"object":"document:single"}}` + "\n"
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+
+		httpmock.RegisterResponder("POST", fmt.Sprintf("%s/stores/%s/streamed-list-objects", configuration.ApiUrl, storeID),
+			func(req *http.Request) (*http.Response, error) {
+				resp := httpmock.NewStringResponse(200, responseBody)
+				resp.Header.Set("Content-Type", "application/x-ndjson")
+				return resp, nil
+			},
+		)
+
+		requestBody := ListObjectsRequest{
+			User:     "user:bob",
+			Relation: "editor",
+			Type:     "document",
+		}
+
+		channel, err := apiClient.OpenFgaApi.StreamedListObjects(context.Background(), storeID).
+			Body(requestBody).
+			Execute()
+		if err != nil {
+			t.Fatalf("StreamedListObjects failed: %v", err)
+		}
+		defer channel.Close()
+
+		var objects []string
+		for obj := range channel.Objects {
+			objects = append(objects, obj.Object)
+		}
+
+		if len(objects) != 1 || objects[0] != "document:single" {
+			t.Fatalf("expected [document:single], got %v", objects)
+		}
+	})
+
+	t.Run("streaming with empty result", func(t *testing.T) {
+		// Empty streaming response (no objects match)
+		responseBody := ""
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+
+		httpmock.RegisterResponder("POST", fmt.Sprintf("%s/stores/%s/streamed-list-objects", configuration.ApiUrl, storeID),
+			func(req *http.Request) (*http.Response, error) {
+				resp := httpmock.NewStringResponse(200, responseBody)
+				resp.Header.Set("Content-Type", "application/x-ndjson")
+				return resp, nil
+			},
+		)
+
+		requestBody := ListObjectsRequest{
+			User:     "user:nobody",
+			Relation: "viewer",
+			Type:     "document",
+		}
+
+		channel, err := apiClient.OpenFgaApi.StreamedListObjects(context.Background(), storeID).
+			Body(requestBody).
+			Execute()
+		if err != nil {
+			t.Fatalf("StreamedListObjects failed: %v", err)
+		}
+		defer channel.Close()
+
+		var objects []string
+		for obj := range channel.Objects {
+			objects = append(objects, obj.Object)
+		}
+
+		if len(objects) != 0 {
+			t.Fatalf("expected 0 objects, got %d", len(objects))
+		}
+	})
+
+	t.Run("streaming with stream error", func(t *testing.T) {
+		// Streaming response with an error in the stream
+		responseBody := `{"result":{"object":"document:doc1"}}` + "\n" +
+			`{"error":{"message":"Internal stream error occurred"}}` + "\n"
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+
+		httpmock.RegisterResponder("POST", fmt.Sprintf("%s/stores/%s/streamed-list-objects", configuration.ApiUrl, storeID),
+			func(req *http.Request) (*http.Response, error) {
+				resp := httpmock.NewStringResponse(200, responseBody)
+				resp.Header.Set("Content-Type", "application/x-ndjson")
+				return resp, nil
+			},
+		)
+
+		requestBody := ListObjectsRequest{
+			User:     "user:anne",
+			Relation: "viewer",
+			Type:     "document",
+		}
+
+		channel, err := apiClient.OpenFgaApi.StreamedListObjects(context.Background(), storeID).
+			Body(requestBody).
+			Execute()
+		if err != nil {
+			t.Fatalf("StreamedListObjects failed: %v", err)
+		}
+		defer channel.Close()
+
+		// First object should come through
+		obj := <-channel.Objects
+		if obj.Object != "document:doc1" {
+			t.Fatalf("expected first object document:doc1, got %s", obj.Object)
+		}
+
+		// Then we should get an error
+		streamErr := <-channel.Errors
+		if streamErr == nil {
+			t.Fatal("expected stream error, got nil")
+		}
+		if streamErr.Error() != "Internal stream error occurred" {
+			t.Fatalf("expected 'Internal stream error occurred', got %v", streamErr)
+		}
+	})
+
+	t.Run("HTTP error response", func(t *testing.T) {
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+
+		httpmock.RegisterResponder("POST", fmt.Sprintf("%s/stores/%s/streamed-list-objects", configuration.ApiUrl, storeID),
+			func(req *http.Request) (*http.Response, error) {
+				return httpmock.NewJsonResponse(400, map[string]interface{}{
+					"code":    "validation_error",
+					"message": "Invalid request body",
+				})
+			},
+		)
+
+		requestBody := ListObjectsRequest{
+			User:     "invalid",
+			Relation: "viewer",
+			Type:     "document",
+		}
+
+		channel, err := apiClient.OpenFgaApi.StreamedListObjects(context.Background(), storeID).
+			Body(requestBody).
+			Execute()
+
+		if err == nil {
+			if channel != nil {
+				channel.Close()
+			}
+			t.Fatal("expected error for 400 response, got nil")
+		}
+		if channel != nil {
+			t.Fatal("expected nil channel on error")
+		}
+	})
+
+	t.Run("missing store ID validation", func(t *testing.T) {
+		requestBody := ListObjectsRequest{
+			User:     "user:anne",
+			Relation: "viewer",
+			Type:     "document",
+		}
+
+		channel, err := apiClient.OpenFgaApi.StreamedListObjects(context.Background(), "").
+			Body(requestBody).
+			Execute()
+
+		if err == nil {
+			if channel != nil {
+				channel.Close()
+			}
+			t.Fatal("expected error for missing store ID, got nil")
+		}
+	})
+
+	t.Run("missing body validation", func(t *testing.T) {
+		channel, err := apiClient.OpenFgaApi.StreamedListObjects(context.Background(), storeID).
+			Execute()
+
+		if err == nil {
+			if channel != nil {
+				channel.Close()
+			}
+			t.Fatal("expected error for missing body, got nil")
+		}
+	})
+
+	t.Run("context cancellation", func(t *testing.T) {
+		// Create a slow response that will be cancelled
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+
+		httpmock.RegisterResponder("POST", fmt.Sprintf("%s/stores/%s/streamed-list-objects", configuration.ApiUrl, storeID),
+			func(req *http.Request) (*http.Response, error) {
+				// Return first result, then the response will be closed when context is cancelled
+				responseBody := `{"result":{"object":"document:doc1"}}` + "\n"
+				resp := httpmock.NewStringResponse(200, responseBody)
+				resp.Header.Set("Content-Type", "application/x-ndjson")
+				return resp, nil
+			},
+		)
+
+		ctx, cancel := context.WithCancel(context.Background())
+
+		requestBody := ListObjectsRequest{
+			User:     "user:anne",
+			Relation: "viewer",
+			Type:     "document",
+		}
+
+		channel, err := apiClient.OpenFgaApi.StreamedListObjects(ctx, storeID).
+			Body(requestBody).
+			Execute()
+		if err != nil {
+			t.Fatalf("StreamedListObjects failed: %v", err)
+		}
+
+		// Read first object
+		obj := <-channel.Objects
+		if obj.Object != "document:doc1" {
+			t.Fatalf("expected document:doc1, got %s", obj.Object)
+		}
+
+		// Cancel the context
+		cancel()
+
+		// Channel should close
+		channel.Close()
+	})
+
+	t.Run("with custom headers", func(t *testing.T) {
+		var capturedHeaders http.Header
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+
+		httpmock.RegisterResponder("POST", fmt.Sprintf("%s/stores/%s/streamed-list-objects", configuration.ApiUrl, storeID),
+			func(req *http.Request) (*http.Response, error) {
+				capturedHeaders = req.Header.Clone()
+				responseBody := `{"result":{"object":"document:doc1"}}` + "\n"
+				resp := httpmock.NewStringResponse(200, responseBody)
+				resp.Header.Set("Content-Type", "application/x-ndjson")
+				return resp, nil
+			},
+		)
+
+		requestBody := ListObjectsRequest{
+			User:     "user:anne",
+			Relation: "viewer",
+			Type:     "document",
+		}
+
+		channel, err := apiClient.OpenFgaApi.StreamedListObjects(context.Background(), storeID).
+			Body(requestBody).
+			Options(StreamingRequestOptions{
+				RequestOptions: RequestOptions{
+					Headers: map[string]string{
+						"X-Custom-Header": "custom-value",
+						"X-Request-ID":    "req-123",
+					},
+				},
+			}).
+			Execute()
+		if err != nil {
+			t.Fatalf("StreamedListObjects failed: %v", err)
+		}
+		defer channel.Close()
+
+		// Drain the channel
+		for range channel.Objects {
+		}
+
+		if capturedHeaders.Get("X-Custom-Header") != "custom-value" {
+			t.Fatalf("expected X-Custom-Header to be 'custom-value', got '%s'", capturedHeaders.Get("X-Custom-Header"))
+		}
+		if capturedHeaders.Get("X-Request-ID") != "req-123" {
+			t.Fatalf("expected X-Request-ID to be 'req-123', got '%s'", capturedHeaders.Get("X-Request-ID"))
+		}
+	})
+
+	t.Run("retry on 500 error", func(t *testing.T) {
+		var attempts int32
+
+		// First two attempts return 500, third succeeds with streaming response.
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			cur := atomic.AddInt32(&attempts, 1)
+			if cur < 3 {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+				_, _ = w.Write([]byte(`{"code":"internal_error","message":"transient"}`))
+				return
+			}
+			w.Header().Set("Content-Type", "application/x-ndjson")
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(`{"result":{"object":"document:retried"}}` + "\n"))
+		}))
+		defer server.Close()
+
+		cfg, err := NewConfiguration(Configuration{
+			ApiUrl:      server.URL,
+			RetryParams: &RetryParams{MaxRetry: 4, MinWaitInMs: 1},
+			HTTPClient:  &http.Client{},
+		})
+		if err != nil {
+			t.Fatalf("failed to create configuration: %v", err)
+		}
+		apiClient := NewAPIClient(cfg)
+
+		requestBody := ListObjectsRequest{
+			User:     "user:anne",
+			Relation: "viewer",
+			Type:     "document",
+		}
+
+		channel, err := apiClient.OpenFgaApi.StreamedListObjects(context.Background(), storeID).
+			Body(requestBody).
+			Execute()
+		if err != nil {
+			t.Fatalf("expected eventual success after retries, got: %v", err)
+		}
+		defer channel.Close()
+
+		var objects []string
+		for obj := range channel.Objects {
+			objects = append(objects, obj.Object)
+		}
+
+		select {
+		case err := <-channel.Errors:
+			if err != nil {
+				t.Fatalf("unexpected stream error: %v", err)
+			}
+		default:
+		}
+
+		gotAttempts := int(atomic.LoadInt32(&attempts))
+		if gotAttempts != 3 {
+			t.Fatalf("expected 3 attempts (2 x 500 + 1 success), got %d", gotAttempts)
+		}
+		if len(objects) != 1 || objects[0] != "document:retried" {
+			t.Fatalf("expected [document:retried], got %v", objects)
+		}
+	})
+
+	t.Run("retry on 429 rate limit error", func(t *testing.T) {
+		var attempts int32
+
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			cur := atomic.AddInt32(&attempts, 1)
+			if cur < 2 {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusTooManyRequests)
+				_, _ = w.Write([]byte(`{"code":"rate_limit_exceeded","message":"Rate limit exceeded"}`))
+				return
+			}
+			w.Header().Set("Content-Type", "application/x-ndjson")
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(`{"result":{"object":"document:after-rate-limit"}}` + "\n"))
+		}))
+		defer server.Close()
+
+		cfg, err := NewConfiguration(Configuration{
+			ApiUrl:      server.URL,
+			RetryParams: &RetryParams{MaxRetry: 3, MinWaitInMs: 1},
+			HTTPClient:  &http.Client{},
+		})
+		if err != nil {
+			t.Fatalf("failed to create configuration: %v", err)
+		}
+		apiClient := NewAPIClient(cfg)
+
+		requestBody := ListObjectsRequest{
+			User:     "user:anne",
+			Relation: "viewer",
+			Type:     "document",
+		}
+
+		channel, err := apiClient.OpenFgaApi.StreamedListObjects(context.Background(), storeID).
+			Body(requestBody).
+			Execute()
+		if err != nil {
+			t.Fatalf("expected eventual success after rate limit retry, got: %v", err)
+		}
+		defer channel.Close()
+
+		var objects []string
+		for obj := range channel.Objects {
+			objects = append(objects, obj.Object)
+		}
+
+		gotAttempts := int(atomic.LoadInt32(&attempts))
+		if gotAttempts != 2 {
+			t.Fatalf("expected 2 attempts (1 x 429 + 1 success), got %d", gotAttempts)
+		}
+		if len(objects) != 1 || objects[0] != "document:after-rate-limit" {
+			t.Fatalf("expected [document:after-rate-limit], got %v", objects)
+		}
+	})
+
+	t.Run("retry on 400 validation error via default case", func(t *testing.T) {
+		// Note: 400 errors fall through to determineRetry's default case, which retries
+		// them just like the non-streaming Check endpoint does. This is consistent behavior.
+		var attempts int32
+
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			atomic.AddInt32(&attempts, 1)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte(`{"code":"validation_error","message":"Invalid request"}`))
+		}))
+		defer server.Close()
+
+		cfg, err := NewConfiguration(Configuration{
+			ApiUrl:      server.URL,
+			RetryParams: &RetryParams{MaxRetry: 2, MinWaitInMs: 1},
+			HTTPClient:  &http.Client{},
+		})
+		if err != nil {
+			t.Fatalf("failed to create configuration: %v", err)
+		}
+		apiClient := NewAPIClient(cfg)
+
+		requestBody := ListObjectsRequest{
+			User:     "user:anne",
+			Relation: "viewer",
+			Type:     "document",
+		}
+
+		channel, err := apiClient.OpenFgaApi.StreamedListObjects(context.Background(), storeID).
+			Body(requestBody).
+			Execute()
+
+		if err == nil {
+			if channel != nil {
+				channel.Close()
+			}
+			t.Fatal("expected error for persistent 400 responses, got nil")
+		}
+
+		gotAttempts := int(atomic.LoadInt32(&attempts))
+		// 400 errors are retried via the default case in determineRetry (matching non-streaming behavior)
+		if gotAttempts != 3 {
+			t.Fatalf("expected 3 attempts (1 initial + 2 retries, matching non-streaming behavior), got %d", gotAttempts)
+		}
+	})
+
+	t.Run("retry on transport error then succeed", func(t *testing.T) {
+		var attempts int32
+
+		// Start a real server for the successful attempt
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/x-ndjson")
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(`{"result":{"object":"document:recovered"}}` + "\n"))
+		}))
+		defer server.Close()
+
+		// Use a custom round tripper that fails once then delegates to real transport
+		transport := &http.Transport{}
+		cfg, err := NewConfiguration(Configuration{
+			ApiUrl:      server.URL,
+			RetryParams: &RetryParams{MaxRetry: 3, MinWaitInMs: 1},
+			HTTPClient: &http.Client{
+				Transport: &testStreamRetryTransport{
+					attempts:      &attempts,
+					failUntil:     2,
+					realTransport: transport,
+				},
+			},
+		})
+		if err != nil {
+			t.Fatalf("failed to create configuration: %v", err)
+		}
+		apiClient := NewAPIClient(cfg)
+
+		requestBody := ListObjectsRequest{
+			User:     "user:anne",
+			Relation: "viewer",
+			Type:     "document",
+		}
+
+		channel, err := apiClient.OpenFgaApi.StreamedListObjects(context.Background(), storeID).
+			Body(requestBody).
+			Execute()
+		if err != nil {
+			t.Fatalf("expected eventual success after transport retry, got: %v", err)
+		}
+		defer channel.Close()
+
+		var objects []string
+		for obj := range channel.Objects {
+			objects = append(objects, obj.Object)
+		}
+
+		gotAttempts := int(atomic.LoadInt32(&attempts))
+		if gotAttempts != 2 {
+			t.Fatalf("expected 2 attempts (1 transport error + 1 success), got %d", gotAttempts)
+		}
+		if len(objects) != 1 || objects[0] != "document:recovered" {
+			t.Fatalf("expected [document:recovered], got %v", objects)
+		}
+	})
+
+	t.Run("exhausts retries on persistent 500", func(t *testing.T) {
+		var attempts int32
+
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			atomic.AddInt32(&attempts, 1)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			_, _ = w.Write([]byte(`{"code":"internal_error","message":"persistent failure"}`))
+		}))
+		defer server.Close()
+
+		cfg, err := NewConfiguration(Configuration{
+			ApiUrl:      server.URL,
+			RetryParams: &RetryParams{MaxRetry: 2, MinWaitInMs: 1},
+			HTTPClient:  &http.Client{},
+		})
+		if err != nil {
+			t.Fatalf("failed to create configuration: %v", err)
+		}
+		apiClient := NewAPIClient(cfg)
+
+		requestBody := ListObjectsRequest{
+			User:     "user:anne",
+			Relation: "viewer",
+			Type:     "document",
+		}
+
+		channel, err := apiClient.OpenFgaApi.StreamedListObjects(context.Background(), storeID).
+			Body(requestBody).
+			Execute()
+
+		if err == nil {
+			if channel != nil {
+				channel.Close()
+			}
+			t.Fatal("expected error after exhausting retries, got nil")
+		}
+
+		gotAttempts := int(atomic.LoadInt32(&attempts))
+		if gotAttempts != 3 {
+			t.Fatalf("expected 3 attempts (1 initial + 2 retries), got %d", gotAttempts)
+		}
+	})
+}
+
+// testStreamRetryTransport is a test helper that fails the first N requests with a transport error
+// and then delegates to a real transport for subsequent requests.
+type testStreamRetryTransport struct {
+	attempts      *int32
+	failUntil     int32
+	realTransport http.RoundTripper
+}
+
+func (t *testStreamRetryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	cur := atomic.AddInt32(t.attempts, 1)
+	if cur < t.failUntil {
+		return nil, fmt.Errorf("connection refused")
+	}
+	return t.realTransport.RoundTrip(req)
+}

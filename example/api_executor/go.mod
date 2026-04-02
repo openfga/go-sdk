@@ -1,11 +1,8 @@
-module example1
+module api_executor
 
 go 1.25.0
 
 toolchain go1.25.4
-
-// To reference published build, comment below and run `go mod tidy`
-replace github.com/openfga/go-sdk v0.7.5 => ../../
 
 require github.com/openfga/go-sdk v0.7.5
 
@@ -21,3 +18,5 @@ require (
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
 )
+
+replace github.com/openfga/go-sdk => ../.. // added this to point to local module

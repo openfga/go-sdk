@@ -1,6 +1,10 @@
 # Streamed List Objects Example
 
-Demonstrates using `StreamedListObjects` to retrieve objects via the streaming API in the Go SDK.
+Demonstrates using the **concrete `StreamedListObjects` client method** to retrieve objects via the typed high-level streaming API.
+
+This is the **recommended approach** for calling `StreamedListObjects` — it provides typed `StreamedListObjectsResponse` objects directly, without requiring manual JSON unmarshalling.
+
+> For an example using the low-level `APIExecutor` with raw NDJSON streaming, see the [`api_executor`](../api_executor/) example.
 
 ## What is StreamedListObjects?
 
@@ -64,7 +68,11 @@ type document
 The `StreamedListObjects` method returns a response with channels, which is the idiomatic Go way to handle streaming data:
 
 ```go
-response, err := fgaClient.StreamedListObjects(ctx).Body(request).Execute()
+response, err := fgaClient.StreamedListObjects(ctx).Body(client.ClientStreamedListObjectsRequest{
+    User:     "user:anne",
+    Relation: "can_read",
+    Type:     "document",
+}).Execute()
 if err != nil {
     log.Fatal(err)
 }
@@ -74,7 +82,7 @@ for obj := range response.Objects {
     fmt.Printf("Received: %s\n", obj.Object)
 }
 
-// Check for errors
+// Check for errors after the stream completes
 if err := <-response.Errors; err != nil {
     log.Fatal(err)
 }
@@ -137,4 +145,3 @@ The example includes robust error handling that:
 - Detects connection issues
 - Avoids logging sensitive data
 - Provides helpful messages for common issues
-
