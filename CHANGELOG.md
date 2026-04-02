@@ -2,14 +2,15 @@
 
 ## [Unreleased](https://github.com/openfga/go-sdk/compare/v0.7.5...HEAD)
 
-- feat: add `ExecuteStreaming` to `APIExecutor` for streaming any OpenFGA endpoint via the generic executor
+- feat!: add `ExecuteStreaming` to `APIExecutor` for streaming any OpenFGA endpoint via the generic executor. Check out the [documentation](./README.md#calling-other-endpoints)
 - feat(telemetry): add `fga-client.request.count` metric to track total HTTP requests made by the SDK
 - fix: The `fga-client.http_request.duration` metric is now disabled by default. Users can enable it via telemetry configuration if needed.
 
 > [!WARNING]
 > BREAKING CHANGES (pre-v1, semver allows):
-> - `ApiStreamedListObjectsRequest.Execute()` now returns `(*StreamedListObjectsChannel, error)` instead of `(StreamResultOfStreamedListObjectsResponse, *http.Response, error)`
-> - `ApiStreamedListObjectsRequest.Options()` now takes `StreamingRequestOptions` instead of `RequestOptions`
+> - `OpenFgaApi`: `ApiStreamedListObjectsRequest.Execute()` now returns `(*StreamedListObjectsChannel, error)` instead of `(StreamResultOfStreamedListObjectsResponse, *http.Response, error)`
+> - `OpenFgaApi`: `ApiStreamedListObjectsRequest.Options()` now takes `StreamingRequestOptions` instead of `RequestOptions`
+> - Removed `ExecuteStreamedListObjects`, `ExecuteStreamedListObjectsWithBufferSize`, and `ProcessStreamedListObjectsResponse` from the `openfga` package. Use `fgaClient.StreamedListObjects(ctx).Body(...).Execute()` or `APIExecutor.ExecuteStreaming` instead
 > - `fga-client.http_request.duration` metric is now disabled by default; enable it via telemetry configuration if needed
 
 ## v0.7.5

@@ -1240,38 +1240,6 @@ The `ExecuteStreaming` method returns an `APIExecutorStreamingChannel` with:
 - `Errors chan error`: Any errors that occur during streaming
 - `Close()`: Method to cancel streaming and cleanup resources
 
-**Note:** For the `StreamedListObjects` endpoint specifically, you can also use the higher-level typed API which handles decoding for you:
-
-```go
-// Using the typed StreamedListObjects API
-channel, err := fgaClient.OpenFgaApi.StreamedListObjects(ctx, storeID).
-    Body(openfga.ListObjectsRequest{
-        AuthorizationModelId: openfga.PtrString(modelID),
-        Type:                 "document",
-        Relation:             "viewer",
-        User:                 "user:alice",
-    }).
-    Execute()
-if err != nil {
-    log.Fatalf("Failed to start streaming: %v", err)
-}
-defer channel.Close()
-
-// Process typed responses directly
-for {
-    select {
-    case obj, ok := <-channel.Objects:
-        if !ok {
-            return // Stream completed
-        }
-        fmt.Printf("Object: %s\n", obj.Object)
-    case err := <-channel.Errors:
-        if err != nil {
-            log.Fatalf("Error: %v", err)
-        }
-    }
-}
-```
 
 ### Retries
 
