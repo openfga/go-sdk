@@ -2601,7 +2601,7 @@ func convertToStreamedListObjectsChannel(ctx context.Context, rawChannel *APIExe
 			}
 
 			// Only read from Results so buffered results are never skipped
-			// when both channels are ready.
+			// when both channels are ready (Go select is non-deterministic).
 			select {
 			case <-streamCtx.Done():
 				typedChannel.Errors <- streamCtx.Err()
