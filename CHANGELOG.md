@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.7.6](https://github.com/openfga/go-sdk/compare/v0.7.5...v0.7.6) (2026-04-06)
+
+
+### Added
+
+* add streaming support to api executor ([#292](https://github.com/openfga/go-sdk/issues/292)) ([e0ce647](https://github.com/openfga/go-sdk/commit/e0ce6473c4097c8601ec8eda667968bf46b094bf))
+* release automation ([f212c84](https://github.com/openfga/go-sdk/commit/f212c843aeaeb3dd501da77b275b5f55ae12ff94))
+* release automation configs ([#291](https://github.com/openfga/go-sdk/issues/291)) ([f212c84](https://github.com/openfga/go-sdk/commit/f212c843aeaeb3dd501da77b275b5f55ae12ff94))
+* **telemetry:** add fga-client.request.count metric ([#286](https://github.com/openfga/go-sdk/issues/286)) ([9c8c53a](https://github.com/openfga/go-sdk/commit/9c8c53a3eef1cbd62229553ef90308aaefd9e04b))
+
+
+### Fixed
+
+* disable http req duration metric by default ([#281](https://github.com/openfga/go-sdk/issues/281)) ([d8c395e](https://github.com/openfga/go-sdk/commit/d8c395ee0f0f01842b3306192d4f3fb837505a29))
+* prevent dropped results in streaming channel conversion ([#296](https://github.com/openfga/go-sdk/issues/296)) ([2eeeed9](https://github.com/openfga/go-sdk/commit/2eeeed962855de793b0465a197067f49959c3d60))
+* releaser app secret key ([#300](https://github.com/openfga/go-sdk/issues/300)) ([0279453](https://github.com/openfga/go-sdk/commit/027945324609dbe9459335e4ac89a877b791af28))
+* use inputs fallback for bump-type to handle push trigger ([#299](https://github.com/openfga/go-sdk/issues/299)) ([6264d0f](https://github.com/openfga/go-sdk/commit/6264d0f3aacf3e8a34a1cfe0a5c4286b99d2ef85))
+
+
+### Miscellaneous
+
+* release 0.7.6 ([e1904ca](https://github.com/openfga/go-sdk/commit/e1904ca71c586d60c62184c14e5670b0510b1aab))
+
 ## [Unreleased](https://github.com/openfga/go-sdk/compare/v0.7.5...HEAD)
 
 - feat!: add `ExecuteStreaming` to `APIExecutor` for streaming any OpenFGA endpoint via the generic executor. Check out the [documentation](./README.md#calling-other-endpoints)
