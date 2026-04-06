@@ -2600,17 +2600,15 @@ func convertToStreamedListObjectsChannel(ctx context.Context, rawChannel *APIExe
 			default:
 			}
 
-			// Prioritize draining results over checking errors to avoid
-			// dropping buffered results when both channels are ready.
+			// Only read from Results so buffered results are never skipped
+			// when both channels are ready.
 			select {
 			case <-streamCtx.Done():
 				typedChannel.Errors <- streamCtx.Err()
 				return
 			case rawResult, ok := <-rawChannel.Results:
 				if !ok {
-					// Raw results channel closed — all results have been drained.
-					// Block until rawChannel.Errors is closed (it always is, via defer).
-					// The raw producer sends an error before closing, or closes cleanly.
+					// Results drained; forward any error from the raw producer.
 					if err, ok := <-rawChannel.Errors; ok && err != nil {
 						typedChannel.Errors <- err
 					}
