@@ -48,6 +48,6 @@ Verify that new or changed public API methods have proper OpenTelemetry instrume
 
 ## Boundaries
 
-- Always: Verify telemetry on any PR that adds or modifies public API methods or telemetry code
+- Always: Verify telemetry on any new or modified public API methods or telemetry code
 - Ask first: Suggesting new metric types or attributes
-- Never: Approve a new public API method without telemetry, allow high-cardinality attributes enabled by default
+- Never: Accept a new public API method without telemetry, allow high-cardinality attributes enabled by default
