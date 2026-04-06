@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -2568,5 +2569,54 @@ func TestConvertToStreamedListObjectsChannel_ContextCancellation(t *testing.T) {
 		assert.Contains(t, err.Error(), "context canceled")
 	case <-time.After(2 * time.Second):
 		t.Fatal("timeout waiting for cancellation error")
+	}
+}
+
+// TestConvertToStreamedListObjectsChannel_ResultsDeliveredBeforeError verifies that
+// when both Results and Errors are ready at the same time, all buffered results are
+// delivered before the error is surfaced. This is a regression test for a bug where
+// Go's non-deterministic select could pick the error case first, dropping results.
+func TestConvertToStreamedListObjectsChannel_ResultsDeliveredBeforeError(t *testing.T) {
+	t.Parallel()
+
+	// Run many iterations — the original bug only manifested under specific
+	// goroutine scheduling, so a single run can pass by luck.
+	for i := 0; i < 100; i++ {
+		rawChannel := &APIExecutorStreamingChannel{
+			Results: make(chan []byte, 3),
+			Errors:  make(chan error, 1),
+			cancel:  func() {},
+		}
+
+		// Pre-buffer results and error so both channels are ready before
+		// the converter's goroutine is scheduled. Do NOT close Results yet —
+		// in the real producer, Results is still open when the error is sent;
+		// it only closes afterwards via defer.
+		rawChannel.Results <- []byte(`{"object":"document:1"}`)
+		rawChannel.Results <- []byte(`{"object":"document:2"}`)
+		rawChannel.Errors <- errors.New("stream error")
+
+		// Close Results asynchronously, simulating the producer's defer
+		// that fires after sending the error.
+		go func() {
+			runtime.Gosched()
+			close(rawChannel.Results)
+			close(rawChannel.Errors)
+		}()
+
+		typedChannel := convertToStreamedListObjectsChannel(context.Background(), rawChannel)
+
+		var objects []string
+		for obj := range typedChannel.Objects {
+			objects = append(objects, obj.Object)
+		}
+
+		err := <-typedChannel.Errors
+
+		typedChannel.Close()
+
+		assert.Equal(t, []string{"document:1", "document:2"}, objects, "iteration %d: expected all results before error", i)
+		assert.Error(t, err, "iteration %d: expected error", i)
+		assert.Contains(t, err.Error(), "stream error", "iteration %d", i)
 	}
 }
