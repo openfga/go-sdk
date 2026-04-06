@@ -5,6 +5,7 @@
 - feat!: add `ExecuteStreaming` to `APIExecutor` for streaming any OpenFGA endpoint via the generic executor. Check out the [documentation](./README.md#calling-other-endpoints)
 - feat(telemetry): add `fga-client.request.count` metric to track total HTTP requests made by the SDK
 - fix: The `fga-client.http_request.duration` metric is now disabled by default. Users can enable it via telemetry configuration if needed.
+- fix: prevent dropped results in `StreamedListObjects` when error and result arrive simultaneously (#296)
 
 > [!WARNING]
 > BREAKING CHANGES (pre-v1, semver allows):
