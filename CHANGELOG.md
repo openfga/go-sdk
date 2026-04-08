@@ -1,11 +1,21 @@
 # Changelog
 
-## [Unreleased](https://github.com/openfga/go-sdk/compare/v0.7.5...HEAD)
+## [0.8.0](https://github.com/openfga/go-sdk/compare/v0.7.5...v0.8.0) (2026-04-08)
 
-- feat!: add `ExecuteStreaming` to `APIExecutor` for streaming any OpenFGA endpoint via the generic executor. Check out the [documentation](./README.md#calling-other-endpoints)
-- feat(telemetry): add `fga-client.request.count` metric to track total HTTP requests made by the SDK
-- fix: The `fga-client.http_request.duration` metric is now disabled by default. Users can enable it via telemetry configuration if needed.
-- fix: prevent dropped results in `StreamedListObjects` when error and result arrive simultaneously (#296)
+### Added
+
+* feat!: add `ExecuteStreaming` to `APIExecutor` for streaming any OpenFGA endpoint via the generic executor. Check out the [documentation](./README.md#calling-other-endpoints) ([#292](https://github.com/openfga/go-sdk/issues/292)) ([e0ce647](https://github.com/openfga/go-sdk/commit/e0ce6473c4097c8601ec8eda667968bf46b094bf))
+* **telemetry:** add `fga-client.request.count` metric to track total HTTP requests made by the SDK ([#286](https://github.com/openfga/go-sdk/issues/286)) ([9c8c53a](https://github.com/openfga/go-sdk/commit/9c8c53a3eef1cbd62229553ef90308aaefd9e04b))
+
+
+### Changed
+
+* chore: bump minimum Go version to 1.25 ([#283](https://github.com/openfga/go-sdk/pull/283)) ([7e50860](https://github.com/openfga/go-sdk/commit/7e5086025a10bd2aeaca952a8fc7c157366f69b8))
+
+### Fixed
+
+* fix: The `fga-client.http_request.duration` metric is now disabled by default. Users can enable it via telemetry configuration if needed. ([#281](https://github.com/openfga/go-sdk/issues/281)) ([d8c395e](https://github.com/openfga/go-sdk/commit/d8c395ee0f0f01842b3306192d4f3fb837505a29))
+* fix: prevent dropped results in `StreamedListObjects` when error and result arrive simultaneously ([#296](https://github.com/openfga/go-sdk/issues/296)) ([2eeeed9](https://github.com/openfga/go-sdk/commit/2eeeed962855de793b0465a197067f49959c3d60))
 
 > [!WARNING]
 > BREAKING CHANGES (pre-v1, semver allows):
