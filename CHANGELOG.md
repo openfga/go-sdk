@@ -8,6 +8,10 @@
 * **telemetry:** add `fga-client.request.count` metric to track total HTTP requests made by the SDK ([#286](https://github.com/openfga/go-sdk/issues/286)) ([9c8c53a](https://github.com/openfga/go-sdk/commit/9c8c53a3eef1cbd62229553ef90308aaefd9e04b))
 
 
+### Changed
+
+* chore: bump minimum Go version to 1.25 ([#283](https://github.com/openfga/go-sdk/pull/283)) ([7e50860](https://github.com/openfga/go-sdk/commit/7e5086025a10bd2aeaca952a8fc7c157366f69b8))
+
 ### Fixed
 
 * fix: The `fga-client.http_request.duration` metric is now disabled by default. Users can enable it via telemetry configuration if needed. ([#281](https://github.com/openfga/go-sdk/issues/281)) ([d8c395e](https://github.com/openfga/go-sdk/commit/d8c395ee0f0f01842b3306192d4f3fb837505a29))
