@@ -18,7 +18,8 @@
         { "type": "docs",     "section": "Documentation", "hidden": false },
         { "type": "test",     "section": "Tests",         "hidden": true  },
         { "type": "ci",       "section": "CI",            "hidden": true  },
-        { "type": "chore",    "section": "Miscellaneous", "hidden": true  }
+        { "type": "chore",    "section": "Miscellaneous", "hidden": true  },
+        { "type": "release",  "section": "Miscellaneous", "hidden": true  }
       ],
       "extra-files": [
         { "type": "generic", "path": "internal/constants/constants.go" }
