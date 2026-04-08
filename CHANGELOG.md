@@ -5,7 +5,7 @@
 ### Added
 
 * feat!: add `ExecuteStreaming` to `APIExecutor` for streaming any OpenFGA endpoint via the generic executor. Check out the [documentation](./README.md#calling-other-endpoints) ([#292](https://github.com/openfga/go-sdk/issues/292)) ([e0ce647](https://github.com/openfga/go-sdk/commit/e0ce6473c4097c8601ec8eda667968bf46b094bf))
-* **telemetry:** feat(telemetry): add `fga-client.request.count` metric to track total HTTP requests made by the SDK ([#286](https://github.com/openfga/go-sdk/issues/286)) ([9c8c53a](https://github.com/openfga/go-sdk/commit/9c8c53a3eef1cbd62229553ef90308aaefd9e04b))
+* **telemetry:** add `fga-client.request.count` metric to track total HTTP requests made by the SDK ([#286](https://github.com/openfga/go-sdk/issues/286)) ([9c8c53a](https://github.com/openfga/go-sdk/commit/9c8c53a3eef1cbd62229553ef90308aaefd9e04b))
 
 
 ### Fixed
