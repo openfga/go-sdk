@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE_PATH=$(cat | jq -r '.tool_input.file_path') && case \"$FILE_PATH\" in *.go) gofmt -w \"$FILE_PATH\" ;; esac",
+            "timeout": 10000
+          }
+        ]
+      }
+    ]
+  }
+}
