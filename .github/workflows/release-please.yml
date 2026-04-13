@@ -42,7 +42,7 @@ jobs:
       bump-type:       ${{ inputs.bump-type || 'auto' }}
       release-version: ${{ inputs.release-version || '' }}
     secrets:
-      RELEASER_APP_ID:          ${{ secrets.RELEASER_APP_ID }}
+      RELEASER_APP_CLIENT_ID:   ${{ secrets.RELEASER_APP_CLIENT_ID }}
       RELEASER_APP_PRIVATE_KEY: ${{ secrets.RELEASER_APP_PRIVATE_KEY }}
       GPG_PRIVATE_KEY:          ${{ secrets.GPG_PRIVATE_KEY }}
       GPG_PASSPHRASE:           ${{ secrets.GPG_PASSPHRASE }}
