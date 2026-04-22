@@ -6,8 +6,11 @@ help: ## Show this help message
 	@echo 'Available targets:'
 	@awk 'BEGIN {FS = ":.*?## "}; /^[a-zA-Z_-]+:.*?## / {printf "  %-20s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-test: ## Run all tests
+test: ## Run all unit tests
 	go test -race -coverprofile=coverage.txt -covermode=atomic -v ./...
+
+test-integration: ## Run integration tests (requires Docker)
+	cd tests/integration && go test -race -v -tags integration -timeout 120s ./...
 
 fmt: ## Run code formatting
 	gofmt -w .
