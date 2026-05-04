@@ -7,15 +7,8 @@ on:
       - main
 
 jobs:
-  validate-pr-title:
-    name: Validate PR Title
-    runs-on: ubuntu-latest
+  pr-title-check:
     permissions:
       pull-requests: read
-    steps:
-      - name: PR Conventional Commit Validation
-        uses: ytanikin/pr-conventional-commits@639145d78959c53c43112365837e3abd21ed67c1 # v1.5.2
-        with:
-          task_types: '["feat","fix","docs","test","refactor","ci","perf","chore","revert","release"]'
-          add_label: 'false'
+    uses: openfga/sdk-generator/.github/workflows/pr-title-check.yml@main
 
