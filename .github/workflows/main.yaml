@@ -74,20 +74,35 @@ jobs:
           cache-dependency-path: "./go.sum"
           go-version-file:  "./go.mod"
 
-  create-release:
-    permissions:
-      contents: write
+  verify-version:
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     needs: [test, lint-format]
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0
 
-      - uses: Roang-zero1/github-create-release-action@57eb9bdce7a964e48788b9e78b5ac766cb684803 # v3.0.1
-        with:
-          version_regex: ^v[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify versions match
+        run: |
+          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          MANIFEST_VERSION=$(jq -r '.["."]' .release-please-manifest.json)
+          GO_VERSION=$(grep 'x-release-please-version' internal/constants/constants.go | grep -oP '"\K[^"]+')
+
+          echo "Tag: $TAG_VERSION | Manifest: $MANIFEST_VERSION | constants.go: $GO_VERSION"
+
+          if [[ "$TAG_VERSION" != "$MANIFEST_VERSION" ]]; then
+            echo "ERROR: Tag version does not match manifest version"
+            exit 1
+          fi
+          if [[ "$GO_VERSION" != "$MANIFEST_VERSION" ]]; then
+            echo "ERROR: constants.go version does not match manifest version"
+            exit 1
+          fi
+          echo "All versions verified: $TAG_VERSION"
+
+  undraft-release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [verify-version]
+    permissions:
+      contents: write
+    uses: openfga/sdk-generator/.github/workflows/undraft-release.yml@main
