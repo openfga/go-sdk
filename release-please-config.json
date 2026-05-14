@@ -3,6 +3,7 @@
   "release-type": "go",
   "pull-request-title-pattern": "release: v${version}",
   "draft": true,
+  "force-tag-creation": true,
   "packages": {
     ".": {
       "include-component-in-tag": false,
