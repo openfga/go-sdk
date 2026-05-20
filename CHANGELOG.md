@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.1](https://github.com/openfga/go-sdk/compare/v0.8.0...v0.8.1) (2026-05-20)
+
+### Fixed
+
+* do not retry non-retryable HTTP 4xx client errors ([#319](https://github.com/openfga/go-sdk/issues/319)) ([3d9ff7a](https://github.com/openfga/go-sdk/commit/3d9ff7aeec0941c66d7c271c0b46f28292c3f657))
+
+
 ## [0.8.0](https://github.com/openfga/go-sdk/compare/v0.7.5...v0.8.0) (2026-04-08)
 
 ### Added
