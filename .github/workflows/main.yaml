@@ -106,7 +106,7 @@ jobs:
         run: |
           TAG_VERSION="${GITHUB_REF#refs/tags/v}"
           MANIFEST_VERSION=$(jq -r '.["."]' .release-please-manifest.json)
-          GO_VERSION=$(grep 'x-release-please-version' internal/constants/constants.go | grep -oP '"\K[^"]+')
+          GO_VERSION=$(grep 'x-release-please-version' internal/constants/constants.go | grep -oP '"\K[^"]+(?=")')
 
           echo "Tag: $TAG_VERSION | Manifest: $MANIFEST_VERSION | constants.go: $GO_VERSION"
 
