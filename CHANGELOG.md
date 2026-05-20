@@ -2,26 +2,10 @@
 
 ## [0.8.1](https://github.com/openfga/go-sdk/compare/v0.8.0...v0.8.1) (2026-05-20)
 
-
-### Added
-
-* draft releases, version verification, and reusable workflows ([0edd2db](https://github.com/openfga/go-sdk/commit/0edd2db1f6ebc32c796f055210e2e665fa94fea8))
-* use releaser app client id instead of app id ([#308](https://github.com/openfga/go-sdk/issues/308)) ([abed0a5](https://github.com/openfga/go-sdk/commit/abed0a5db71b81e0c72d71c49222d51a2e60c2d6))
-
-
 ### Fixed
 
 * do not retry non-retryable HTTP 4xx client errors ([#319](https://github.com/openfga/go-sdk/issues/319)) ([3d9ff7a](https://github.com/openfga/go-sdk/commit/3d9ff7aeec0941c66d7c271c0b46f28292c3f657))
 
-
-### Documentation
-
-* add AI agent onboarding and CodeRabbit code review configuration ([#288](https://github.com/openfga/go-sdk/issues/288)) ([fd83720](https://github.com/openfga/go-sdk/commit/fd837209c73a6475693253b326b7e60efadce58c))
-
-
-### Miscellaneous
-
-* release 0.8.1 ([15b3b51](https://github.com/openfga/go-sdk/commit/15b3b51968c03883660300529ac5f439eb5ec1ba))
 
 ## [0.8.0](https://github.com/openfga/go-sdk/compare/v0.7.5...v0.8.0) (2026-04-08)
 
