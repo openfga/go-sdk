@@ -28,11 +28,14 @@ routine breaking changes.
    - `minor` — breaking changes (see above)
    - `explicit` — you specify the exact version string (e.g. `0.8.0` or `0.8.0-beta.1`)
 3. The workflow creates a release PR. Review it, then merge.
-4. On merge, release-please updates the `CHANGELOG.md` and the version manifest, but **does
-   not create a GitHub Release or git tag automatically**. This package sets
-   `"skip-github-release": true` in `release-please-config.json`, which disables that step.
-   If you want a GitHub Release and/or tag, a maintainer must create them manually (or run
-   release-please's release step manually) after the PR is merged.
+4. On merge, release-please lands the `CHANGELOG.md`/manifest bump. Because this package sets
+   `"skip-github-release": true` in `release-please-config.json`, a separate `post-release`
+   job handles tagging and the release:
+   - creates a **GPG-signed** git tag and pushes it, and
+   - creates a **draft** GitHub Release with the changelog/auto-generated notes.
+
+   Pushing the tag triggers the SDK's publish workflow, which publishes to the package
+   registry and then undrafts the GitHub Release. No manual steps are required.
 
 > **Note — release-please only understands `auto` or an explicit version string.**
 > The `patch`, `minor`, and `major` options in the workflow dropdown are conveniences
