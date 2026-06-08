@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/openfga/go-sdk/internal/utils/retryutils"
+	"github.com/openfga/go-sdk/oauth2"
 	"github.com/openfga/go-sdk/oauth2/clientcredentials"
 )
 
@@ -99,10 +100,29 @@ func (c *Credentials) GetApiTokenHeader() *HeaderParams {
 
 // GetHttpClientAndHeaderOverrides
 // The main export the client uses to get a configuration with the necessary
-// httpClient and header overrides based on the chosen credential method
+// httpClient and header overrides based on the chosen credential method.
+//
+// Deprecated: use GetHttpClientAndHeaderOverridesWithBase, which can wrap a
+// caller-provided base http.Client. This variant is retained for backward
+// compatibility and behaves as if no base client were provided.
 func (c *Credentials) GetHttpClientAndHeaderOverrides(retryParams retryutils.RetryParams, debug bool) (*http.Client, []*HeaderParams) {
+	client, headers := c.GetHttpClientAndHeaderOverridesWithBase(retryParams, debug, nil)
+	// Preserve the historical contract of this method: a non-nil client is
+	// always returned (http.DefaultClient for the None/ApiToken methods).
+	if client == nil {
+		client = http.DefaultClient
+	}
+	return client, headers
+}
+
+// GetHttpClientAndHeaderOverridesWithBase returns the httpClient and header
+// overrides for the chosen credential method. When the method requires an
+// OAuth2-enabled client (ClientCredentials), baseClient (if non-nil) is wrapped
+// so its settings are preserved; otherwise the returned client is nil and the
+// caller should keep its existing client.
+func (c *Credentials) GetHttpClientAndHeaderOverridesWithBase(retryParams retryutils.RetryParams, debug bool, baseClient *http.Client) (*http.Client, []*HeaderParams) {
 	var headers []*HeaderParams
-	var client = http.DefaultClient
+	var client *http.Client
 	switch c.Method {
 	case CredentialsMethodClientCredentials:
 		requestConfig := clientcredentials.RequestConfig{
@@ -125,10 +145,24 @@ func (c *Credentials) GetHttpClientAndHeaderOverrides(retryParams retryutils.Ret
 			scopes := strings.Split(strings.TrimSpace(c.Config.ClientCredentialsScopes), " ")
 			ccConfig.Scopes = append(ccConfig.Scopes, scopes...)
 		}
-		if c.Context == nil {
-			c.Context = context.Background()
+		ctx := c.Context
+		if ctx == nil {
+			ctx = context.Background()
 		}
-		client = ccConfig.Client(c.Context)
+		if baseClient != nil {
+			// Route token fetches through baseClient (oauth2 reads this key via
+			// ContextClient) and wrap a copy so its full config (Timeout, Jar,
+			// CheckRedirect), not just its Transport, applies to API calls.
+			ctx = context.WithValue(ctx, oauth2.HTTPClient, baseClient)
+			authClient := *baseClient
+			authClient.Transport = &oauth2.Transport{
+				Base:   baseClient.Transport,
+				Source: ccConfig.TokenSource(ctx),
+			}
+			client = &authClient
+		} else {
+			client = ccConfig.Client(ctx)
+		}
 	case CredentialsMethodApiToken:
 		var header = c.GetApiTokenHeader()
 		if header != nil {
