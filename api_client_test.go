@@ -26,9 +26,9 @@ func (c *countingRoundTripper) RoundTrip(req *http.Request) (*http.Response, err
 	return c.base.RoundTrip(req)
 }
 
+// Not parallel: uses httptest servers whose Close() reads the global
+// http.DefaultTransport, which the httpmock-based parallel tests mutate.
 func TestClientCredentialsEndToEndWithCustomClient(t *testing.T) {
-	t.Parallel()
-
 	tokenRequests := int32(0)
 	issuer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		atomic.AddInt32(&tokenRequests, 1)
