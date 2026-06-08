@@ -150,8 +150,10 @@ func (c *Credentials) GetHttpClientAndHeaderOverridesWithBase(retryParams retryu
 			ctx = context.Background()
 		}
 		if baseClient != nil {
+			// Route token fetches through baseClient (oauth2 reads this key via
+			// ContextClient) and wrap a copy so its full config (Timeout, Jar,
+			// CheckRedirect), not just its Transport, applies to API calls.
 			ctx = context.WithValue(ctx, oauth2.HTTPClient, baseClient)
-			// Wrap a copy so the custom client's Timeout/Jar/CheckRedirect survive, not just its Transport.
 			authClient := *baseClient
 			authClient.Transport = &oauth2.Transport{
 				Base:   baseClient.Transport,

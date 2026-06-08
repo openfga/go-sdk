@@ -104,11 +104,9 @@ func TestApiClientCreatedWithDefaultTelemetry(t *testing.T) {
 	}
 }
 
-// Not parallel at the top level: the httpmock-based subtests below mutate the
-// global http.DefaultTransport, which must not overlap with other parallel tests.
 func TestApiClientWithCredentials(t *testing.T) {
 	t.Run("ApiToken credentials should be applied with custom HTTPClient", func(t *testing.T) {
-		// Not parallel: httpmock.Activate() swaps the global http.DefaultTransport.
+		// Not parallel: httpmock mutates the custom client's transport.
 		customHTTPClient := &http.Client{
 			Timeout: 30 * time.Second,
 		}
@@ -129,7 +127,7 @@ func TestApiClientWithCredentials(t *testing.T) {
 
 		apiClient := NewAPIClient(configuration)
 
-		httpmock.Activate()
+		httpmock.ActivateNonDefault(customHTTPClient)
 		defer httpmock.DeactivateAndReset()
 
 		authHeaderReceived := false

@@ -63,7 +63,6 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 		cfg.HTTPClient = http.DefaultClient
 	}
 
-	// Process credentials if provided
 	if cfg.Credentials != nil {
 		if cfg.Credentials.Context == nil {
 			cfg.Credentials.Context = context.Background()
