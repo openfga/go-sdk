@@ -130,12 +130,18 @@ func (c *Credentials) GetHttpClientAndHeaderOverrides(retryParams retryutils.Ret
 		if ctx == nil {
 			ctx = context.Background()
 		}
-		// Inject the base client into the OAuth2 context if provided
-		// This allows the OAuth2 client to wrap the custom client's transport
 		if baseClient != nil && baseClient != http.DefaultClient {
 			ctx = context.WithValue(ctx, oauth2.HTTPClient, baseClient)
+			// Wrap a copy so the custom client's Timeout/Jar/CheckRedirect survive, not just its Transport.
+			authClient := *baseClient
+			authClient.Transport = &oauth2.Transport{
+				Base:   baseClient.Transport,
+				Source: ccConfig.TokenSource(ctx),
+			}
+			client = &authClient
+		} else {
+			client = ccConfig.Client(ctx)
 		}
-		client = ccConfig.Client(ctx)
 	case CredentialsMethodApiToken:
 		var header = c.GetApiTokenHeader()
 		if header != nil {

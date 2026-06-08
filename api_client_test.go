@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -13,6 +15,78 @@ import (
 	"github.com/openfga/go-sdk/oauth2"
 	"github.com/openfga/go-sdk/telemetry"
 )
+
+type countingRoundTripper struct {
+	base  http.RoundTripper
+	count *int32
+}
+
+func (c *countingRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	atomic.AddInt32(c.count, 1)
+	return c.base.RoundTrip(req)
+}
+
+func TestClientCredentialsEndToEndWithCustomClient(t *testing.T) {
+	t.Parallel()
+
+	tokenRequests := int32(0)
+	issuer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&tokenRequests, 1)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"access_token":"e2e-token","token_type":"Bearer","expires_in":3600}`))
+	}))
+	defer issuer.Close()
+
+	var gotAuthHeader atomic.Value
+	gotAuthHeader.Store("")
+	api := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotAuthHeader.Store(r.Header.Get("Authorization"))
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"authorization_models":[]}`))
+	}))
+	defer api.Close()
+
+	var transportHits int32
+	customHTTPClient := &http.Client{
+		Timeout:   30 * time.Second,
+		Transport: &countingRoundTripper{base: http.DefaultTransport, count: &transportHits},
+	}
+
+	configuration, err := NewConfiguration(Configuration{
+		ApiUrl: api.URL,
+		Credentials: &credentials.Credentials{
+			Method: credentials.CredentialsMethodClientCredentials,
+			Config: &credentials.Config{
+				ClientCredentialsClientId:       "client-id",
+				ClientCredentialsClientSecret:   "client-secret",
+				ClientCredentialsApiTokenIssuer: issuer.URL,
+				ClientCredentialsApiAudience:    "https://api.example.com",
+			},
+		},
+		HTTPClient: customHTTPClient,
+	})
+	if err != nil {
+		t.Fatalf("Failed to create configuration: %v", err)
+	}
+
+	apiClient := NewAPIClient(configuration)
+
+	_, _, err = apiClient.OpenFgaApi.ReadAuthorizationModels(context.Background(), "01GXSB9YR785C4FYS3C0RTG7B2").Execute()
+	if err != nil {
+		t.Fatalf("Request failed: %v", err)
+	}
+
+	if got := gotAuthHeader.Load().(string); got != "Bearer e2e-token" {
+		t.Errorf("API request did not carry the bearer token. Got: %q", got)
+	}
+	if atomic.LoadInt32(&tokenRequests) == 0 {
+		t.Error("Token issuer was never called")
+	}
+	// The custom transport must be traversed by the API call (token fetch hits the issuer through DefaultTransport).
+	if atomic.LoadInt32(&transportHits) == 0 {
+		t.Error("Custom transport was not used for the API request")
+	}
+}
 
 func TestApiClientCreatedWithDefaultTelemetry(t *testing.T) {
 	cfg := Configuration{
@@ -255,8 +329,9 @@ func TestApiClientWithCredentials(t *testing.T) {
 			IdleConnTimeout:     90 * time.Second,
 		}
 
+		customTimeout := 30 * time.Second
 		customHTTPClient := &http.Client{
-			Timeout:   30 * time.Second,
+			Timeout:   customTimeout,
 			Transport: customTransport,
 		}
 
@@ -315,47 +390,13 @@ func TestApiClientWithCredentials(t *testing.T) {
 		} else {
 			t.Error("HTTPClient.Transport should not be nil")
 		}
-	})
 
-	t.Run("No warning or error when combining custom HTTPClient and ClientCredentials", func(t *testing.T) {
-		// Before the fix, this would log a warning and replace the custom client
-		// After the fix, it should work silently by wrapping the custom client
-		customHTTPClient := &http.Client{
-			Timeout: 25 * time.Second,
+		if finalClient.Timeout != customTimeout {
+			t.Errorf("Custom HTTPClient Timeout was not preserved. Expected: %v, Got: %v", customTimeout, finalClient.Timeout)
 		}
 
-		configuration, err := NewConfiguration(Configuration{
-			ApiHost: "api." + constants.SampleBaseDomain,
-			Credentials: &credentials.Credentials{
-				Method: credentials.CredentialsMethodClientCredentials,
-				Config: &credentials.Config{
-					ClientCredentialsClientId:       "client-id",
-					ClientCredentialsClientSecret:   "client-secret",
-					ClientCredentialsApiTokenIssuer: "https://auth.example.com/token",
-					ClientCredentialsApiAudience:    "https://api.example.com",
-				},
-			},
-			HTTPClient: customHTTPClient,
-			Debug:      true, // Enable debug to verify no warnings are logged
-		})
-		if err != nil {
-			t.Fatalf("Failed to create configuration: %v", err)
-		}
-
-		apiClient := NewAPIClient(configuration)
-
-		if apiClient == nil {
-			t.Error("APIClient creation should succeed")
-		}
-
-		// Verify OAuth2 client was created (not the original custom client)
-		if configuration.HTTPClient == customHTTPClient {
-			t.Error("HTTPClient should be OAuth2 wrapper, not original client")
-		}
-
-		// Verify it's not just the default client either
-		if configuration.HTTPClient == http.DefaultClient {
-			t.Error("HTTPClient should be OAuth2 client with wrapped custom transport")
+		if customHTTPClient.Transport != customTransport {
+			t.Error("Original custom HTTPClient.Transport was mutated; it should be left untouched")
 		}
 	})
 
