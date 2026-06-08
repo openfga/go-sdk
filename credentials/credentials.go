@@ -100,10 +100,29 @@ func (c *Credentials) GetApiTokenHeader() *HeaderParams {
 
 // GetHttpClientAndHeaderOverrides
 // The main export the client uses to get a configuration with the necessary
-// httpClient and header overrides based on the chosen credential method
-func (c *Credentials) GetHttpClientAndHeaderOverrides(retryParams retryutils.RetryParams, debug bool, baseClient *http.Client) (*http.Client, []*HeaderParams) {
+// httpClient and header overrides based on the chosen credential method.
+//
+// Deprecated: use GetHttpClientAndHeaderOverridesWithBase, which can wrap a
+// caller-provided base http.Client. This variant is retained for backward
+// compatibility and behaves as if no base client were provided.
+func (c *Credentials) GetHttpClientAndHeaderOverrides(retryParams retryutils.RetryParams, debug bool) (*http.Client, []*HeaderParams) {
+	client, headers := c.GetHttpClientAndHeaderOverridesWithBase(retryParams, debug, nil)
+	// Preserve the historical contract of this method: a non-nil client is
+	// always returned (http.DefaultClient for the None/ApiToken methods).
+	if client == nil {
+		client = http.DefaultClient
+	}
+	return client, headers
+}
+
+// GetHttpClientAndHeaderOverridesWithBase returns the httpClient and header
+// overrides for the chosen credential method. When the method requires an
+// OAuth2-enabled client (ClientCredentials), baseClient (if non-nil) is wrapped
+// so its settings are preserved; otherwise the returned client is nil and the
+// caller should keep its existing client.
+func (c *Credentials) GetHttpClientAndHeaderOverridesWithBase(retryParams retryutils.RetryParams, debug bool, baseClient *http.Client) (*http.Client, []*HeaderParams) {
 	var headers []*HeaderParams
-	var client = http.DefaultClient
+	var client *http.Client
 	switch c.Method {
 	case CredentialsMethodClientCredentials:
 		requestConfig := clientcredentials.RequestConfig{
@@ -130,7 +149,7 @@ func (c *Credentials) GetHttpClientAndHeaderOverrides(retryParams retryutils.Ret
 		if ctx == nil {
 			ctx = context.Background()
 		}
-		if baseClient != nil && baseClient != http.DefaultClient {
+		if baseClient != nil {
 			ctx = context.WithValue(ctx, oauth2.HTTPClient, baseClient)
 			// Wrap a copy so the custom client's Timeout/Jar/CheckRedirect survive, not just its Transport.
 			authClient := *baseClient

@@ -82,7 +82,8 @@ func TestClientCredentialsEndToEndWithCustomClient(t *testing.T) {
 	if atomic.LoadInt32(&tokenRequests) == 0 {
 		t.Error("Token issuer was never called")
 	}
-	// The custom transport must be traversed by the API call (token fetch hits the issuer through DefaultTransport).
+	// The custom transport must be traversed by both the API call and the
+	// token fetch, since baseClient is injected via oauth2.HTTPClient.
 	if atomic.LoadInt32(&transportHits) == 0 {
 		t.Error("Custom transport was not used for the API request")
 	}
@@ -103,8 +104,11 @@ func TestApiClientCreatedWithDefaultTelemetry(t *testing.T) {
 	}
 }
 
+// Not parallel at the top level: the httpmock-based subtests below mutate the
+// global http.DefaultTransport, which must not overlap with other parallel tests.
 func TestApiClientWithCredentials(t *testing.T) {
 	t.Run("ApiToken credentials should be applied with custom HTTPClient", func(t *testing.T) {
+		// Not parallel: httpmock.Activate() swaps the global http.DefaultTransport.
 		customHTTPClient := &http.Client{
 			Timeout: 30 * time.Second,
 		}
@@ -169,6 +173,7 @@ func TestApiClientWithCredentials(t *testing.T) {
 	})
 
 	t.Run("ClientCredentials should wrap custom HTTPClient", func(t *testing.T) {
+		t.Parallel()
 		customHTTPClient := &http.Client{
 			Timeout: 30 * time.Second,
 		}
@@ -230,6 +235,7 @@ func TestApiClientWithCredentials(t *testing.T) {
 	})
 
 	t.Run("Credentials should work when HTTPClient is nil", func(t *testing.T) {
+		// Not parallel: httpmock.Activate() swaps the global http.DefaultTransport.
 		configuration, err := NewConfiguration(Configuration{
 			ApiHost: "api." + constants.SampleBaseDomain,
 			Credentials: &credentials.Credentials{
@@ -284,6 +290,7 @@ func TestApiClientWithCredentials(t *testing.T) {
 	})
 
 	t.Run("ApiToken with custom transport and authentication", func(t *testing.T) {
+		t.Parallel()
 		customClient := &http.Client{
 			Timeout: 45 * time.Second,
 			Transport: &http.Transport{
@@ -321,6 +328,7 @@ func TestApiClientWithCredentials(t *testing.T) {
 	})
 
 	t.Run("ClientCredentials with custom transport settings wraps correctly", func(t *testing.T) {
+		t.Parallel()
 		// This test validates the fix for issue #234:
 		// Custom HTTPClient should be wrapped by OAuth2 client, not replaced
 		customTransport := &http.Transport{
@@ -401,6 +409,7 @@ func TestApiClientWithCredentials(t *testing.T) {
 	})
 
 	t.Run("Custom HTTPClient preserved when no credentials provided", func(t *testing.T) {
+		t.Parallel()
 		customHTTPClient := &http.Client{
 			Timeout: 20 * time.Second,
 		}
