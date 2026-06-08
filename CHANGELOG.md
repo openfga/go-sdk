@@ -8,10 +8,6 @@
 * process credentials when custom HTTPClient is provided ([#276](https://github.com/openfga/go-sdk/issues/276)) ([07b7c82](https://github.com/openfga/go-sdk/commit/07b7c82679c112c4d9cf9950792b4b7a209af47b))
 
 
-### Miscellaneous
-
-* release 0.8.2 ([f657602](https://github.com/openfga/go-sdk/commit/f6576020ff59864df641019dab91e48d7cd795c4))
-
 ## [0.8.1](https://github.com/openfga/go-sdk/compare/v0.8.0...v0.8.1) (2026-05-20)
 
 ### Fixed
