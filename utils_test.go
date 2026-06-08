@@ -296,76 +296,24 @@ func TestValidateParameter(t *testing.T) {
 
 	testCases := []struct {
 		name        string
-		paramName   string
-		paramValue  interface{}
+		call        func() error
 		expectError bool
 		errorMsg    string
 	}{
 		{
-			name:        "valid_string_value",
-			paramName:   "body",
-			paramValue:  "test",
+			name:        "non_nil_pointer_is_valid",
+			call:        func() error { return validateParameter("body", &CheckRequest{}) },
 			expectError: false,
 		},
 		{
-			name:        "valid_int_value",
-			paramName:   "pageSize",
-			paramValue:  10,
-			expectError: false,
-		},
-		{
-			name:        "valid_struct_value",
-			paramName:   "request",
-			paramValue:  struct{ Name string }{Name: "test"},
-			expectError: false,
-		},
-		{
-			name:        "valid_pointer_value",
-			paramName:   "options",
-			paramValue:  ToPtr("value"),
-			expectError: false,
-		},
-		{
-			name:        "valid_slice_value",
-			paramName:   "items",
-			paramValue:  []string{"a", "b", "c"},
-			expectError: false,
-		},
-		{
-			name:        "valid_map_value",
-			paramName:   "metadata",
-			paramValue:  map[string]string{"key": "value"},
-			expectError: false,
-		},
-		{
-			name:        "valid_empty_string_is_not_nil",
-			paramName:   "body",
-			paramValue:  "",
-			expectError: false,
-		},
-		{
-			name:        "valid_zero_int_is_not_nil",
-			paramName:   "count",
-			paramValue:  0,
-			expectError: false,
-		},
-		{
-			name:        "valid_false_bool_is_not_nil",
-			paramName:   "enabled",
-			paramValue:  false,
-			expectError: false,
-		},
-		{
-			name:        "nil_value_returns_error",
-			paramName:   "body",
-			paramValue:  nil,
+			name:        "nil_pointer_returns_error",
+			call:        func() error { return validateParameter("body", (*CheckRequest)(nil)) },
 			expectError: true,
 			errorMsg:    "body is required and must be specified",
 		},
 		{
-			name:        "nil_value_different_parameter_name",
-			paramName:   "request",
-			paramValue:  nil,
+			name:        "nil_pointer_includes_parameter_name_in_error",
+			call:        func() error { return validateParameter("request", (*WriteRequest)(nil)) },
 			expectError: true,
 			errorMsg:    "request is required and must be specified",
 		},
@@ -375,7 +323,7 @@ func TestValidateParameter(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			err := validateParameter(tc.paramName, tc.paramValue)
+			err := tc.call()
 
 			if tc.expectError {
 				require.Error(t, err)

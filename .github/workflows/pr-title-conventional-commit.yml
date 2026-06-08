@@ -1,0 +1,17 @@
+name: PR Title Conventional Commit Check
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, edited]
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  pr-title-check:
+    permissions:
+      pull-requests: read
+    uses: openfga/.github/.github/workflows/pr-title-check.yml@main
+

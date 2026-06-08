@@ -62,6 +62,12 @@ func (m *Metrics) PrepareAttributes(metric MetricInterface, attrs map[*Attribute
 		}
 
 		allowed = config.METRIC_COUNTER_CREDENTIALS_REQUEST
+	case METRIC_COUNTER_REQUEST_COUNT:
+		if config.METRIC_COUNTER_REQUEST_COUNT == nil {
+			return *attribute.EmptySet(), nil
+		}
+
+		allowed = config.METRIC_COUNTER_REQUEST_COUNT
 	case METRIC_HISTOGRAM_REQUEST_DURATION:
 		if config.METRIC_HISTOGRAM_REQUEST_DURATION == nil {
 			return *attribute.EmptySet(), nil

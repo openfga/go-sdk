@@ -3457,24 +3457,19 @@ func (client *OpenFgaClient) StreamedListObjectsExecute(request SdkClientStreame
 		Context:              request.GetBody().Context,
 		AuthorizationModelId: authorizationModelId,
 	}
-	requestOptions := RequestOptions{}
-	bufferSize := 0
+	requestOptions := fgaSdk.StreamingRequestOptions{}
 	if request.GetOptions() != nil {
-		requestOptions = request.GetOptions().RequestOptions
+		requestOptions.RequestOptions = request.GetOptions().RequestOptions
 		body.Consistency = request.GetOptions().Consistency
 		if request.GetOptions().StreamBufferSize != nil {
-			bufferSize = *request.GetOptions().StreamBufferSize
+			requestOptions.BufferSize = *request.GetOptions().StreamBufferSize
 		}
 	}
 
-	channel, err := fgaSdk.ExecuteStreamedListObjectsWithBufferSize(
-		&client.APIClient,
-		request.GetContext(),
-		*storeId,
-		body,
-		requestOptions,
-		bufferSize,
-	)
+	channel, err := client.OpenFgaApi.StreamedListObjects(request.GetContext(), *storeId).
+		Body(body).
+		Options(requestOptions).
+		Execute()
 
 	if err != nil {
 		return nil, err

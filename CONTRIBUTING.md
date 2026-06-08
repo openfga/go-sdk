@@ -1,52 +1,270 @@
-# Contributing to OpenFGA projects
+# Contributing to the OpenFGA Go SDK
 
-A big welcome and thank you for considering contributing to the OpenFGA open source projects. It’s people like you that make it a reality for users in our community.
+Thank you for considering contributing to the OpenFGA Go SDK! This guide will help you get set up and submit effective contributions.
 
-Reading and following these guidelines will help us make the contribution process easy and effective for everyone involved. It also communicates that you agree to respect the time of the developers managing and developing these open source projects. In return, we will reciprocate that respect by addressing your issue, assessing changes, and helping you finalize your pull requests.
+## Table of Contents
 
-### Table of Contents
-
-* [Code of Conduct](#code-of-conduct)
-* [Getting Started](#getting-started)
-    * [Making Changes](#making-changes)
-    * [Opening Issues](#opening-issues)
-    * [Submitting Pull Requests](#submitting-pull-requests)
-* [Getting in Touch](#getting-in-touch)
-    * [Have a question or problem?](#have-a-question-or-problem)
-    * [Vulnerability Reporting](#vulnerability-reporting)
+- [Code of Conduct](#code-of-conduct)
+- [Prerequisites](#prerequisites)
+- [Getting Started](#getting-started)
+- [Project Structure](#project-structure)
+- [Generated vs Hand-Written Code](#generated-vs-hand-written-code)
+- [Cross-SDK Consistency](#cross-sdk-consistency)
+- [Development Workflow](#development-workflow)
+- [Writing Tests](#writing-tests)
+- [PR Requirements](#pr-requirements)
+- [Adding New API Methods](#adding-new-api-methods)
+- [Working with Telemetry](#working-with-telemetry)
+- [Security Considerations](#security-considerations)
+- [Getting Help](#getting-help)
 
 ## Code of Conduct
 
 By participating and contributing to this project, you are expected to uphold our [Code of Conduct](https://github.com/openfga/.github/blob/main/CODE_OF_CONDUCT.md).
 
+## Prerequisites
+
+- **Go**: Latest two releases supported per [Go's release policy](https://go.dev/doc/devel/release#policy). We target `(latest-1).0` in `go.mod` and use the latest as `toolchain`.
+- **golangci-lint**: Used for linting ([install](https://golangci-lint.run/welcome/install/))
+- **gosec** and **govulncheck**: Used for security scanning
+- **make**: For running common commands (`make check`, `make test`, etc.)
+
 ## Getting Started
 
-### Making Changes
+1. Fork [github.com/openfga/go-sdk](https://github.com/openfga/go-sdk)
+2. Clone your fork
+3. Create a branch: `git checkout -b feat/your-feature`
+4. Make your changes
+5. Run `make check` to verify everything passes
+6. Push and open a PR
 
-When contributing to a repository, the first step is to open [an issue](https://github.com/openfga/go-sdk/issues) to discuss the change you wish to make before making them.
+### Useful commands
 
-### Opening Issues
+```bash
+make fmt        # Format code with gofmt
+make lint       # Format + go vet + golangci-lint
+make test       # Run all tests with race detection and coverage
+make security   # Run gosec and govulncheck
+make check      # All of the above
+```
 
-Before you submit a new issue please make sure to search all open and closed issues. It is possible your feature request/issue has already been answered.  Make sure to also check the [OpenFGA discussions](https://github.com/orgs/openfga/discussions).
+Run a single package's tests:
+```bash
+go test -race -v ./client/...
+```
 
-The repo includes an issue template that will walk through all the places to check before submitting your issue here. Please follow the instructions there to make sure this is not a duplicate issue and that we have everything we need to research and reproduce this problem.
+## Project Structure
 
-If you have found a bug or if you have a feature request, please report them in the [repo issues](https://github.com/openfga/go-sdk/issues). Cross-SDK bugs and feature requests can be additionally reported in the [sdk-generator repo](https://github.com/openfga/sdk-generator/issues) issues section, where the individual SDK issue is then linked.
+This SDK has a **dual-layer architecture**:
 
-**Please do not report security vulnerabilities on the public GitHub issue tracker.**
+- **Low-level layer** (root package): `APIClient`, `APIExecutor`, `OpenFgaApi` generated models, error types
+- **High-level layer** (`client/` package): `OpenFgaClient` with fluent API, batch splitting, credential injection, telemetry
 
-### Submitting Pull Requests
+| Package | Purpose |
+|---------|---------|
+| `client/` | High-level SDK client (Check, BatchCheck, Expand, etc.) |
+| `credentials/` | Authentication (none, API token, client credentials) |
+| `oauth2/` | OAuth2 token flows and Bearer token transport |
+| `telemetry/` | OpenTelemetry metric recording |
+| `internal/constants/` | SDK constants (batch limits, retry defaults) |
+| `internal/utils/retryutils/` | Exponential backoff, Retry-After header parsing |
 
-Feel free to submit a Pull Request against this repository. Please make sure to follow the existing code style and include tests where applicable.
+## Generated vs Hand-Written Code
 
-Some files in this repository are autogenerated. These files have a comment at the top indicating that they are autogenerated and should not be modified directly - the files are usually identified by a header marking them as such, or by their inclusion in [`.openapi-generator/FILES`](./.openapi-generator/FILES). Changes to these files should be made in the [sdk-generator](https://github.com/openfga/sdk-generator) repository in tandem, so please consider additionally submitting your Pull Requests to the [sdk-generator](https://github.com/openfga/sdk-generator) and linking the two PRs together and to the corresponding issue. This will greatly assist the OpenFGA team in being able to give timely reviews as well as deploying fixes and updates to our other SDKs as well.
+Parts of this SDK are auto-generated from the [sdk-generator](https://github.com/openfga/sdk-generator) repository using OpenAPI Generator.
 
-## Getting in touch
+### Generated files (will be wiped on regeneration)
 
-### Have a question or problem?
+- All `model_*.go` files (data model files)
+- `api_open_fga.go` (deprecated in favor of `api_executor.go`)
+- `streaming.go`
+- `internal/constants/constants.go` — these constants are generated from sdk-generator and are consistent across all OpenFGA SDKs
+- `docs/**`
 
-Please do not open issues for general support or usage questions. Instead, join us over in the [OpenFGA discussions](https://github.com/orgs/openfga/discussions) or [support community](https://openfga.dev/community).
+You can identify generated files by the header comment: `NOTE: This file was auto generated by OpenAPI Generator ... DO NOT EDIT.`
 
-### Vulnerability Reporting
+The full list is tracked in [`.openapi-generator/FILES`](./.openapi-generator/FILES).
 
-Please do not report security vulnerabilities on the public GitHub issue tracker. The [Responsible Disclosure Program](https://github.com/openfga/.github/blob/main/SECURITY.md) details the procedure for disclosing security issues.
+### If you need to change a generated file
+
+You may modify generated files in this repo, but changes must also be submitted to sdk-generator to persist:
+
+1. Submit a PR to [openfga/sdk-generator](https://github.com/openfga/sdk-generator) with the template/spec changes
+2. Open your PR in this repo and **link the sdk-generator PR** in the description
+3. Without a linked sdk-generator PR, your changes will be overwritten on the next regeneration
+
+This workflow ensures fixes propagate to all OpenFGA SDKs (Go, JS, Java, .NET, Python).
+
+### Hand-written files (safe to edit directly)
+
+- `api_client.go`, `api_executor.go`, `configuration.go`, `errors.go`, `utils.go`, `response.go`
+- `client/**`, `credentials/**`, `oauth2/**`, `telemetry/**`
+- `internal/utils/**`
+- All `*_test.go` files
+
+## Cross-SDK Consistency
+
+OpenFGA maintains SDKs in multiple languages: [Go](https://github.com/openfga/go-sdk), [JS/TS](https://github.com/openfga/js-sdk), [Java](https://github.com/openfga/java-sdk), [.NET](https://github.com/openfga/dotnet-sdk), and [Python](https://github.com/openfga/python-sdk). These SDKs should behave consistently:
+
+- **Before implementing a feature or fix**, check how the other SDKs handle it. Use them as reference to ensure your implementation matches the expected behavior and interface. When submitting your PR, note whether the change applies across SDKs.
+- **Public interfaces** should match as closely as each language allows — same method names, same parameters, same defaults, same error behavior.
+- **Constants** (batch limits, retry defaults, telemetry metric names, etc.) are generated from sdk-generator and must stay consistent across all SDKs.
+- **Behavioral contracts** must be identical: which status codes are retried, how Retry-After headers are parsed, how token refresh works, how streaming channels behave.
+
+If you discover a discrepancy between SDKs, please open an issue in [openfga/sdk-generator](https://github.com/openfga/sdk-generator/issues) so it can be tracked and resolved across all SDKs.
+
+## Development Workflow
+
+### Code style
+
+- Format with `gofmt` (not `goimports`) — CI checks this
+- Lint with `golangci-lint run` using the repo's `.golangci.yaml`
+- Use `openfga.ToPtr[T]()` for optional fields — the older `PtrString()`, `PtrBool()`, `PtrInt()` helpers are deprecated
+- Propagate `context.Context` throughout — never drop or ignore contexts
+- Use `github.com/sourcegraph/conc` for concurrent batch operations
+
+### Fluent API pattern
+
+All client methods follow this pattern:
+
+```go
+response, err := fgaClient.Check(ctx).
+    Body(client.ClientCheckRequest{
+        User:     "user:alice",
+        Relation: "viewer",
+        Object:   "document:budget",
+    }).
+    Options(client.ClientCheckOptions{
+        AuthorizationModelId: openfga.ToPtr("01H..."),
+    }).
+    Execute()
+```
+
+Maintain this pattern when adding new methods.
+
+## Writing Tests
+
+Every PR must include or update tests that exercise the changed code.
+
+### Test conventions
+
+- Use `t.Parallel()` at both the top-level test function **and** inside each `t.Run()` subtest
+- Use table-driven tests with `t.Run()` for multiple cases
+- Use `testify` for assertions: `require` for fatal checks, `assert` for non-fatal
+- Mock HTTP calls with `github.com/jarcoal/httpmock` — never make real network calls
+- Use `httptest.NewServer` for streaming/NDJSON response tests
+- Never use `time.Sleep` — use channels, contexts, or test helpers
+- All tests must be race-safe (CI runs with `-race`)
+
+### Example
+
+```go
+func TestMyFeature(t *testing.T) {
+    t.Parallel()
+    tests := []struct {
+        name     string
+        input    string
+        expected string
+    }{
+        {"valid input", "foo", "bar"},
+        {"empty input", "", ""},
+    }
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            t.Parallel()
+            result := myFunction(tt.input)
+            assert.Equal(t, tt.expected, result)
+        })
+    }
+}
+```
+
+## PR Requirements
+
+### Title format
+
+PR titles must follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+type(scope): description
+```
+
+Scope is optional. Examples:
+- `feat: add StreamedListUsers method`
+- `fix(client): handle nil response in BatchCheck`
+- `chore(deps): bump go.opentelemetry.io/otel`
+
+**Allowed types:**
+
+| Type | Use for |
+|------|---------|
+| `feat` | New features |
+| `fix` | Bug fixes |
+| `refactor` | Code changes that don't fix bugs or add features |
+| `perf` | Performance improvements |
+| `chore` | Maintenance (use `chore(docs)`, `chore(ci)`, `chore(test)` for those areas) |
+| `revert` | Reverting previous changes |
+| `release` | Release PRs (e.g., `release: v0.8.0`) |
+
+### Checklist
+
+Before submitting your PR:
+
+- [ ] `make check` passes (fmt + lint + test + security)
+- [ ] Tests added or updated for the changed code
+- [ ] Documentation updated if the public interface or functionality changed (README, godoc comments, dedicated doc file if warranted)
+- [ ] If generated files were modified, a linked [sdk-generator](https://github.com/openfga/sdk-generator) PR is referenced in the description
+- [ ] If telemetry metrics were added or changed, the changes are noted for the changelog
+
+## Adding New API Methods
+
+New public methods that call the OpenFGA API must follow this checklist:
+
+1. **Use the executor**: All API methods must go through `api_executor.go` — no custom HTTP logic. Client methods in `client/` call API methods, but API methods must all use the executor.
+2. **Set `OperationName`** in `APIExecutorRequest` — this becomes the `fga_client_request_method` telemetry attribute.
+3. **Pass `storeId`** through for metric attributes.
+4. **Add to `SdkClient` interface** in `client/client.go`.
+5. **Add telemetry attributes** in `telemetry/attributes.go` and `telemetry/configuration.go` if the method introduces a new dimension (like `batch_check_size` for BatchCheck).
+6. **Validate inputs**: StoreId and AuthorizationModelId must be valid ULIDs (see `internal/utils/IsWellFormedUlidString`).
+7. **Wrap errors** using the typed error types from `errors.go` — never return raw errors to users.
+
+Use existing methods like `Check`, `BatchCheck`, or `ListObjects` in `client/client.go` as reference.
+
+**Prefer `api_executor.go` over `api_open_fga.go`** — the latter is generated and deprecated.
+
+## Working with Telemetry
+
+The SDK emits OpenTelemetry metrics for all client operations using the `fga_client_*` prefix.
+
+### Key rules
+
+- **High-cardinality attributes** (e.g., `url_full`, unique per-request IDs) must be **disabled by default** in `DefaultTelemetryConfiguration()`. Some observability providers charge heavily for high cardinality.
+- **No PII** in metric attributes — no user IDs, tokens, or request bodies.
+- **Unit tests** must use `noop.NewMeterProvider()` — never live OTel exporters.
+- **Document changes**: any additions or modifications to metrics must be called out in the changelog on release.
+
+### Adding a new metric
+
+1. Define the metric in `telemetry/configuration.go` as a `MetricConfiguration`
+2. Add the recording method in `telemetry/metrics.go`
+3. Add attribute keys in `telemetry/attributes.go` if needed
+4. Test with noop provider
+
+## Security Considerations
+
+This SDK handles user credentials. When working on security-sensitive areas (`credentials/`, `oauth2/`, `errors.go`, `api_client.go`, `api_executor.go`):
+
+- **Never** log or include tokens, client secrets, or credentials in error messages
+- **Never** expose sensitive headers in string representations or debug output
+- OAuth2 token refresh must be **thread-safe** (`OpenFgaClient` is shared across goroutines)
+- Always **close HTTP response bodies** in all code paths, including error paths
+- **Retry only** on 429 and 5xx — never retry 4xx client errors (except 429)
+- **Respect** `Retry-After` and `X-RateLimit-Reset` headers for backoff timing
+- Do not remove token expiry **jitter** (300s) — it prevents thundering herd against token issuers
+
+## Getting Help
+
+- **Questions or problems**: Join the [OpenFGA discussions](https://github.com/orgs/openfga/discussions) or [community](https://openfga.dev/community)
+- **Bug reports and feature requests**: Open an issue in [openfga/go-sdk](https://github.com/openfga/go-sdk/issues)
+- **Cross-SDK issues**: Also report in [openfga/sdk-generator](https://github.com/openfga/sdk-generator/issues) and link the issues
+- **Security vulnerabilities**: Do not use the public issue tracker. Follow the [Responsible Disclosure Program](https://github.com/openfga/.github/blob/main/SECURITY.md)

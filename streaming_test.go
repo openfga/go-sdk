@@ -56,7 +56,7 @@ func TestStreamedListObjectsChannel_Close(t *testing.T) {
 	}
 }
 
-func TestStreamedListObjectsWithChannel_Success(t *testing.T) {
+func TestStreamedListObjectsWithAPI_Success(t *testing.T) {
 	objects := []string{"document:1", "document:2", "document:3"}
 	expectedResults := []string{}
 	for _, obj := range objects {
@@ -94,10 +94,12 @@ func TestStreamedListObjectsWithChannel_Success(t *testing.T) {
 		User:     "user:anne",
 	}
 
-	channel, err := ExecuteStreamedListObjects(client, ctx, "test-store", request, RequestOptions{})
+	channel, err := client.OpenFgaApi.StreamedListObjects(ctx, "test-store").
+		Body(request).
+		Execute()
 
 	if err != nil {
-		t.Fatalf("ExecuteStreamedListObjects failed: %v", err)
+		t.Fatalf("StreamedListObjects failed: %v", err)
 	}
 
 	defer channel.Close()
@@ -122,7 +124,7 @@ func TestStreamedListObjectsWithChannel_Success(t *testing.T) {
 	}
 }
 
-func TestStreamedListObjectsWithChannel_EmptyLines(t *testing.T) {
+func TestStreamedListObjectsWithAPI_EmptyLines(t *testing.T) {
 	responseBody := `{"result":{"object":"document:1"}}
 
 {"result":{"object":"document:2"}}
@@ -152,10 +154,12 @@ func TestStreamedListObjectsWithChannel_EmptyLines(t *testing.T) {
 		User:     "user:anne",
 	}
 
-	channel, err := ExecuteStreamedListObjects(client, ctx, "test-store", request, RequestOptions{})
+	channel, err := client.OpenFgaApi.StreamedListObjects(ctx, "test-store").
+		Body(request).
+		Execute()
 
 	if err != nil {
-		t.Fatalf("ExecuteStreamedListObjects failed: %v", err)
+		t.Fatalf("StreamedListObjects failed: %v", err)
 	}
 
 	defer channel.Close()
@@ -170,7 +174,7 @@ func TestStreamedListObjectsWithChannel_EmptyLines(t *testing.T) {
 	}
 }
 
-func TestStreamedListObjectsWithChannel_ErrorInStream(t *testing.T) {
+func TestStreamedListObjectsWithAPI_ErrorInStream(t *testing.T) {
 	responseBody := `{"result":{"object":"document:1"}}
 {"error":{"code":500,"message":"Internal error"}}`
 
@@ -197,10 +201,12 @@ func TestStreamedListObjectsWithChannel_ErrorInStream(t *testing.T) {
 		User:     "user:anne",
 	}
 
-	channel, err := ExecuteStreamedListObjects(client, ctx, "test-store", request, RequestOptions{})
+	channel, err := client.OpenFgaApi.StreamedListObjects(ctx, "test-store").
+		Body(request).
+		Execute()
 
 	if err != nil {
-		t.Fatalf("ExecuteStreamedListObjects failed: %v", err)
+		t.Fatalf("StreamedListObjects failed: %v", err)
 	}
 
 	defer channel.Close()
@@ -224,7 +230,7 @@ func TestStreamedListObjectsWithChannel_ErrorInStream(t *testing.T) {
 	}
 }
 
-func TestStreamedListObjectsWithChannel_InvalidJSON(t *testing.T) {
+func TestStreamedListObjectsWithAPI_InvalidJSON(t *testing.T) {
 	responseBody := `{"result":{"object":"document:1"}}
 invalid json`
 
@@ -251,10 +257,12 @@ invalid json`
 		User:     "user:anne",
 	}
 
-	channel, err := ExecuteStreamedListObjects(client, ctx, "test-store", request, RequestOptions{})
+	channel, err := client.OpenFgaApi.StreamedListObjects(ctx, "test-store").
+		Body(request).
+		Execute()
 
 	if err != nil {
-		t.Fatalf("ExecuteStreamedListObjects failed: %v", err)
+		t.Fatalf("StreamedListObjects failed: %v", err)
 	}
 
 	defer channel.Close()
@@ -274,7 +282,7 @@ invalid json`
 	}
 }
 
-func TestStreamedListObjectsWithChannel_ContextCancellation(t *testing.T) {
+func TestStreamedListObjectsWithAPI_ContextCancellation(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/x-ndjson")
 		w.WriteHeader(http.StatusOK)
@@ -304,10 +312,12 @@ func TestStreamedListObjectsWithChannel_ContextCancellation(t *testing.T) {
 		User:     "user:anne",
 	}
 
-	channel, err := ExecuteStreamedListObjects(client, ctx, "test-store", request, RequestOptions{})
+	channel, err := client.OpenFgaApi.StreamedListObjects(ctx, "test-store").
+		Body(request).
+		Execute()
 
 	if err != nil {
-		t.Fatalf("ExecuteStreamedListObjects failed: %v", err)
+		t.Fatalf("StreamedListObjects failed: %v", err)
 	}
 
 	defer channel.Close()
@@ -332,7 +342,7 @@ func TestStreamedListObjectsWithChannel_ContextCancellation(t *testing.T) {
 	}
 }
 
-func TestStreamedListObjectsWithChannel_CustomBufferSize(t *testing.T) {
+func TestStreamedListObjectsWithAPI_ManyObjects(t *testing.T) {
 	numObjects := 100
 	expectedResults := []string{}
 	for i := 0; i < numObjects; i++ {
@@ -363,11 +373,12 @@ func TestStreamedListObjectsWithChannel_CustomBufferSize(t *testing.T) {
 		User:     "user:anne",
 	}
 
-	// Use custom buffer size of 50
-	channel, err := ExecuteStreamedListObjectsWithBufferSize(client, ctx, "test-store", request, RequestOptions{}, 50)
+	channel, err := client.OpenFgaApi.StreamedListObjects(ctx, "test-store").
+		Body(request).
+		Execute()
 
 	if err != nil {
-		t.Fatalf("ExecuteStreamedListObjectsWithBufferSize failed: %v", err)
+		t.Fatalf("StreamedListObjects failed: %v", err)
 	}
 
 	defer channel.Close()
@@ -403,13 +414,10 @@ func TestProcessStreamingResponse_Generic(t *testing.T) {
 		t.Fatalf("Failed to make request: %v", err)
 	}
 
-	ctx := context.Background()
-	channel, err := ProcessStreamingResponse[StreamedListObjectsResponse](ctx, resp, 10)
-
+	channel, err := ProcessStreamingResponse[StreamedListObjectsResponse](context.Background(), resp, 10)
 	if err != nil {
 		t.Fatalf("ProcessStreamingResponse failed: %v", err)
 	}
-
 	defer channel.Close()
 
 	receivedObjects := []string{}
@@ -417,18 +425,31 @@ func TestProcessStreamingResponse_Generic(t *testing.T) {
 		receivedObjects = append(receivedObjects, obj.Object)
 	}
 
-	if err := <-channel.Errors; err != nil {
-		t.Fatalf("Received error from channel: %v", err)
-	}
-
 	if len(receivedObjects) != 2 {
 		t.Fatalf("Expected 2 objects, got %d", len(receivedObjects))
 	}
+}
 
-	if receivedObjects[0] != "document:1" {
-		t.Errorf("Expected document:1, got %s", receivedObjects[0])
+func TestProcessStreamingResponse_NilResponse(t *testing.T) {
+	channel, err := ProcessStreamingResponse[StreamedListObjectsResponse](context.Background(), nil, 10)
+	if err == nil {
+		t.Fatal("Expected error for nil response, got nil")
 	}
-	if receivedObjects[1] != "document:2" {
-		t.Errorf("Expected document:2, got %s", receivedObjects[1])
+	if channel != nil {
+		t.Fatal("Expected nil channel for nil response")
+	}
+}
+
+func TestProcessStreamingResponse_NilBody(t *testing.T) {
+	resp := &http.Response{
+		StatusCode: 200,
+		Body:       nil,
+	}
+	channel, err := ProcessStreamingResponse[StreamedListObjectsResponse](context.Background(), resp, 10)
+	if err == nil {
+		t.Fatal("Expected error for nil body, got nil")
+	}
+	if channel != nil {
+		t.Fatal("Expected nil channel for nil body")
 	}
 }

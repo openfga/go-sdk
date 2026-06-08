@@ -14,10 +14,10 @@ package constants
 
 const (
 	// SdkVersion is the version of the OpenFGA Go SDK.
-	SdkVersion = "0.7.5"
+	SdkVersion = "0.8.1" // x-release-please-version
 
 	// UserAgent is the user agent used in HTTP requests.
-	UserAgent = "openfga-sdk go/0.7.5"
+	UserAgent = "openfga-sdk go/" + SdkVersion
 
 	// SampleBaseDomain is the example API domain for documentation/tests.
 	SampleBaseDomain = "fga.example"
