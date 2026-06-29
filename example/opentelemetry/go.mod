@@ -2,7 +2,7 @@ module openfga-opentelemetry-example
 
 go 1.25.0
 
-toolchain go1.25.4
+toolchain go1.26.4
 
 // To reference published build, comment below and run `go mod tidy`
 replace github.com/openfga/go-sdk v0.7.5 => ../../

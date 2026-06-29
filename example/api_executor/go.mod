@@ -2,7 +2,7 @@ module api_executor
 
 go 1.25.0
 
-toolchain go1.25.4
+toolchain go1.26.4
 
 require github.com/openfga/go-sdk v0.7.5
 
