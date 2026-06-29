@@ -125,4 +125,4 @@ jobs:
     needs: [verify-version]
     permissions:
       contents: write
-    uses: openfga/.github/.github/workflows/undraft-release.yml@main
+    uses: openfga/.github/.github/workflows/undraft-release.yml@835baf31562809ad9eb884c73efc5b79318f700f # pin@main

@@ -13,5 +13,5 @@ jobs:
   pr-title-check:
     permissions:
       pull-requests: read
-    uses: openfga/.github/.github/workflows/pr-title-check.yml@main
+    uses: openfga/.github/.github/workflows/pr-title-check.yml@835baf31562809ad9eb884c73efc5b79318f700f # pin@main
 
