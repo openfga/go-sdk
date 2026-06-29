@@ -36,7 +36,7 @@ jobs:
     if: |
       github.event_name == 'workflow_dispatch' ||
       startsWith(github.event.head_commit.message, 'release:')
-    uses: openfga/.github/.github/workflows/release-please.yml@main
+    uses: openfga/.github/.github/workflows/release-please.yml@835baf31562809ad9eb884c73efc5b79318f700f # pin@main
     with:
       trigger-event:   ${{ github.event_name }}
       bump-type:       ${{ inputs.bump-type || 'auto' }}
