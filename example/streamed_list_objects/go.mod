@@ -2,7 +2,7 @@ module streamed_list_objects
 
 go 1.25.0
 
-toolchain go1.26.4
+toolchain go1.26.5
 
 require (
 	github.com/openfga/go-sdk v0.7.5
