@@ -2,7 +2,7 @@ module github.com/openfga/go-sdk/tests/integration
 
 go 1.25.0
 
-toolchain go1.25.4
+toolchain go1.26.5
 
 replace github.com/openfga/go-sdk => ../..
 

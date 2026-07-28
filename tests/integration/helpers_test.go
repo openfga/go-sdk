@@ -63,7 +63,7 @@ func getAPIURL(t *testing.T) string {
 		if err != nil {
 			t.Fatalf("failed to get container host: %v", err)
 		}
-		port, err := container.MappedPort(ctx, "8080")
+		port, err := container.MappedPort(ctx, "8080/tcp")
 		if err != nil {
 			t.Fatalf("failed to get mapped port: %v", err)
 		}
@@ -117,9 +117,13 @@ func setupStoreWithTuples(t *testing.T) (*client.OpenFgaClient, string, string) 
 		t.Fatalf("CreateStore: %v", err)
 	}
 	t.Cleanup(func() {
-		c, _ := client.NewSdkClient(&client.ClientConfiguration{
+		c, err := client.NewSdkClient(&client.ClientConfiguration{
 			ApiUrl: apiURL, StoreId: store.Id, Credentials: creds,
 		})
+		if err != nil {
+			t.Logf("cleanup: failed to build client to delete store %s: %v", store.Id, err)
+			return
+		}
 		_, _ = c.DeleteStore(context.Background()).Execute()
 	})
 

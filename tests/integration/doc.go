@@ -11,7 +11,12 @@
 //
 // # Running
 //
-//	go test -v -tags integration -timeout 120s ./tests/integration/...
+// This directory is a separate Go module, so run the tests from within it
+// (or use the Makefile target from the repo root):
+//
+//	make test-integration
+//
+//	cd tests/integration && go test -v -tags integration -timeout 120s ./...
 //
 // # Prerequisites
 //
