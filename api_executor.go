@@ -481,6 +481,9 @@ func (e *apiExecutor) determineRetry(
 	// Check for rate limit or internal server errors that support retry
 	var rateLimitErr FgaApiRateLimitExceededError
 	var internalErr FgaApiInternalError
+	var validationErr FgaApiValidationError
+	var authErr FgaApiAuthenticationError
+	var notFoundErr FgaApiNotFoundError
 
 	switch {
 	case errors.As(err, &rateLimitErr):
@@ -489,6 +492,12 @@ func (e *apiExecutor) determineRetry(
 	case errors.As(err, &internalErr):
 		timeToWait := internalErr.GetTimeToWait(attemptNum, retryParams)
 		return timeToWait > 0, timeToWait
+	case errors.As(err, &validationErr):
+		return false, 0
+	case errors.As(err, &authErr):
+		return false, 0
+	case errors.As(err, &notFoundErr):
+		return false, 0
 	default:
 		// Network errors or body read errors
 		headers := http.Header{}

@@ -813,6 +813,46 @@ func TestAPIExecutor_DetermineRetry(t *testing.T) {
 			expectShouldRetry:  false,
 			expectWaitDuration: false,
 		},
+		{
+			name:               "validation_error_no_retry",
+			err:                FgaApiValidationError{error: "validation error", responseStatusCode: 400},
+			response:           &APIExecutorResponse{StatusCode: 400, Headers: http.Header{}},
+			attemptNum:         0,
+			retryParams:        RetryParams{MaxRetry: 3, MinWaitInMs: 50},
+			operationName:      "Test",
+			expectShouldRetry:  false,
+			expectWaitDuration: false,
+		},
+		{
+			name:               "authentication_error_no_retry",
+			err:                FgaApiAuthenticationError{error: "auth error", responseStatusCode: 401},
+			response:           &APIExecutorResponse{StatusCode: 401, Headers: http.Header{}},
+			attemptNum:         0,
+			retryParams:        RetryParams{MaxRetry: 3, MinWaitInMs: 50},
+			operationName:      "Test",
+			expectShouldRetry:  false,
+			expectWaitDuration: false,
+		},
+		{
+			name:               "authentication_error_403_no_retry",
+			err:                FgaApiAuthenticationError{error: "forbidden", responseStatusCode: 403},
+			response:           &APIExecutorResponse{StatusCode: 403, Headers: http.Header{}},
+			attemptNum:         0,
+			retryParams:        RetryParams{MaxRetry: 3, MinWaitInMs: 50},
+			operationName:      "Test",
+			expectShouldRetry:  false,
+			expectWaitDuration: false,
+		},
+		{
+			name:               "not_found_error_no_retry",
+			err:                FgaApiNotFoundError{error: "not found", responseStatusCode: 404},
+			response:           &APIExecutorResponse{StatusCode: 404, Headers: http.Header{}},
+			attemptNum:         0,
+			retryParams:        RetryParams{MaxRetry: 3, MinWaitInMs: 50},
+			operationName:      "Test",
+			expectShouldRetry:  false,
+			expectWaitDuration: false,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -2107,26 +2147,17 @@ func TestAPIExecutor_ExecuteStreaming_ExhaustsRetriesOnPersistentServerError(t *
 	assert.Equal(t, 3, attemptCount, "expected 3 attempts (1 initial + 2 retries)")
 }
 
-func TestAPIExecutor_ExecuteStreaming_RetriesOnNonSpecificHTTPErrors(t *testing.T) {
-	// 400 errors fall through to determineRetry's default case, which retries them
-	// just like the non-streaming executeInternal path. This test verifies that
-	// streaming matches the same behavior as non-streaming endpoints.
+func TestAPIExecutor_ExecuteStreaming_DoesNotRetryValidationErrors(t *testing.T) {
+	// 400 validation errors are not retryable — they fail immediately without retries.
 	t.Parallel()
 
 	attemptCount := 0
 	client := newTestClient(t, &testRoundTripper{fn: func(req *http.Request) (*http.Response, error) {
 		attemptCount++
-		if attemptCount <= 2 {
-			return &http.Response{
-				StatusCode: 400,
-				Body:       io.NopCloser(strings.NewReader(`{"code":"validation_error","message":"Invalid request"}`)),
-				Header:     http.Header{"Content-Type": []string{"application/json"}},
-			}, nil
-		}
 		return &http.Response{
-			StatusCode: 200,
-			Body:       io.NopCloser(strings.NewReader(`{"result":{"object":"doc:1"}}` + "\n")),
-			Header:     http.Header{},
+			StatusCode: 400,
+			Body:       io.NopCloser(strings.NewReader(`{"code":"validation_error","message":"Invalid request"}`)),
+			Header:     http.Header{"Content-Type": []string{"application/json"}},
 		}, nil
 	}}, &RetryParams{MaxRetry: 3, MinWaitInMs: 1})
 
@@ -2140,17 +2171,9 @@ func TestAPIExecutor_ExecuteStreaming_RetriesOnNonSpecificHTTPErrors(t *testing.
 		Body:           map[string]string{"type": "document"},
 	}, 10)
 
-	require.NoError(t, err)
-	require.NotNil(t, channel)
-	defer channel.Close()
-
-	var results [][]byte
-	for result := range channel.Results {
-		results = append(results, result)
-	}
-
-	assert.Equal(t, 3, attemptCount, "400 errors are retried via default case, matching non-streaming behavior")
-	assert.Len(t, results, 1)
+	assert.Error(t, err)
+	assert.Nil(t, channel)
+	assert.Equal(t, 1, attemptCount, "400 validation errors should not be retried")
 }
 
 func TestAPIExecutor_ExecuteStreaming_DoesNotRetryContextCancellation(t *testing.T) {

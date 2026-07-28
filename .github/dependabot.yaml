@@ -19,3 +19,23 @@ updates:
       dependencies:
         patterns:
           - "*"
+
+  - package-ecosystem: gomod
+    directory: /example/api_executor
+    schedule:
+      interval: daily
+
+  - package-ecosystem: gomod
+    directory: /example/example1
+    schedule:
+      interval: daily
+
+  - package-ecosystem: gomod
+    directory: /example/opentelemetry
+    schedule:
+      interval: daily
+
+  - package-ecosystem: gomod
+    directory: /example/streamed_list_objects
+    schedule:
+      interval: daily

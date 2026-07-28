@@ -2406,9 +2406,8 @@ func TestStreamedListObjectsExecute(t *testing.T) {
 		}
 	})
 
-	t.Run("retry on 400 validation error via default case", func(t *testing.T) {
-		// Note: 400 errors fall through to determineRetry's default case, which retries
-		// them just like the non-streaming Check endpoint does. This is consistent behavior.
+	t.Run("no retry on 400 validation error", func(t *testing.T) {
+		// 400 validation errors are not retryable — they fail immediately.
 		var attempts int32
 
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -2443,13 +2442,13 @@ func TestStreamedListObjectsExecute(t *testing.T) {
 			if channel != nil {
 				channel.Close()
 			}
-			t.Fatal("expected error for persistent 400 responses, got nil")
+			t.Fatal("expected error for 400 response, got nil")
 		}
 
 		gotAttempts := int(atomic.LoadInt32(&attempts))
-		// 400 errors are retried via the default case in determineRetry (matching non-streaming behavior)
-		if gotAttempts != 3 {
-			t.Fatalf("expected 3 attempts (1 initial + 2 retries, matching non-streaming behavior), got %d", gotAttempts)
+		// 400 errors should not be retried
+		if gotAttempts != 1 {
+			t.Fatalf("expected 1 attempt (no retries for validation errors), got %d", gotAttempts)
 		}
 	})
 
