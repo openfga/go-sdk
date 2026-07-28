@@ -1,0 +1,52 @@
+name: release-please-develop
+
+# Experimental / pre-release lane for the `develop` branch.
+#
+# This is a thin caller around the SHARED reusable workflow
+# openfga/.github/.github/workflows/release-please-prerelease.yml. The common
+# logic lives there so every SDK can onboard by copying just this file.
+#
+# It is completely separate from release-please.yml (the stable main flow):
+#   * targets the long-lived `develop` branch
+#   * only ever cuts pre-release versions (alpha/beta/rc) — enforced by the
+#     reusable workflow. Stable releases must go through main.
+#
+# Triggers:
+#   * workflow_dispatch → build a release PR for an explicit pre-release version
+#   * push to develop   → when the `release:` PR merges, tag + draft + publish
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+    inputs:
+      release-version:
+        description: >
+          Explicit pre-release version to cut (e.g. 0.10.0-beta.1, 0.10.0-rc.2).
+          Must include an alpha/beta/rc suffix. Stable versions are rejected.
+        required: true
+        type: string
+
+jobs:
+  prerelease:
+    permissions:
+      contents: write
+      pull-requests: write
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      startsWith(github.event.head_commit.message, 'release:')
+    uses: openfga/.github/.github/workflows/release-please-prerelease.yml@835baf31562809ad9eb884c73efc5b79318f700f # pin@main
+    with:
+      trigger-event:   ${{ github.event_name }}
+      release-version: ${{ inputs.release-version || '' }}
+      base-branch:     develop
+      staging-branch:  release-develop
+    secrets:
+      RELEASER_APP_CLIENT_ID:   ${{ secrets.RELEASER_APP_CLIENT_ID }}
+      RELEASER_APP_PRIVATE_KEY: ${{ secrets.RELEASER_APP_PRIVATE_KEY }}
+      GPG_PRIVATE_KEY:          ${{ secrets.GPG_PRIVATE_KEY }}
+      GPG_PASSPHRASE:           ${{ secrets.GPG_PASSPHRASE }}
+
