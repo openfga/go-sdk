@@ -1,4 +1,4 @@
-.PHONY: help test lint fmt vet security check
+.PHONY: help test test-integration lint fmt vet security check
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'
