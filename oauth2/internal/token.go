@@ -348,7 +348,11 @@ func doTokenRoundTrip(ctx context.Context, req *http.Request, config RequestConf
 					log.Printf("\nWaiting %v to retry %v (%v %v) due to %s error (error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, errorStyle, err, i)
 				}
 
-				time.Sleep(timeToWait)
+				select {
+				case <-time.After(timeToWait):
+				case <-ctx.Done():
+					return nil, ctx.Err()
+				}
 				continue
 			}
 		}

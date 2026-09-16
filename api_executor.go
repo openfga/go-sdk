@@ -364,7 +364,11 @@ func (e *apiExecutor) executeInternal(ctx context.Context, request APIExecutorRe
 			if e.client.cfg.Debug {
 				e.logRetry(request, err, response, attemptNum, waitDuration)
 			}
-			time.Sleep(waitDuration)
+			select {
+			case <-time.After(waitDuration):
+			case <-ctx.Done():
+				return lastResponse, ctx.Err()
+			}
 			continue
 		}
 

@@ -6,13 +6,16 @@ package internal
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"math"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/jarcoal/httpmock"
 
@@ -266,5 +269,45 @@ func TestExpiresInUpperBound(t *testing.T) {
 	const want = math.MaxInt32
 	if e != want {
 		t.Errorf("expiration time = %v; want %v", e, want)
+	}
+}
+
+// Test that a canceled context interrupts the wait between token retries.
+func TestRetrieveTokenWithContextsCancelDuringRetryWait(t *testing.T) {
+	ResetAuthCache()
+	const clientID = "client-id"
+
+	var requests atomic.Int32
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requests.Add(1)
+		w.Header().Set("Retry-After", "60")
+		w.WriteHeader(http.StatusTooManyRequests)
+	}))
+	defer ts.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+	defer cancel()
+
+	done := make(chan error, 1)
+	go func() {
+		_, err := RetrieveToken(ctx, clientID, "", ts.URL, url.Values{}, AuthStyleInParams, RequestConfig{
+			RetryParams: retryutils.RetryParams{
+				MaxRetry:    testMaxRetry,
+				MinWaitInMs: testMinWaitInMs,
+			},
+		})
+		done <- err
+	}()
+
+	select {
+	case err := <-done:
+		if !errors.Is(err, context.DeadlineExceeded) {
+			t.Errorf("RetrieveToken = %v; want context.DeadlineExceeded", err)
+		}
+		if got := requests.Load(); got != 1 {
+			t.Errorf("token endpoint served %d requests; want 1", got)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("RetrieveToken did not return after the context deadline; the retry wait ignored the context")
 	}
 }

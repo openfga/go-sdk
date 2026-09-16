@@ -2643,3 +2643,73 @@ func TestConvertToStreamedListObjectsChannel_ResultsDeliveredBeforeError(t *test
 		assert.Contains(t, err.Error(), "stream error", "iteration %d", i)
 	}
 }
+
+// retryWaitTestRequest is a minimal retryable request used by the retry-wait tests.
+var retryWaitTestRequest = APIExecutorRequest{
+	OperationName:  "Check",
+	Method:         "POST",
+	Path:           "/stores/{store_id}/check",
+	PathParameters: map[string]string{"store_id": "123"},
+	Body:           map[string]string{"user": "user:anne"},
+}
+
+// rateLimitedRetryClient responds 429 with a 60 second Retry-After on every attempt,
+// and counts the attempts it served.
+func rateLimitedRetryClient(t *testing.T, attempts *int, onAttempt func()) *APIClient {
+	t.Helper()
+	return newTestClient(t, &testRoundTripper{fn: func(req *http.Request) (*http.Response, error) {
+		*attempts++
+		if onAttempt != nil {
+			onAttempt()
+		}
+		return makeResp(http.StatusTooManyRequests, "", map[string]string{"Retry-After": "60"}), nil
+	}}, &RetryParams{MaxRetry: 3, MinWaitInMs: 1})
+}
+
+func TestAPIExecutor_Execute_DeadlineInterruptsRetryWait(t *testing.T) {
+	t.Parallel()
+
+	attempts := 0
+	executor := NewAPIExecutor(rateLimitedRetryClient(t, &attempts, nil))
+
+	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+	defer cancel()
+
+	done := make(chan error, 1)
+	go func() {
+		_, err := executor.Execute(ctx, retryWaitTestRequest)
+		done <- err
+	}()
+
+	select {
+	case err := <-done:
+		require.ErrorIs(t, err, context.DeadlineExceeded)
+		assert.Equal(t, 1, attempts, "should not attempt again once the deadline has passed")
+	case <-time.After(5 * time.Second):
+		t.Fatal("Execute did not return after the context deadline; the retry wait ignored the context")
+	}
+}
+
+func TestAPIExecutor_Execute_CancellationInterruptsRetryWait(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	attempts := 0
+	executor := NewAPIExecutor(rateLimitedRetryClient(t, &attempts, cancel))
+
+	done := make(chan error, 1)
+	go func() {
+		_, err := executor.Execute(ctx, retryWaitTestRequest)
+		done <- err
+	}()
+
+	select {
+	case err := <-done:
+		require.ErrorIs(t, err, context.Canceled)
+		assert.Equal(t, 1, attempts, "should not attempt again once the context is canceled")
+	case <-time.After(5 * time.Second):
+		t.Fatal("Execute did not return after cancellation; the retry wait ignored the context")
+	}
+}
