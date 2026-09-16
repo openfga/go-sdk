@@ -2645,6 +2645,16 @@ func TestConvertToStreamedListObjectsChannel_ResultsDeliveredBeforeError(t *test
 	}
 }
 
+type cancelOnCloseBody struct {
+	io.ReadCloser
+	cancel context.CancelFunc
+}
+
+func (b *cancelOnCloseBody) Close() error {
+	b.cancel()
+	return b.ReadCloser.Close()
+}
+
 // retryWaitTestRequest is a minimal retryable request used by the retry-wait tests.
 var retryWaitTestRequest = APIExecutorRequest{
 	OperationName:  "Check",
@@ -2656,16 +2666,17 @@ var retryWaitTestRequest = APIExecutorRequest{
 
 // rateLimitedRetryClient responds 429 with a 60 second Retry-After on every attempt,
 // and counts the attempts it served.
-func rateLimitedRetryClient(t *testing.T, attempts *int, onAttempt func()) *APIClient {
+// Optional cancellation occurs on response-body close, after transport delivery.
+func rateLimitedRetryClient(t *testing.T, attempts *int, cancelOnBodyClose context.CancelFunc) *APIClient {
 	t.Helper()
 	transport := httpmock.NewMockTransport()
 	transport.RegisterResponder(http.MethodPost, constants.TestApiUrl+"/stores/123/check", func(req *http.Request) (*http.Response, error) {
 		*attempts++
-		if onAttempt != nil {
-			onAttempt()
-		}
 		resp := httpmock.NewStringResponse(http.StatusTooManyRequests, "")
 		resp.Header.Set("Retry-After", "60")
+		if cancelOnBodyClose != nil {
+			resp.Body = &cancelOnCloseBody{ReadCloser: resp.Body, cancel: cancelOnBodyClose}
+		}
 		return resp, nil
 	})
 	return newTestClient(t, transport, &RetryParams{MaxRetry: 3, MinWaitInMs: 1})
@@ -2704,15 +2715,20 @@ func TestAPIExecutor_Execute_CancellationInterruptsRetryWait(t *testing.T) {
 	attempts := 0
 	executor := NewAPIExecutor(rateLimitedRetryClient(t, &attempts, cancel))
 
+	var response *APIExecutorResponse
 	done := make(chan error, 1)
 	go func() {
-		_, err := executor.Execute(ctx, retryWaitTestRequest)
+		var err error
+		response, err = executor.Execute(ctx, retryWaitTestRequest)
 		done <- err
 	}()
 
 	select {
 	case err := <-done:
 		require.ErrorIs(t, err, context.Canceled)
+		require.NotNil(t, response)
+		assert.Equal(t, http.StatusTooManyRequests, response.StatusCode)
+		assert.Equal(t, "60", response.Headers.Get("Retry-After"))
 		assert.Equal(t, 1, attempts, "should not attempt again once the context is canceled")
 	case <-time.After(5 * time.Second):
 		t.Fatal("Execute did not return after cancellation; the retry wait ignored the context")
