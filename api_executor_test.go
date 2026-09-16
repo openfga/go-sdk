@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -2657,13 +2658,17 @@ var retryWaitTestRequest = APIExecutorRequest{
 // and counts the attempts it served.
 func rateLimitedRetryClient(t *testing.T, attempts *int, onAttempt func()) *APIClient {
 	t.Helper()
-	return newTestClient(t, &testRoundTripper{fn: func(req *http.Request) (*http.Response, error) {
+	transport := httpmock.NewMockTransport()
+	transport.RegisterResponder(http.MethodPost, constants.TestApiUrl+"/stores/123/check", func(req *http.Request) (*http.Response, error) {
 		*attempts++
 		if onAttempt != nil {
 			onAttempt()
 		}
-		return makeResp(http.StatusTooManyRequests, "", map[string]string{"Retry-After": "60"}), nil
-	}}, &RetryParams{MaxRetry: 3, MinWaitInMs: 1})
+		resp := httpmock.NewStringResponse(http.StatusTooManyRequests, "")
+		resp.Header.Set("Retry-After", "60")
+		return resp, nil
+	})
+	return newTestClient(t, transport, &RetryParams{MaxRetry: 3, MinWaitInMs: 1})
 }
 
 func TestAPIExecutor_Execute_DeadlineInterruptsRetryWait(t *testing.T) {

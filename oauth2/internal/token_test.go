@@ -6,7 +6,6 @@ package internal
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -18,6 +17,8 @@ import (
 	"time"
 
 	"github.com/jarcoal/httpmock"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/openfga/go-sdk/internal/utils/retryutils"
 )
@@ -277,20 +278,22 @@ func TestRetrieveTokenWithContextsCancelDuringRetryWait(t *testing.T) {
 	ResetAuthCache()
 	const clientID = "client-id"
 
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
 	var requests atomic.Int32
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	httpmock.RegisterResponder(http.MethodPost, testURL, func(req *http.Request) (*http.Response, error) {
 		requests.Add(1)
-		w.Header().Set("Retry-After", "60")
-		w.WriteHeader(http.StatusTooManyRequests)
-	}))
-	defer ts.Close()
+		resp := httpmock.NewStringResponse(http.StatusTooManyRequests, "")
+		resp.Header.Set("Retry-After", "60")
+		return resp, nil
+	})
 
 	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
 	defer cancel()
 
 	done := make(chan error, 1)
 	go func() {
-		_, err := RetrieveToken(ctx, clientID, "", ts.URL, url.Values{}, AuthStyleInParams, RequestConfig{
+		_, err := RetrieveToken(ctx, clientID, "", testURL, url.Values{}, AuthStyleInParams, RequestConfig{
 			RetryParams: retryutils.RetryParams{
 				MaxRetry:    testMaxRetry,
 				MinWaitInMs: testMinWaitInMs,
@@ -301,12 +304,8 @@ func TestRetrieveTokenWithContextsCancelDuringRetryWait(t *testing.T) {
 
 	select {
 	case err := <-done:
-		if !errors.Is(err, context.DeadlineExceeded) {
-			t.Errorf("RetrieveToken = %v; want context.DeadlineExceeded", err)
-		}
-		if got := requests.Load(); got != 1 {
-			t.Errorf("token endpoint served %d requests; want 1", got)
-		}
+		require.ErrorIs(t, err, context.DeadlineExceeded)
+		assert.Equal(t, int32(1), requests.Load(), "token endpoint should be called once")
 	case <-time.After(5 * time.Second):
 		t.Fatal("RetrieveToken did not return after the context deadline; the retry wait ignored the context")
 	}
