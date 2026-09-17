@@ -310,3 +310,53 @@ func TestRetrieveTokenWithContextsCancelDuringRetryWait(t *testing.T) {
 		t.Fatal("RetrieveToken did not return after the context deadline; the retry wait ignored the context")
 	}
 }
+
+type cancelOnCloseTokenBody struct {
+	io.ReadCloser
+	cancel context.CancelFunc
+}
+
+func (b *cancelOnCloseTokenBody) Close() error {
+	b.cancel()
+	return b.ReadCloser.Close()
+}
+
+func TestRetrieveTokenWithContextsCancelDuringRetryWaitStopsAuthStyleProbe(t *testing.T) {
+	t.Parallel()
+
+	const (
+		clientID = "client-id"
+		tokenURL = testURL + "/cancelled-auth-style-probe"
+	)
+
+	baseCtx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	transport := httpmock.NewMockTransport()
+	transport.RegisterResponder(http.MethodPost, tokenURL, func(req *http.Request) (*http.Response, error) {
+		resp := httpmock.NewStringResponse(http.StatusTooManyRequests, "")
+		resp.Header.Set("Retry-After", "60")
+		resp.Body = &cancelOnCloseTokenBody{ReadCloser: resp.Body, cancel: cancel}
+		return resp, nil
+	})
+	ctx := context.WithValue(baseCtx, HTTPClient, &http.Client{Transport: transport})
+
+	done := make(chan error, 1)
+	go func() {
+		_, err := RetrieveToken(ctx, clientID, "", tokenURL, url.Values{}, AuthStyleUnknown, RequestConfig{
+			RetryParams: retryutils.RetryParams{
+				MaxRetry:    testMaxRetry,
+				MinWaitInMs: testMinWaitInMs,
+			},
+		})
+		done <- err
+	}()
+
+	select {
+	case err := <-done:
+		require.ErrorIs(t, err, context.Canceled)
+		assert.Equal(t, 1, transport.GetTotalCallCount(), "auth-style fallback should not run after cancellation")
+	case <-time.After(5 * time.Second):
+		t.Fatal("RetrieveToken did not return after cancellation; the retry wait ignored the context")
+	}
+}

@@ -219,7 +219,7 @@ func RetrieveToken(ctx context.Context, clientID, clientSecret, tokenURL string,
 		return nil, err
 	}
 	token, err := doTokenRoundTrip(ctx, req, config)
-	if err != nil && needsAuthStyleProbe {
+	if err != nil && needsAuthStyleProbe && ctx.Err() == nil {
 		// If we get an error, assume the server wants the
 		// clientID & clientSecret in a different form.
 		// See https://code.google.com/p/goauth2/issues/detail?id=31 for background.
