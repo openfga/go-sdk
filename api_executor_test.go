@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"runtime"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -2667,11 +2668,11 @@ var retryWaitTestRequest = APIExecutorRequest{
 // rateLimitedRetryClient responds 429 with a 60 second Retry-After on every attempt,
 // and counts the attempts it served.
 // Optional cancellation occurs on response-body close, after transport delivery.
-func rateLimitedRetryClient(t *testing.T, attempts *int, cancelOnBodyClose context.CancelFunc) *APIClient {
+func rateLimitedRetryClient(t *testing.T, attempts *atomic.Int32, cancelOnBodyClose context.CancelFunc) *APIClient {
 	t.Helper()
 	transport := httpmock.NewMockTransport()
 	transport.RegisterResponder(http.MethodPost, constants.TestApiUrl+"/stores/123/check", func(req *http.Request) (*http.Response, error) {
-		*attempts++
+		attempts.Add(1)
 		resp := httpmock.NewStringResponse(http.StatusTooManyRequests, "")
 		resp.Header.Set("Retry-After", "60")
 		if cancelOnBodyClose != nil {
@@ -2685,7 +2686,7 @@ func rateLimitedRetryClient(t *testing.T, attempts *int, cancelOnBodyClose conte
 func TestAPIExecutor_Execute_DeadlineInterruptsRetryWait(t *testing.T) {
 	t.Parallel()
 
-	attempts := 0
+	var attempts atomic.Int32
 	executor := NewAPIExecutor(rateLimitedRetryClient(t, &attempts, nil))
 
 	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
@@ -2700,7 +2701,7 @@ func TestAPIExecutor_Execute_DeadlineInterruptsRetryWait(t *testing.T) {
 	select {
 	case err := <-done:
 		require.ErrorIs(t, err, context.DeadlineExceeded)
-		assert.Equal(t, 1, attempts, "should not attempt again once the deadline has passed")
+		assert.Equal(t, int32(1), attempts.Load(), "should not attempt again once the deadline has passed")
 	case <-time.After(5 * time.Second):
 		t.Fatal("Execute did not return after the context deadline; the retry wait ignored the context")
 	}
@@ -2712,7 +2713,7 @@ func TestAPIExecutor_Execute_CancellationInterruptsRetryWait(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	attempts := 0
+	var attempts atomic.Int32
 	executor := NewAPIExecutor(rateLimitedRetryClient(t, &attempts, cancel))
 
 	var response *APIExecutorResponse
@@ -2729,7 +2730,7 @@ func TestAPIExecutor_Execute_CancellationInterruptsRetryWait(t *testing.T) {
 		require.NotNil(t, response)
 		assert.Equal(t, http.StatusTooManyRequests, response.StatusCode)
 		assert.Equal(t, "60", response.Headers.Get("Retry-After"))
-		assert.Equal(t, 1, attempts, "should not attempt again once the context is canceled")
+		assert.Equal(t, int32(1), attempts.Load(), "should not attempt again once the context is canceled")
 	case <-time.After(5 * time.Second):
 		t.Fatal("Execute did not return after cancellation; the retry wait ignored the context")
 	}
