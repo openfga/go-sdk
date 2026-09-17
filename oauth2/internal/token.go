@@ -219,7 +219,7 @@ func RetrieveToken(ctx context.Context, clientID, clientSecret, tokenURL string,
 		return nil, err
 	}
 	token, err := doTokenRoundTrip(ctx, req, config)
-	if err != nil && needsAuthStyleProbe {
+	if err != nil && needsAuthStyleProbe && ctx.Err() == nil {
 		// If we get an error, assume the server wants the
 		// clientID & clientSecret in a different form.
 		// See https://code.google.com/p/goauth2/issues/detail?id=31 for background.
@@ -348,7 +348,11 @@ func doTokenRoundTrip(ctx context.Context, req *http.Request, config RequestConf
 					log.Printf("\nWaiting %v to retry %v (%v %v) due to %s error (error=%v) on attempt %v\n", timeToWait, operationName, req.Method, req.URL, errorStyle, err, i)
 				}
 
-				time.Sleep(timeToWait)
+				select {
+				case <-time.After(timeToWait):
+				case <-ctx.Done():
+					return nil, ctx.Err()
+				}
 				continue
 			}
 		}

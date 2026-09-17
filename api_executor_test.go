@@ -9,9 +9,11 @@ import (
 	"net/url"
 	"runtime"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
+	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -2641,5 +2643,95 @@ func TestConvertToStreamedListObjectsChannel_ResultsDeliveredBeforeError(t *test
 		assert.Equal(t, []string{"document:1", "document:2"}, objects, "iteration %d: expected all results before error", i)
 		assert.Error(t, err, "iteration %d: expected error", i)
 		assert.Contains(t, err.Error(), "stream error", "iteration %d", i)
+	}
+}
+
+type cancelOnCloseBody struct {
+	io.ReadCloser
+	cancel context.CancelFunc
+}
+
+func (b *cancelOnCloseBody) Close() error {
+	b.cancel()
+	return b.ReadCloser.Close()
+}
+
+// retryWaitTestRequest is a minimal retryable request used by the retry-wait tests.
+var retryWaitTestRequest = APIExecutorRequest{
+	OperationName:  "Check",
+	Method:         "POST",
+	Path:           "/stores/{store_id}/check",
+	PathParameters: map[string]string{"store_id": "123"},
+	Body:           map[string]string{"user": "user:anne"},
+}
+
+// rateLimitedRetryClient responds 429 with a 60 second Retry-After on every attempt,
+// and counts the attempts it served.
+// Optional cancellation occurs on response-body close, after transport delivery.
+func rateLimitedRetryClient(t *testing.T, attempts *atomic.Int32, cancelOnBodyClose context.CancelFunc) *APIClient {
+	t.Helper()
+	transport := httpmock.NewMockTransport()
+	transport.RegisterResponder(http.MethodPost, constants.TestApiUrl+"/stores/123/check", func(req *http.Request) (*http.Response, error) {
+		attempts.Add(1)
+		resp := httpmock.NewStringResponse(http.StatusTooManyRequests, "")
+		resp.Header.Set("Retry-After", "60")
+		if cancelOnBodyClose != nil {
+			resp.Body = &cancelOnCloseBody{ReadCloser: resp.Body, cancel: cancelOnBodyClose}
+		}
+		return resp, nil
+	})
+	return newTestClient(t, transport, &RetryParams{MaxRetry: 3, MinWaitInMs: 1})
+}
+
+func TestAPIExecutor_Execute_DeadlineInterruptsRetryWait(t *testing.T) {
+	t.Parallel()
+
+	var attempts atomic.Int32
+	executor := NewAPIExecutor(rateLimitedRetryClient(t, &attempts, nil))
+
+	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+	defer cancel()
+
+	done := make(chan error, 1)
+	go func() {
+		_, err := executor.Execute(ctx, retryWaitTestRequest)
+		done <- err
+	}()
+
+	select {
+	case err := <-done:
+		require.ErrorIs(t, err, context.DeadlineExceeded)
+		assert.Equal(t, int32(1), attempts.Load(), "should not attempt again once the deadline has passed")
+	case <-time.After(5 * time.Second):
+		t.Fatal("Execute did not return after the context deadline; the retry wait ignored the context")
+	}
+}
+
+func TestAPIExecutor_Execute_CancellationInterruptsRetryWait(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	var attempts atomic.Int32
+	executor := NewAPIExecutor(rateLimitedRetryClient(t, &attempts, cancel))
+
+	var response *APIExecutorResponse
+	done := make(chan error, 1)
+	go func() {
+		var err error
+		response, err = executor.Execute(ctx, retryWaitTestRequest)
+		done <- err
+	}()
+
+	select {
+	case err := <-done:
+		require.ErrorIs(t, err, context.Canceled)
+		require.NotNil(t, response)
+		assert.Equal(t, http.StatusTooManyRequests, response.StatusCode)
+		assert.Equal(t, "60", response.Headers.Get("Retry-After"))
+		assert.Equal(t, int32(1), attempts.Load(), "should not attempt again once the context is canceled")
+	case <-time.After(5 * time.Second):
+		t.Fatal("Execute did not return after cancellation; the retry wait ignored the context")
 	}
 }
