@@ -311,17 +311,17 @@ func TestRetrieveTokenWithContextsCancelDuringRetryWait(t *testing.T) {
 	}
 }
 
-type cancelOnCloseTokenBody struct {
+type cancelOnCloseBody struct {
 	io.ReadCloser
 	cancel context.CancelFunc
 }
 
-func (b *cancelOnCloseTokenBody) Close() error {
+func (b *cancelOnCloseBody) Close() error {
 	b.cancel()
 	return b.ReadCloser.Close()
 }
 
-func TestRetrieveTokenWithContextsCancelDuringRetryWaitStopsAuthStyleProbe(t *testing.T) {
+func TestRetrieveToken_CancellationStopsAuthStyleFallback(t *testing.T) {
 	t.Parallel()
 
 	const (
@@ -336,7 +336,7 @@ func TestRetrieveTokenWithContextsCancelDuringRetryWaitStopsAuthStyleProbe(t *te
 	transport.RegisterResponder(http.MethodPost, tokenURL, func(req *http.Request) (*http.Response, error) {
 		resp := httpmock.NewStringResponse(http.StatusTooManyRequests, "")
 		resp.Header.Set("Retry-After", "60")
-		resp.Body = &cancelOnCloseTokenBody{ReadCloser: resp.Body, cancel: cancel}
+		resp.Body = &cancelOnCloseBody{ReadCloser: resp.Body, cancel: cancel}
 		return resp, nil
 	})
 	ctx := context.WithValue(baseCtx, HTTPClient, &http.Client{Transport: transport})
