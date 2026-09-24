@@ -18,10 +18,6 @@
 * compile ULID regex once ([#384](https://github.com/openfga/go-sdk/issues/384)) ([ae78937](https://github.com/openfga/go-sdk/commit/ae78937d442632c7a211fab70c0a9abfa741a4a2))
 
 
-### Miscellaneous
-
-* release 0.8.3 ([76f0484](https://github.com/openfga/go-sdk/commit/76f04840e7feeded186e0240241093a05a0cfbb2))
-
 ## [0.8.2](https://github.com/openfga/go-sdk/compare/v0.8.1...v0.8.2) (2026-06-08)
 
 
