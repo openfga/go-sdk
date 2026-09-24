@@ -59,3 +59,10 @@ func TestIsWellFormedUlidString(t *testing.T) {
 	}
 
 }
+
+func BenchmarkIsWellFormedUlidString(b *testing.B) {
+	b.ReportAllocs()
+	for b.Loop() {
+		IsWellFormedUlidString("01GRC27AM72M4SGK4VBHF3DY0F")
+	}
+}
