@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.8.3](https://github.com/openfga/go-sdk/compare/v0.8.2...v0.8.3) (2026-09-24)
+
+
+### Added
+
+* testContainers set up for integration tests ([#309](https://github.com/openfga/go-sdk/issues/309)) ([d4b3af9](https://github.com/openfga/go-sdk/commit/d4b3af9710cec775b97ef7d5c2e8c3d53e92cca0))
+
+
+### Fixed
+
+* honor context cancellation while waiting between retries ([#378](https://github.com/openfga/go-sdk/issues/378)) ([b5b270e](https://github.com/openfga/go-sdk/commit/b5b270e88e1fe0010341e16423540a92b3cc2e96))
+
+
+### Changed
+
+* compile ULID regex once ([#384](https://github.com/openfga/go-sdk/issues/384)) ([ae78937](https://github.com/openfga/go-sdk/commit/ae78937d442632c7a211fab70c0a9abfa741a4a2))
+
+
 ## [0.8.2](https://github.com/openfga/go-sdk/compare/v0.8.1...v0.8.2) (2026-06-08)
 
 
