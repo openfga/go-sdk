@@ -34,6 +34,12 @@ type Config struct {
 	ClientCredentialsClientId       string `json:"clientId,omitempty"`
 	ClientCredentialsClientSecret   string `json:"clientSecret,omitempty"`
 	ClientCredentialsScopes         string `json:"scopes,omitempty"`
+	// ClientCredentialsApiTokenIssuerParams are additional form fields sent in
+	// the token request body as application/x-www-form-urlencoded. Use url.Values
+	// to send a key more than once (for example, multiple RFC 8707 resource
+	// indicators). The keys grant_type, scope, audience, client_id, and
+	// client_secret are reserved for SDK-managed token request fields.
+	ClientCredentialsApiTokenIssuerParams url.Values `json:"apiTokenIssuerParams,omitempty"`
 }
 
 type Credentials struct {
@@ -71,6 +77,12 @@ func (c *Credentials) ValidateCredentialsConfig() error {
 			conf.ClientCredentialsClientSecret == "" ||
 			conf.ClientCredentialsApiTokenIssuer == "" {
 			return fmt.Errorf("all of CredentialsConfig.ClientId, CredentialsConfig.ClientSecret and CredentialsConfig.ApiTokenIssuer are required when CredentialsMethod is CredentialsMethodClientCredentials (%s)", c.Method)
+		}
+		for key := range conf.ClientCredentialsApiTokenIssuerParams {
+			switch key {
+			case "", "grant_type", "client_id", "client_secret", "scope", "audience":
+				return fmt.Errorf("CredentialsConfig.ClientCredentialsApiTokenIssuerParams contains reserved key %q", key)
+			}
 		}
 		tokenURL, err := buildApiTokenURL(conf.ClientCredentialsApiTokenIssuer)
 		if err != nil {
@@ -136,10 +148,17 @@ func (c *Credentials) GetHttpClientAndHeaderOverridesWithBase(retryParams retryu
 			TokenURL:      c.Config.ClientCredentialsApiTokenIssuer,
 			RequestConfig: requestConfig,
 		}
-		if c.Config.ClientCredentialsApiAudience != "" {
-			ccConfig.EndpointParams = map[string][]string{
-				"audience": {c.Config.ClientCredentialsApiAudience},
+		if len(c.Config.ClientCredentialsApiTokenIssuerParams) > 0 {
+			ccConfig.EndpointParams = make(url.Values, len(c.Config.ClientCredentialsApiTokenIssuerParams)+1)
+			for key, values := range c.Config.ClientCredentialsApiTokenIssuerParams {
+				ccConfig.EndpointParams[key] = append([]string(nil), values...)
 			}
+		}
+		if c.Config.ClientCredentialsApiAudience != "" {
+			if ccConfig.EndpointParams == nil {
+				ccConfig.EndpointParams = make(url.Values)
+			}
+			ccConfig.EndpointParams.Set("audience", c.Config.ClientCredentialsApiAudience)
 		}
 		if c.Config.ClientCredentialsScopes != "" {
 			scopes := strings.Split(strings.TrimSpace(c.Config.ClientCredentialsScopes), " ")
