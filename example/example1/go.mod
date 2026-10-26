@@ -1,8 +1,8 @@
 module example1
 
-go 1.25.0
+go 1.26.0
 
-toolchain go1.26.5
+toolchain go1.27.3
 
 // To reference published build, comment below and run `go mod tidy`
 replace github.com/openfga/go-sdk v0.7.5 => ../../
