@@ -24,9 +24,11 @@ routine breaking changes.
 
 1. Go to **Actions → release-please** and click **Run workflow**.
 2. Choose a bump type:
+   - `auto` — bump determined from the conventional commits since the last release (default)
    - `patch` — bugfixes, docs, small changes
    - `minor` — breaking changes (see above)
-   - `explicit` — you specify the exact version string (e.g. `0.8.0` or `0.8.0-beta.1`)
+   - `explicit` — uses the exact version entered in `release-version` (e.g. `0.8.0` or
+     `0.8.0-beta.1`); the other bump types ignore that field
 3. The workflow creates a release PR. Review it, then merge.
 4. On merge, release-please lands the `CHANGELOG.md`/manifest bump. Because this package sets
    `"skip-github-release": true` in `release-please-config.json`, a separate `post-release`
@@ -34,8 +36,10 @@ routine breaking changes.
    - creates a **GPG-signed** git tag and pushes it, and
    - creates a **draft** GitHub Release with the changelog/auto-generated notes.
 
-   Pushing the tag triggers the SDK's publish workflow, which publishes to the package
-   registry and then undrafts the GitHub Release. No manual steps are required.
+   Pushing the tag triggers the tag build in `main.yaml`, which checks the tag against
+   `.release-please-manifest.json` and `SdkVersion` in `internal/constants/constants.go`,
+   then undrafts the GitHub Release — there is no registry publish for Go. No manual
+   steps are required.
 
 > **Note — release-please only understands `auto` or an explicit version string.**
 > The `patch`, `minor`, and `major` options in the workflow dropdown are conveniences
@@ -72,6 +76,9 @@ every beta, incrementing the suffix manually:
 0.8.0-beta.1  →  explicit: 0.8.0-beta.2  →  explicit: 0.8.0
 ```
 
+The `release-please-develop` pre-release lane is configured but needs a `develop` branch
+first; until then, cut pre-releases from `main` with `explicit`.
+
 ---
 
 ## What goes in the changelog
@@ -84,8 +91,32 @@ feat: add support for batch check          → Added
 fix: correct retry logic for transient errors  → Fixed
 docs: update API reference                 → Documentation
 perf: cache DNS lookups                    → Changed
-refactor: extract auth helper              → (hidden)
+refactor: extract auth helper               → Changed
 chore: bump dependencies                   → (hidden)
+```
+
+### Overriding a changelog entry
+
+If a commit message isn't user-facing, add this block to the PR description (before or
+after merging; re-run the release workflow to pick it up). release-please uses it instead
+of the commit message:
+
+```
+BEGIN_COMMIT_OVERRIDE
+feat: user-facing description of the change
+END_COMMIT_OVERRIDE
+```
+
+### Breaking changes
+
+Mark the type with `!` and add a `BREAKING CHANGE:` footer. PRs are squash-merged, and GitHub defaults the squash
+title to the commit title for single-commit PRs (the PR title otherwise), so check that the final squash title has
+the `!` and its body has the footer before merging:
+
+```
+feat!: remove the Foo option
+
+BREAKING CHANGE: the Foo option has been removed. Use Bar instead.
 ```
 
 ---
