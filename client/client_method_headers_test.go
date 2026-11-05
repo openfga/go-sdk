@@ -216,8 +216,9 @@ func TestClientMethodHeaders(t *testing.T) {
 		t.Parallel()
 		client, recorder := newRecordingClient(t, `{"allowed":true}`)
 
+		// Header names are case-insensitive, so a lowercase name counts as set
 		callerHeaders := map[string]string{
-			"X-OpenFGA-Client-Method":          "MyMethod",
+			"x-openfga-client-method":          "MyMethod",
 			"X-OpenFGA-Client-Bulk-Request-Id": "my-bulk-id",
 		}
 		_, err := client.ClientBatchCheck(context.Background()).Body(fgaSdkClient.ClientBatchCheckClientBody{

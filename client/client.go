@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 	_nethttp "net/http"
+	"strings"
 	"time"
 
 	"github.com/sourcegraph/conc/pool"
@@ -119,14 +120,24 @@ func withClientHeaders(options RequestOptions, method string, bulk bool) Request
 	for name, value := range options.Headers {
 		headers[name] = value
 	}
-	if _, ok := headers[constants.ClientMethodHeader]; !ok && method != "" {
+	if method != "" && !hasHeader(headers, constants.ClientMethodHeader) {
 		headers[constants.ClientMethodHeader] = method
 	}
-	if _, ok := headers[constants.ClientBulkRequestIdHeader]; !ok && bulk {
+	if bulk && !hasHeader(headers, constants.ClientBulkRequestIdHeader) {
 		headers[constants.ClientBulkRequestIdHeader] = newBulkRequestId()
 	}
 	options.Headers = headers
 	return options
+}
+
+// hasHeader reports whether headers contains name, compared case-insensitively like HTTP header names.
+func hasHeader(headers map[string]string, name string) bool {
+	for key := range headers {
+		if strings.EqualFold(key, name) {
+			return true
+		}
+	}
+	return false
 }
 
 // newBulkRequestId returns a random (version 4) UUID.
