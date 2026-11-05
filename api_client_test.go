@@ -416,3 +416,31 @@ func TestApiClientWithCredentials(t *testing.T) {
 		}
 	})
 }
+
+func TestApiClientsDoNotGrowTheTelemetryRegistry(t *testing.T) {
+	// Not parallel: it reads the process-wide telemetry registry, which parallel tests could write to.
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"stores":[],"continuation_token":""}`))
+	}))
+	defer server.Close()
+
+	for range 20 {
+		cfg := Configuration{
+			HTTPClient: &http.Client{Timeout: 10 * time.Second},
+			ApiUrl:     server.URL,
+		}
+		client := NewAPIClient(&cfg)
+
+		_, _, err := client.OpenFgaApi.ListStores(context.Background()).Execute()
+		if err != nil {
+			t.Fatalf("ListStores failed: %v", err)
+		}
+
+		// Each client records its metrics with its own telemetry instance, so creating clients
+		// doesn't leave entries behind in the registry.
+		if _, registered := telemetry.TelemetryInstances[cfg.Telemetry]; registered {
+			t.Fatalf("the client's telemetry configuration was added to the process-wide registry")
+		}
+	}
+}

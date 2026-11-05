@@ -41,6 +41,10 @@ type APIClient struct {
 	cfg    *Configuration
 	common service // Reuse a single struct instead of allocating one for each service on the heap.
 
+	// telemetry records the metrics of this client. It is created once per client, so that it is
+	// released with the client instead of being kept in the process-wide telemetry registry.
+	telemetry *telemetry.Telemetry
+
 	// API Services
 
 	OpenFgaApi OpenFgaApi
@@ -57,6 +61,7 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 	if cfg.Telemetry == nil {
 		cfg.Telemetry = telemetry.DefaultTelemetryConfiguration()
 	}
+	clientTelemetry, _ := telemetry.Configure(cfg.Telemetry)
 
 	// Set default HTTP client if none provided
 	if cfg.HTTPClient == nil {
@@ -67,7 +72,7 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 		if cfg.Credentials.Context == nil {
 			cfg.Credentials.Context = context.Background()
 		}
-		cfg.Credentials.Context = telemetry.Bind(cfg.Credentials.Context, telemetry.Get(telemetry.TelemetryFactoryParameters{Configuration: cfg.Telemetry}))
+		cfg.Credentials.Context = telemetry.Bind(cfg.Credentials.Context, clientTelemetry)
 		var httpClient, headers = cfg.Credentials.GetHttpClientAndHeaderOverridesWithBase(retryutils.GetRetryParamsOrDefault(cfg.RetryParams), cfg.Debug, cfg.HTTPClient)
 
 		// Apply header overrides (e.g. ApiToken's Authorization header).
@@ -84,6 +89,7 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 
 	c := &APIClient{}
 	c.cfg = cfg
+	c.telemetry = clientTelemetry
 	c.common.client = c
 	c.common.RetryParams = cfg.RetryParams
 
@@ -91,6 +97,15 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 	c.OpenFgaApi = (*OpenFgaApiService)(&c.common)
 
 	return c
+}
+
+// metrics returns the metrics of this client. A client that wasn't created with NewAPIClient has no
+// telemetry instance of its own and falls back to the process-wide one for its configuration.
+func (c *APIClient) metrics() telemetry.MetricsInterface {
+	if c.telemetry != nil {
+		return c.telemetry.Metrics
+	}
+	return telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: c.cfg.Telemetry})
 }
 
 // selectHeaderContentType select a content type from the available list.
@@ -192,7 +207,7 @@ func (c *APIClient) callAPI(request *http.Request) (*http.Response, error) {
 
 	// Emit HTTP request duration metric for each HTTP call
 	{
-		metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: c.cfg.Telemetry})
+		metrics := c.metrics()
 		httpRequestAttrs := map[*telemetry.Attribute]string{
 			telemetry.HTTPHost:          request.URL.Host,
 			telemetry.HTTPRequestMethod: request.Method,
