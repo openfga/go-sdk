@@ -69,11 +69,14 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 	}
 
 	if cfg.Credentials != nil {
-		if cfg.Credentials.Context == nil {
-			cfg.Credentials.Context = context.Background()
+		// Bind this client's telemetry to a copy of the credentials, so that credentials shared by
+		// several clients don't keep every client's telemetry reachable through their context.
+		clientCredentials := *cfg.Credentials
+		if clientCredentials.Context == nil {
+			clientCredentials.Context = context.Background()
 		}
-		cfg.Credentials.Context = telemetry.Bind(cfg.Credentials.Context, clientTelemetry)
-		var httpClient, headers = cfg.Credentials.GetHttpClientAndHeaderOverridesWithBase(retryutils.GetRetryParamsOrDefault(cfg.RetryParams), cfg.Debug, cfg.HTTPClient)
+		clientCredentials.Context = telemetry.Bind(clientCredentials.Context, clientTelemetry)
+		var httpClient, headers = clientCredentials.GetHttpClientAndHeaderOverridesWithBase(retryutils.GetRetryParamsOrDefault(cfg.RetryParams), cfg.Debug, cfg.HTTPClient)
 
 		// Apply header overrides (e.g. ApiToken's Authorization header).
 		for idx := range headers {
