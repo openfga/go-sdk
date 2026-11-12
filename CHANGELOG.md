@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.4](https://github.com/openfga/go-sdk/compare/v0.8.3...v0.8.4) (2026-11-12)
+
+
+### Miscellaneous
+
+* release 0.8.4 ([c712a31](https://github.com/openfga/go-sdk/commit/c712a31c651376a483303b74e7500a9a23fd00f6))
+
 ## [0.8.3](https://github.com/openfga/go-sdk/compare/v0.8.2...v0.8.3) (2026-09-24)
 
 
