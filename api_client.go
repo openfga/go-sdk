@@ -175,10 +175,47 @@ func parameterToJson(obj interface{}) (string, error) {
 	return string(jsonBuf), err
 }
 
+// sensitiveRequestHeaders are the request headers whose values are redacted from debug output.
+var sensitiveRequestHeaders = []string{"Authorization", "Proxy-Authorization", "Cookie"}
+
+// dumpRequestRedacted returns the httputil.DumpRequestOut output for request,
+// with the values of sensitiveRequestHeaders redacted.
+func dumpRequestRedacted(request *http.Request) ([]byte, error) {
+	redacted := request.Clone(request.Context())
+	for _, name := range sensitiveRequestHeaders {
+		values := redacted.Header.Values(name)
+		if len(values) == 0 {
+			continue
+		}
+		redacted.Header.Del(name)
+		for _, value := range values {
+			redacted.Header.Add(name, redactHeaderValue(name, value))
+		}
+	}
+
+	dump, err := httputil.DumpRequestOut(redacted, true)
+	// Clone shares the body. DumpRequestOut reads it and sets a fresh copy on the clone only.
+	if request.Body != nil {
+		request.Body = redacted.Body
+	}
+	return dump, err
+}
+
+// redactHeaderValue redacts a header value. For the authorization headers it keeps the
+// authentication scheme, so the output still shows e.g. "Bearer [REDACTED]".
+func redactHeaderValue(name, value string) string {
+	if name != "Cookie" {
+		if scheme, _, found := strings.Cut(value, " "); found {
+			return scheme + " [REDACTED]"
+		}
+	}
+	return "[REDACTED]"
+}
+
 // callAPI do the request.
 func (c *APIClient) callAPI(request *http.Request) (*http.Response, error) {
 	if c.cfg.Debug {
-		dump, err := httputil.DumpRequestOut(request, true)
+		dump, err := dumpRequestRedacted(request)
 		if err != nil {
 			return nil, err
 		}
