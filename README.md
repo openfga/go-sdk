@@ -262,6 +262,15 @@ checkResponse, err := fgaClient.Check(context.Background()).
     Execute()
 ```
 
+#### Headers Set by the SDK
+
+Some client methods add headers that identify them, so the server side can group related requests:
+
+- `X-OpenFGA-Client-Method`: the name of the client method, sent by `ReadLatestAuthorizationModel`, `WriteTuples`, `DeleteTuples`, `ClientBatchCheck`, `ListRelations`, and `Write` with transactions disabled.
+- `X-OpenFGA-Client-Bulk-Request-Id`: a random ID shared by all the requests of one call, sent by the methods that make several requests: `ClientBatchCheck`, `BatchCheck`, `ListRelations`, and `Write`, `WriteTuples` and `DeleteTuples` with transactions disabled.
+
+A value for either header passed in `RequestOptions.Headers` is sent instead.
+
 
 ### Get your Store ID
 
