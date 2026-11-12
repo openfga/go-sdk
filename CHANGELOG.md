@@ -7,6 +7,11 @@
 
 * release 0.8.4 ([c712a31](https://github.com/openfga/go-sdk/commit/c712a31c651376a483303b74e7500a9a23fd00f6))
 
+
+### Security
+
+* Fixed [GHSA-4gwj-8j4m-8hm2](https://github.com/openfga/go-sdk/security/advisories/GHSA-4gwj-8j4m-8hm2), where the API token could be written to the debug log when `Debug` is enabled. ([9ed05c2](https://github.com/openfga/go-sdk/commit/9ed05c2b276c0d0e0f18e3e2cf6ea6907df2afaa))
+
 ## [0.8.3](https://github.com/openfga/go-sdk/compare/v0.8.2...v0.8.3) (2026-09-24)
 
 
