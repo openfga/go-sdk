@@ -2,11 +2,13 @@ package client
 
 import (
 	_context "context"
+	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
 	_nethttp "net/http"
+	"strings"
 	"time"
 
 	"github.com/sourcegraph/conc/pool"
@@ -108,6 +110,45 @@ func NewSdkClient(cfg *ClientConfiguration) (*OpenFgaClient, error) {
 }
 
 type RequestOptions = fgaSdk.RequestOptions
+
+// withClientHeaders returns a copy of options with the X-OpenFGA-Client-Method header set to method and,
+// when bulk is true, the X-OpenFGA-Client-Bulk-Request-Id header set to a new random ID shared by all the
+// requests made with the returned options. An empty method leaves the method header out. Headers that
+// the caller already set are kept. The caller's headers map is never modified.
+func withClientHeaders(options RequestOptions, method string, bulk bool) RequestOptions {
+	headers := make(map[string]string, len(options.Headers)+2)
+	for name, value := range options.Headers {
+		headers[name] = value
+	}
+	if method != "" && !hasHeader(headers, constants.ClientMethodHeader) {
+		headers[constants.ClientMethodHeader] = method
+	}
+	if bulk && !hasHeader(headers, constants.ClientBulkRequestIdHeader) {
+		headers[constants.ClientBulkRequestIdHeader] = newBulkRequestId()
+	}
+	options.Headers = headers
+	return options
+}
+
+// hasHeader reports whether headers contains name, compared case-insensitively like HTTP header names.
+func hasHeader(headers map[string]string, name string) bool {
+	for key := range headers {
+		if strings.EqualFold(key, name) {
+			return true
+		}
+	}
+	return false
+}
+
+// newBulkRequestId returns a random (version 4) UUID.
+func newBulkRequestId() string {
+	var b [16]byte
+	// crypto/rand.Read never returns an error, see its documentation
+	_, _ = rand.Read(b[:])
+	b[6] = (b[6] & 0x0f) | 0x40 // version 4
+	b[8] = (b[8] & 0x3f) | 0x80 // RFC 4122 variant
+	return fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:16])
+}
 
 type AuthorizationModelIdOptions struct {
 	AuthorizationModelId *string `json:"authorization_model_id,omitempty"`
@@ -1230,6 +1271,7 @@ func (client *OpenFgaClient) ReadLatestAuthorizationModelExecute(request SdkClie
 		opts.StoreId = request.GetOptions().StoreId
 		opts.RequestOptions = request.GetOptions().RequestOptions
 	}
+	opts.RequestOptions = withClientHeaders(opts.RequestOptions, "ReadLatestAuthorizationModel", false)
 	req := client.ReadAuthorizationModels(request.GetContext()).Options(opts)
 
 	response, err := req.Execute()
@@ -1777,6 +1819,9 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 		maxParallelReqs = options.Transaction.MaxParallelRequests
 	}
 
+	// All the chunked requests share one bulk request ID
+	chunkRequestOptions := withClientHeaders(options.RequestOptions, "Write", true)
+
 	// If the transaction mode is disabled:
 	// - the client will attempt to chunk the writes and deletes into multiple requests
 	// - each request is a transaction
@@ -1801,7 +1846,7 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 					Writes: writeBody,
 				},
 				options: &ClientWriteOptions{
-					RequestOptions:       options.RequestOptions,
+					RequestOptions:       chunkRequestOptions,
 					AuthorizationModelId: authorizationModelId,
 					StoreId:              request.GetStoreIdOverride(),
 					Conflict:             options.Conflict,
@@ -1850,7 +1895,7 @@ func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface
 					Deletes: deleteBody,
 				},
 				options: &ClientWriteOptions{
-					RequestOptions:       options.RequestOptions,
+					RequestOptions:       chunkRequestOptions,
 					AuthorizationModelId: authorizationModelId,
 					StoreId:              request.GetStoreIdOverride(),
 					Conflict:             options.Conflict,
@@ -1951,13 +1996,14 @@ func (request *SdkClientWriteTuplesRequest) GetOptions() *ClientWriteOptions {
 }
 
 func (client *OpenFgaClient) WriteTuplesExecute(request SdkClientWriteTuplesRequestInterface) (*ClientWriteResponse, error) {
-	baseReq := client.Write(request.GetContext()).Body(ClientWriteRequest{
-		Writes: *request.GetBody(),
-	})
+	options := ClientWriteOptions{}
 	if request.GetOptions() != nil {
-		baseReq = baseReq.Options(*request.GetOptions())
+		options = *request.GetOptions()
 	}
-	return baseReq.Execute()
+	options.RequestOptions = withClientHeaders(options.RequestOptions, "WriteTuples", false)
+	return client.Write(request.GetContext()).Body(ClientWriteRequest{
+		Writes: *request.GetBody(),
+	}).Options(options).Execute()
 }
 
 // / DeleteTuples
@@ -2015,13 +2061,14 @@ func (request *SdkClientDeleteTuplesRequest) GetOptions() *ClientWriteOptions {
 }
 
 func (client *OpenFgaClient) DeleteTuplesExecute(request SdkClientDeleteTuplesRequestInterface) (*ClientWriteResponse, error) {
-	baseReq := client.Write(request.GetContext()).Body(ClientWriteRequest{
-		Deletes: *request.GetBody(),
-	})
+	options := ClientWriteOptions{}
 	if request.GetOptions() != nil {
-		baseReq = baseReq.Options(*request.GetOptions())
+		options = *request.GetOptions()
 	}
-	return baseReq.Execute()
+	options.RequestOptions = withClientHeaders(options.RequestOptions, "DeleteTuples", false)
+	return client.Write(request.GetContext()).Body(ClientWriteRequest{
+		Deletes: *request.GetBody(),
+	}).Options(options).Execute()
 }
 
 /* Relationship Queries */
@@ -2258,6 +2305,8 @@ func (client *OpenFgaClient) ClientBatchCheckExecute(request SdkClientBatchCheck
 			maxParallelReqs = int(*request.GetOptions().MaxParallelRequests)
 		}
 	}
+	// All the checks share one bulk request ID
+	requestOptions = withClientHeaders(requestOptions, "ClientBatchCheck", true)
 
 	var numOfChecks = len(*request.GetBody())
 	response := make(ClientBatchCheckClientResponse, numOfChecks)
@@ -2402,9 +2451,13 @@ func (client *OpenFgaClient) BatchCheckExecute(request SdkClientBatchCheckReques
 		return nil, FgaRequiredParamError{param: "checks"}
 	}
 
-	if options == nil {
-		options = &BatchCheckOptions{}
+	// Copy the options so that adding the bulk request ID doesn't change the caller's options
+	batchOptions := BatchCheckOptions{}
+	if options != nil {
+		batchOptions = *options
 	}
+	batchOptions.RequestOptions = withClientHeaders(batchOptions.RequestOptions, "", true)
+	options = &batchOptions
 
 	maxParallelRequests := DEFAULT_MAX_METHOD_PARALLEL_REQS
 	if options.MaxParallelRequests != nil {
@@ -2942,6 +2995,8 @@ func (client *OpenFgaClient) ListRelationsExecute(request SdkClientListRelations
 		options.Consistency = request.GetOptions().Consistency
 		options.MaxParallelRequests = request.GetOptions().MaxParallelRequests
 	}
+	// Set before ClientBatchCheck, which keeps headers that are already set
+	options.RequestOptions = withClientHeaders(options.RequestOptions, "ListRelations", true)
 
 	batchResponse, err := client.ClientBatchCheckExecute(&SdkClientBatchCheckClientRequest{
 		ctx:     request.GetContext(),
