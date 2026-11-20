@@ -180,6 +180,10 @@ func main() {
                 ClientCredentialsClientSecret:   os.Getenv("FGA_CLIENT_SECRET"),
                 ClientCredentialsApiAudience:    os.Getenv("FGA_API_AUDIENCE"),
                 ClientCredentialsApiTokenIssuer: os.Getenv("FGA_API_TOKEN_ISSUER"),
+                // Optional: extra form fields for the token request. url.Values supports repeated keys.
+                // ClientCredentialsApiTokenIssuerParams: url.Values{
+                //     "resource": {"https://api.fga.example"},
+                // },
             },
         },
     })

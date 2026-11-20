@@ -1230,6 +1230,7 @@ func (client *OpenFgaClient) ReadLatestAuthorizationModelExecute(request SdkClie
 		opts.StoreId = request.GetOptions().StoreId
 		opts.RequestOptions = request.GetOptions().RequestOptions
 	}
+	addClientMethodHeader(&opts.RequestOptions, "ReadLatestAuthorizationModel")
 	req := client.ReadAuthorizationModels(request.GetContext()).Options(opts)
 
 	response, err := req.Execute()
@@ -1683,15 +1684,23 @@ func (request *SdkClientWriteRequest) GetBody() *ClientWriteRequest {
 func (client *OpenFgaClient) WriteExecute(request SdkClientWriteRequestInterface) (*ClientWriteResponse, error) {
 	options := request.GetOptions()
 	transactionOptionsSet := options != nil && options.Transaction != nil
+	requestOptions := RequestOptions{}
+	if options != nil {
+		requestOptions = options.RequestOptions
+	}
+	if requestOptions.Headers == nil || requestOptions.Headers[clientMethodHeader] == "" {
+		addClientMethodHeader(&requestOptions, "Write")
+	}
+	if err := addBulkRequestIDHeader(&requestOptions); err != nil {
+		return nil, err
+	}
+	if options != nil {
+		options.RequestOptions = requestOptions
+	}
 	response := ClientWriteResponse{
 		Writes:  []ClientWriteRequestWriteResponse{},
 		Deletes: []ClientWriteRequestDeleteResponse{},
 	}
-	requestOptions := RequestOptions{}
-	if request.GetOptions() != nil {
-		requestOptions = request.GetOptions().RequestOptions
-	}
-
 	authorizationModelId, err := client.getAuthorizationModelId(request.GetAuthorizationModelIdOverride())
 	if err != nil {
 		return nil, err
@@ -1951,12 +1960,14 @@ func (request *SdkClientWriteTuplesRequest) GetOptions() *ClientWriteOptions {
 }
 
 func (client *OpenFgaClient) WriteTuplesExecute(request SdkClientWriteTuplesRequestInterface) (*ClientWriteResponse, error) {
+	writeOptions := ClientWriteOptions{}
+	if request.GetOptions() != nil {
+		writeOptions = *request.GetOptions()
+	}
+	addClientMethodHeader(&writeOptions.RequestOptions, "WriteTuples")
 	baseReq := client.Write(request.GetContext()).Body(ClientWriteRequest{
 		Writes: *request.GetBody(),
-	})
-	if request.GetOptions() != nil {
-		baseReq = baseReq.Options(*request.GetOptions())
-	}
+	}).Options(writeOptions)
 	return baseReq.Execute()
 }
 
@@ -2015,12 +2026,14 @@ func (request *SdkClientDeleteTuplesRequest) GetOptions() *ClientWriteOptions {
 }
 
 func (client *OpenFgaClient) DeleteTuplesExecute(request SdkClientDeleteTuplesRequestInterface) (*ClientWriteResponse, error) {
+	writeOptions := ClientWriteOptions{}
+	if request.GetOptions() != nil {
+		writeOptions = *request.GetOptions()
+	}
+	addClientMethodHeader(&writeOptions.RequestOptions, "DeleteTuples")
 	baseReq := client.Write(request.GetContext()).Body(ClientWriteRequest{
 		Deletes: *request.GetBody(),
-	})
-	if request.GetOptions() != nil {
-		baseReq = baseReq.Options(*request.GetOptions())
-	}
+	}).Options(writeOptions)
 	return baseReq.Execute()
 }
 
@@ -2404,6 +2417,10 @@ func (client *OpenFgaClient) BatchCheckExecute(request SdkClientBatchCheckReques
 
 	if options == nil {
 		options = &BatchCheckOptions{}
+	}
+	addClientMethodHeader(&options.RequestOptions, "BatchCheck")
+	if err := addBulkRequestIDHeader(&options.RequestOptions); err != nil {
+		return nil, err
 	}
 
 	maxParallelRequests := DEFAULT_MAX_METHOD_PARALLEL_REQS
@@ -2941,6 +2958,10 @@ func (client *OpenFgaClient) ListRelationsExecute(request SdkClientListRelations
 		options.RequestOptions = request.GetOptions().RequestOptions
 		options.Consistency = request.GetOptions().Consistency
 		options.MaxParallelRequests = request.GetOptions().MaxParallelRequests
+	}
+	addClientMethodHeader(&options.RequestOptions, "ListRelations")
+	if err := addBulkRequestIDHeader(&options.RequestOptions); err != nil {
+		return nil, err
 	}
 
 	batchResponse, err := client.ClientBatchCheckExecute(&SdkClientBatchCheckClientRequest{
