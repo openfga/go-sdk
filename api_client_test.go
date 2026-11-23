@@ -1,10 +1,14 @@
 package openfga
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -86,6 +90,116 @@ func TestClientCredentialsEndToEndWithCustomClient(t *testing.T) {
 	// token fetch, since baseClient is injected via oauth2.HTTPClient.
 	if atomic.LoadInt32(&transportHits) == 0 {
 		t.Error("Custom transport was not used for the API request")
+	}
+}
+
+func TestDumpRequestRedacted(t *testing.T) {
+	t.Parallel()
+
+	const requestBody = `{"name":"store"}`
+	request, err := http.NewRequest(http.MethodPost, "https://api.example.com/stores", strings.NewReader(requestBody))
+	if err != nil {
+		t.Fatalf("Failed to create request: %v", err)
+	}
+	request.Header.Set("Authorization", "Bearer secret-api-token")
+	request.Header.Set("Proxy-Authorization", "Basic c2VjcmV0LXByb3h5")
+	request.Header.Set("Cookie", "session=secret-cookie; theme=dark")
+	request.Header.Set("Content-Type", "application/json")
+
+	dump, err := dumpRequestRedacted(request)
+	if err != nil {
+		t.Fatalf("dumpRequestRedacted failed: %v", err)
+	}
+
+	output := string(dump)
+	for _, secret := range []string{"secret-api-token", "c2VjcmV0LXByb3h5", "secret-cookie"} {
+		if strings.Contains(output, secret) {
+			t.Errorf("Dump contains %q:\n%s", secret, output)
+		}
+	}
+	for _, want := range []string{
+		"Authorization: Bearer [REDACTED]",
+		"Proxy-Authorization: Basic [REDACTED]",
+		"Cookie: [REDACTED]",
+		"Content-Type: application/json",
+		requestBody,
+	} {
+		if !strings.Contains(output, want) {
+			t.Errorf("Dump is missing %q:\n%s", want, output)
+		}
+	}
+
+	if got := request.Header.Get("Authorization"); got != "Bearer secret-api-token" {
+		t.Errorf("Request header was modified. Got: %q", got)
+	}
+	body, err := io.ReadAll(request.Body)
+	if err != nil {
+		t.Fatalf("Failed to read request body: %v", err)
+	}
+	if string(body) != requestBody {
+		t.Errorf("Request body was not preserved. Got: %q", string(body))
+	}
+}
+
+// Not parallel: captures the output of the standard logger, and uses an
+// httptest server (see TestClientCredentialsEndToEndWithCustomClient).
+func TestDebugOutputDoesNotContainApiToken(t *testing.T) {
+	var gotAuthHeader, gotBody atomic.Value
+	gotAuthHeader.Store("")
+	gotBody.Store("")
+	api := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotAuthHeader.Store(r.Header.Get("Authorization"))
+		body, _ := io.ReadAll(r.Body)
+		gotBody.Store(string(body))
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"allowed":true}`))
+	}))
+	defer api.Close()
+
+	var logs bytes.Buffer
+	defer log.SetOutput(log.Writer())
+	log.SetOutput(&logs)
+
+	configuration, err := NewConfiguration(Configuration{
+		ApiUrl: api.URL,
+		Credentials: &credentials.Credentials{
+			Method: credentials.CredentialsMethodApiToken,
+			Config: &credentials.Config{
+				ApiToken: "test-api-token",
+			},
+		},
+		Debug: true,
+	})
+	if err != nil {
+		t.Fatalf("Failed to create configuration: %v", err)
+	}
+
+	apiClient := NewAPIClient(configuration)
+
+	requestBody := CheckRequest{
+		TupleKey: CheckRequestTupleKey{
+			User:     "user:anne",
+			Relation: "viewer",
+			Object:   "document:roadmap",
+		},
+	}
+	_, _, err = apiClient.OpenFgaApi.Check(context.Background(), "01GXSB9YR785C4FYS3C0RTG7B2").Body(requestBody).Execute()
+	if err != nil {
+		t.Fatalf("Request failed: %v", err)
+	}
+
+	output := logs.String()
+	if strings.Contains(output, "test-api-token") {
+		t.Errorf("Debug output contains the API token:\n%s", output)
+	}
+	if !strings.Contains(output, "Authorization: Bearer [REDACTED]") {
+		t.Errorf("Debug output does not contain the redacted Authorization header:\n%s", output)
+	}
+	if got := gotAuthHeader.Load().(string); got != "Bearer test-api-token" {
+		t.Errorf("API request did not carry the API token. Got: %q", got)
+	}
+	if got := gotBody.Load().(string); !strings.Contains(got, `"user:anne"`) {
+		t.Errorf("API request body was not sent. Got: %q", got)
 	}
 }
 

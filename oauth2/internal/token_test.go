@@ -360,3 +360,62 @@ func TestRetrieveToken_CancellationStopsAuthStyleFallback(t *testing.T) {
 		t.Fatal("RetrieveToken did not return after cancellation; the retry wait ignored the context")
 	}
 }
+
+func TestRetrieveErrorDoesNotRetainCredentials(t *testing.T) {
+	ResetAuthCache()
+	const clientSecret = "very-secret-client-secret"
+
+	t.Run("AuthStyleInHeader strips the Authorization header", func(t *testing.T) {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			require.NotEmpty(t, r.Header.Get("Authorization"), "token request should be authenticated")
+			w.WriteHeader(http.StatusUnauthorized)
+		}))
+		defer ts.Close()
+
+		_, err := RetrieveToken(context.Background(), "client-id", clientSecret, ts.URL, url.Values{}, AuthStyleInHeader, testTokenRequestConfig)
+		require.Error(t, err)
+
+		var rErr *RetrieveError
+		require.ErrorAs(t, err, &rErr)
+		require.NotNil(t, rErr.Response)
+		assert.Equal(t, http.StatusUnauthorized, rErr.Response.StatusCode)
+		require.NotNil(t, rErr.Response.Request)
+		assert.Empty(t, rErr.Response.Request.Header.Get("Authorization"))
+		assert.Nil(t, rErr.Response.Request.Body)
+		assert.Nil(t, rErr.Response.Request.GetBody)
+	})
+
+	t.Run("AuthStyleInParams strips the request body", func(t *testing.T) {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			body, _ := io.ReadAll(r.Body)
+			require.Contains(t, string(body), "client_secret", "token request should carry the secret")
+			w.WriteHeader(http.StatusUnauthorized)
+		}))
+		defer ts.Close()
+
+		_, err := RetrieveToken(context.Background(), "client-id", clientSecret, ts.URL, url.Values{}, AuthStyleInParams, testTokenRequestConfig)
+		require.Error(t, err)
+
+		var rErr *RetrieveError
+		require.ErrorAs(t, err, &rErr)
+		require.NotNil(t, rErr.Response)
+		require.NotNil(t, rErr.Response.Request)
+		assert.Nil(t, rErr.Response.Request.Body)
+		assert.Nil(t, rErr.Response.Request.GetBody)
+	})
+
+	t.Run("retried requests stay authenticated", func(t *testing.T) {
+		var authenticated atomic.Int32
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Header.Get("Authorization") != "" {
+				authenticated.Add(1)
+			}
+			w.WriteHeader(http.StatusInternalServerError)
+		}))
+		defer ts.Close()
+
+		_, err := RetrieveToken(context.Background(), "client-id", clientSecret, ts.URL, url.Values{}, AuthStyleInHeader, testTokenRequestConfig)
+		require.Error(t, err)
+		assert.Equal(t, int32(testMaxRetry+1), authenticated.Load(), "every attempt should carry the Authorization header")
+	})
+}

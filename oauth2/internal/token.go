@@ -258,6 +258,19 @@ func singleTokenRoundTrip(ctx context.Context, req *http.Request) (*Token, error
 		return nil, fmt.Errorf("oauth2: cannot fetch token: %v", err)
 	}
 	if code := r.StatusCode; code < 200 || code > 299 {
+		// The token request carries the client credentials, in the Authorization
+		// header or in the form-encoded body depending on the auth style. Never
+		// retain them on the returned error, which callers may log or serialize.
+		// The request is cloned because it is shared with the retry loop.
+		if r.Request != nil {
+			req := r.Request.Clone(r.Request.Context())
+			req.Header.Del("Authorization")
+			req.Header.Del("Proxy-Authorization")
+			req.Header.Del("Cookie")
+			req.Body = nil
+			req.GetBody = nil
+			r.Request = req
+		}
 		return nil, &RetrieveError{
 			Response: r,
 			Body:     body,
