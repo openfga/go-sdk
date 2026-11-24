@@ -583,3 +583,57 @@ func TestApiClientsDoNotChangeSharedCredentials(t *testing.T) {
 		t.Fatalf("the shared credentials' context was changed")
 	}
 }
+
+type sentinelTransport struct{}
+
+func (sentinelTransport) RoundTrip(*http.Request) (*http.Response, error) {
+	return nil, fmt.Errorf("not used")
+}
+
+func TestApiClientsReusingConfigurationDoNotStackOAuthClients(t *testing.T) {
+	t.Parallel()
+
+	base := sentinelTransport{}
+	cfg := Configuration{
+		ApiUrl:     "http://localhost:8080",
+		HTTPClient: &http.Client{Transport: base},
+		Credentials: &credentials.Credentials{
+			Method: credentials.CredentialsMethodClientCredentials,
+			Config: &credentials.Config{
+				ClientCredentialsClientId:       "id",
+				ClientCredentialsClientSecret:   "secret",
+				ClientCredentialsApiTokenIssuer: "http://localhost:8080/oauth/token",
+			},
+		},
+		DefaultHeaders: map[string]string{},
+	}
+
+	for range 3 {
+		_ = NewAPIClient(&cfg)
+	}
+
+	authTransport, ok := cfg.HTTPClient.Transport.(*oauth2.Transport)
+	if !ok {
+		t.Fatalf("expected an OAuth transport, got %T", cfg.HTTPClient.Transport)
+	}
+	if authTransport.Base != base {
+		t.Fatalf("the OAuth transport wraps %T instead of the original transport", authTransport.Base)
+	}
+}
+
+func TestApiClientUsesReplacedTelemetryConfiguration(t *testing.T) {
+	t.Parallel()
+
+	client := NewAPIClient(&Configuration{ApiUrl: "http://localhost:8080"})
+
+	replaced := &telemetry.Configuration{Metrics: &telemetry.MetricsConfiguration{}}
+	client.GetConfig().Telemetry = replaced
+
+	m, ok := client.metrics().(*telemetry.Metrics)
+	if !ok {
+		t.Fatalf("unexpected metrics type %T", client.metrics())
+	}
+	if m.Configuration != replaced.Metrics {
+		t.Fatalf("metrics still use the telemetry configuration from construction time")
+	}
+}

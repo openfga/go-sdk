@@ -34,6 +34,10 @@ type Configuration struct {
 	HTTPClient     *http.Client
 	RetryParams    *RetryParams
 	Telemetry      *telemetry.Configuration `json:"telemetry,omitempty"`
+
+	// oauthClient is the HTTP client built for client credentials, and oauthBaseClient the one it wraps.
+	oauthClient     *http.Client
+	oauthBaseClient *http.Client
 }
 
 func GetSdkUserAgent() string {

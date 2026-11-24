@@ -16,6 +16,7 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 	"unicode/utf8"
 
@@ -44,6 +45,9 @@ type APIClient struct {
 	// telemetry records the metrics of this client. It is created once per client, so that it is
 	// released with the client instead of being kept in the process-wide telemetry registry.
 	telemetry *telemetry.Telemetry
+	// telemetryConfig is the configuration that telemetry was created for.
+	telemetryConfig *telemetry.Configuration
+	telemetryLock   sync.Mutex
 
 	// API Services
 
@@ -76,7 +80,13 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 			clientCredentials.Context = context.Background()
 		}
 		clientCredentials.Context = telemetry.Bind(clientCredentials.Context, clientTelemetry)
-		var httpClient, headers = clientCredentials.GetHttpClientAndHeaderOverridesWithBase(retryutils.GetRetryParamsOrDefault(cfg.RetryParams), cfg.Debug, cfg.HTTPClient)
+		// When the configuration is reused, wrap the original HTTP client again instead of the
+		// OAuth client of a previous API client, which would keep that client's telemetry reachable.
+		baseClient := cfg.HTTPClient
+		if cfg.oauthClient != nil && baseClient == cfg.oauthClient {
+			baseClient = cfg.oauthBaseClient
+		}
+		var httpClient, headers = clientCredentials.GetHttpClientAndHeaderOverridesWithBase(retryutils.GetRetryParamsOrDefault(cfg.RetryParams), cfg.Debug, baseClient)
 
 		// Apply header overrides (e.g. ApiToken's Authorization header).
 		for idx := range headers {
@@ -86,6 +96,8 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 		// A non-nil client means an OAuth2-enabled client was built (ClientCredentials),
 		// wrapping the custom HTTPClient if one was provided.
 		if httpClient != nil {
+			cfg.oauthBaseClient = baseClient
+			cfg.oauthClient = httpClient
 			cfg.HTTPClient = httpClient
 		}
 	}
@@ -93,6 +105,7 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 	c := &APIClient{}
 	c.cfg = cfg
 	c.telemetry = clientTelemetry
+	c.telemetryConfig = cfg.Telemetry
 	c.common.client = c
 	c.common.RetryParams = cfg.RetryParams
 
@@ -105,7 +118,14 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 // metrics returns the metrics of this client. A client that wasn't created with NewAPIClient has no
 // telemetry instance of its own and falls back to the process-wide one for its configuration.
 func (c *APIClient) metrics() telemetry.MetricsInterface {
+	c.telemetryLock.Lock()
+	defer c.telemetryLock.Unlock()
 	if c.telemetry != nil {
+		// The configuration may have been replaced since the client was created.
+		if c.telemetryConfig != c.cfg.Telemetry && c.cfg.Telemetry != nil {
+			c.telemetry, _ = telemetry.Configure(c.cfg.Telemetry)
+			c.telemetryConfig = c.cfg.Telemetry
+		}
 		return c.telemetry.Metrics
 	}
 	return telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: c.cfg.Telemetry})
