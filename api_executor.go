@@ -15,7 +15,6 @@ import (
 
 	"github.com/openfga/go-sdk/internal/constants"
 	"github.com/openfga/go-sdk/internal/utils/retryutils"
-	"github.com/openfga/go-sdk/telemetry"
 )
 
 // APIExecutorRequest represents a request to be executed by the API executor.
@@ -396,7 +395,7 @@ func (e *apiExecutor) getRetryParams() RetryParams {
 
 // recordTelemetry records request telemetry metrics.
 func (e *apiExecutor) recordTelemetry(operationName string, storeID string, body interface{}, req *http.Request, httpResponse *http.Response, requestStarted time.Time, attemptNum int) {
-	metrics := telemetry.GetMetrics(telemetry.TelemetryFactoryParameters{Configuration: e.client.cfg.Telemetry})
+	metrics := e.client.metrics()
 	attrs, queryDuration, requestDuration, _ := metrics.BuildTelemetryAttributes(
 		operationName,
 		map[string]interface{}{
