@@ -326,6 +326,15 @@ func doTokenRoundTrip(ctx context.Context, req *http.Request, config RequestConf
 	debug := config.Debug
 
 	for i := 0; i <= maxRetry; i++ {
+		// A request body can only be read once, so rewind it before every retry.
+		// Otherwise the retried token request is sent with an empty body.
+		if i > 0 && req.GetBody != nil {
+			body, rewindErr := req.GetBody()
+			if rewindErr != nil {
+				return nil, rewindErr
+			}
+			req.Body = body
+		}
 		token, err = singleTokenRoundTrip(ctx, req)
 		if err == nil {
 			if otel := telemetry.Extract(ctx); otel != nil {

@@ -419,3 +419,34 @@ func TestRetrieveErrorDoesNotRetainCredentials(t *testing.T) {
 		assert.Equal(t, int32(testMaxRetry+1), authenticated.Load(), "every attempt should carry the Authorization header")
 	})
 }
+
+func TestRetrieveTokenRetriesSendRequestBody(t *testing.T) {
+	ResetAuthCache()
+
+	var bodies []string
+	srv := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, err := io.ReadAll(r.Body)
+		require.NoError(t, err)
+		bodies = append(bodies, string(body))
+		if len(bodies) <= testMaxRetry {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"access_token":"ACCESS_TOKEN","token_type":"bearer"}`))
+	}))
+	srv.EnableHTTP2 = true
+	srv.StartTLS()
+	defer srv.Close()
+
+	ctx := context.WithValue(context.Background(), HTTPClient, srv.Client())
+	token, err := RetrieveToken(ctx, "client-id", "client-secret", srv.URL,
+		url.Values{"audience": {"api"}}, AuthStyleInParams, testTokenRequestConfig)
+	require.NoError(t, err)
+	require.Equal(t, "ACCESS_TOKEN", token.AccessToken)
+	require.Len(t, bodies, testMaxRetry+1)
+	for i, body := range bodies {
+		require.NotEmpty(t, body, "attempt %d sent an empty body", i)
+		require.Equal(t, bodies[0], body, "attempt %d sent a different body", i)
+	}
+}
